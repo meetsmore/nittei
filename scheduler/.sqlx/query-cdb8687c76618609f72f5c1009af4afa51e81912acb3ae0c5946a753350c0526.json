@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE schedules\n            SET rules = $2,\n            timezone = $3,\n            metadata = $4\n            WHERE schedule_uid = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Json",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "cdb8687c76618609f72f5c1009af4afa51e81912acb3ae0c5946a753350c0526"
+}

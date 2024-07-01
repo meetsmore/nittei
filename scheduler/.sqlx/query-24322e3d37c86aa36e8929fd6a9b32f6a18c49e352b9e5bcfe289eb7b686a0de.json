@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO service_user_busy_calendars(service_uid, user_uid, calendar_uid)\n            VALUES($1, $2, $3)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "24322e3d37c86aa36e8929fd6a9b32f6a18c49e352b9e5bcfe289eb7b686a0de"
+}

@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT * FROM accounts\n            WHERE account_uid = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "account_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "secret_api_key",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "public_jwt_key",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "settings",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "dae4e8fe37ab9e71be49ccfda4cd101b0be7d470da731625b2da255c4e16fd3a"
+}

@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE users\n            SET account_uid = $2,\n            metadata = $3\n            WHERE user_uid = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "472cbfe614d8a7d9b08fdd923beaec7eecc9714b18617ea78950bba786a23fcc"
+}

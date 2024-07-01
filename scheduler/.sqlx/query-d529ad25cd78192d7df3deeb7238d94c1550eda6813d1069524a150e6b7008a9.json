@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO schedules(schedule_uid, user_uid, rules, timezone, metadata)\n            VALUES($1, $2, $3, $4, $5)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Json",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d529ad25cd78192d7df3deeb7238d94c1550eda6813d1069524a150e6b7008a9"
+}

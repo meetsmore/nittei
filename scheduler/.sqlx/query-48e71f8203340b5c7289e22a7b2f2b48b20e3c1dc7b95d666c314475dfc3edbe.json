@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE service_users SET\n                available_calendar_uid = $3,\n                available_schedule_uid = $4,\n                buffer_after = $5,\n                buffer_before = $6,\n                closest_booking_time = $7,\n                furthest_booking_time = $8\n            WHERE service_uid = $1 AND user_uid = $2\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Uuid",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "48e71f8203340b5c7289e22a7b2f2b48b20e3c1dc7b95d666c314475dfc3edbe"
+}

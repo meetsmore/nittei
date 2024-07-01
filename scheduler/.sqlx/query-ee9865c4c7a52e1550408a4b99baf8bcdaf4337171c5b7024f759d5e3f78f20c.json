@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE service_reservations as r\n            SET count = count - 1\n            WHERE r.service_uid = $1 AND r.timestamp = $2\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ee9865c4c7a52e1550408a4b99baf8bcdaf4337171c5b7024f759d5e3f78f20c"
+}

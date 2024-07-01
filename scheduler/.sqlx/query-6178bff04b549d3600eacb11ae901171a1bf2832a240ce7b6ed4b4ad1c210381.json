@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO user_integrations(account_uid, user_uid, provider, refresh_token, access_token, access_token_expires_ts)\n            VALUES($1, $2, $3, $4, $5, $6)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        {
+          "Custom": {
+            "name": "ext_calendar_provider",
+            "kind": {
+              "Domain": "Text"
+            }
+          }
+        },
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6178bff04b549d3600eacb11ae901171a1bf2832a240ce7b6ed4b4ad1c210381"
+}

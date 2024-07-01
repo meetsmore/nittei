@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            DELETE FROM service_user_busy_calendars AS busy\n            WHERE busy.service_uid = $1 AND\n            busy.user_uid = $2\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "89fb1898f7d614e33ed7c96bb0d550869cf85b6fb1a3e000577ae4e74a712501"
+}

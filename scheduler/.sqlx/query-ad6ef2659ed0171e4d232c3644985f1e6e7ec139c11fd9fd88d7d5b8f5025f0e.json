@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO reminders\n            (event_uid, account_uid, remind_at, version, identifier)\n            VALUES($1, $2, $3, $4, $5)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Int8",
+        {
+          "Custom": {
+            "name": "entity_version",
+            "kind": {
+              "Domain": "Int8"
+            }
+          }
+        },
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ad6ef2659ed0171e4d232c3644985f1e6e7ec139c11fd9fd88d7d5b8f5025f0e"
+}

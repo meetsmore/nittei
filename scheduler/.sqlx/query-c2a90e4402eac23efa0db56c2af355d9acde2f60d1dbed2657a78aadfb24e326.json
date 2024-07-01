@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            DELETE FROM externally_synced_calendars\n            WHERE calendar_uid = $1 AND\n                user_uid = $2 AND\n                ext_calendar_id = $3 AND\n                provider = $4\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c2a90e4402eac23efa0db56c2af355d9acde2f60d1dbed2657a78aadfb24e326"
+}

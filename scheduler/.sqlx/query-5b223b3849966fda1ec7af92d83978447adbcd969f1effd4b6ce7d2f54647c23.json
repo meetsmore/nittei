@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO calendar_events(\n                event_uid,\n                calendar_uid,\n                start_ts,\n                duration,\n                end_ts,\n                busy,\n                created,\n                updated,\n                recurrence,\n                exdates,\n                reminders,\n                service_uid,\n                metadata\n            )\n            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Bool",
+        "Int8",
+        "Int8",
+        "Json",
+        "Int8Array",
+        "Json",
+        "Uuid",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5b223b3849966fda1ec7af92d83978447adbcd969f1effd4b6ce7d2f54647c23"
+}
