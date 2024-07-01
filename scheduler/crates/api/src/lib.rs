@@ -60,7 +60,7 @@ impl Application {
 
     async fn configure_server(context: NettuContext) -> Result<(Server, u16), std::io::Error> {
         let port = context.config.port;
-        let address = format!("0.0.0.0:{}", port);
+        let address = format!("127.0.0.1:{}", port);
         let listener = TcpListener::bind(&address)?;
         let port = listener.local_addr().unwrap().port();
 
