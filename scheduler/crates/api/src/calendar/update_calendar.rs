@@ -5,7 +5,7 @@ use crate::shared::{
     usecase::{execute, execute_with_policy, PermissionBoundary, UseCase},
 };
 use crate::{error::NettuError, shared::auth::protect_route};
-use actix_web::{web, HttpResponse};
+use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::Weekday;
 use chrono_tz::Tz;
 use nettu_scheduler_api_structs::update_calendar::{APIResponse, PathParams, RequestBody};
@@ -13,7 +13,7 @@ use nettu_scheduler_domain::{Calendar, Metadata, User, ID};
 use nettu_scheduler_infra::NettuContext;
 
 pub async fn update_calendar_admin_controller(
-    http_req: web::HttpRequest,
+    http_req: HttpRequest,
     ctx: web::Data<NettuContext>,
     path: web::Path<PathParams>,
     body: web::Json<RequestBody>,
@@ -37,7 +37,7 @@ pub async fn update_calendar_admin_controller(
 }
 
 pub async fn update_calendar_controller(
-    http_req: web::HttpRequest,
+    http_req: HttpRequest,
     ctx: web::Data<NettuContext>,
     mut path: web::Path<PathParams>,
     body: web::Json<RequestBody>,

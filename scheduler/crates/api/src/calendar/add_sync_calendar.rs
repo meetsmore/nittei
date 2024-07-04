@@ -4,7 +4,7 @@ use crate::{
     error::NettuError,
     shared::usecase::{execute, UseCase},
 };
-use actix_web::{web, HttpResponse};
+use actix_web::{web, HttpRequest, HttpResponse};
 use nettu_scheduler_api_structs::add_sync_calendar::{APIResponse, PathParams, RequestBody};
 use nettu_scheduler_domain::IntegrationProvider;
 use nettu_scheduler_domain::{
@@ -17,7 +17,7 @@ use nettu_scheduler_infra::{
 };
 
 pub async fn add_sync_calendar_admin_controller(
-    http_req: web::HttpRequest,
+    http_req: HttpRequest,
     path_params: web::Path<PathParams>,
     body: web::Json<RequestBody>,
     ctx: web::Data<NettuContext>,

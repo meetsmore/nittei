@@ -1,12 +1,12 @@
 use crate::shared::usecase::{execute, UseCase};
 use crate::{error::NettuError, shared::auth::protect_account_route};
-use actix_web::{web, HttpResponse};
+use actix_web::{web, HttpRequest, HttpResponse};
 use nettu_scheduler_api_structs::set_account_pub_key::{APIResponse, RequestBody};
 use nettu_scheduler_domain::{Account, PEMKey};
 use nettu_scheduler_infra::NettuContext;
 
 pub async fn set_account_pub_key_controller(
-    http_req: web::HttpRequest,
+    http_req: HttpRequest,
     ctx: web::Data<NettuContext>,
     body: web::Json<RequestBody>,
 ) -> Result<HttpResponse, NettuError> {

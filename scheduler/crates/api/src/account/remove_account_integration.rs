@@ -1,12 +1,12 @@
 use crate::shared::usecase::{execute, UseCase};
 use crate::{error::NettuError, shared::auth::protect_account_route};
-use actix_web::{web, HttpResponse};
+use actix_web::{web, HttpRequest, HttpResponse};
 use nettu_scheduler_api_structs::remove_account_integration::{APIResponse, PathParams};
 use nettu_scheduler_domain::{Account, IntegrationProvider};
 use nettu_scheduler_infra::NettuContext;
 
 pub async fn remove_account_integration_controller(
-    http_req: web::HttpRequest,
+    http_req: HttpRequest,
     mut path: web::Path<PathParams>,
     ctx: web::Data<NettuContext>,
 ) -> Result<HttpResponse, NettuError> {
