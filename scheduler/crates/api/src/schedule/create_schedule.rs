@@ -9,14 +9,14 @@ use crate::{
         usecase::{execute_with_policy, PermissionBoundary},
     },
 };
-use actix_web::{web, HttpResponse};
+use actix_web::{web, HttpRequest, HttpResponse};
 use chrono_tz::Tz;
 use nettu_scheduler_api_structs::create_schedule::*;
 use nettu_scheduler_domain::{Metadata, Schedule, ScheduleRule, ID};
 use nettu_scheduler_infra::NettuContext;
 
 pub async fn create_schedule_admin_controller(
-    http_req: web::HttpRequest,
+    http_req: HttpRequest,
     path_params: web::Path<PathParams>,
     body_params: web::Json<RequestBody>,
     ctx: web::Data<NettuContext>,
@@ -39,7 +39,7 @@ pub async fn create_schedule_admin_controller(
 }
 
 pub async fn create_schedule_controller(
-    http_req: web::HttpRequest,
+    http_req: HttpRequest,
     body_params: web::Json<RequestBody>,
     ctx: web::Data<NettuContext>,
 ) -> Result<HttpResponse, NettuError> {

@@ -7,7 +7,7 @@ use crate::{
     error::NettuError,
     shared::usecase::{execute, UseCase},
 };
-use actix_web::{web, HttpResponse};
+use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::Weekday;
 use chrono_tz::Tz;
 use nettu_scheduler_api_structs::create_calendar::{APIResponse, PathParams, RequestBody};
@@ -15,7 +15,7 @@ use nettu_scheduler_domain::{Calendar, CalendarSettings, Metadata, ID};
 use nettu_scheduler_infra::NettuContext;
 
 pub async fn create_calendar_admin_controller(
-    http_req: web::HttpRequest,
+    http_req: HttpRequest,
     path_params: web::Path<PathParams>,
     body: web::Json<RequestBody>,
     ctx: web::Data<NettuContext>,
@@ -38,7 +38,7 @@ pub async fn create_calendar_admin_controller(
 }
 
 pub async fn create_calendar_controller(
-    http_req: web::HttpRequest,
+    http_req: HttpRequest,
     body: web::Json<RequestBody>,
     ctx: web::Data<NettuContext>,
 ) -> Result<HttpResponse, NettuError> {

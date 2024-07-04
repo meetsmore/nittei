@@ -7,7 +7,7 @@ use nettu_scheduler_domain::{Calendar, EventWithInstances, TimeSpan, ID};
 use nettu_scheduler_infra::NettuContext;
 
 pub async fn get_calendar_events_admin_controller(
-    http_req: web::HttpRequest,
+    http_req: HttpRequest,
     query_params: web::Query<QueryParams>,
     path: web::Path<PathParams>,
     ctx: web::Data<NettuContext>,
