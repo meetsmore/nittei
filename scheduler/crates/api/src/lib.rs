@@ -40,6 +40,7 @@ pub struct Application {
 impl Application {
     pub async fn new(context: NettuContext) -> Result<Self, std::io::Error> {
         let (server, port) = Application::configure_server(context.clone()).await?;
+
         Application::start_job_schedulers(context.clone());
 
         Ok(Self {
@@ -54,8 +55,23 @@ impl Application {
     }
 
     fn start_job_schedulers(context: NettuContext) {
-        start_send_reminders_job(context.clone());
-        start_reminder_generation_job_scheduler(context);
+        if let Ok(reminder_job_enabled) = std::env::var("REMINDER_JOB_ENABLED") {
+            // Parse the value of REMINDER_JOB_ENABLED to a boolean
+            // If it fails, log a warning and default to false
+            // Use shadowing as we don't need the original value anymore
+            let reminder_job_enabled = reminder_job_enabled.parse::<bool>().unwrap_or_else(|_| {
+                warn!(
+                    "Invalid value for BACKEND_JOB_ENABLED ({}). Defaulting to false.",
+                    reminder_job_enabled
+                );
+                false
+            });
+
+            if reminder_job_enabled {
+                start_send_reminders_job(context.clone());
+                start_reminder_generation_job_scheduler(context);
+            }
+        }
     }
 
     async fn configure_server(context: NettuContext) -> Result<(Server, u16), std::io::Error> {
