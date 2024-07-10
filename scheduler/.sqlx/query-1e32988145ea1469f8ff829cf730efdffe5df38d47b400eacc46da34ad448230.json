@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO services(service_uid, account_uid, multi_person, metadata)\n            VALUES($1, $2, $3, $4)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Json",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "1e32988145ea1469f8ff829cf730efdffe5df38d47b400eacc46da34ad448230"
+}

@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO calendar_event_reminder_generation_jobs\n            (event_uid, timestamp, version)\n            VALUES($1, $2, $3)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int8",
+        {
+          "Custom": {
+            "name": "entity_version",
+            "kind": {
+              "Domain": "Int8"
+            }
+          }
+        }
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0dacc11cdd273495684aa5e443e3c147df1c1f8a07410f3c898457fc799f0ff8"
+}

@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO account_integrations(account_uid, client_id, client_secret, redirect_uri, provider)\n            VALUES($1, $2, $3, $4, $5)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        {
+          "Custom": {
+            "name": "ext_calendar_provider",
+            "kind": {
+              "Domain": "Text"
+            }
+          }
+        }
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9ef8408f9010b1e72cc6abfa3ee444d63139ae8b9976d366da29b2d831c8d577"
+}

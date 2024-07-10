@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            DELETE FROM calendars AS c\n            WHERE c.calendar_uid = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2d199107909cb8715839719d4bab21c355fc58f088b441a83d9d8f507eede5f9"
+}

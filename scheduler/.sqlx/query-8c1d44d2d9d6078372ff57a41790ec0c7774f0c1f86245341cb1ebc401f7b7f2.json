@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE accounts\n            SET secret_api_key = $2,\n            public_jwt_key = $3,\n            settings = $4\n            WHERE account_uid = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8c1d44d2d9d6078372ff57a41790ec0c7774f0c1f86245341cb1ebc401f7b7f2"
+}

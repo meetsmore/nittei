@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH prev_v AS (\n                DELETE FROM event_reminder_versions\n                WHERE event_uid = $1\n                RETURNING *\n            )\n            INSERT INTO event_reminder_versions\n                (event_uid, version)\n            SELECT $1, version + 1 from prev_v\n            RETURNING *\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "event_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "version",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "80786f9ca51fd11a4846a2d6281e18ec1772c932e20e9e8ed9a0bb652ed20906"
+}

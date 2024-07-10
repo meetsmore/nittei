@@ -1,0 +1,37 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT * FROM users AS u\n            WHERE u.account_uid = $1 AND metadata @> $2\n            LIMIT $3\n            OFFSET $4\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "account_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "metadata",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Jsonb",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "34a936c0f2b048420febbc50b15e91ad6b30d517016d197d25d225ef5b96567d"
+}

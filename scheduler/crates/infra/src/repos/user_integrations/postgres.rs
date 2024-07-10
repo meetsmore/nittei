@@ -1,8 +1,9 @@
 use super::IUserIntegrationRepo;
 use nettu_scheduler_domain::{IntegrationProvider, UserIntegration, ID};
 use serde::Deserialize;
-use sqlx::{types::Uuid, FromRow, PgPool};
+use sqlx::{FromRow, PgPool};
 use tracing::error;
+use uuid::Uuid;
 
 pub struct PostgresUserIntegrationRepo {
     pool: PgPool,

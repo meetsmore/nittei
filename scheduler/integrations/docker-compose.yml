@@ -1,12 +1,9 @@
-version: "3.7"
+name: nettu
 services:
   postgres:
     image: postgres:13
     ports:
-      - "5432:5432"
-    volumes:
-      - postgresdata:/var/lib/postgresql/data
-    restart: always
+      - "45432:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -23,7 +20,5 @@ services:
   #   init: true
   #   entrypoint:
   #     - "integrations/wait-for.sh"
-  #     - "postgres:5432"
+  #     - "postgres:45432"
   #     - "--"
-volumes:
-  postgresdata:

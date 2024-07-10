@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            DELETE FROM service_users AS s\n            WHERE s.service_uid = $1 AND\n            s.user_uid = $2\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "75f42aa0640ca38b8ae68d8e2950a5403a9a791d093237a5366e566773997de8"
+}

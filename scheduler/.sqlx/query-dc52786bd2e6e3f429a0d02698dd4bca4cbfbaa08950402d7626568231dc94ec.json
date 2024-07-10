@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO accounts(account_uid, secret_api_key, public_jwt_key, settings)\n            VALUES($1, $2, $3, $4)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "dc52786bd2e6e3f429a0d02698dd4bca4cbfbaa08950402d7626568231dc94ec"
+}

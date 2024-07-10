@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT * FROM users AS u\n            WHERE u.user_uid = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "account_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "metadata",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "db009061ff49fcdd2b16affb3161768b2f57a94e13fbff4480b29012f1b9d062"
+}

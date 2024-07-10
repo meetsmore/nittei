@@ -18,7 +18,7 @@ impl CalendarResponse {
 
 pub mod create_calendar {
     use super::*;
-    use nettu_scheduler_domain::{Metadata, Weekday};
+    use nettu_scheduler_domain::Metadata;
 
     #[derive(Deserialize)]
     pub struct PathParams {

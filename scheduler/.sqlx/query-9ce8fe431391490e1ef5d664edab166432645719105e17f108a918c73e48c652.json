@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT s.*, u.account_uid FROM schedules AS s\n            INNER JOIN users AS u\n                ON u.user_uid = s.user_uid\n            WHERE s.user_uid = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "schedule_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "rules",
+        "type_info": "Json"
+      },
+      {
+        "ordinal": 3,
+        "name": "timezone",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "metadata",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 5,
+        "name": "account_uid",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "9ce8fe431391490e1ef5d664edab166432645719105e17f108a918c73e48c652"
+}

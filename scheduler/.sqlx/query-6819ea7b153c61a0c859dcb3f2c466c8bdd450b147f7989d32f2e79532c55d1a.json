@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            DELETE FROM users AS u\n            WHERE u.user_uid = $1\n            RETURNING *\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "account_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "metadata",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "6819ea7b153c61a0c859dcb3f2c466c8bdd450b147f7989d32f2e79532c55d1a"
+}

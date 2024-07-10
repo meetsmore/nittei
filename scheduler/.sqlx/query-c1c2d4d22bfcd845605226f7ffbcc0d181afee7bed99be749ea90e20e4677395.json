@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE user_integrations\n            SET access_token = $1,\n            access_token_expires_ts = $2,\n            refresh_token = $3\n            WHERE user_uid = $4 AND provider = $5\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8",
+        "Text",
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c1c2d4d22bfcd845605226f7ffbcc0d181afee7bed99be749ea90e20e4677395"
+}

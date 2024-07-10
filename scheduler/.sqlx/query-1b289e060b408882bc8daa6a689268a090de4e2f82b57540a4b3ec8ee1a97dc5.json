@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT * FROM externally_synced_calendars AS c\n            WHERE c.calendar_uid = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "calendar_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "ext_calendar_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "provider",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "1b289e060b408882bc8daa6a689268a090de4e2f82b57540a4b3ec8ee1a97dc5"
+}

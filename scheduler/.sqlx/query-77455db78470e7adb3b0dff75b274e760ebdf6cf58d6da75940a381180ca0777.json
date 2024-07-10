@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            DELETE FROM reminders AS r\n            WHERE r.remind_at <= $1\n            RETURNING *\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "event_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "account_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "remind_at",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "version",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "identifier",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "77455db78470e7adb3b0dff75b274e760ebdf6cf58d6da75940a381180ca0777"
+}

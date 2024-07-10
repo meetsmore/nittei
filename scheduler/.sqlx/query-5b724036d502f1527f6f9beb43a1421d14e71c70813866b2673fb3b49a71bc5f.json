@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO externally_synced_calendar_events(\n                event_uid,\n                calendar_uid,\n                ext_calendar_id,\n                ext_calendar_event_id,\n                provider\n            )\n            VALUES($1, $2, $3, $4, $5)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text",
+        {
+          "Custom": {
+            "name": "ext_calendar_provider",
+            "kind": {
+              "Domain": "Text"
+            }
+          }
+        }
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5b724036d502f1527f6f9beb43a1421d14e71c70813866b2673fb3b49a71bc5f"
+}

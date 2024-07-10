@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE services SET\n                multi_person = $2,\n                metadata = $3\n            WHERE service_uid = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Json",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "099b1aadd13b6e6d89d61d8b0c816d0a513107b6ecab38069cc1c04af98127e8"
+}

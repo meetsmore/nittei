@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT FROM service_user_busy_calendars WHERE\n            service_uid = $1 AND\n            user_uid = $2 AND\n            calendar_uid = $3\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "20a12bb5364ce87f8210848b3aeba7d2c052ddfb8c34eec947f1c9e50ccc8433"
+}

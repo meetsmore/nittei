@@ -1,0 +1,94 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            DELETE FROM calendar_events AS c\n            WHERE c.event_uid = $1\n            RETURNING *\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "event_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "calendar_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "start_ts",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 3,
+        "name": "duration",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "end_ts",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 5,
+        "name": "busy",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "created",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "updated",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 8,
+        "name": "recurrence",
+        "type_info": "Json"
+      },
+      {
+        "ordinal": 9,
+        "name": "exdates",
+        "type_info": "Int8Array"
+      },
+      {
+        "ordinal": 10,
+        "name": "reminders",
+        "type_info": "Json"
+      },
+      {
+        "ordinal": 11,
+        "name": "service_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 12,
+        "name": "metadata",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "501ef13a11ba2faacadd9a0dc484abdef01b81c9bba68250ed6ca2766be91adf"
+}

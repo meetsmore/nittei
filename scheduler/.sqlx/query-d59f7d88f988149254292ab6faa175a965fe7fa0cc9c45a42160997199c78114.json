@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT * FROM account_integrations\n            WHERE account_uid = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "account_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "client_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "client_secret",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "redirect_uri",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "provider",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "d59f7d88f988149254292ab6faa175a965fe7fa0cc9c45a42160997199c78114"
+}

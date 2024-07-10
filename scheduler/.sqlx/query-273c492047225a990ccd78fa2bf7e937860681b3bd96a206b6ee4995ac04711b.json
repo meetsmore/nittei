@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            DELETE FROM accounts\n            WHERE account_uid = $1\n            RETURNING *\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "account_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "secret_api_key",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "public_jwt_key",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "settings",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "273c492047225a990ccd78fa2bf7e937860681b3bd96a206b6ee4995ac04711b"
+}

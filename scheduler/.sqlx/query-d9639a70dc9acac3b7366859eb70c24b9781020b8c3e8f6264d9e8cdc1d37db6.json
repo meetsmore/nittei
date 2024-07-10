@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO service_reservations(service_uid, timestamp)\n            VALUES($1, $2)\n            ON CONFLICT(service_uid, timestamp) DO UPDATE SET count = service_reservations.count + 1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d9639a70dc9acac3b7366859eb70c24b9781020b8c3e8f6264d9e8cdc1d37db6"
+}
