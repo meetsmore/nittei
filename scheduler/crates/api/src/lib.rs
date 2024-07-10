@@ -17,6 +17,7 @@ use nettu_scheduler_domain::{
     Account, AccountIntegration, AccountWebhookSettings, IntegrationProvider, PEMKey, ID,
 };
 use nettu_scheduler_infra::NettuContext;
+use nettu_scheduler_utils::config::APP_CONFIG;
 use std::net::TcpListener;
 use tracing::warn;
 use tracing_actix_web::TracingLogger;
@@ -59,7 +60,7 @@ impl Application {
     }
 
     async fn configure_server(context: NettuContext) -> Result<(Server, u16), std::io::Error> {
-        let port = context.config.port;
+        let port = APP_CONFIG.http_port;
         let address = format!("127.0.0.1:{}", port);
         let listener = TcpListener::bind(&address)?;
         let port = listener.local_addr().unwrap().port();
