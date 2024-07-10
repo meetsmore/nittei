@@ -55,19 +55,20 @@ impl Application {
     }
 
     fn start_job_schedulers(context: NettuContext) {
-        if let Ok(reminder_job_enabled) = std::env::var("REMINDER_JOB_ENABLED") {
+        if let Ok(reminders_job_enabled) = std::env::var("REMINDERS_JOB_ENABLED") {
             // Parse the value of REMINDER_JOB_ENABLED to a boolean
             // If it fails, log a warning and default to false
             // Use shadowing as we don't need the original value anymore
-            let reminder_job_enabled = reminder_job_enabled.parse::<bool>().unwrap_or_else(|_| {
-                warn!(
-                    "Invalid value for BACKEND_JOB_ENABLED ({}). Defaulting to false.",
-                    reminder_job_enabled
-                );
-                false
-            });
+            let reminders_job_enabled =
+                reminders_job_enabled.parse::<bool>().unwrap_or_else(|_| {
+                    warn!(
+                        "Invalid value for BACKEND_JOB_ENABLED ({}). Defaulting to false.",
+                        reminders_job_enabled
+                    );
+                    false
+                });
 
-            if reminder_job_enabled {
+            if reminders_job_enabled {
                 start_send_reminders_job(context.clone());
                 start_reminder_generation_job_scheduler(context);
             }
