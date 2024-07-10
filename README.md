@@ -1,14 +1,14 @@
-<div align="center">
+<!-- <div align="center">
 <img width="400" src="docs/logo.png" alt="logo">
-</div>
+</div> -->
 
-# Nettu scheduler
+# Nittei
 
-[![MIT licensed](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+<!-- [![MIT licensed](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Release](https://github.com/fmeringdal/nettu-scheduler/actions/workflows/release.yml/badge.svg)](https://github.com/fmeringdal/nettu-scheduler/actions/workflows/release.yml)
-[![codecov](https://codecov.io/gh/fmeringdal/nettu-scheduler/branch/master/graph/badge.svg?token=l5z2mzzdHu)](https://codecov.io/gh/fmeringdal/nettu-scheduler)
+[![codecov](https://codecov.io/gh/fmeringdal/nettu-scheduler/branch/master/graph/badge.svg?token=l5z2mzzdHu)](https://codecov.io/gh/fmeringdal/nettu-scheduler) -->
 
-## Overview
+<!-- ## Overview
 
 `Nettu scheduler` is a self-hosted calendar and scheduler server that aims to provide the building blocks for building calendar / booking apps with ease. It has a simple REST API and also a [JavaScript SDK](https://www.npmjs.com/package/@nettu/sdk-scheduler) and [Rust SDK](https://crates.io/crates/nettu_scheduler_sdk).
 
@@ -79,7 +79,7 @@ Please see below for links to more examples.
 
 ## Contributing
 
-Contributions are welcome and are greatly appreciated!
+Contributions are welcome and are greatly appreciated! -->
 
 ## License
 
@@ -87,5 +87,4 @@ Contributions are welcome and are greatly appreciated!
 
 ## Special thanks
 
-- [Lemmy](https://github.com/LemmyNet/lemmy) for inspiration on how to use cargo workspace to organize a web app in rust.
-- [The author of this blog post](https://www.lpalmieri.com/posts/2020-09-27-zero-to-production-4-are-we-observable-yet/) for an excellent introduction on how to do telemetry in rust.
+- [fmeringdal](https://github.com/fmeringdal/nettu-scheduler) for the initial project. This repository is a fork adapted to our needs.
