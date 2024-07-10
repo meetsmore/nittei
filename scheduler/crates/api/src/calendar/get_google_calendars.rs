@@ -12,7 +12,7 @@ use nettu_scheduler_domain::{
 use nettu_scheduler_infra::{google_calendar::GoogleCalendarProvider, NettuContext};
 
 pub async fn get_google_calendars_admin_controller(
-    http_req: web::HttpRequest,
+    http_req: HttpRequest,
     path: web::Path<PathParams>,
     query: web::Query<QueryParams>,
     ctx: web::Data<NettuContext>,

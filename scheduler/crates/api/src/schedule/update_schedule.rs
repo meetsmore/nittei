@@ -9,14 +9,14 @@ use crate::{
         usecase::{execute_with_policy, PermissionBoundary},
     },
 };
-use actix_web::{web, HttpResponse};
+use actix_web::{web, HttpRequest, HttpResponse};
 use chrono_tz::Tz;
 use nettu_scheduler_api_structs::update_schedule::*;
 use nettu_scheduler_domain::{Metadata, Schedule, ScheduleRule, ID};
 use nettu_scheduler_infra::NettuContext;
 
 pub async fn update_schedule_admin_controller(
-    http_req: web::HttpRequest,
+    http_req: HttpRequest,
     path: web::Path<PathParams>,
     body: web::Json<RequestBody>,
     ctx: web::Data<NettuContext>,
@@ -40,7 +40,7 @@ pub async fn update_schedule_admin_controller(
 }
 
 pub async fn update_schedule_controller(
-    http_req: web::HttpRequest,
+    http_req: HttpRequest,
     ctx: web::Data<NettuContext>,
     mut path: web::Path<PathParams>,
     body: web::Json<RequestBody>,

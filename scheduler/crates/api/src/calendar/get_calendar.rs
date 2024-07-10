@@ -9,7 +9,7 @@ use nettu_scheduler_domain::{Calendar, ID};
 use nettu_scheduler_infra::NettuContext;
 
 pub async fn get_calendar_admin_controller(
-    http_req: web::HttpRequest,
+    http_req: HttpRequest,
     path: web::Path<PathParams>,
     ctx: web::Data<NettuContext>,
 ) -> Result<HttpResponse, NettuError> {

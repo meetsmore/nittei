@@ -3,13 +3,13 @@ use crate::shared::{
     usecase::{execute, execute_with_policy, PermissionBoundary},
 };
 use crate::{error::NettuError, shared::usecase::UseCase};
-use actix_web::{web, HttpResponse};
+use actix_web::{web, HttpRequest, HttpResponse};
 use nettu_scheduler_api_structs::delete_schedule::*;
 use nettu_scheduler_domain::{Schedule, ID};
 use nettu_scheduler_infra::NettuContext;
 
 pub async fn delete_schedule_admin_controller(
-    http_req: web::HttpRequest,
+    http_req: HttpRequest,
     path: web::Path<PathParams>,
     ctx: web::Data<NettuContext>,
 ) -> Result<HttpResponse, NettuError> {
@@ -28,7 +28,7 @@ pub async fn delete_schedule_admin_controller(
 }
 
 pub async fn delete_schedule_controller(
-    http_req: web::HttpRequest,
+    http_req: HttpRequest,
     path: web::Path<PathParams>,
     ctx: web::Data<NettuContext>,
 ) -> Result<HttpResponse, NettuError> {

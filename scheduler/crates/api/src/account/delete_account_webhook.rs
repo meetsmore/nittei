@@ -2,12 +2,12 @@ use super::set_account_webhook::SetAccountWebhookUseCase;
 use crate::error::NettuError;
 use crate::shared::auth::protect_account_route;
 use crate::shared::usecase::execute;
-use actix_web::{web, HttpResponse};
+use actix_web::{web, HttpRequest, HttpResponse};
 use nettu_scheduler_api_structs::delete_account_webhook::APIResponse;
 use nettu_scheduler_infra::NettuContext;
 
 pub async fn delete_account_webhook_controller(
-    http_req: web::HttpRequest,
+    http_req: HttpRequest,
     ctx: web::Data<NettuContext>,
 ) -> Result<HttpResponse, NettuError> {
     let account = protect_account_route(&http_req, &ctx).await?;

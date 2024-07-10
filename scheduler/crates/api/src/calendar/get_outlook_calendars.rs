@@ -12,7 +12,7 @@ use nettu_scheduler_domain::{
 use nettu_scheduler_infra::{outlook_calendar::OutlookCalendarProvider, NettuContext};
 
 pub async fn get_outlook_calendars_admin_controller(
-    http_req: web::HttpRequest,
+    http_req: HttpRequest,
     path: web::Path<PathParams>,
     query: web::Query<QueryParams>,
     ctx: web::Data<NettuContext>,

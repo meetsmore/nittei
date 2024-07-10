@@ -5,7 +5,7 @@ use crate::shared::{
     auth::{account_can_modify_user, protect_account_route, protect_route, Permission},
     usecase::{execute, execute_with_policy, PermissionBoundary, Subscriber, UseCase},
 };
-use actix_web::{web, HttpResponse};
+use actix_web::{web, HttpRequest, HttpResponse};
 use nettu_scheduler_api_structs::create_event::*;
 use nettu_scheduler_domain::{
     CalendarEvent, CalendarEventReminder, Metadata, RRuleOptions, User, ID,
@@ -13,7 +13,7 @@ use nettu_scheduler_domain::{
 use nettu_scheduler_infra::NettuContext;
 
 pub async fn create_event_admin_controller(
-    http_req: web::HttpRequest,
+    http_req: HttpRequest,
     path_params: web::Path<PathParams>,
     body: web::Json<RequestBody>,
     ctx: web::Data<NettuContext>,
@@ -41,7 +41,7 @@ pub async fn create_event_admin_controller(
 }
 
 pub async fn create_event_controller(
-    http_req: web::HttpRequest,
+    http_req: HttpRequest,
     body: web::Json<RequestBody>,
     ctx: web::Data<NettuContext>,
 ) -> Result<HttpResponse, NettuError> {
