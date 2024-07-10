@@ -6,8 +6,10 @@ use telemetry::init_subscriber;
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
+    // Initialize the environment variables for SSL certificates
     openssl_probe::init_ssl_cert_env_vars();
 
+    // Initialize the subscriber for logging
     init_subscriber();
 
     let context = setup_context().await;
