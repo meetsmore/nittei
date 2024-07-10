@@ -11,5 +11,5 @@ edition = "2018"
 [dependencies]
 nettu_scheduler_api_structs = { path = "../../crates/api_structs", version = "0.3.1" }
 nettu_scheduler_domain = { path = "../../crates/domain", version = "0.2.1" }
-reqwest = { version = "0.12", default-features = false, features = ["json"] }
+reqwest = { version = "0.12", features = ["json"] }
 serde = "1"
