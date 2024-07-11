@@ -17,7 +17,7 @@ _setup_db:
 
 # Setup Javascript client - run `pnpm install`
 _setup_client_node:
-	cd scheduler/clients/javascript && [npm install
+	cd scheduler/clients/javascript && pnpm install
 
 # Dev
 dev: _setup_db
