@@ -23,15 +23,21 @@ describe("Calendar API", () => {
     const res = await client.calendar.create({
       timezone: "UTC",
     });
+    if (!res.data) {
+      throw new Error("Calendar not created");
+    }
     expect(res.status).toBe(201);
-    expect(res.data!.calendar.id).toBeDefined();
+    expect(res.data.calendar.id).toBeDefined();
   });
 
   it("should delete calendar for authenticated user and not for unauthenticated user", async () => {
     let res = await client.calendar.create({
       timezone: "UTC",
     });
-    const calendarId = res.data!.calendar.id;
+    if (!res.data) {
+      throw new Error("Calendar not created");
+    }
+    const calendarId = res.data.calendar.id;
     res = await unauthClient.calendar.remove(calendarId);
     expect(res.status).toBe(401);
     res = await client.calendar.remove(calendarId);
