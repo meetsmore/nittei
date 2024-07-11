@@ -12,8 +12,8 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-20.04, ubuntu-18.04]
-        node-version: [10, 12, 14]
+        os: [ubuntu-22.04]
+        node-version: [20]
 
     services:
       postgres:
@@ -68,7 +68,7 @@ jobs:
       - name: Run JavaScript client tests
         run: |
           cd scheduler/clients/javascript
-          npm i -g typescript
-          npm i
+          npm i -g pnpm
+          pnpm i
 
-          npm run test
+          pnpm run test
