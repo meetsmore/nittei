@@ -147,10 +147,10 @@ impl UseCase for UpdateEventUseCase {
             }
         };
 
-        e.service_id = service_id.clone();
+        e.service_id.clone_from(service_id);
 
         if let Some(exdates) = exdates {
-            e.exdates = exdates.clone();
+            e.exdates.clone_from(exdates);
         }
         if let Some(metadata) = metadata {
             e.metadata = metadata.clone();
@@ -162,7 +162,7 @@ impl UseCase for UpdateEventUseCase {
                     return Err(UseCaseError::InvalidReminder);
                 }
             }
-            e.reminders = reminders.clone();
+            e.reminders.clone_from(reminders);
         }
 
         let calendar = match ctx.repos.calendars.find(&e.calendar_id).await {

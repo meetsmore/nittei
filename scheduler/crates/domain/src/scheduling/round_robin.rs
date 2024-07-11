@@ -149,7 +149,7 @@ mod tests {
             (none_user_2.clone(), None),
             (none_user_3.clone(), None),
         ];
-        let none_user_ids = vec![none_user_1, none_user_2, none_user_3, none_user_4];
+        let none_user_ids = [none_user_1, none_user_2, none_user_3, none_user_4];
         let query = RoundRobinAvailabilityAssignment { members };
         assert!(query.clone().assign().is_some());
         let selected_member = query.clone().assign().unwrap();
@@ -219,7 +219,7 @@ mod tests {
     #[test]
     fn round_robin_eq_distribution_assignment() {
         let least_bookings = 1;
-        let user_with_events_count = vec![
+        let user_with_events_count = [
             UserWithEventsCount::new(least_bookings),
             UserWithEventsCount::new(least_bookings + 100),
             UserWithEventsCount::new(least_bookings + 1),
@@ -240,14 +240,13 @@ mod tests {
             .collect::<Vec<_>>();
         let mut events = user_with_events_count
             .iter()
-            .map(|u| {
+            .flat_map(|u| {
                 let mut user_events = Vec::with_capacity(u.count);
                 for _ in 0..u.count {
                     user_events.push(generate_default_event(&u.user_id));
                 }
                 user_events
             })
-            .flatten()
             .collect::<Vec<_>>();
         events.shuffle(&mut thread_rng());
 
