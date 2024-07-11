@@ -1,3 +1,4 @@
+use actix_web::rt::task::JoinHandle;
 use nettu_scheduler_api::Application;
 use nettu_scheduler_infra::{setup_context, Config, NettuContext};
 use nettu_scheduler_sdk::NettuSDK;
@@ -8,7 +9,7 @@ pub struct TestApp {
 }
 
 // Launch the application as a background task
-pub async fn spawn_app() -> (TestApp, NettuSDK, String) {
+pub async fn spawn_app() -> (TestApp, NettuSDK, String, JoinHandle<()>) {
     let mut ctx = setup_context().await;
     ctx.config.port = 0; // Random port
 
@@ -19,7 +20,7 @@ pub async fn spawn_app() -> (TestApp, NettuSDK, String) {
         .expect("Failed to build application.");
 
     let address = format!("http://localhost:{}", application.port());
-    let _ = actix_web::rt::spawn(async move {
+    let handle = actix_web::rt::spawn(async move {
         application
             .start()
             .await
@@ -31,5 +32,5 @@ pub async fn spawn_app() -> (TestApp, NettuSDK, String) {
         ctx: context,
     };
     let sdk = NettuSDK::new(address.clone(), "");
-    (app, sdk, address)
+    (app, sdk, address, handle)
 }

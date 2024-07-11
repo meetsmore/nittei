@@ -74,7 +74,7 @@ async fn create_default_service_host(admin_client: &NettuSDK, service_id: &ID) -
 #[actix_web::main]
 #[test]
 async fn test_round_robin_scheduling_simple_test() {
-    let (app, sdk, address) = spawn_app().await;
+    let (app, sdk, address, _) = spawn_app().await;
     let res = sdk
         .account
         .create(&app.config.create_account_secret_code)
@@ -204,7 +204,7 @@ async fn test_round_robin_scheduling_simple_test() {
 #[actix_web::main]
 #[test]
 async fn test_round_robin_equal_distribution_scheduling() {
-    let (app, sdk, address) = spawn_app().await;
+    let (app, sdk, address, _) = spawn_app().await;
     let res = sdk
         .account
         .create(&app.config.create_account_secret_code)
@@ -358,7 +358,7 @@ async fn test_round_robin_equal_distribution_scheduling() {
 #[actix_web::main]
 #[test]
 async fn test_round_robin_availability_scheduling() {
-    let (app, sdk, address) = spawn_app().await;
+    let (app, sdk, address, _) = spawn_app().await;
     let res = sdk
         .account
         .create(&app.config.create_account_secret_code)

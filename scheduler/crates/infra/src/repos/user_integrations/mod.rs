@@ -2,7 +2,7 @@ mod postgres;
 
 use nettu_scheduler_domain::ID;
 use nettu_scheduler_domain::{IntegrationProvider, UserIntegration};
-pub use postgres::{PostgresUserIntegrationRepo, UserIntegrationRaw};
+pub use postgres::PostgresUserIntegrationRepo;
 
 #[async_trait::async_trait]
 pub trait IUserIntegrationRepo: Send + Sync {
@@ -115,12 +115,10 @@ mod tests {
         assert_eq!(user_integrations[1].user_id, user.id);
         assert!(user_integrations
             .iter()
-            .find(|c| c.provider == IntegrationProvider::Google)
-            .is_some());
+            .any(|c| c.provider == IntegrationProvider::Google));
         assert!(user_integrations
             .iter()
-            .find(|c| c.provider == IntegrationProvider::Outlook)
-            .is_some());
+            .any(|c| c.provider == IntegrationProvider::Outlook));
 
         assert!(ctx
             .repos

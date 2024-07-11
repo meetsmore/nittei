@@ -74,7 +74,7 @@ async fn create_default_service_host(admin_client: &NettuSDK, service_id: &ID) -
 #[actix_web::main]
 #[test]
 async fn test_group_team_scheduling() {
-    let (app, sdk, address) = spawn_app().await;
+    let (app, sdk, address, _) = spawn_app().await;
     let res = sdk
         .account
         .create(&app.config.create_account_secret_code)
@@ -220,7 +220,7 @@ async fn test_group_team_scheduling() {
 #[actix_web::main]
 #[test]
 async fn test_group_team_scheduling_is_collective() {
-    let (app, sdk, address) = spawn_app().await;
+    let (app, sdk, address, _) = spawn_app().await;
     let res = sdk
         .account
         .create(&app.config.create_account_secret_code)
@@ -328,7 +328,7 @@ async fn test_group_team_scheduling_is_collective() {
 #[actix_web::main]
 #[test]
 async fn test_group_team_scheduling_increase_max_count() {
-    let (app, sdk, address) = spawn_app().await;
+    let (app, sdk, address, _) = spawn_app().await;
     let res = sdk
         .account
         .create(&app.config.create_account_secret_code)
@@ -739,7 +739,7 @@ async fn test_group_team_scheduling_increase_max_count() {
 #[actix_web::main]
 #[test]
 async fn test_group_team_scheduling_decrease_max_count() {
-    let (app, sdk, address) = spawn_app().await;
+    let (app, sdk, address, _) = spawn_app().await;
     let res = sdk
         .account
         .create(&app.config.create_account_secret_code)
@@ -946,7 +946,7 @@ async fn test_group_team_scheduling_decrease_max_count() {
 #[actix_web::main]
 #[test]
 async fn test_combination_of_services() {
-    let (app, sdk, address) = spawn_app().await;
+    let (app, sdk, address, _) = spawn_app().await;
     let res = sdk
         .account
         .create(&app.config.create_account_secret_code)
@@ -1012,7 +1012,7 @@ async fn test_combination_of_services() {
         .calendar;
 
     // Add user to both services
-    for service_id in vec![round_robin_service.id.clone(), group_service.id.clone()] {
+    for service_id in [round_robin_service.id.clone(), group_service.id.clone()] {
         let input = AddServiceUserInput {
             availability: Some(TimePlan::Schedule(schedule.id.clone())),
             buffer_after: None,

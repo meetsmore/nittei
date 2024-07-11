@@ -78,7 +78,7 @@ impl Application {
     async fn configure_server(context: NettuContext) -> Result<(Server, u16), std::io::Error> {
         let port = context.config.port;
         let address = format!("127.0.0.1:{}", port);
-        let listener = TcpListener::bind(&address)?;
+        let listener = TcpListener::bind(address)?;
         let port = listener.local_addr().unwrap().port();
 
         let server = HttpServer::new(move || {
@@ -89,7 +89,7 @@ impl Application {
                 .wrap(middleware::Compress::default())
                 .wrap(TracingLogger::default())
                 .app_data(Data::new(ctx))
-                .service(web::scope("/api/v1").configure(|cfg| configure_server_api(cfg)))
+                .service(web::scope("/api/v1").configure(configure_server_api))
         })
         .listen(listener)?
         .workers(4)

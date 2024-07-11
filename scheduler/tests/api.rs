@@ -14,14 +14,14 @@ use std::collections::HashMap;
 #[actix_web::main]
 #[test]
 async fn test_status_ok() {
-    let (_, sdk, _) = spawn_app().await;
+    let (_, sdk, _, _) = spawn_app().await;
     assert!(sdk.status.check_health().await.is_ok());
 }
 
 #[actix_web::main]
 #[test]
 async fn test_create_account() {
-    let (app, sdk, _) = spawn_app().await;
+    let (app, sdk, _, _) = spawn_app().await;
     assert!(sdk
         .account
         .create(&app.config.create_account_secret_code)
@@ -32,7 +32,7 @@ async fn test_create_account() {
 #[actix_web::main]
 #[test]
 async fn test_get_account() {
-    let (app, sdk, address) = spawn_app().await;
+    let (app, sdk, address, _) = spawn_app().await;
     let res = sdk
         .account
         .create(&app.config.create_account_secret_code)
@@ -47,7 +47,7 @@ async fn test_get_account() {
 #[actix_web::main]
 #[test]
 async fn test_crud_user() {
-    let (app, sdk, address) = spawn_app().await;
+    let (app, sdk, address, _) = spawn_app().await;
     let res = sdk
         .account
         .create(&app.config.create_account_secret_code)
@@ -121,7 +121,7 @@ async fn test_crud_user() {
 #[actix_web::main]
 #[test]
 async fn test_crud_schedule() {
-    let (app, sdk, address) = spawn_app().await;
+    let (app, sdk, address, _) = spawn_app().await;
     let res = sdk
         .account
         .create(&app.config.create_account_secret_code)
@@ -188,7 +188,7 @@ async fn test_crud_schedule() {
 #[actix_web::main]
 #[test]
 async fn test_create_user() {
-    let (app, sdk, address) = spawn_app().await;
+    let (app, sdk, address, _) = spawn_app().await;
     let res = sdk
         .account
         .create(&app.config.create_account_secret_code)
@@ -221,7 +221,7 @@ async fn test_create_user() {
 #[actix_web::main]
 #[test]
 async fn test_crud_account() {
-    let (app, sdk, address) = spawn_app().await;
+    let (app, sdk, address, _) = spawn_app().await;
     let res = sdk
         .account
         .create(&app.config.create_account_secret_code)
@@ -276,7 +276,7 @@ async fn test_crud_account() {
 #[actix_web::main]
 #[test]
 async fn test_crud_calendars() {
-    let (app, sdk, address) = spawn_app().await;
+    let (app, sdk, address, _) = spawn_app().await;
     let res = sdk
         .account
         .create(&app.config.create_account_secret_code)
@@ -355,7 +355,7 @@ async fn test_crud_calendars() {
 #[actix_web::main]
 #[test]
 async fn test_crud_events() {
-    let (app, sdk, address) = spawn_app().await;
+    let (app, sdk, address, _) = spawn_app().await;
     let res = sdk
         .account
         .create(&app.config.create_account_secret_code)
@@ -458,7 +458,7 @@ async fn test_crud_events() {
 #[actix_web::main]
 #[test]
 async fn test_crud_service() {
-    let (app, sdk, address) = spawn_app().await;
+    let (app, sdk, address, _) = spawn_app().await;
     let res = sdk
         .account
         .create(&app.config.create_account_secret_code)

@@ -75,7 +75,7 @@ async fn create_default_service_host(admin_client: &NettuSDK, service_id: &ID) -
 #[actix_web::main]
 #[test]
 async fn test_collective_team_scheduling() {
-    let (app, sdk, address) = spawn_app().await;
+    let (app, sdk, address, _) = spawn_app().await;
     let res = sdk
         .account
         .create(&app.config.create_account_secret_code)
@@ -202,7 +202,7 @@ async fn test_collective_team_scheduling() {
 #[actix_web::main]
 #[test]
 async fn test_collective_team_scheduling_is_collective() {
-    let (app, sdk, address) = spawn_app().await;
+    let (app, sdk, address, _) = spawn_app().await;
     let res = sdk
         .account
         .create(&app.config.create_account_secret_code)
