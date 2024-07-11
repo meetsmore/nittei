@@ -9,7 +9,7 @@ pub struct TestApp {
 }
 
 // Launch the application as a background task
-pub async fn spawn_app() -> (TestApp, NettuSDK, String, JoinHandle<()>) {
+pub async fn spawn_app() -> (TestApp, NettuSDK, String) {
     let mut ctx = setup_context().await;
     ctx.config.port = 0; // Random port
 
@@ -20,7 +20,11 @@ pub async fn spawn_app() -> (TestApp, NettuSDK, String, JoinHandle<()>) {
         .expect("Failed to build application.");
 
     let address = format!("http://localhost:{}", application.port());
-    let handle = actix_web::rt::spawn(async move {
+
+    // Allow underscore future because it needs to run in background
+    // If we `await` it, the tests will hang
+    #[allow(clippy::let_underscore_future)]
+    let _ = actix_web::rt::spawn(async move {
         application
             .start()
             .await
@@ -32,5 +36,5 @@ pub async fn spawn_app() -> (TestApp, NettuSDK, String, JoinHandle<()>) {
         ctx: context,
     };
     let sdk = NettuSDK::new(address.clone(), "");
-    (app, sdk, address, handle)
+    (app, sdk, address)
 }
