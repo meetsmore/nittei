@@ -1,6 +1,6 @@
 import * as fs from "fs";
 
-const configFolder = __dirname + "/../config";
+const configFolder = `${__dirname}/../config`;
 
 export const readFile = async (path: string) => {
   return fs.readFileSync(path).toString();
