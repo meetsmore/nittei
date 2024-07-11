@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc --p ./tsconfig.release.json",
     "deploy": "npm run build && npm publish",
-    "test": "jest tests/ -i --verbose"
+    "test": "jest -i --verbose"
   },
   "repository": {
     "type": "git",
