@@ -24,14 +24,14 @@ jobs:
       DATABASE_URL: postgresql://postgres:postgres@localhost/nettuscheduler
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Set version env
         run: |
           # v1.0.0 --> 1.0.0
           VERSION=${GITHUB_REF#refs/*/} 
           echo "VERSION=${VERSION:1}" >> $GITHUB_ENV
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/bin/
@@ -42,14 +42,15 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
       - name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
-          username: fmeringdal
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run migrations
         run: |
@@ -58,181 +59,185 @@ jobs:
           (cd crates/infra && sqlx migrate run)
 
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           context: ./scheduler
           push: true
+          file: "{context}/debian.Dockerfile"
           tags: |
             fmeringdal/nettu-scheduler:latest
             fmeringdal/nettu-scheduler:${{ env.VERSION }}
 
-  rust-client-release:
-    runs-on: ubuntu-latest
-    needs: javascript-client-release
-    services:
-      postgres:
-        image: postgres:13
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: nettuscheduler
-        ports:
-          - 5432:5432
-    env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost/nettuscheduler
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Set version env
-        run: |
-          # v1.0.0 --> 1.0.0
-          VERSION=${GITHUB_REF#refs/*/} 
-          echo "VERSION=${VERSION:1}" >> $GITHUB_ENV
-      - name: Wait for remote to become up to date
-        run: |
-          duration=15
-          echo "sleeping $duration seconds ..."
-          sleep $duration
-          echo "sleeping $duration seconds ... DONE"
+  # We don't use the Rust client for now
+  # To re-enable later
+  # rust-client-release:
+  #   runs-on: ubuntu-latest
+  #   needs: javascript-client-release
+  #   services:
+  #     postgres:
+  #       image: postgres:13
+  #       env:
+  #         POSTGRES_PASSWORD: postgres
+  #         POSTGRES_DB: nettuscheduler
+  #       ports:
+  #         - 5432:5432
+  #   env:
+  #     DATABASE_URL: postgresql://postgres:postgres@localhost/nettuscheduler
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
+  #     - name: Set version env
+  #       run: |
+  #         # v1.0.0 --> 1.0.0
+  #         VERSION=${GITHUB_REF#refs/*/}
+  #         echo "VERSION=${VERSION:1}" >> $GITHUB_ENV
+  #     - name: Wait for remote to become up to date
+  #       run: |
+  #         duration=15
+  #         echo "sleeping $duration seconds ..."
+  #         sleep $duration
+  #         echo "sleeping $duration seconds ... DONE"
 
-      - uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            scheduler/target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+  #     - uses: actions/cache@v2
+  #       with:
+  #         path: |
+  #           ~/.cargo/bin/
+  #           ~/.cargo/registry/index/
+  #           ~/.cargo/registry/cache/
+  #           ~/.cargo/git/db/
+  #           scheduler/target/
+  #         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Run migrations
-        run: |
-          cd scheduler
-          cargo install sqlx-cli --no-default-features --features postgres || true
-          (cd crates/infra && sqlx migrate run)
+  #     - name: Run migrations
+  #       run: |
+  #         cd scheduler
+  #         cargo install sqlx-cli --no-default-features --features postgres || true
+  #         (cd crates/infra && sqlx migrate run)
 
-      - name: Login to crates.io
-        env:
-          CRATE_PUBLISH_TOKEN: ${{secrets.CRATE_PUBLISH_TOKEN}}
-        run: |
-          cargo login $CRATE_PUBLISH_TOKEN
+  #     - name: Login to crates.io
+  #       env:
+  #         CRATE_PUBLISH_TOKEN: ${{secrets.CRATE_PUBLISH_TOKEN}}
+  #       run: |
+  #         cargo login $CRATE_PUBLISH_TOKEN
 
-      - name: Set version numbers
-        run: |
-          # What follows is a lot of search and replace magic for Cargo.toml to update
-          # version number for a crate and its dependenices. It seems like there
-          # is no good tool that can bump version numbers in a cargo workspace yet.
+  #     - name: Set version numbers
+  #       run: |
+  #         # What follows is a lot of search and replace magic for Cargo.toml to update
+  #         # version number for a crate and its dependenices. It seems like there
+  #         # is no good tool that can bump version numbers in a cargo workspace yet.
 
-          cd scheduler
+  #         cd scheduler
 
-          cd crates/utils
-          sed -i "0,/\(version *= *\).*/{s/\(version *= *\).*/\1\"$VERSION\"/}" ./Cargo.toml
-          cd ../../
+  #         cd crates/utils
+  #         sed -i "0,/\(version *= *\).*/{s/\(version *= *\).*/\1\"$VERSION\"/}" ./Cargo.toml
+  #         cd ../../
 
-          cd crates/domain
-          sed -i "0,/\(version *= *\).*/{s/\(version *= *\).*/\1\"$VERSION\"/}" ./Cargo.toml
-          sed -i "s/path = \"..\/utils\", version = \"*.*.*\"/path = \"..\/utils\", version = \"$VERSION\"/" ./Cargo.toml
-          cd ../../
+  #         cd crates/domain
+  #         sed -i "0,/\(version *= *\).*/{s/\(version *= *\).*/\1\"$VERSION\"/}" ./Cargo.toml
+  #         sed -i "s/path = \"..\/utils\", version = \"*.*.*\"/path = \"..\/utils\", version = \"$VERSION\"/" ./Cargo.toml
+  #         cd ../../
 
-          cd crates/api_structs
-          sed -i "0,/\(version *= *\).*/{s/\(version *= *\).*/\1\"$VERSION\"/}" ./Cargo.toml
-          sed -i "s/path = \"..\/domain\", version = \"*.*.*\"/path = \"..\/domain\", version = \"$VERSION\"/" ./Cargo.toml
-          echo "api_structs toml"
-          cat ./Cargo.toml
-          echo "api_structs toml DONE"
-          cd ../../
+  #         cd crates/api_structs
+  #         sed -i "0,/\(version *= *\).*/{s/\(version *= *\).*/\1\"$VERSION\"/}" ./Cargo.toml
+  #         sed -i "s/path = \"..\/domain\", version = \"*.*.*\"/path = \"..\/domain\", version = \"$VERSION\"/" ./Cargo.toml
+  #         echo "api_structs toml"
+  #         cat ./Cargo.toml
+  #         echo "api_structs toml DONE"
+  #         cd ../../
 
-          cd crates/infra
-          sed -i "0,/\(version *= *\).*/{s/\(version *= *\).*/\1\"$VERSION\"/}" ./Cargo.toml
-          cd ../../
+  #         cd crates/infra
+  #         sed -i "0,/\(version *= *\).*/{s/\(version *= *\).*/\1\"$VERSION\"/}" ./Cargo.toml
+  #         cd ../../
 
-          cd crates/api
-          sed -i "0,/\(version *= *\).*/{s/\(version *= *\).*/\1\"$VERSION\"/}" ./Cargo.toml
-          cd ../../
+  #         cd crates/api
+  #         sed -i "0,/\(version *= *\).*/{s/\(version *= *\).*/\1\"$VERSION\"/}" ./Cargo.toml
+  #         cd ../../
 
-          cd clients/rust
-          sed -i "0,/\(version *= *\).*/{s/\(version *= *\).*/\1\"$VERSION\"/}" ./Cargo.toml
-          sed -i "s/path = \"..\/..\/crates\/domain\", version = \"*.*.*\"/path = \"..\/..\/crates\/domain\", version = \"$VERSION\"/" ./Cargo.toml
-          sed -i "s/path = \"..\/..\/crates\/api_structs\", version = \"*.*.*\"/path = \"..\/..\/crates\/api_structs\", version = \"$VERSION\"/" ./Cargo.toml
-          echo "SDK toml"
-          cat ./Cargo.toml
-          echo "SDK toml DONE"
-          cd ../../
+  #         cd clients/rust
+  #         sed -i "0,/\(version *= *\).*/{s/\(version *= *\).*/\1\"$VERSION\"/}" ./Cargo.toml
+  #         sed -i "s/path = \"..\/..\/crates\/domain\", version = \"*.*.*\"/path = \"..\/..\/crates\/domain\", version = \"$VERSION\"/" ./Cargo.toml
+  #         sed -i "s/path = \"..\/..\/crates\/api_structs\", version = \"*.*.*\"/path = \"..\/..\/crates\/api_structs\", version = \"$VERSION\"/" ./Cargo.toml
+  #         echo "SDK toml"
+  #         cat ./Cargo.toml
+  #         echo "SDK toml DONE"
+  #         cd ../../
 
-          # Root Cargo.toml
-          sed -i "0,/\(version *= *\).*/{s/\(version *= *\).*/\1\"$VERSION\"/}" ./Cargo.toml
+  #         # Root Cargo.toml
+  #         sed -i "0,/\(version *= *\).*/{s/\(version *= *\).*/\1\"$VERSION\"/}" ./Cargo.toml
 
-          cargo check --all
+  #         cargo check --all
 
-      - name: Publish crates
-        run: |
-          cd scheduler
+  #     - name: Publish crates
+  #       run: |
+  #         cd scheduler
 
-          cd crates/utils
-          cargo publish --allow-dirty
-          cd ../../
+  #         cd crates/utils
+  #         cargo publish --allow-dirty
+  #         cd ../../
 
-          # Make sure published version is available at crates.io
-          sleep 30
+  #         # Make sure published version is available at crates.io
+  #         sleep 30
 
-          cd crates/domain
-          cargo publish --allow-dirty
-          cd ../../
+  #         cd crates/domain
+  #         cargo publish --allow-dirty
+  #         cd ../../
 
-          # Make sure published version is available at crates.io
-          sleep 30
+  #         # Make sure published version is available at crates.io
+  #         sleep 30
 
-          cd crates/api_structs
-          cargo publish --allow-dirty
-          cd ../../
+  #         cd crates/api_structs
+  #         cargo publish --allow-dirty
+  #         cd ../../
 
-          # Make sure published version is available at crates.io
-          sleep 30
+  #         # Make sure published version is available at crates.io
+  #         sleep 30
 
-          cd clients/rust
-          cargo publish --allow-dirty
-          cd ../../
+  #         cd clients/rust
+  #         cargo publish --allow-dirty
+  #         cd ../../
 
-      # - name: Commit & Push version changes
-      #   uses: actions-js/push@master
-      #   with:
-      #     github_token: ${{ secrets.GITHUB_TOKEN }}
-      #     branch: master
-      #     message: |
-      #       Autopublish: Update cargo workspace deps on release
+  # - name: Commit & Push version changes
+  #   uses: actions-js/push@master
+  #   with:
+  #     github_token: ${{ secrets.GITHUB_TOKEN }}
+  #     branch: master
+  #     message: |
+  #       Autopublish: Update cargo workspace deps on release
 
   javascript-client-release:
     runs-on: ubuntu-latest
     needs: docker-release
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Set version env
         run: |
           # v1.0.0 --> 1.0.0
           VERSION=${GITHUB_REF#refs/*/} 
           echo "VERSION=${VERSION:1}" >> $GITHUB_ENV
-      - name: Setup Node.js 14
-        uses: actions/setup-node@v2
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
         with:
-          node-version: 14
-          cache: "npm"
-          cache-dependency-path: scheduler/clients/javascript/package-lock.json
+          node-version: 20
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
       - name: Install deps
         run: |
           cd scheduler/clients/javascript
-          npm install
+          pnpm install
 
       - name: Set version number
         run: |
           cd scheduler/clients/javascript
-          npm version $VERSION
+          pnpm version $VERSION
 
       - name: Publish package
         run: |
           cd scheduler/clients/javascript
-          echo "//registry.npmjs.org/:_authToken=$NPM_PUBLISH_TOKEN" > ~/.npmrc
-          npm run deploy
+          pnpm run deploy
         env:
           NPM_PUBLISH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
 
