@@ -8,7 +8,10 @@
     "deploy": "pnpm run build && pnpm publish --no-git-checks",
     "test": "jest tests/ -i --verbose"
   },
-  "repository": "https://github.com/meetsmore/nittei",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/meetsmore/nittei.git"
+  },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   },
