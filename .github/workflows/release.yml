@@ -1,5 +1,9 @@
 name: Release
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 on:
   push:
     # Sequence of patterns matched against refs/tags
@@ -68,8 +72,8 @@ jobs:
           push: true
           file: "./scheduler/debian.Dockerfile"
           tags: |
-            meetsmore/nittei:latest
-            meetsmore/nittei:${{ env.VERSION }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
 
   # We don't use the Rust client for now
   # To re-enable later
