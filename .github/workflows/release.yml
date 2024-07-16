@@ -67,7 +67,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           context: ./scheduler
           push: true
-          file: "./debian.Dockerfile"
+          file: "./scheduler/debian.Dockerfile"
           tags: |
             meetsmore/nittei:latest
             meetsmore/nittei:${{ env.VERSION }}
