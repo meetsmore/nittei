@@ -4,7 +4,7 @@ use nettu_scheduler_api::Application;
 use nettu_scheduler_infra::setup_context;
 use telemetry::init_subscriber;
 
-#[tokio::main]
+#[actix_web::main]
 async fn main() -> std::io::Result<()> {
     // Initialize the environment variables for SSL certificates
     openssl_probe::init_ssl_cert_env_vars();
