@@ -223,7 +223,7 @@ jobs:
         with:
           node-version: 20
           registry-url: "https://npm.pkg.github.com"
-          scope: "@nittei"
+          scope: "@meetsmore"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
