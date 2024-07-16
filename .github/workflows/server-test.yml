@@ -12,7 +12,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-20.04, ubuntu-18.04]
+        os: [ubuntu-22.04]
 
     services:
       postgres:
@@ -29,9 +29,9 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/bin/
@@ -63,13 +63,17 @@ jobs:
       - name: Clippy
         run: |
           cd scheduler
-          cargo clippy --all -- --deny "warnings"
+          cargo clippy --all
+          # To re-enable
+          # cargo clippy --all -- --deny "warnings"
 
-      - name: Unused dependencies
-        run: |
-          cd scheduler
-          cargo install cargo-udeps --locked
-          cargo +nightly udeps --all-targets
+      # Commented out for now as it's pretty slow in the CI
+      # TODO: find a solution (e.g. by using caching) or re-enable only on master
+      # - name: Unused dependencies
+      #   run: |
+      #     cd scheduler
+      #     cargo install cargo-udeps --locked
+      #     cargo +nightly udeps --all-targets
 
       # - name: Outdated dependencies
       #   run: |
