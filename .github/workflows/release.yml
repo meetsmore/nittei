@@ -219,6 +219,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@meetsmore"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -239,7 +241,7 @@ jobs:
           cd scheduler/clients/javascript
           pnpm run deploy
         env:
-          NPM_PUBLISH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # - name: Commit & Push version changes
       #   uses: actions-js/push@master

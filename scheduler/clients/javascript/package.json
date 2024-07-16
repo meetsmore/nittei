@@ -8,9 +8,9 @@
     "deploy": "npm run build && npm publish",
     "test": "jest tests/ -i --verbose"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/meetsmore/nittei.git"
+  "repository": "https://github.com/meetsmore/nittei",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   },
   "contributors": [
     "Fredrik Meringdal <fredrik@nettu.no>"
