@@ -13,7 +13,10 @@ describe.only("CalendarEvent API", () => {
     const calendarRes = await client.calendar.create({
       timezone: "UTC",
     });
-    calendarId = calendarRes.data!.calendar.id;
+    if (!calendarRes.data) {
+      throw new Error("Calendar not created");
+    }
+    calendarId = calendarRes.data.calendar.id;
     userId = data.userId;
   });
 
@@ -38,7 +41,7 @@ describe.only("CalendarEvent API", () => {
 
   it("should create daily event and retrieve instances", async () => {
     const count = 10;
-    let res = await client.events.create({
+    const res = await client.events.create({
       calendarId,
       duration: 1000,
       startTs: 1000,
@@ -48,27 +51,36 @@ describe.only("CalendarEvent API", () => {
         count,
       },
     });
-    const eventId = res.data!.event.id;
+    if (!res.data) {
+      throw new Error("Event not created");
+    }
+    const eventId = res.data.event.id;
     expect(res.status).toBe(201);
-    let res2 = await client.events.getInstances(eventId, {
+    const res2 = await client.events.getInstances(eventId, {
       startTs: 20,
       endTs: 1000 * 60 * 60 * 24 * (count + 1),
     });
-    let instances = res2.data!.instances;
+    if (!res2.data) {
+      throw new Error("Instances not found");
+    }
+    let instances = res2.data.instances;
     expect(instances.length).toBe(count);
 
     // Query after instances are finished
-    let res3 = await client.events.getInstances(eventId, {
+    const res3 = await client.events.getInstances(eventId, {
       startTs: 1000 * 60 * 60 * 24 * (count + 1),
       endTs: 1000 * 60 * 60 * 24 * (count + 30),
     });
-    instances = res3.data!.instances;
+    if (!res3.data) {
+      throw new Error("Instances not found");
+    }
+    instances = res3.data.instances;
     expect(instances.length).toBe(0);
   });
 
   it("should create exception for calendar event", async () => {
     const count = 10;
-    let res = await client.events.create({
+    const res = await client.events.create({
       calendarId,
       duration: 1000,
       startTs: 1000,
@@ -78,7 +90,10 @@ describe.only("CalendarEvent API", () => {
         count,
       },
     });
-    const event = res.data!.event;
+    if (!res.data) {
+      throw new Error("Event not created");
+    }
+    const event = res.data.event;
     const eventId = event.id;
 
     const getInstances = async () => {
@@ -86,7 +101,10 @@ describe.only("CalendarEvent API", () => {
         startTs: 20,
         endTs: 1000 * 60 * 60 * 24 * (count + 1),
       });
-      return res.data!.instances;
+      if (!res.data) {
+        throw new Error("Instances not found");
+      }
+      return res.data.instances;
     };
     const instancesBeforeException = await getInstances();
     expect(instancesBeforeException.length).toBe(count);
@@ -106,7 +124,7 @@ describe.only("CalendarEvent API", () => {
 
   it("updating calendar event start time removes exception", async () => {
     const count = 10;
-    let res = await client.events.create({
+    const res = await client.events.create({
       calendarId,
       duration: 1000,
       startTs: 1000,
@@ -116,7 +134,10 @@ describe.only("CalendarEvent API", () => {
         count,
       },
     });
-    const event = res.data!.event;
+    if (!res.data) {
+      throw new Error("Event not created");
+    }
+    const event = res.data.event;
     const eventId = event.id;
 
     const getInstances = async () => {
@@ -124,7 +145,10 @@ describe.only("CalendarEvent API", () => {
         startTs: 20,
         endTs: 1000 * 60 * 60 * 24 * (count + 1),
       });
-      return res.data!.instances;
+      if (!res.data) {
+        throw new Error("Instances not found");
+      }
+      return res.data.instances;
     };
     const instancesBeforeException = await getInstances();
     // do create exception

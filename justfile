@@ -12,12 +12,12 @@ setup: _setup_db _setup_client_node
 
 # Setup database + execute migrations
 _setup_db:
-	docker-compose -f scheduler/integrations/docker-compose.yml up -d
+	docker compose -f scheduler/integrations/docker-compose.yml up -d
 	cd scheduler/crates/infra && sqlx migrate run
 
-# Setup Javascript client - run `npm install`
+# Setup Javascript client - run `pnpm install`
 _setup_client_node:
-	cd scheduler/clients/javascript && npm install
+	cd scheduler/clients/javascript && pnpm install
 
 # Dev
 dev: _setup_db
