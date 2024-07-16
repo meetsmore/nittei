@@ -206,7 +206,7 @@ jobs:
 
   javascript-client-release:
     runs-on: ubuntu-latest
-    needs: docker-release
+    # needs: docker-release
     steps:
       - name: Checkout
         uses: actions/checkout@v4
