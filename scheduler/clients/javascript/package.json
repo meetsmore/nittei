@@ -1,5 +1,5 @@
 {
-  "name": "@meetsmore/nittei",
+  "name": "@nittei/client",
   "version": "0.0.1",
   "description": "The Nettu Scheduler Javascript library provides convenient access to the Nettu Scheduler API from server-side JavaScript applications or web applications",
   "main": "dist/index.js",
