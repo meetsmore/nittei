@@ -59,11 +59,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      #     - name: Run migrations
-      #       run: |
-      #         cd scheduler
-      #         cargo install sqlx-cli --no-default-features --features postgres || true
-      #         (cd crates/infra && sqlx migrate run)
+      - name: Run migrations
+        run: |
+          cd scheduler
+          cargo install sqlx-cli --no-default-features --features postgres || true
+          (cd crates/infra && sqlx migrate run)
 
       - name: Build and push
         uses: docker/build-push-action@v6
