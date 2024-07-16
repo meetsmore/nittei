@@ -7,7 +7,7 @@ on:
     # use the officially recommended regex to verify the semantic versioning tag
     # https://github.com/semver/semver/blob/master/semver.md#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
     tags:
-      - "^v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(\\.(0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(\\+([0-9a-zA-Z-]+(\\.[0-9a-zA-Z-]+)*))?$"
+      - "v[0-9]+.[0-9]+.[0-9]+-?[a-zA-Z0-9]*"
 
 jobs:
   # docker-release:
@@ -206,7 +206,7 @@ jobs:
 
   javascript-client-release:
     runs-on: ubuntu-latest
-    # needs: docker-release
+    needs: docker-release
     steps:
       - name: Checkout
         uses: actions/checkout@v4
