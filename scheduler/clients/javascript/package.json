@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc --p ./tsconfig.release.json",
-    "deploy": "npm run build && npm publish",
+    "deploy": "pnpm run build && pnpm publish",
     "test": "jest tests/ -i --verbose"
   },
   "repository": "https://github.com/meetsmore/nittei",
