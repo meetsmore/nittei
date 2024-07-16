@@ -2,6 +2,8 @@ extern crate rand;
 
 use rand::Rng;
 
+pub mod config;
+
 const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
                             abcdefghijklmnopqrstuvwxyz\
                             0123456789";
