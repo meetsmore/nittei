@@ -24,9 +24,9 @@ _setup_client_node:
 dev: _setup_db
 	cd scheduler && cargo run
 
-# Test
-test: _setup_db
-	cd scheduler && cargo nextest run --workspace
+# Run the tests on a temporary DB container
+test:
+	bash ./scripts/run_tests.sh
 
 # Lint
 lint: _setup_db
