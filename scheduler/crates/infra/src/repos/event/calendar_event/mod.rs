@@ -104,7 +104,7 @@ mod tests {
         let get_event_res = ctx
             .repos
             .events
-            .find_many(&vec![event.id.clone()])
+            .find_many(&[event.id.clone()])
             .await
             .expect("To find many events");
         assert!(get_event_res[0].eq(&event));
@@ -194,11 +194,11 @@ mod tests {
         end_ts: i64,
         ctx: &NettuContext,
     ) -> CalendarEvent {
-        let mut event = generate_default_event(&account_id, &calendar_id, &user_id);
+        let mut event = generate_default_event(account_id, calendar_id, user_id);
         event.calendar_id = calendar_id.clone();
         event.start_ts = start_ts;
         event.end_ts = end_ts;
-        event.service_id = service_id.map(|id| id.clone());
+        event.service_id = service_id.cloned();
         ctx.repos
             .events
             .insert(&event)
@@ -215,7 +215,7 @@ mod tests {
         created: i64,
         ctx: &NettuContext,
     ) -> CalendarEvent {
-        let mut event = generate_default_event(&account_id, &calendar_id, &user_id);
+        let mut event = generate_default_event(account_id, calendar_id, user_id);
         event.calendar_id = calendar_id.clone();
         event.service_id = Some(service_id.clone());
         event.created = created;
@@ -402,8 +402,7 @@ mod tests {
         for actual_event in actual_events_in_timespan {
             assert!(events_in_calendar_and_timespan
                 .iter()
-                .find(|e| e.id() == actual_event.id())
-                .is_some());
+                .any(|e| e.id() == actual_event.id()));
         }
 
         let events_in_calendar = ctx
@@ -416,8 +415,7 @@ mod tests {
         for actual_event in actual_events_in_calendar {
             assert!(events_in_calendar
                 .iter()
-                .find(|e| e.id() == actual_event.id())
-                .is_some());
+                .any(|e| e.id() == actual_event.id()));
         }
     }
 
@@ -509,7 +507,7 @@ mod tests {
             .events
             .find_most_recently_created_service_events(
                 &service.id,
-                &vec![user1.id.clone(), user2.id.clone(), user3.id.clone()],
+                &[user1.id.clone(), user2.id.clone(), user3.id.clone()],
             )
             .await;
         assert_eq!(recent_service_events.len(), 3);
@@ -709,7 +707,7 @@ mod tests {
         let events_in_service_and_timespan = ctx
             .repos
             .events
-            .find_by_service(&service.id, &vec![user1.id.clone()], start_ts, end_ts)
+            .find_by_service(&service.id, &[user1.id.clone()], start_ts, end_ts)
             .await;
 
         assert_eq!(
@@ -719,8 +717,7 @@ mod tests {
         for actual_event in actual_events_in_timespan {
             assert!(events_in_service_and_timespan
                 .iter()
-                .find(|e| e.id() == actual_event.id())
-                .is_some());
+                .any(|e| e.id() == actual_event.id()));
         }
 
         let events_in_service_with_no_users = ctx

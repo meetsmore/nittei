@@ -53,7 +53,7 @@ impl BaseClient {
         }
     }
 
-    async fn check_status_code<T>(
+    async fn check_status_code(
         &self,
         res: Response,
         expected_status_code: StatusCode,
@@ -89,9 +89,7 @@ impl BaseClient {
         res: Response,
         expected_status_code: StatusCode,
     ) -> APIResponse<T> {
-        let res = self
-            .check_status_code::<T>(res, expected_status_code)
-            .await?;
+        let res = self.check_status_code(res, expected_status_code).await?;
         self.get_json_response(res).await
     }
 
