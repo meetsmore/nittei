@@ -4,7 +4,8 @@ export DATABASE_URL := "postgresql://postgres:postgres@localhost:45432/nettusche
 install_all_prerequisite:
 	cargo install sqlx-cli --no-default-features --features postgres || true
 	cargo install cargo-outdated || true
-	cargo install cargo-udeps cargo-outdated || true
+	cargo install cargo-udeps || true
+	cargo install cargo-nextest || true
 
 
 # Setup
@@ -25,7 +26,7 @@ dev: _setup_db
 
 # Test
 test: _setup_db
-	cd scheduler && cargo test --all
+	cd scheduler && cargo nextest run --workspace
 
 # Lint
 lint: _setup_db
