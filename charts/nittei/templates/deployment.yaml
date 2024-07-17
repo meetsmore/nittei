@@ -1,3 +1,5 @@
+{{- $database_url := .Values.DATABASE_URL | required ".Values.DATABASE_URL is required." -}}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -49,6 +51,9 @@ spec:
           {{- with .Values.volumeMounts }}
           volumeMounts:
             {{- toYaml . | nindent 12 }}
+          env:
+            - name: DATABASE_URL
+              value: {{ $database_url }}
           {{- end }}
       {{- with .Values.volumes }}
       volumes:
