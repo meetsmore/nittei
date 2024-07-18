@@ -31,10 +31,8 @@ impl CompatibleInstances {
                 compatible_events.push_back(instance);
                 continue;
             }
-            if let Some(merged) = EventInstance::merge(
-                &instance,
-                compatible_events.get(compatible_events.len() - 1).unwrap(),
-            ) {
+            if let Some(merged) = EventInstance::merge(&instance, compatible_events.back().unwrap())
+            {
                 let len = compatible_events.len();
                 compatible_events[len - 1] = merged;
             } else {
@@ -51,13 +49,12 @@ impl CompatibleInstances {
         self.events = self
             .events
             .iter()
-            .map(|free_instance| free_instance.remove_instances(instances, skip).inner())
-            .flatten()
+            .flat_map(|free_instance| free_instance.remove_instances(instances, skip).inner())
             .collect()
     }
 
     pub fn push_front(&mut self, instance: EventInstance) -> bool {
-        if let Some(first_instance) = self.events.get(0) {
+        if let Some(first_instance) = self.events.front() {
             // There is overlap, so cannot be added
             if first_instance.start_ts < instance.end_ts {
                 return false;
@@ -69,7 +66,7 @@ impl CompatibleInstances {
 
     pub fn push_back(&mut self, instance: EventInstance) -> bool {
         if !self.events.is_empty() {
-            if let Some(last_instance) = self.events.get(self.events.len() - 1) {
+            if let Some(last_instance) = self.events.back() {
                 // There is overlap, so cannot be added
                 if last_instance.end_ts > instance.start_ts {
                     return false;

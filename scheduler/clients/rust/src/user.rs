@@ -89,7 +89,7 @@ impl UserClient {
         let query: String = input.into();
         self.base
             .get(
-                format!("user/{}/freebusy{}", user_id.to_string(), query),
+                format!("user/{}/freebusy{}", user_id, query),
                 StatusCode::OK,
             )
             .await
@@ -102,11 +102,7 @@ impl UserClient {
             provider: input.provider,
         };
         self.base
-            .post(
-                body,
-                format!("user/{}/oauth", user_id.to_string()),
-                StatusCode::OK,
-            )
+            .post(body, format!("user/{}/oauth", user_id), StatusCode::OK)
             .await
     }
 
@@ -117,7 +113,7 @@ impl UserClient {
         let provider: String = input.provider.clone().into();
         self.base
             .delete(
-                format!("user/{}/oauth/{}", input.user_id.to_string(), provider),
+                format!("user/{}/oauth/{}", input.user_id, provider),
                 StatusCode::OK,
             )
             .await

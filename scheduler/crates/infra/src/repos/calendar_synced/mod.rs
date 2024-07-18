@@ -94,12 +94,10 @@ mod tests {
         assert_eq!(synced_calendars[1].calendar_id, calendar.id);
         assert!(synced_calendars
             .iter()
-            .find(|c| c.provider == IntegrationProvider::Google)
-            .is_some());
+            .any(|c| c.provider == IntegrationProvider::Google));
         assert!(synced_calendars
             .iter()
-            .find(|c| c.provider == IntegrationProvider::Outlook)
-            .is_some());
+            .any(|c| c.provider == IntegrationProvider::Outlook));
 
         let sync_calendar = SyncedCalendar {
             calendar_id: calendar.id.clone(),

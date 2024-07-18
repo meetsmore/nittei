@@ -145,7 +145,7 @@ impl UseCase for CreateServiceEventIntendUseCase {
             for date in booking_slots_dates {
                 for slot in date.slots {
                     if slot.start == self.timestamp {
-                        hosts_at_slot = slot.user_ids.clone();
+                        hosts_at_slot.clone_from(&slot.user_ids);
                         break;
                     }
                     if slot.start > self.timestamp {

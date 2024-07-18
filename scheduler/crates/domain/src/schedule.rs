@@ -47,9 +47,8 @@ impl Schedule {
         let min_date = self.timezone.ymd(now.year(), now.month(), now.day()) - Duration::days(2);
         let max_date = self.timezone.ymd(min_date.year() + 5, 1, 1);
         let allowed_rules = rules
-            .to_owned()
-            .into_iter()
-            .filter(|r| match &r.variant {
+            .iter()
+            .filter(|&r| match &r.variant {
                 ScheduleRuleVariant::Date(datestr) => match datestr.parse::<Day>() {
                     Ok(day) => {
                         let date = day.date(&self.timezone);
@@ -59,6 +58,7 @@ impl Schedule {
                 },
                 _ => true,
             })
+            .cloned()
             .map(|mut r| {
                 r.parse_intervals();
                 r
@@ -226,11 +226,11 @@ impl ScheduleRule {
         let mut remove_intervals = HashMap::new();
 
         for i in 0..self.intervals.len() {
-            if remove_intervals.get(&i).is_some() {
+            if remove_intervals.contains_key(&i) {
                 continue;
             }
             for j in (i + 1)..self.intervals.len() {
-                if remove_intervals.get(&j).is_some() {
+                if remove_intervals.contains_key(&j) {
                     continue;
                 }
                 if self.intervals[j].start == self.intervals[i].start
@@ -244,10 +244,7 @@ impl ScheduleRule {
             }
         }
 
-        let mut remove_intervals = remove_intervals
-            .iter()
-            .map(|(index, _)| *index)
-            .collect::<Vec<_>>();
+        let mut remove_intervals = remove_intervals.keys().copied().collect::<Vec<_>>();
         // largest index first
         remove_intervals.sort_by(|i1, i2| i2.partial_cmp(i1).unwrap());
         for index in remove_intervals {

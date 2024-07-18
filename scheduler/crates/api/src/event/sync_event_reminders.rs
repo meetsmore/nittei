@@ -94,7 +94,7 @@ async fn create_event_reminders(
 
             dates
                 .into_iter()
-                .map(|d| {
+                .flat_map(|d| {
                     let dt_millis = d.timestamp_millis();
                     event
                         .reminders
@@ -114,7 +114,6 @@ async fn create_event_reminders(
                         })
                         .collect::<Vec<_>>()
                 })
-                .flatten()
                 .collect()
         }
         None => event

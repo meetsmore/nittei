@@ -53,7 +53,7 @@ impl AccountSettings {
             Some(url) => {
                 if let Ok(parsed_url) = url::Url::parse(&url) {
                     // TODO: in the future, only https endpoints will be allowed
-                    let allowed_schemes = vec!["https", "http"];
+                    let allowed_schemes = ["https", "http"];
                     if !allowed_schemes.contains(&parsed_url.scheme()) {
                         return false;
                     }
@@ -61,7 +61,7 @@ impl AccountSettings {
                     return false;
                 }
 
-                if let Some(mut webhook_settings) = self.webhook.as_mut() {
+                if let Some(webhook_settings) = self.webhook.as_mut() {
                     webhook_settings.url = url;
                 } else {
                     self.webhook = Some(AccountWebhookSettings {

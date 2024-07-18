@@ -215,8 +215,7 @@ impl GetServiceBookingSlotsUseCase {
 
                 let all_event_instances = all_calendar_events
                     .iter()
-                    .map(|e| e.expand(Some(timespan), &calendar.settings))
-                    .flatten()
+                    .flat_map(|e| e.expand(Some(timespan), &calendar.settings))
                     .collect::<Vec<_>>();
 
                 get_free_busy(all_event_instances).free
@@ -306,7 +305,7 @@ impl GetServiceBookingSlotsUseCase {
                     let mut calendar_busy_events = calendar_events
                         .into_iter()
                         .filter(|e| e.busy)
-                        .map(|e| {
+                        .flat_map(|e| {
                             let mut instances = e.expand(Some(timespan), &cal.settings);
 
                             // Add buffer to instances if event is a service event
@@ -325,10 +324,8 @@ impl GetServiceBookingSlotsUseCase {
                                     }
                                 }
                             }
-
                             instances
                         })
-                        .flatten()
                         .collect::<Vec<_>>();
 
                     busy_events.append(&mut calendar_busy_events);
@@ -541,9 +538,9 @@ mod test {
             furthest_booking_time: None,
         };
 
-        let calendar_user_1 = Calendar::new(&resource1.user_id, &account_id);
+        let calendar_user_1 = Calendar::new(&resource1.user_id, account_id);
         resource1.availability = TimePlan::Calendar(calendar_user_1.id.clone());
-        let calendar_user_2 = Calendar::new(&resource2.user_id, &account_id);
+        let calendar_user_2 = Calendar::new(&resource2.user_id, account_id);
         resource2.availability = TimePlan::Calendar(calendar_user_2.id.clone());
 
         ctx.repos.calendars.insert(&calendar_user_1).await.unwrap();
@@ -635,11 +632,11 @@ mod test {
         let booking_slots = booking_slots.dates.remove(0).slots;
 
         assert_eq!(booking_slots.len(), 4);
-        for i in 0..4 {
-            assert_eq!(booking_slots[i].duration, usecase.duration);
-            assert_eq!(booking_slots[i].user_ids.len(), 1);
+        for (i, booking_slot) in booking_slots.iter().enumerate().take(4) {
+            assert_eq!(booking_slot.duration, usecase.duration);
+            assert_eq!(booking_slot.user_ids.len(), 1);
             assert_eq!(
-                booking_slots[i].start,
+                booking_slot.start,
                 Utc.ymd(2010, 1, 1)
                     .and_hms(4, 15 * i as u32, 0)
                     .timestamp_millis()
@@ -664,12 +661,12 @@ mod test {
 
         assert_eq!(booking_slots.len(), 5);
         assert_eq!(booking_slots[0].user_ids.len(), 2);
-        for i in 0..5 {
-            assert_eq!(booking_slots[i].duration, usecase.duration);
+        for (i, booking_slot) in booking_slots.iter().enumerate().take(5) {
+            assert_eq!(booking_slot.duration, usecase.duration);
             if i > 0 {
-                assert_eq!(booking_slots[i].user_ids.len(), 1);
+                assert_eq!(booking_slot.user_ids.len(), 1);
                 assert_eq!(
-                    booking_slots[i].start,
+                    booking_slot.start,
                     Utc.ymd(1970, 1, 1)
                         .and_hms(4, 15 * (i - 1) as u32, 0)
                         .timestamp_millis()

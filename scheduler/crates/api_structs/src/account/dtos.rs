@@ -30,7 +30,7 @@ impl AccountSettingsDTO {
         let webhook_settings = settings
             .webhook
             .as_ref()
-            .map(|webhook| AccountWebhookSettingsDTO::new(webhook));
+            .map(AccountWebhookSettingsDTO::new);
 
         Self {
             webhook: webhook_settings,

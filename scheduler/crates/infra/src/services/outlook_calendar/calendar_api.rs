@@ -276,7 +276,7 @@ impl OutlookCalendarRestApi {
             .await
             .into_iter()
             .filter_map(|res| res.ok())
-            .map(|view| {
+            .flat_map(|view| {
                 view.value
                     .into_iter()
                     .filter(|e| matches!(e.show_as, OutlookCalendarEventShowAs::Busy))
@@ -287,7 +287,6 @@ impl OutlookCalendarRestApi {
                     })
                     .collect::<Vec<_>>()
             })
-            .flatten()
             .collect::<Vec<_>>();
         Ok(CompatibleInstances::new(calendar_views))
     }
