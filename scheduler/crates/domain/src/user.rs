@@ -45,17 +45,12 @@ pub struct UserIntegration {
     pub access_token_expires_ts: i64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub enum IntegrationProvider {
+    #[default]
     Google,
     Outlook,
-}
-
-impl Default for IntegrationProvider {
-    fn default() -> Self {
-        IntegrationProvider::Google
-    }
 }
 
 impl From<IntegrationProvider> for String {

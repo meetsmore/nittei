@@ -41,11 +41,7 @@ mod tests {
         // Different find methods
         let res = ctx.repos.schedules.find(&schedule.id).await.unwrap();
         assert!(res.eq(&schedule));
-        let res = ctx
-            .repos
-            .schedules
-            .find_many(&vec![schedule.id.clone()])
-            .await;
+        let res = ctx.repos.schedules.find_many(&[schedule.id.clone()]).await;
         assert_eq!(res.len(), 1);
         assert!(res[0].eq(&schedule));
 

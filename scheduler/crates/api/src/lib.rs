@@ -40,6 +40,7 @@ pub struct Application {
 impl Application {
     pub async fn new(context: NettuContext) -> Result<Self, std::io::Error> {
         let (server, port) = Application::configure_server(context.clone()).await?;
+
         Application::start_job_schedulers(context.clone());
 
         Ok(Self {
@@ -54,14 +55,30 @@ impl Application {
     }
 
     fn start_job_schedulers(context: NettuContext) {
-        start_send_reminders_job(context.clone());
-        start_reminder_generation_job_scheduler(context);
+        if let Ok(reminders_job_enabled) = std::env::var("NITTEI_REMINDERS_JOB_ENABLED") {
+            // Parse the value of NITTEI_REMINDERS_JOB_ENABLED to a boolean
+            // If it fails, log a warning and default to false
+            // Use shadowing as we don't need the original value anymore
+            let reminders_job_enabled =
+                reminders_job_enabled.parse::<bool>().unwrap_or_else(|_| {
+                    warn!(
+                        "Invalid value for NITTEI_REMINDERS_JOB_ENABLED ({}). Defaulting to false.",
+                        reminders_job_enabled
+                    );
+                    false
+                });
+
+            if reminders_job_enabled {
+                start_send_reminders_job(context.clone());
+                start_reminder_generation_job_scheduler(context);
+            }
+        }
     }
 
     async fn configure_server(context: NettuContext) -> Result<(Server, u16), std::io::Error> {
         let port = context.config.port;
         let address = format!("127.0.0.1:{}", port);
-        let listener = TcpListener::bind(&address)?;
+        let listener = TcpListener::bind(address)?;
         let port = listener.local_addr().unwrap().port();
 
         let server = HttpServer::new(move || {
@@ -72,7 +89,7 @@ impl Application {
                 .wrap(middleware::Compress::default())
                 .wrap(TracingLogger::default())
                 .app_data(Data::new(ctx))
-                .service(web::scope("/api/v1").configure(|cfg| configure_server_api(cfg)))
+                .service(web::scope("/api/v1").configure(configure_server_api))
         })
         .listen(listener)?
         .workers(4)

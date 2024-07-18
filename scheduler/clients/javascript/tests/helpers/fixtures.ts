@@ -3,14 +3,18 @@ import { readPrivateKey, readPublicKey } from "./utils";
 import * as jwt from "jsonwebtoken";
 
 export const CREATE_ACCOUNT_CODE =
-  process.env["CREATE_ACCOUNT_SECRET_CODE"] || "opqI5r3e7v1z2h3P";
+  process.env.CREATE_ACCOUNT_SECRET_CODE || "opqI5r3e7v1z2h3P";
 
 export const setupAccount = async () => {
   const client = NettuClient();
   const account = await client.account.create({ code: CREATE_ACCOUNT_CODE });
+  const accountId = account.data?.account.id;
+  if (!accountId) {
+    throw new Error("Account not created");
+  }
   return {
-    client: NettuClient({ apiKey: account.data!.secretApiKey }),
-    accountId: account.data!.account.id,
+    client: NettuClient({ apiKey: account.data?.secretApiKey }),
+    accountId: account.data?.account.id,
   };
 };
 
@@ -20,10 +24,13 @@ export const setupUserClient = async () => {
   await client.account.setPublicSigningKey(publicKey);
   const privateKey = await readPrivateKey();
   const userRes = await client.user.create();
-  const user = userRes.data!.user;
+  const user = userRes.data?.user;
+  if (!user) {
+    throw new Error("User not created");
+  }
   const { client: userClient } = setupUserClientForAccount(
     privateKey,
-    user.id,
+    user?.id,
     accountId
   );
 
