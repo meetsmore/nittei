@@ -1,3 +1,4 @@
+use actix_web::rt::task::JoinHandle;
 use nettu_scheduler_api::Application;
 use nettu_scheduler_infra::{setup_context, Config, NettuContext};
 use nettu_scheduler_sdk::NettuSDK;
@@ -19,6 +20,10 @@ pub async fn spawn_app() -> (TestApp, NettuSDK, String) {
         .expect("Failed to build application.");
 
     let address = format!("http://localhost:{}", application.port());
+
+    // Allow underscore future because it needs to run in background
+    // If we `await` it, the tests will hang
+    #[allow(clippy::let_underscore_future)]
     let _ = actix_web::rt::spawn(async move {
         application
             .start()

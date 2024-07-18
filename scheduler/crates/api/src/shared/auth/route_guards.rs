@@ -177,7 +177,7 @@ pub async fn protect_public_account_route(
             }
         }
         // No nettu-account header, then check if this is an admin client
-        None => return protect_account_route(http_req, ctx).await,
+        None => protect_account_route(http_req, ctx).await,
     }
 }
 

@@ -102,7 +102,6 @@ pub async fn exchange_code_token(req: CodeTokenRequest) -> Result<CodeTokenRespo
     let scopes = res
         .scope
         .split(' ')
-        .into_iter()
         .map(|scope| scope.to_lowercase())
         .collect::<Vec<_>>();
     for required_scope in REQUIRED_OAUTH_SCOPES.iter() {
