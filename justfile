@@ -1,10 +1,13 @@
 export DATABASE_URL := "postgresql://postgres:postgres@localhost:45432/nettuscheduler"
 
-# Install all prerequisites
-install_all_prerequisite:
-	cargo install sqlx-cli --no-default-features --features postgres || true
-	cargo install cargo-outdated || true
-	cargo install cargo-udeps cargo-outdated || true
+# Install minimal tools
+install_tools: 
+	cargo install sqlx-cli --no-default-features --features postgres
+
+# Install all tools
+install_all_tools: install_tools
+	cargo install cargo-outdated
+	cargo install cargo-udeps
 
 
 # Setup
