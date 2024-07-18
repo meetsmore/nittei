@@ -120,7 +120,7 @@ This will install
 
 ## Contributing
 
-Contributions are welcome and are greatly appreciated! -->
+Contributions are welcome and are greatly appreciated!
 
 ## License
 
