@@ -1,5 +1,8 @@
 #! /bin/bash
 
+# Script to run all the (Rust) tests of the scheduler project
+# It launches a temporary PostgreSQL container, runs the migrations, runs the tests and then stops and removes the container
+
 # Search for a free port to bind the temporary PG container
 BASE_PORT=1234
 INCREMENT=1
