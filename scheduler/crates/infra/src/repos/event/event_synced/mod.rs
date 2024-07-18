@@ -28,7 +28,7 @@ mod tests {
             .await
             .expect("To insert account");
 
-        let user = User::new(account.id.clone());
+        let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.expect("To insert user");
 
         for provider in [IntegrationProvider::Google, IntegrationProvider::Outlook] {

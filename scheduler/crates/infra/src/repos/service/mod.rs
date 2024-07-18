@@ -41,7 +41,7 @@ mod tests {
             .await
             .expect("To get service");
 
-        let user = User::new(account.id.clone());
+        let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.unwrap();
 
         let timeplan = TimePlan::Empty;

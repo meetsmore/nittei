@@ -11,7 +11,7 @@ use nettu_scheduler_sdk::{
 };
 
 async fn create_default_service_host(admin_client: &NettuSDK, service_id: &ID) -> (User, Calendar) {
-    let input = CreateUserInput { metadata: None };
+    let input = CreateUserInput { metadata: None, user_id: None };
     let host = admin_client
         .user
         .create(input)
@@ -222,14 +222,14 @@ async fn test_collective_team_scheduling_is_collective() {
         .expect("To create service")
         .service;
 
-    let input = CreateUserInput { metadata: None };
+    let input = CreateUserInput { metadata: None, user_id: None };
     let host1 = admin_client
         .user
         .create(input)
         .await
         .expect("To create user")
         .user;
-    let input = CreateUserInput { metadata: None };
+    let input = CreateUserInput { metadata: None, user_id: None };
     let host2 = admin_client
         .user
         .create(input)

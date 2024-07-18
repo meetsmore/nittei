@@ -7,7 +7,7 @@ use nettu_scheduler_sdk::{
     CreateServiceInput, CreateUserInput, GetCalendarEventsInput, GetEventsInstancesInput,
     GetServiceBookingSlotsInput, GetUserFreeBusyInput, KVMetadata, MetadataFindInput, NettuSDK,
     RemoveServiceUserInput, UpdateCalendarInput, UpdateEventInput, UpdateScheduleInput,
-    UpdateServiceUserInput,
+    UpdateServiceUserInput, ID,
 };
 use std::collections::HashMap;
 
@@ -63,6 +63,7 @@ async fn test_crud_user() {
         .user
         .create(CreateUserInput {
             metadata: Some(metadata.into()),
+            user_id: None,
         })
         .await
         .expect("Expected to create user");
@@ -120,6 +121,41 @@ async fn test_crud_user() {
 
 #[actix_web::main]
 #[test]
+async fn test_user_provide_id() {
+    let (app, sdk, address) = spawn_app().await;
+    let res = sdk
+        .account
+        .create(&app.config.create_account_secret_code)
+        .await
+        .expect("Expected to create account");
+
+    let admin_client = NettuSDK::new(address, res.secret_api_key);
+
+    let mut metadata = HashMap::new();
+    metadata.insert("group_id".to_string(), "123".to_string());
+
+    let user_id = ID::default();
+
+    let res = admin_client
+        .user
+        .create(CreateUserInput {
+            metadata: Some(metadata.into()),
+            user_id: Some(user_id.clone()),
+        })
+        .await
+        .expect("Expected to create user");
+    assert_eq!(
+        res.user.metadata.inner.get("group_id").unwrap().clone(),
+        "123".to_string()
+    );
+    assert_eq!(
+        res.user.id, user_id,
+        "Expected user id to be the same as the one provided"
+    );
+}
+
+#[actix_web::main]
+#[test]
 async fn test_crud_schedule() {
     let (app, sdk, address) = spawn_app().await;
     let res = sdk
@@ -131,7 +167,10 @@ async fn test_crud_schedule() {
     let admin_client = NettuSDK::new(address, res.secret_api_key);
     let create_user_res = admin_client
         .user
-        .create(CreateUserInput { metadata: None })
+        .create(CreateUserInput {
+            metadata: None,
+            user_id: None,
+        })
         .await
         .expect("Expected to create user");
 
@@ -197,7 +236,10 @@ async fn test_create_user() {
     let admin_client = NettuSDK::new(address, res.secret_api_key);
     let create_user_res = admin_client
         .user
-        .create(CreateUserInput { metadata: None })
+        .create(CreateUserInput {
+            metadata: None,
+            user_id: None,
+        })
         .await
         .expect("Expected to create user");
     let get_user_res = admin_client
@@ -285,7 +327,10 @@ async fn test_crud_calendars() {
     let admin_client = NettuSDK::new(address, res.secret_api_key);
     let user = admin_client
         .user
-        .create(CreateUserInput { metadata: None })
+        .create(CreateUserInput {
+            metadata: None,
+            user_id: None,
+        })
         .await
         .unwrap()
         .user;
@@ -364,7 +409,10 @@ async fn test_crud_events() {
     let admin_client = NettuSDK::new(address, res.secret_api_key);
     let user = admin_client
         .user
-        .create(CreateUserInput { metadata: None })
+        .create(CreateUserInput {
+            metadata: None,
+            user_id: None,
+        })
         .await
         .unwrap()
         .user;
@@ -467,7 +515,10 @@ async fn test_crud_service() {
     let admin_client = NettuSDK::new(address, res.secret_api_key);
     let user = admin_client
         .user
-        .create(CreateUserInput { metadata: None })
+        .create(CreateUserInput {
+            metadata: None,
+            user_id: None,
+        })
         .await
         .unwrap()
         .user;

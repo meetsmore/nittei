@@ -30,7 +30,7 @@ mod tests {
             .insert(&account)
             .await
             .expect("To insert account");
-        let user = User::new(account.id.clone());
+        let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.expect("To insert user");
 
         let schedule = Schedule::new(user.id.clone(), account.id.clone(), &Pacific);
@@ -69,7 +69,7 @@ mod tests {
             .insert(&account)
             .await
             .expect("To insert account");
-        let user = User::new(account.id.clone());
+        let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.expect("To insert user");
 
         let mut schedule = Schedule::new(user.id.clone(), account.id.clone(), &Pacific);

@@ -184,7 +184,7 @@ mod test {
         let ctx = setup_context().await;
         let account = Account::default();
         ctx.repos.accounts.insert(&account).await.unwrap();
-        let user = User::new(account.id.clone());
+        let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.unwrap();
         let calendar = Calendar::new(&user.id(), &user.account_id);
         ctx.repos.calendars.insert(&calendar).await.unwrap();

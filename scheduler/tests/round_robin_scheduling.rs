@@ -11,7 +11,10 @@ use nettu_scheduler_sdk::{
 };
 
 async fn create_default_service_host(admin_client: &NettuSDK, service_id: &ID) -> (User, Calendar) {
-    let input = CreateUserInput { metadata: None };
+    let input = CreateUserInput {
+        metadata: None,
+        user_id: None,
+    };
     let host = admin_client
         .user
         .create(input)

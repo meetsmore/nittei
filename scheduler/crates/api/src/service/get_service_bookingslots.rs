@@ -515,8 +515,8 @@ mod test {
     }
 
     async fn setup_service_users(ctx: &NettuContext, service: &mut Service, account_id: &ID) {
-        let user1 = User::new(account_id.clone());
-        let user2 = User::new(account_id.clone());
+        let user1 = User::new(account_id.clone(), None);
+        let user2 = User::new(account_id.clone(), None);
         ctx.repos.users.insert(&user1).await.unwrap();
         ctx.repos.users.insert(&user2).await.unwrap();
         let mut resource1 = ServiceResource {

@@ -24,7 +24,7 @@ mod tests {
         let ctx = setup_context().await;
         let account = Account::default();
         ctx.repos.accounts.insert(&account).await.unwrap();
-        let user = User::new(account.id.clone());
+        let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.unwrap();
         let calendar = Calendar::new(&user.id, &account.id);
 
@@ -50,7 +50,7 @@ mod tests {
         let ctx = setup_context().await;
         let account = Account::default();
         ctx.repos.accounts.insert(&account).await.unwrap();
-        let user = User::new(account.id.clone());
+        let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.unwrap();
         let mut calendar = Calendar::new(&user.id, &account.id);
 
@@ -73,7 +73,7 @@ mod tests {
         let ctx = setup_context().await;
         let account = Account::default();
         ctx.repos.accounts.insert(&account).await.unwrap();
-        let user = User::new(account.id.clone());
+        let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.unwrap();
         let calendar = Calendar::new(&user.id, &account.id);
 

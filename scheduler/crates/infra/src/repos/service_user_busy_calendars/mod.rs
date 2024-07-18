@@ -47,7 +47,7 @@ mod tests {
             .insert(&account)
             .await
             .expect("To insert account");
-        let user = User::new(account.id.clone());
+        let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.expect("To insert user");
         let service = Service::new(account.id.clone());
         ctx.repos.services.insert(&service).await.unwrap();
