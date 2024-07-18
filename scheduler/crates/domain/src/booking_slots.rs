@@ -18,12 +18,10 @@ fn is_cursor_in_events(
     duration: i64,
     events: &CompatibleInstances,
 ) -> Option<&EventInstance> {
-    for event in events.as_ref() {
-        if event.start_ts <= cursor && event.end_ts >= cursor + duration {
-            return Some(event);
-        }
-    }
-    None
+    events
+        .as_ref()
+        .iter()
+        .find(|&event| event.start_ts <= cursor && event.end_ts >= cursor + duration)
 }
 
 pub struct BookingSlotsOptions {
@@ -77,7 +75,7 @@ impl ServiceBookingSlotsDate {
         let date = format_date(&first_date);
         let mut date_slots = Vec::new();
 
-        while let Some(current_date) = slots.get(0) {
+        while let Some(current_date) = slots.front() {
             let current_date = format_date(&tz.timestamp_millis(current_date.start));
             if current_date != date {
                 break;
@@ -568,11 +566,10 @@ mod test {
 
         let user_id = ID::default();
 
-        let mut users_free = Vec::new();
-        users_free.push(UserFreeEvents {
+        let users_free = vec![UserFreeEvents {
             free_events: CompatibleInstances::new(vec![e1]),
             user_id: user_id.clone(),
-        });
+        }];
 
         let slots = get_service_bookingslots(
             users_free,
@@ -619,15 +616,16 @@ mod test {
 
         let user_id_1 = ID::default();
         let user_id_2 = ID::default();
-        let mut users_free = Vec::new();
-        users_free.push(UserFreeEvents {
-            free_events: CompatibleInstances::new(vec![e1.clone()]),
-            user_id: user_id_1.clone(),
-        });
-        users_free.push(UserFreeEvents {
-            free_events: CompatibleInstances::new(vec![e1, e2]),
-            user_id: user_id_2.clone(),
-        });
+        let users_free = vec![
+            UserFreeEvents {
+                free_events: CompatibleInstances::new(vec![e1.clone()]),
+                user_id: user_id_1.clone(),
+            },
+            UserFreeEvents {
+                free_events: CompatibleInstances::new(vec![e1, e2]),
+                user_id: user_id_2.clone(),
+            },
+        ];
 
         let slots = get_service_bookingslots(
             users_free,
@@ -674,13 +672,11 @@ mod test {
 
         // Case 2
         let user_id = ID::default();
-        let mut slots = Vec::default();
-
-        slots.push(ServiceBookingSlot {
+        let slots = vec![ServiceBookingSlot {
             duration: 1000 * 60 * 15,
             start: 0,
             user_ids: vec![user_id],
-        });
+        }];
 
         let grouped_slots = ServiceBookingSlots::new(slots, chrono_tz::UTC);
         assert_eq!(grouped_slots.dates.len(), 1);

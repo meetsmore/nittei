@@ -76,77 +76,68 @@ mod test {
     fn permissions() {
         let policy = Policy::default();
         assert!(policy.authorize(&Vec::new()));
-        assert!(!policy.authorize(&vec![Permission::CreateCalendar]));
+        assert!(!policy.authorize(&[Permission::CreateCalendar]));
 
         let policy = Policy {
             allow: Some(vec![Permission::All]),
             reject: None,
         };
-        assert!(policy.authorize(&vec![Permission::CreateCalendar]));
+        assert!(policy.authorize(&[Permission::CreateCalendar]));
 
         let policy = Policy {
             allow: Some(vec![Permission::All]),
             reject: Some(vec![Permission::CreateCalendar]),
         };
-        assert!(!policy.authorize(&vec![Permission::CreateCalendar]));
+        assert!(!policy.authorize(&[Permission::CreateCalendar]));
 
         let policy = Policy {
             allow: Some(vec![Permission::CreateCalendar]),
             reject: Some(Vec::new()),
         };
-        assert!(policy.authorize(&vec![Permission::CreateCalendar]));
+        assert!(policy.authorize(&[Permission::CreateCalendar]));
 
         let policy = Policy {
             allow: Some(vec![Permission::CreateCalendar]),
             reject: Some(vec![Permission::CreateCalendar]),
         };
-        assert!(!policy.authorize(&vec![Permission::CreateCalendar]));
+        assert!(!policy.authorize(&[Permission::CreateCalendar]));
 
         let policy = Policy {
             allow: Some(vec![Permission::CreateCalendar]),
             reject: Some(vec![Permission::All]),
         };
-        assert!(!policy.authorize(&vec![Permission::CreateCalendar]));
+        assert!(!policy.authorize(&[Permission::CreateCalendar]));
 
         let policy = Policy {
             allow: Some(vec![Permission::CreateCalendar, Permission::UpdateCalendar]),
             reject: Some(vec![Permission::DeleteCalendar]),
         };
-        assert!(policy.authorize(&vec![Permission::CreateCalendar]));
-        assert!(policy.authorize(&vec![
-            Permission::CreateCalendar,
-            Permission::UpdateCalendar
-        ]));
+        assert!(policy.authorize(&[Permission::CreateCalendar]));
+        assert!(policy.authorize(&[Permission::CreateCalendar, Permission::UpdateCalendar]));
 
         let policy = Policy {
             allow: Some(vec![Permission::UpdateCalendar]),
             reject: None,
         };
-        assert!(!policy.authorize(&vec![Permission::CreateCalendar]));
+        assert!(!policy.authorize(&[Permission::CreateCalendar]));
 
         let policy = Policy {
             allow: Some(vec![Permission::CreateCalendar, Permission::UpdateCalendar]),
             reject: Some(vec![Permission::UpdateCalendar]),
         };
-        assert!(policy.authorize(&vec![Permission::CreateCalendar]));
-        assert!(!policy.authorize(&vec![
-            Permission::CreateCalendar,
-            Permission::UpdateCalendar
-        ]));
+        assert!(policy.authorize(&[Permission::CreateCalendar]));
+        assert!(!policy.authorize(&[Permission::CreateCalendar, Permission::UpdateCalendar]));
 
         let policy = Policy {
             allow: Some(vec![Permission::All]),
             reject: Some(vec![Permission::UpdateCalendar]),
         };
-        assert!(policy.authorize(&vec![Permission::CreateCalendar]));
-        assert!(policy.authorize(&vec![
+        assert!(policy.authorize(&[Permission::CreateCalendar]));
+        assert!(policy.authorize(&[Permission::CreateCalendar, Permission::DeleteCalendar]));
+        assert!(!policy.authorize(&[
             Permission::CreateCalendar,
             Permission::DeleteCalendar,
-        ]));
-        assert!(!policy.authorize(&vec![
-            Permission::CreateCalendar,
-            Permission::DeleteCalendar,
-            Permission::UpdateCalendar,
+            Permission::UpdateCalendar
         ]));
     }
 }

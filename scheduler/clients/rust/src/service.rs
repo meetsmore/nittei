@@ -2,7 +2,6 @@ use crate::{shared::MetadataFindInput, APIResponse, BaseClient, TimePlan, Tz, ID
 use nettu_scheduler_api_structs::*;
 use nettu_scheduler_domain::{BusyCalendar, Metadata, ServiceMultiPersonOptions};
 use reqwest::StatusCode;
-use serde::Serialize;
 use std::sync::Arc;
 
 #[derive(Clone)]
@@ -81,9 +80,6 @@ pub struct CreateServiceInput {
     pub metadata: Option<Metadata>,
     pub multi_person: Option<ServiceMultiPersonOptions>,
 }
-
-#[derive(Serialize)]
-struct Empty {}
 
 impl ServiceClient {
     pub(crate) fn new(base: Arc<BaseClient>) -> Self {

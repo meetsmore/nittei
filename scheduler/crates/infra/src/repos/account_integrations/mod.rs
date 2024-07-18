@@ -59,13 +59,10 @@ mod tests {
         assert_eq!(acc_integrations[1].account_id, account.id);
         assert!(acc_integrations
             .iter()
-            .find(|c| c.provider == IntegrationProvider::Google)
-            .is_some());
+            .any(|c| c.provider == IntegrationProvider::Google));
         assert!(acc_integrations
             .iter()
-            .find(|c| c.provider == IntegrationProvider::Outlook)
-            .is_some());
-
+            .any(|c| c.provider == IntegrationProvider::Outlook));
         assert!(ctx
             .repos
             .account_integrations

@@ -1012,7 +1012,7 @@ async fn test_combination_of_services() {
         .calendar;
 
     // Add user to both services
-    for service_id in vec![round_robin_service.id.clone(), group_service.id.clone()] {
+    for service_id in [round_robin_service.id.clone(), group_service.id.clone()] {
         let input = AddServiceUserInput {
             availability: Some(TimePlan::Schedule(schedule.id.clone())),
             buffer_after: None,

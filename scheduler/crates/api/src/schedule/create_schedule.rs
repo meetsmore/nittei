@@ -111,7 +111,7 @@ impl UseCase for CreateScheduleUseCase {
 
         let mut schedule = Schedule::new(user.id, user.account_id, &self.timezone);
         if let Some(rules) = &self.rules {
-            schedule.rules = rules.clone();
+            schedule.rules.clone_from(rules);
         }
         if let Some(metadata) = &self.metadata {
             schedule.metadata = metadata.clone();

@@ -113,12 +113,10 @@ mod tests {
         assert_eq!(synced_events[1].event_id, e.id);
         assert!(synced_events
             .iter()
-            .find(|c| c.provider == IntegrationProvider::Google)
-            .is_some());
+            .any(|c| c.provider == IntegrationProvider::Google));
         assert!(synced_events
             .iter()
-            .find(|c| c.provider == IntegrationProvider::Outlook)
-            .is_some());
+            .any(|c| c.provider == IntegrationProvider::Outlook));
 
         // Deleting the sync calendar also deletes all the corresponding sync events for that calendar
         let sync_calendar = SyncedCalendar {

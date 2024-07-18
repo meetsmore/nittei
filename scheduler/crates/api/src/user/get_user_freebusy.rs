@@ -12,9 +12,7 @@ pub fn parse_vec_query_value(val: &Option<String>) -> Option<Vec<ID>> {
     val.as_ref().map(|ids| {
         ids.split(',')
             .map(String::from)
-            .map(|id| id.parse::<ID>())
-            .filter(|id| id.is_ok())
-            .map(|id| id.unwrap())
+            .flat_map(|id| id.parse::<ID>())
             .collect()
     })
 }
@@ -121,10 +119,7 @@ impl GetFreeBusyUseCase {
         let mut calendars = ctx.repos.calendars.find_by_user(&self.user_id).await;
 
         if !calendar_ids.is_empty() {
-            calendars = calendars
-                .into_iter()
-                .filter(|cal| calendar_ids.contains(&cal.id))
-                .collect();
+            calendars.retain(|cal| calendar_ids.contains(&cal.id));
         }
 
         let calendars_lookup: HashMap<_, _> = calendars
@@ -142,7 +137,7 @@ impl GetFreeBusyUseCase {
             .await
             .into_iter()
             .map(|events_res| events_res.unwrap_or_default())
-            .map(|events| {
+            .flat_map(|events| {
                 events
                     .into_iter()
                     .map(|event| {
@@ -154,7 +149,6 @@ impl GetFreeBusyUseCase {
                     // It is possible that there are no instances in the expanded event, should remove them
                     .filter(|instances| !instances.is_empty())
             })
-            .flatten()
             .flatten()
             .collect::<Vec<_>>()
     }

@@ -1,31 +1,53 @@
-// Copied from: https://github.com/LukeMathWalker/zero-to-production/blob/main/src/telemetry.rs
+use std::fmt;
 
-use tracing::subscriber::set_global_default;
-use tracing::Subscriber;
-use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
-use tracing_log::LogTracer;
-use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
+use chrono::{DateTime, Utc};
+use tracing_subscriber::{fmt::time::FormatTime, EnvFilter};
 
-/// Compose multiple layers into a `tracing`'s subscriber.
-///
-/// # Implementation Notes
-///
-/// We are using `impl Subscriber` as return type to avoid having to spell out the actual
-/// type of the returned subscriber, which is indeed quite complex.
-pub fn get_subscriber(name: String, env_filter: String) -> impl Subscriber + Sync + Send {
-    let env_filter =
-        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(env_filter));
-    let formatting_layer = BunyanFormattingLayer::new(name, std::io::stdout);
-    Registry::default()
-        .with(env_filter)
-        .with(JsonStorageLayer)
-        .with(formatting_layer)
+/// Struct used to keep the format for having custom formatting of timestamps in the logs
+struct TracingChronoTimer {
+    format: String,
+}
+
+impl TracingChronoTimer {
+    fn with_format(format: String) -> Self {
+        Self { format }
+    }
+}
+
+// Implement the `FormatTime` trait required by tracing_subscriber
+// for the `TracingChronoTimer` struct
+impl FormatTime for TracingChronoTimer {
+    fn format_time(&self, w: &mut dyn fmt::Write) -> fmt::Result {
+        let now: DateTime<Utc> = Utc::now();
+        write!(w, "{}", now.format(&self.format))
+    }
 }
 
 /// Register a subscriber as global default to process span data.
 ///
 /// It should only be called once!
-pub fn init_subscriber(subscriber: impl Subscriber + Sync + Send) {
-    LogTracer::init().expect("Failed to set logger");
-    set_global_default(subscriber).expect("Failed to set subscriber");
+pub fn init_subscriber() {
+    // Filter the spans that are shown based on the RUST_LOG env var or the default value ("info")
+    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
+
+    // TODO: add the `env` on all logs
+
+    // If the binary is compiled in debug mode, use the compact format for logs
+    // In other words, if we are in dev
+    if cfg!(debug_assertions) {
+        tracing_subscriber::fmt()
+            .compact()
+            .with_env_filter(env_filter)
+            .init();
+    } else {
+        // Otherwise, use the JSON format for logs
+        tracing_subscriber::fmt()
+            .json()
+            .with_timer(TracingChronoTimer::with_format(
+                "%Y-%m-%dT%H:%M:%S%.3fZ".to_string(),
+            ))
+            .with_env_filter(env_filter)
+            .with_current_span(false)
+            .init();
+    }
 }
