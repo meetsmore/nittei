@@ -4,13 +4,19 @@ use nettu_scheduler_api::Application;
 use nettu_scheduler_infra::setup_context;
 use telemetry::init_subscriber;
 
-#[actix_web::main]
+#[tokio::main]
 async fn main() -> std::io::Result<()> {
     // Initialize the environment variables for SSL certificates
     openssl_probe::init_ssl_cert_env_vars();
 
     // Initialize the subscriber for logging
     init_subscriber();
+
+    // Example log statement
+    tracing::info!("Application started");
+
+    // Simulate some work
+    tracing::info!("Performing some work");
 
     let context = setup_context().await;
 
