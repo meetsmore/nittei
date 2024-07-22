@@ -1,3 +1,1 @@
-export type Metadata = {
-    [key: string]: string
-};
+export type Metadata = Record<string, string>

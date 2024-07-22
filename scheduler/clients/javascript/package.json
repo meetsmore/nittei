@@ -6,6 +6,8 @@
   "scripts": {
     "build": "tsc --p ./tsconfig.release.json",
     "deploy": "pnpm run build && pnpm publish --no-git-checks",
+    "format": "biome format --write ./lib ./tests",
+    "lint": "biome lint --write ./lib ./tests",
     "test": "jest -i --verbose"
   },
   "repository": {
@@ -28,6 +30,7 @@
     "axios": "1.7.2"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.8.3",
     "@types/jest": "^29.5.12",
     "@types/jsonwebtoken": "9.0.6",
     "@types/node": "20.14.10",
