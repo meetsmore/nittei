@@ -1,5 +1,6 @@
 import { Calendar, INettuClient, User, CalendarEvent } from "../../lib";
 import { setupAccount } from "../helpers/fixtures";
+import { v4 } from "uuid";
 
 // This test suite is testing the specifications for our use cases
 
@@ -20,14 +21,15 @@ describe("Requirements", () => {
       let user1Calendar1: Calendar | undefined;
 
       it("should create a user", async () => {
-        // TODO: we cannot provide an ID for the user
-        // For our use case, we would like to provide our own ID
-        // To be adapted
-        const res = await client?.user.create();
+        const userUuid = v4();
+        const res = await client?.user.create({
+          userId: userUuid,
+        });
         if (!res?.data) {
           throw new Error("User not created");
         }
         expect(res?.status).toBe(201);
+        expect(res?.data.user.id).toEqual(userUuid);
 
         user1 = res.data.user;
       });
@@ -66,10 +68,8 @@ describe("Requirements", () => {
       let user1Calendar2: Calendar | undefined;
 
       beforeAll(async () => {
-        // TODO: we cannot provide an ID for the user
-        // For our use case, we would like to provide our own ID
-        // To be adapted
-        const res = await client?.user.create();
+        const userUuid = v4();
+        const res = await client?.user.create({ userId: userUuid });
         if (!res?.data) {
           throw new Error("User not created");
         }
