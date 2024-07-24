@@ -1,25 +1,30 @@
-import axios, { type AxiosResponse } from 'axios'
+import axios, { type AxiosInstance, type AxiosResponse } from 'axios'
 import { config } from '.'
 
 export abstract class NettuBaseClient {
   private readonly credentials: ICredentials
+  private readonly axiosClient: AxiosInstance
 
   constructor(credentials: ICredentials) {
     this.credentials = credentials
+    this.axiosClient = axios.create({
+      headers: this.credentials.createAuthHeaders(),
+      validateStatus: () => true, // allow all status codes without throwing error
+    })
   }
 
-  private getAxiosConfig = () => ({
-    validateStatus: () => true, // allow all status codes without throwing error
-    headers: this.credentials.createAuthHeaders(),
-  })
-
-  protected async get<T>(path: string): Promise<APIResponse<T>> {
-    const res = await axios.get(config.baseUrl + path, this.getAxiosConfig())
+  protected async get<T>(
+    path: string,
+    params: Record<string, any> = {}
+  ): Promise<APIResponse<T>> {
+    const res = await this.axiosClient.get(`${config.baseUrl}${path}`, {
+      params,
+    })
     return new APIResponse(res)
   }
 
   protected async delete<T>(path: string): Promise<APIResponse<T>> {
-    const res = await axios.delete(config.baseUrl + path, this.getAxiosConfig())
+    const res = await this.axiosClient.delete(`${config.baseUrl}${path}`)
     return new APIResponse(res)
   }
 
@@ -27,13 +32,10 @@ export abstract class NettuBaseClient {
     path: string,
     data: unknown
   ): Promise<APIResponse<T>> {
-    const { headers, validateStatus } = this.getAxiosConfig()
-    const res = await axios({
+    const res = await this.axiosClient({
       method: 'DELETE',
       data,
-      url: config.baseUrl + path,
-      headers,
-      validateStatus,
+      url: `${config.baseUrl}${path}`,
     })
     return new APIResponse(res)
   }
@@ -42,20 +44,12 @@ export abstract class NettuBaseClient {
     path: string,
     data: unknown
   ): Promise<APIResponse<T>> {
-    const res = await axios.post(
-      config.baseUrl + path,
-      data,
-      this.getAxiosConfig()
-    )
+    const res = await this.axiosClient.post(`${config.baseUrl}${path}`, data)
     return new APIResponse(res)
   }
 
   protected async put<T>(path: string, data: unknown): Promise<APIResponse<T>> {
-    const res = await axios.put(
-      config.baseUrl + path,
-      data,
-      this.getAxiosConfig()
-    )
+    const res = await this.axiosClient.put(`${config.baseUrl}${path}`, data)
     return new APIResponse(res)
   }
 }
