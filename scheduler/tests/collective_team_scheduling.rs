@@ -158,7 +158,7 @@ async fn test_collective_team_scheduling() {
                 recurrence: None,
                 reminders: Vec::new(),
                 service_id: Some(service.id.clone()),
-                start_ts: available_slot,
+                start_time: available_slot,
             };
             admin_client
                 .event

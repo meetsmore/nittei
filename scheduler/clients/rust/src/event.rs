@@ -1,5 +1,6 @@
 use crate::{shared::MetadataFindInput, APIResponse, BaseClient};
 use crate::{CalendarEventReminder, RRuleOptions, ID};
+use chrono::{DateTime, Utc};
 use nettu_scheduler_api_structs::*;
 use nettu_scheduler_domain::Metadata;
 use reqwest::StatusCode;
@@ -16,7 +17,7 @@ pub struct CalendarEventClient {
 pub struct CreateEventInput {
     pub user_id: ID,
     pub calendar_id: ID,
-    pub start_ts: i64,
+    pub start_time: DateTime<Utc>,
     pub duration: i64,
     #[serde(default)]
     pub busy: Option<bool>,
@@ -32,19 +33,19 @@ pub struct CreateEventInput {
 
 pub struct GetEventsInstancesInput {
     pub event_id: ID,
-    pub start_ts: i64,
-    pub end_ts: i64,
+    pub start_time: DateTime<Utc>,
+    pub end_time: DateTime<Utc>,
 }
 
 pub struct UpdateEventInput {
     pub event_id: ID,
-    pub start_ts: Option<i64>,
+    pub start_time: Option<DateTime<Utc>>,
     pub duration: Option<i64>,
     pub busy: Option<bool>,
     pub reminders: Option<Vec<CalendarEventReminder>>,
     pub rrule_options: Option<RRuleOptions>,
     pub service_id: Option<ID>,
-    pub exdates: Option<Vec<i64>>,
+    pub exdates: Option<Vec<DateTime<Utc>>>,
     pub metadata: Option<Metadata>,
 }
 
@@ -61,7 +62,7 @@ impl CalendarEventClient {
 
     pub async fn get(&self, event_id: ID) -> APIResponse<get_event::APIResponse> {
         self.base
-            .get(format!("user/events/{}", event_id), StatusCode::OK)
+            .get(format!("user/events/{}", event_id), None, StatusCode::OK)
             .await
     }
 
@@ -71,10 +72,11 @@ impl CalendarEventClient {
     ) -> APIResponse<get_event_instances::APIResponse> {
         self.base
             .get(
-                format!(
-                    "user/events/{}/instances?startTs={}&endTs={}",
-                    input.event_id, input.start_ts, input.end_ts
-                ),
+                format!("user/events/{}/instances", input.event_id),
+                Some(vec![
+                    ("startTime".to_string(), input.start_time.to_string()),
+                    ("endTime".to_string(), input.end_time.to_string()),
+                ]),
                 StatusCode::OK,
             )
             .await
@@ -84,7 +86,7 @@ impl CalendarEventClient {
         let user_id = input.user_id.clone();
         let body = create_event::RequestBody {
             calendar_id: input.calendar_id,
-            start_ts: input.start_ts,
+            start_time: input.start_time,
             duration: input.duration,
             busy: input.busy,
             recurrence: input.recurrence,
@@ -108,7 +110,8 @@ impl CalendarEventClient {
     ) -> APIResponse<get_events_by_meta::APIResponse> {
         self.base
             .get(
-                format!("events/meta?{}", input.to_query_string()),
+                "events/meta".to_string(),
+                Some(input.to_query()),
                 StatusCode::OK,
             )
             .await
@@ -123,7 +126,7 @@ impl CalendarEventClient {
             recurrence: input.rrule_options,
             reminders: input.reminders,
             service_id: input.service_id,
-            start_ts: input.start_ts,
+            start_time: input.start_time,
             metadata: input.metadata,
         };
         self.base

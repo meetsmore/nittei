@@ -1,6 +1,7 @@
 use crate::shared::usecase::{execute, UseCase};
 use crate::{error::NettuError, user::parse_vec_query_value};
 use actix_web::{web, HttpRequest, HttpResponse};
+use chrono::{DateTime, TimeDelta};
 use futures::future::join_all;
 use nettu_scheduler_api_structs::get_service_bookingslots::*;
 use nettu_scheduler_domain::{
@@ -137,7 +138,7 @@ impl UseCase for GetServiceBookingSlotsUseCase {
 
         let mut usecase_futures: Vec<_> = Vec::with_capacity(service.users.len());
 
-        let timespan = TimeSpan::new(booking_timespan.start_ts, booking_timespan.end_ts);
+        let timespan = TimeSpan::new(booking_timespan.start_time, booking_timespan.end_time);
         if timespan.greater_than(ctx.config.booking_slots_query_duration_limit) {
             return Err(UseCaseError::InvalidTimespan);
         }
@@ -167,8 +168,8 @@ impl UseCase for GetServiceBookingSlotsUseCase {
             &BookingSlotsOptions {
                 interval: self.interval,
                 duration: self.duration,
-                end_ts: booking_timespan.end_ts,
-                start_ts: booking_timespan.start_ts,
+                end_time: booking_timespan.end_time,
+                start_time: booking_timespan.start_time,
             },
         );
 
@@ -288,8 +289,8 @@ impl GetServiceBookingSlotsUseCase {
             })
             .map(|e| EventInstance {
                 busy: true,
-                start_ts: e.start_ts,
-                end_ts: e.end_ts,
+                start_time: e.start_time,
+                end_time: e.end_time,
             })
             .collect::<Vec<_>>();
         busy_events.append(&mut busy_service_events);
@@ -314,13 +315,15 @@ impl GetServiceBookingSlotsUseCase {
                                     .iter()
                                     .find(|s| s.service_id == service_id)
                                 {
-                                    let buffer_after_in_millis =
-                                        service_resource.buffer_after * 60 * 1000;
-                                    let buffer_before_in_millis =
-                                        service_resource.buffer_before * 60 * 1000;
+                                    let buffer_after_in_millis = TimeDelta::milliseconds(
+                                        service_resource.buffer_after * 60 * 1000,
+                                    );
+                                    let buffer_before_in_millis = TimeDelta::milliseconds(
+                                        service_resource.buffer_before * 60 * 1000,
+                                    );
                                     for instance in instances.iter_mut() {
-                                        instance.end_ts += buffer_after_in_millis;
-                                        instance.start_ts -= buffer_before_in_millis;
+                                        instance.end_time += buffer_after_in_millis;
+                                        instance.start_time -= buffer_before_in_millis;
                                     }
                                 }
                             }
@@ -397,13 +400,16 @@ impl GetServiceBookingSlotsUseCase {
         mut timespan: TimeSpan,
         ctx: &NettuContext,
     ) -> Result<TimeSpan, ()> {
-        let first_available =
-            ctx.sys.get_timestamp_millis() + user.closest_booking_time * 60 * 1000;
+        let first_available = DateTime::from_timestamp_millis(ctx.sys.get_timestamp_millis())
+            .unwrap()
+            + TimeDelta::milliseconds(user.closest_booking_time * 60 * 1000);
         if timespan.start() < first_available {
             timespan = TimeSpan::new(first_available, timespan.end());
         }
         if let Some(furthest_booking_time) = user.furthest_booking_time {
-            let last_available = furthest_booking_time * 60 * 1000 + ctx.sys.get_timestamp_millis();
+            let last_available = DateTime::from_timestamp_micros(ctx.sys.get_timestamp_millis())
+                .unwrap()
+                + TimeDelta::milliseconds(furthest_booking_time * 60 * 1000);
             if last_available < timespan.end() {
                 if last_available <= timespan.start() {
                     return Err(());
@@ -550,7 +556,7 @@ mod test {
             account_id: account_id.clone(),
             calendar_id: calendar_user_1.id,
             duration: 1000 * 60 * 60,
-            start_ts: 1000 * 60 * 60,
+            start_time: DateTime::from_timestamp_millis(1000 * 60 * 60).unwrap(),
             user_id: resource1.user_id.to_owned(),
             ..Default::default()
         };
@@ -558,7 +564,7 @@ mod test {
             account_id: account_id.clone(),
             calendar_id: calendar_user_2.id.clone(),
             duration: 1000 * 60 * 60,
-            start_ts: 1000 * 60 * 60,
+            start_time: DateTime::from_timestamp_millis(1000 * 60 * 60).unwrap(),
             user_id: resource2.user_id.to_owned(),
             ..Default::default()
         };
@@ -566,7 +572,7 @@ mod test {
             account_id: account_id.clone(),
             calendar_id: calendar_user_2.id,
             duration: 1000 * 60 * 105,
-            start_ts: 1000 * 60 * 60 * 4,
+            start_time: DateTime::from_timestamp_millis(1000 * 60 * 60 * 4).unwrap(),
             user_id: resource2.user_id.to_owned(),
             ..Default::default()
         };
@@ -637,9 +643,7 @@ mod test {
             assert_eq!(booking_slot.user_ids.len(), 1);
             assert_eq!(
                 booking_slot.start,
-                Utc.ymd(2010, 1, 1)
-                    .and_hms(4, 15 * i as u32, 0)
-                    .timestamp_millis()
+                Utc.ymd(2010, 1, 1).and_hms(4, 15 * i as u32, 0)
             );
         }
 
@@ -667,9 +671,7 @@ mod test {
                 assert_eq!(booking_slot.user_ids.len(), 1);
                 assert_eq!(
                     booking_slot.start,
-                    Utc.ymd(1970, 1, 1)
-                        .and_hms(4, 15 * (i - 1) as u32, 0)
-                        .timestamp_millis()
+                    Utc.ymd(1970, 1, 1).and_hms(4, 15 * (i - 1) as u32, 0)
                 );
             }
         }

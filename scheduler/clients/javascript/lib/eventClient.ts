@@ -13,7 +13,7 @@ interface EventReminder {
 
 type CreateCalendarEventReq = {
   calendarId: string
-  startTs: number
+  startTime: Date
   duration: number
   busy?: boolean
   recurrence?: RRuleOptions
@@ -23,19 +23,19 @@ type CreateCalendarEventReq = {
 }
 
 type UpdateCalendarEventReq = {
-  startTs?: number
+  startTime?: Date
   duration?: number
   busy?: boolean
   recurrence?: RRuleOptions
   serviceId?: boolean
-  exdates?: number[]
+  exdates?: Date[]
   reminders?: EventReminder[]
   metadata?: Metadata
 }
 
 export type Timespan = {
-  startTs: number
-  endTs: number
+  startTime: Date
+  endTime: Date
 }
 
 type GetEventInstancesResponse = {
@@ -67,9 +67,12 @@ export class NettuEventClient extends NettuBaseClient {
     skip: number,
     limit: number
   ) {
-    return this.get<{ events: CalendarEvent[] }>(
-      `/events/meta?skip=${skip}&limit=${limit}&key=${meta.key}&value=${meta.value}`
-    )
+    return this.get<{ events: CalendarEvent[] }>('/events/meta', {
+      skip,
+      limit,
+      key: meta.key,
+      value: meta.value,
+    })
   }
 
   public remove(eventId: string) {
@@ -78,7 +81,11 @@ export class NettuEventClient extends NettuBaseClient {
 
   public getInstances(eventId: string, timespan: Timespan) {
     return this.get<GetEventInstancesResponse>(
-      `/user/events/${eventId}/instances?startTs=${timespan.startTs}&endTs=${timespan.endTs}`
+      `/user/events/${eventId}/instances`,
+      {
+        startTime: timespan.startTime.toISOString(),
+        endTime: timespan.endTime.toISOString(),
+      }
     )
   }
 }
@@ -101,8 +108,9 @@ export class NettuEventUserClient extends NettuBaseClient {
   }
 
   public getInstances(eventId: string, timespan: Timespan) {
-    return this.get<GetEventInstancesResponse>(
-      `/events/${eventId}/instances?startTs=${timespan.startTs}&endTs=${timespan.endTs}`
-    )
+    return this.get<GetEventInstancesResponse>(`/events/${eventId}/instances`, {
+      startTime: timespan.startTime.toISOString(),
+      endTime: timespan.endTime.toISOString(),
+    })
   }
 }

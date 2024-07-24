@@ -65,20 +65,27 @@ export class NettuCalendarClient extends NettuBaseClient {
     skip: number,
     limit: number
   ) {
-    return this.get<{ calendars: Calendar[] }>(
-      `/calendar/meta?skip=${skip}&limit=${limit}&key=${meta.key}&value=${meta.value}`
-    )
+    return this.get<{ calendars: Calendar[] }>('/calendar/meta', {
+      skip: skip,
+      limit: limit,
+      key: meta.key,
+      value: meta.value,
+    })
   }
 
   async findGoogle(userId: string, minAccessRole: GoogleCalendarAccessRole) {
     return this.get<{ calendars: GoogleCalendarListEntry[] }>(
-      `/user/${userId}/calendar/provider/google?minAccessRole=${minAccessRole}`
+      `/user/${userId}/calendar/provider/google`,
+      {
+        minAccessRole,
+      }
     )
   }
 
   async findOutlook(userId: string, minAccessRole: OutlookCalendarAccessRole) {
     return this.get<{ calendars: OutlookCalendar[] }>(
-      `/user/${userId}/calendar/provider/outlook?minAccessRole=${minAccessRole}`
+      `/user/${userId}/calendar/provider/outlook`,
+      { minAccessRole }
     )
   }
 
@@ -96,9 +103,13 @@ export class NettuCalendarClient extends NettuBaseClient {
     })
   }
 
-  public getEvents(calendarId: string, startTS: number, endTS: number) {
+  public getEvents(calendarId: string, startTime: Date, endTime: Date) {
     return this.get<GetCalendarEventsResponse>(
-      `/user/calendar/${calendarId}/events?startTs=${startTS}&endTs=${endTS}`
+      `/user/calendar/${calendarId}/events`,
+      {
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
+      }
     )
   }
 
@@ -132,13 +143,19 @@ export class NettuCalendarUserClient extends NettuBaseClient {
 
   async findGoogle(minAccessRole: GoogleCalendarAccessRole) {
     return this.get<{ calendars: GoogleCalendarListEntry[] }>(
-      `/calendar/provider/google?minAccessRole=${minAccessRole}`
+      '/calendar/provider/google',
+      {
+        minAccessRole,
+      }
     )
   }
 
   async findOutlook(minAccessRole: OutlookCalendarAccessRole) {
     return this.get<{ calendars: OutlookCalendar[] }>(
-      `/calendar/provider/outlook?minAccessRole=${minAccessRole}`
+      '/calendar/provider/outlook',
+      {
+        minAccessRole,
+      }
     )
   }
 
@@ -152,7 +169,11 @@ export class NettuCalendarUserClient extends NettuBaseClient {
 
   public getEvents(calendarId: string, timespan: Timespan) {
     return this.get<GetCalendarEventsResponse>(
-      `/user/calendar/${calendarId}/events?startTs=${timespan.startTs}&endTs=${timespan.endTs}`
+      `/user/calendar/${calendarId}/events`,
+      {
+        startTime: timespan.startTime.toISOString(),
+        endTime: timespan.endTime.toISOString(),
+      }
     )
   }
 }

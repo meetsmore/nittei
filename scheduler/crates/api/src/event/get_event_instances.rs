@@ -105,7 +105,7 @@ impl UseCase for GetEventInstancesUseCase {
                     }
                 };
 
-                let timespan = TimeSpan::new(self.timespan.start_ts, self.timespan.end_ts);
+                let timespan = TimeSpan::new(self.timespan.start_time, self.timespan.end_time);
                 if timespan.greater_than(ctx.config.event_instances_query_duration_limit) {
                     return Err(UseCaseError::InvalidTimespan);
                 }

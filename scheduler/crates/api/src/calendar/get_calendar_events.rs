@@ -2,6 +2,7 @@ use crate::shared::auth::{account_can_modify_calendar, protect_route};
 use crate::shared::usecase::{execute, UseCase};
 use crate::{error::NettuError, shared::auth::protect_account_route};
 use actix_web::{web, HttpRequest, HttpResponse};
+use chrono::{DateTime, Utc};
 use nettu_scheduler_api_structs::get_calendar_events::{APIResponse, PathParams, QueryParams};
 use nettu_scheduler_domain::{Calendar, EventWithInstances, TimeSpan, ID};
 use nettu_scheduler_infra::NettuContext;
@@ -18,8 +19,8 @@ pub async fn get_calendar_events_admin_controller(
     let usecase = GetCalendarEventsUseCase {
         user_id: cal.user_id,
         calendar_id: cal.id,
-        start_ts: query_params.start_ts,
-        end_ts: query_params.end_ts,
+        start_time: query_params.start_time,
+        end_time: query_params.end_time,
     };
 
     execute(usecase, &ctx)
@@ -41,8 +42,8 @@ pub async fn get_calendar_events_controller(
     let usecase = GetCalendarEventsUseCase {
         user_id: user.id,
         calendar_id: path.calendar_id.clone(),
-        start_ts: query_params.start_ts,
-        end_ts: query_params.end_ts,
+        start_time: query_params.start_time,
+        end_time: query_params.end_time,
     };
 
     execute(usecase, &ctx)
@@ -56,8 +57,8 @@ pub async fn get_calendar_events_controller(
 pub struct GetCalendarEventsUseCase {
     pub calendar_id: ID,
     pub user_id: ID,
-    pub start_ts: i64,
-    pub end_ts: i64,
+    pub start_time: DateTime<Utc>,
+    pub end_time: DateTime<Utc>,
 }
 
 #[derive(Debug)]
@@ -97,7 +98,7 @@ impl UseCase for GetCalendarEventsUseCase {
     async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
         let calendar = ctx.repos.calendars.find(&self.calendar_id).await;
 
-        let timespan = TimeSpan::new(self.start_ts, self.end_ts);
+        let timespan = TimeSpan::new(self.start_time, self.end_time);
         if timespan.greater_than(ctx.config.event_instances_query_duration_limit) {
             return Err(UseCaseError::InvalidTimespan);
         }

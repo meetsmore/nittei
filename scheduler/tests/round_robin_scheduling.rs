@@ -1,6 +1,6 @@
 mod helpers;
 
-use chrono::{Duration, Utc, Weekday};
+use chrono::{DateTime, Duration, TimeDelta, Utc, Weekday};
 use helpers::setup::spawn_app;
 use helpers::utils::{assert_equal_user_lists, format_datetime};
 use nettu_scheduler_domain::{BusyCalendar, ServiceMultiPersonOptions, TimePlan, ID};
@@ -180,7 +180,7 @@ async fn test_round_robin_scheduling_simple_test() {
                     recurrence: None,
                     reminders: Vec::new(),
                     service_id: Some(service.id.clone()),
-                    start_ts: available_slot,
+                    start_time: available_slot,
                 };
                 admin_client
                     .event
@@ -274,7 +274,7 @@ async fn test_round_robin_equal_distribution_scheduling() {
             continue;
         }
         let available_slot = bookingslots[0].slots[0].start;
-        let some_time_later = available_slot + 14 * 24 * 60 * 60 * 1000;
+        let some_time_later = available_slot + TimeDelta::milliseconds(14 * 24 * 60 * 60 * 1000);
 
         // Create upcoming service_events
         for (upcoming_service_events, (host, busy_calendar)) in upcoming_service_events_per_host
@@ -292,7 +292,7 @@ async fn test_round_robin_equal_distribution_scheduling() {
                     recurrence: None,
                     reminders: Vec::new(),
                     service_id: Some(service.id.clone()),
-                    start_ts: some_time_later,
+                    start_time: some_time_later,
                 };
                 admin_client
                     .event
@@ -328,10 +328,8 @@ async fn test_round_robin_equal_distribution_scheduling() {
 
             assert_eq!(booking_intend.selected_hosts.len(), 1);
             assert!(hosts_with_min_upcoming_events.contains(&booking_intend.selected_hosts[0].id));
-            hosts_with_min_upcoming_events = hosts_with_min_upcoming_events
-                .into_iter()
-                .filter(|host_id| host_id != &booking_intend.selected_hosts[0].id)
-                .collect();
+            hosts_with_min_upcoming_events
+                .retain(|host_id| host_id != &booking_intend.selected_hosts[0].id);
 
             // Create service event for booking
             let (host, busy_calendar) = hosts_with_calendars
@@ -347,7 +345,7 @@ async fn test_round_robin_equal_distribution_scheduling() {
                 recurrence: None,
                 reminders: Vec::new(),
                 service_id: Some(service.id.clone()),
-                start_ts: available_slot,
+                start_time: available_slot,
             };
             admin_client
                 .event
@@ -445,7 +443,7 @@ async fn test_round_robin_availability_scheduling() {
                 recurrence: None,
                 reminders: Vec::new(),
                 service_id: Some(service.id.clone()),
-                start_ts: 0,
+                start_time: DateTime::from_timestamp_millis(0).unwrap(),
             };
             let event_id = admin_client
                 .event
@@ -498,10 +496,8 @@ async fn test_round_robin_availability_scheduling() {
 
             assert_eq!(booking_intend.selected_hosts.len(), 1);
             assert!(hosts_with_last_assigned_events.contains(&booking_intend.selected_hosts[0].id));
-            hosts_with_last_assigned_events = hosts_with_last_assigned_events
-                .into_iter()
-                .filter(|host_id| host_id != &booking_intend.selected_hosts[0].id)
-                .collect();
+            hosts_with_last_assigned_events
+                .retain(|host_id| host_id != &booking_intend.selected_hosts[0].id);
 
             // Create service event for booking
             let (host, busy_calendar) = hosts_with_calendars
@@ -518,7 +514,7 @@ async fn test_round_robin_availability_scheduling() {
                 recurrence: None,
                 reminders: Vec::new(),
                 service_id: Some(service.id.clone()),
-                start_ts: available_slot,
+                start_time: available_slot,
             };
             admin_client
                 .event

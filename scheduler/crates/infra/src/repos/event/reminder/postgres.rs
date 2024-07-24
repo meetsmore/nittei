@@ -1,4 +1,5 @@
 use super::IReminderRepo;
+use chrono::{DateTime, Utc};
 use nettu_scheduler_domain::{Reminder, ID};
 use sqlx::{types::Uuid, FromRow, PgPool};
 use tracing::error;
@@ -23,7 +24,7 @@ struct ReminderVersionRaw {
 struct ReminderRaw {
     event_uid: Uuid,
     account_uid: Uuid,
-    remind_at: i64,
+    remind_at: DateTime<Utc>,
     version: i64,
     identifier: String,
 }
@@ -123,7 +124,7 @@ impl IReminderRepo for PostgresReminderRepo {
         Ok(r_version.version)
     }
 
-    async fn delete_all_before(&self, before: i64) -> Vec<Reminder> {
+    async fn delete_all_before(&self, before: DateTime<Utc>) -> Vec<Reminder> {
         sqlx::query_as!(
             ReminderRaw,
             r#"

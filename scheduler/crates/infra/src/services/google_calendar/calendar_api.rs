@@ -70,9 +70,9 @@ impl From<CalendarEvent> for GoogleCalendarEventAttributes {
         Self {
             description,
             summary,
-            start: GoogleCalendarEventDateTime::new(e.start_ts),
+            start: GoogleCalendarEventDateTime::new(e.start_time.timestamp_millis()),
             // Recurrence sync not supported yet, so e.end_ts will not be correct if used
-            end: GoogleCalendarEventDateTime::new(e.start_ts + e.duration),
+            end: GoogleCalendarEventDateTime::new(e.start_time.timestamp_millis() + e.duration),
             // Recurrence sync not supported yet
             recurrence: Vec::new(),
             // Whether it blocks calendar time or not
@@ -110,6 +110,10 @@ impl GoogleDateTime {
         DateTime::parse_from_rfc3339(&self.0)
             .expect("Inner string to always be valid RFC3339 string")
             .timestamp_millis()
+    }
+
+    pub fn to_string(&self) -> String {
+        self.0.clone()
     }
 }
 

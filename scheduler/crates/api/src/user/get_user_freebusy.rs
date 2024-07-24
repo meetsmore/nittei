@@ -1,6 +1,7 @@
 use crate::shared::usecase::{execute, UseCase};
 use crate::{error::NettuError, shared::auth::protect_public_account_route};
 use actix_web::{web, HttpRequest, HttpResponse};
+use chrono::{DateTime, Utc};
 use futures::future::join_all;
 use nettu_scheduler_api_structs::get_user_freebusy::{APIResponse, PathParams, QueryParams};
 use nettu_scheduler_domain::{CompatibleInstances, EventInstance, TimeSpan, ID};
@@ -19,19 +20,17 @@ pub fn parse_vec_query_value(val: &Option<String>) -> Option<Vec<ID>> {
 
 pub async fn get_freebusy_controller(
     http_req: HttpRequest,
-    query_params: web::Query<QueryParams>,
+    mut query_params: web::Query<QueryParams>,
     mut params: web::Path<PathParams>,
     ctx: web::Data<NettuContext>,
 ) -> Result<HttpResponse, NettuError> {
     let _account = protect_public_account_route(&http_req, &ctx).await?;
 
-    let calendar_ids = parse_vec_query_value(&query_params.calendar_ids);
-
     let usecase = GetFreeBusyUseCase {
         user_id: std::mem::take(&mut params.user_id),
-        calendar_ids,
-        start_ts: query_params.start_ts,
-        end_ts: query_params.end_ts,
+        calendar_ids: query_params.calendar_ids.take(),
+        start_time: query_params.start_time,
+        end_time: query_params.end_time,
     };
 
     execute(usecase, &ctx)
@@ -49,8 +48,8 @@ pub async fn get_freebusy_controller(
 pub struct GetFreeBusyUseCase {
     pub user_id: ID,
     pub calendar_ids: Option<Vec<ID>>,
-    pub start_ts: i64,
-    pub end_ts: i64,
+    pub start_time: DateTime<Utc>,
+    pub end_time: DateTime<Utc>,
 }
 
 #[derive(Debug)]
@@ -83,7 +82,7 @@ impl UseCase for GetFreeBusyUseCase {
     const NAME: &'static str = "GetUserFreebusy";
 
     async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
-        let timespan = TimeSpan::new(self.start_ts, self.end_ts);
+        let timespan = TimeSpan::new(self.start_time, self.end_time);
         if timespan.greater_than(ctx.config.event_instances_query_duration_limit) {
             return Err(UseCaseError::InvalidTimespan);
         }
@@ -195,7 +194,7 @@ mod test {
             account_id: user.account_id.clone(),
             busy: true,
             duration: one_hour,
-            end_ts: CalendarEvent::get_max_timestamp(),
+            end_time: DateTime::<Utc>::MAX_UTC,
             ..Default::default()
         };
         let e1rr = RRuleOptions {
@@ -210,8 +209,8 @@ mod test {
             account_id: user.account_id.clone(),
             busy: true,
             duration: one_hour,
-            end_ts: CalendarEvent::get_max_timestamp(),
-            start_ts: one_hour * 4,
+            end_time: DateTime::<Utc>::MAX_UTC,
+            start_time: DateTime::from_timestamp_millis(one_hour * 4).unwrap(),
             ..Default::default()
         };
         let e2rr = RRuleOptions {
@@ -226,7 +225,7 @@ mod test {
             account_id: user.account_id.clone(),
             busy: true,
             duration: one_hour,
-            end_ts: one_hour,
+            end_time: DateTime::from_timestamp_millis(one_hour).unwrap(),
             ..Default::default()
         };
         let e3rr = RRuleOptions {
@@ -243,8 +242,8 @@ mod test {
         let mut usecase = GetFreeBusyUseCase {
             user_id: user.id().clone(),
             calendar_ids: Some(vec![calendar.id.clone()]),
-            start_ts: 86400000,
-            end_ts: 172800000,
+            start_time: DateTime::from_timestamp_millis(86400000).unwrap(),
+            end_time: DateTime::from_timestamp_millis(172800000).unwrap(),
         };
 
         let res = usecase.execute(&ctx).await;
@@ -255,16 +254,16 @@ mod test {
             instances[0],
             EventInstance {
                 busy: true,
-                start_ts: 86400000,
-                end_ts: 90000000,
+                start_time: DateTime::from_timestamp_millis(86400000).unwrap(),
+                end_time: DateTime::from_timestamp_millis(90000000).unwrap(),
             }
         );
         assert_eq!(
             instances[1],
             EventInstance {
                 busy: true,
-                start_ts: 100800000,
-                end_ts: 104400000,
+                start_time: DateTime::from_timestamp_millis(100800000).unwrap(),
+                end_time: DateTime::from_timestamp_millis(104400000).unwrap(),
             }
         );
     }

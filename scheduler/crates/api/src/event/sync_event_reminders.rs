@@ -1,4 +1,5 @@
 use crate::shared::usecase::UseCase;
+use chrono::{DateTime, TimeDelta, Utc};
 use futures::future;
 use nettu_scheduler_domain::{Calendar, CalendarEvent, EventRemindersExpansionJob, Reminder};
 use nettu_scheduler_infra::NettuContext;
@@ -38,8 +39,9 @@ async fn create_event_reminders(
     version: i64,
     ctx: &NettuContext,
 ) -> Result<(), UseCaseError> {
-    let timestamp_now_millis = ctx.sys.get_timestamp_millis();
-    let threshold_millis = timestamp_now_millis + 61 * 1000; // Now + 61 seconds
+    let timestamp_now_millis =
+        DateTime::from_timestamp_millis(ctx.sys.get_timestamp_millis()).unwrap();
+    let threshold_millis = timestamp_now_millis + TimeDelta::milliseconds(61 * 1000); // Now + 61 seconds
 
     let rrule_set = event.get_rrule_set(&calendar.settings);
     let reminders: Vec<Reminder> = match rrule_set {
@@ -75,7 +77,7 @@ async fn create_event_reminders(
                 // There are more reminders to generate, store a job to expand them later
                 let job = EventRemindersExpansionJob {
                     event_id: event.id.clone(),
-                    timestamp: dates[90].timestamp_millis(),
+                    timestamp: dates[90].with_timezone(&Utc),
                     version,
                 };
                 if ctx
@@ -95,20 +97,20 @@ async fn create_event_reminders(
             dates
                 .into_iter()
                 .flat_map(|d| {
-                    let dt_millis = d.timestamp_millis();
+                    let dt_millis = d;
                     event
                         .reminders
                         .iter()
                         .map(|er| {
                             let delta_millis = er.delta * 60 * 1000;
-                            let remind_at = dt_millis + delta_millis;
+                            let remind_at = dt_millis + TimeDelta::milliseconds(delta_millis);
                             (er, remind_at)
                         })
                         .filter(|(_er, remind_at)| remind_at > &threshold_millis)
                         .map(|(er, remind_at)| Reminder {
                             event_id: event.id.to_owned(),
                             account_id: event.account_id.to_owned(),
-                            remind_at,
+                            remind_at: remind_at.with_timezone(&Utc),
                             version,
                             identifier: er.identifier.clone(),
                         })
@@ -121,7 +123,7 @@ async fn create_event_reminders(
             .iter()
             .map(|er| {
                 let delta_millis = er.delta * 60 * 1000;
-                let remind_at = event.start_ts + delta_millis;
+                let remind_at = event.start_time + TimeDelta::milliseconds(delta_millis);
                 (er, remind_at)
             })
             .filter(|(_er, remind_at)| remind_at > &threshold_millis)
@@ -198,7 +200,9 @@ impl<'a> UseCase for SyncEventRemindersUseCase<'a> {
                 let jobs = ctx
                     .repos
                     .event_reminders_generation_jobs
-                    .delete_all_before(ctx.sys.get_timestamp_millis())
+                    .delete_all_before(
+                        DateTime::from_timestamp_millis(ctx.sys.get_timestamp_millis()).unwrap(),
+                    )
                     .await;
 
                 let event_ids = jobs

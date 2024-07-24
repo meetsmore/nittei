@@ -10,10 +10,12 @@ pub struct MetadataFindInput {
 }
 
 impl MetadataFindInput {
-    pub(crate) fn to_query_string(&self) -> String {
-        format!(
-            "skip={}&limit={}&key={}&value={}",
-            self.skip, self.limit, self.metadata.key, self.metadata.value
-        )
+    pub(crate) fn to_query(&self) -> Vec<(String, String)> {
+        vec![
+            ("skip".to_string(), self.skip.to_string()),
+            ("limit".to_string(), self.limit.to_string()),
+            ("key".to_string(), self.metadata.key.clone()),
+            ("value".to_string(), self.metadata.value.clone()),
+        ]
     }
 }

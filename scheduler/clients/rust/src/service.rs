@@ -1,4 +1,5 @@
 use crate::{shared::MetadataFindInput, APIResponse, BaseClient, TimePlan, Tz, ID};
+use chrono::{DateTime, Utc};
 use nettu_scheduler_api_structs::*;
 use nettu_scheduler_domain::{BusyCalendar, Metadata, ServiceMultiPersonOptions};
 use reqwest::StatusCode;
@@ -44,14 +45,14 @@ pub struct UpdateServiceUserInput {
 pub struct CreateBookingIntendInput {
     pub service_id: ID,
     pub host_user_ids: Option<Vec<ID>>,
-    pub timestamp: i64,
+    pub timestamp: DateTime<Utc>,
     pub duration: i64,
     pub interval: i64,
 }
 
 pub struct RemoveBookingIntendInput {
     pub service_id: ID,
-    pub timestamp: i64,
+    pub timestamp: DateTime<Utc>,
 }
 
 pub struct RemoveServiceUserInput {
@@ -88,7 +89,7 @@ impl ServiceClient {
 
     pub async fn get(&self, service_id: ID) -> APIResponse<get_service::APIResponse> {
         self.base
-            .get(format!("service/{}", service_id), StatusCode::OK)
+            .get(format!("service/{}", service_id), None, StatusCode::OK)
             .await
     }
 
@@ -96,29 +97,29 @@ impl ServiceClient {
         &self,
         input: GetServiceBookingSlotsInput,
     ) -> APIResponse<get_service_bookingslots::APIResponse> {
-        let mut query_string = format!(
-            "duration={}&interval={}&startDate={}&endDate={}",
-            input.duration, input.interval, input.start_date, input.end_date
-        );
+        let mut query = vec![
+            ("duration".to_string(), input.duration.to_string()),
+            ("interval".to_string(), input.interval.to_string()),
+            ("startDate".to_string(), input.start_date),
+            ("endDate".to_string(), input.end_date),
+        ];
 
         if let Some(timezone) = input.timezone {
-            query_string = format!("{}&ianaTz={}", query_string, timezone);
+            query.push(("ianaTz".to_string(), timezone.to_string()));
         }
         if let Some(host_user_ids) = input.host_user_ids {
-            query_string = format!(
-                "{}&hostUserIds={}",
-                query_string,
-                host_user_ids
-                    .into_iter()
-                    .map(|id| id.to_string())
-                    .collect::<Vec<_>>()
-                    .join(",")
-            );
+            let host_user_ids = host_user_ids
+                .into_iter()
+                .map(|id| id.to_string())
+                .collect::<Vec<_>>()
+                .join(",");
+            query.push(("hostUserIds".to_string(), host_user_ids));
         }
 
         self.base
             .get(
-                format!("service/{}/booking?{}", input.service_id, query_string),
+                format!("service/{}/booking", input.service_id),
+                Some(query),
                 StatusCode::OK,
             )
             .await
@@ -200,7 +201,8 @@ impl ServiceClient {
     ) -> APIResponse<get_services_by_meta::APIResponse> {
         self.base
             .get(
-                format!("service/meta?{}", input.to_query_string()),
+                "service/meta".to_string(),
+                Some(input.to_query()),
                 StatusCode::OK,
             )
             .await

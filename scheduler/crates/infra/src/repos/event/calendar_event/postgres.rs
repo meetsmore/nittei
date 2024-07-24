@@ -1,5 +1,6 @@
 use super::{IEventRepo, MostRecentCreatedServiceEvents};
 use crate::repos::shared::query_structs::MetadataFindQuery;
+use chrono::{DateTime, Utc};
 use nettu_scheduler_domain::{CalendarEvent, CalendarEventReminder, RRuleOptions, ID};
 use serde_json::Value;
 use sqlx::{
@@ -39,14 +40,14 @@ struct EventRaw {
     calendar_uid: Uuid,
     user_uid: Uuid,
     account_uid: Uuid,
-    start_ts: i64,
+    start_time: DateTime<Utc>,
     duration: i64,
     busy: bool,
-    end_ts: i64,
+    end_time: DateTime<Utc>,
     created: i64,
     updated: i64,
     recurrence: Option<Value>,
-    exdates: Vec<i64>,
+    exdates: Vec<DateTime<Utc>>,
     reminders: Option<Value>,
     service_uid: Option<Uuid>,
     metadata: Value,
@@ -68,10 +69,10 @@ impl From<EventRaw> for CalendarEvent {
             user_id: e.user_uid.into(),
             account_id: e.account_uid.into(),
             calendar_id: e.calendar_uid.into(),
-            start_ts: e.start_ts,
+            start_time: e.start_time,
             duration: e.duration,
             busy: e.busy,
-            end_ts: e.end_ts,
+            end_time: e.end_time,
             created: e.created,
             updated: e.updated,
             recurrence,
@@ -91,9 +92,9 @@ impl IEventRepo for PostgresEventRepo {
             INSERT INTO calendar_events(
                 event_uid,
                 calendar_uid,
-                start_ts,
+                start_time,
                 duration,
-                end_ts,
+                end_time,
                 busy,
                 created,
                 updated,
@@ -107,9 +108,9 @@ impl IEventRepo for PostgresEventRepo {
             "#,
             e.id.as_ref(),
             e.calendar_id.as_ref(),
-            e.start_ts,
+            e.start_time,
             e.duration,
-            e.end_ts,
+            e.end_time,
             e.busy,
             e.created,
             e.updated,
@@ -136,9 +137,9 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query!(
             r#"
             UPDATE calendar_events SET
-                start_ts = $2,
+                start_time = $2,
                 duration = $3,
-                end_ts = $4,
+                end_time = $4,
                 busy = $5,
                 created = $6,
                 updated = $7,
@@ -150,9 +151,9 @@ impl IEventRepo for PostgresEventRepo {
             WHERE event_uid = $1
             "#,
             e.id.as_ref(),
-            e.start_ts,
+            e.start_time,
             e.duration,
-            e.end_ts,
+            e.end_time,
             e.busy,
             e.created,
             e.updated,
@@ -243,7 +244,7 @@ impl IEventRepo for PostgresEventRepo {
                     INNER JOIN users AS u
                         ON u.user_uid = c.user_uid
                     WHERE e.calendar_uid = $1 AND
-                    e.start_ts <= $2 AND e.end_ts >= $3
+                    e.start_time <= $2 AND e.end_time >= $3
                     "#,
                 calendar_id.as_ref(),
                 timespan.end(),
@@ -326,8 +327,8 @@ impl IEventRepo for PostgresEventRepo {
         &self,
         service_id: &ID,
         user_ids: &[ID],
-        min_ts: i64,
-        max_ts: i64,
+        min_time: DateTime<Utc>,
+        max_time: DateTime<Utc>,
     ) -> Vec<CalendarEvent> {
         let user_ids = user_ids.iter().map(|id| *id.as_ref()).collect::<Vec<_>>();
         let events: Vec<EventRaw> = match sqlx::query_as!(
@@ -340,12 +341,12 @@ impl IEventRepo for PostgresEventRepo {
                 ON u.user_uid = c.user_uid
             WHERE e.service_uid = $1 AND
             u.user_uid = ANY($2) AND
-            e.start_ts <= $3 AND e.end_ts >= $4
+            e.start_time <= $3 AND e.end_time >= $4
             "#,
             service_id.as_ref(),
             &user_ids,
-            max_ts,
-            min_ts,
+            max_time,
+            min_time,
         )
         .fetch_all(&self.pool)
         .await
@@ -353,11 +354,11 @@ impl IEventRepo for PostgresEventRepo {
             Ok(events) => events,
             Err(e) => {
                 error!(
-                    "Find calendar events for service id: {}, user_ids: {:?}, min_ts: {}, max_ts: {} failed. DB returned error: {:?}",
+                    "Find calendar events for service id: {}, user_ids: {:?}, min_time: {}, max_time: {} failed. DB returned error: {:?}",
                     service_id,
                     user_ids,
-                    min_ts,
-                    max_ts,
+                    min_time,
+                    max_time,
                      e
                 );
 
@@ -371,8 +372,8 @@ impl IEventRepo for PostgresEventRepo {
         &self,
         user_id: &ID,
         busy: bool,
-        min_ts: i64,
-        max_ts: i64,
+        min_time: DateTime<Utc>,
+        max_time: DateTime<Utc>,
     ) -> Vec<CalendarEvent> {
         let events: Vec<EventRaw> = match sqlx::query_as!(
             EventRaw,
@@ -385,12 +386,12 @@ impl IEventRepo for PostgresEventRepo {
             WHERE u.user_uid = $1 AND
             e.busy = $2 AND
             e.service_uid IS NOT NULL AND
-            e.start_ts <= $3 AND e.end_ts >= $4
+            e.start_time <= $3 AND e.end_time >= $4
             "#,
             user_id.as_ref(),
             busy,
-            max_ts,
-            min_ts,
+            max_time,
+            min_time,
         )
         .fetch_all(&self.pool)
         .await
@@ -398,11 +399,11 @@ impl IEventRepo for PostgresEventRepo {
             Ok(events) => events,
             Err(e) => {
                 error!(
-                    "Find service calendar events for user_id: {}, busy: {}, min_ts: {}, max_ts: {} failed. DB returned error: {:?}",
+                    "Find service calendar events for user_id: {}, busy: {}, min_time: {}, max_time: {} failed. DB returned error: {:?}",
                     user_id,
                     busy,
-                    min_ts,
-                    max_ts,
+                    min_time,
+                    max_time,
                      e
                 );
 

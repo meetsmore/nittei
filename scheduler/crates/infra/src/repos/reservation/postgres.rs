@@ -1,4 +1,5 @@
 use super::IReservationRepo;
+use chrono::{DateTime, Utc};
 use nettu_scheduler_domain::ID;
 use sqlx::{types::Uuid, FromRow, PgPool};
 use tracing::error;
@@ -16,13 +17,13 @@ impl PostgresReservationRepo {
 #[derive(Debug, FromRow)]
 struct ReservationRaw {
     count: i64,
-    timestamp: i64,
+    timestamp: DateTime<Utc>,
     service_uid: Uuid,
 }
 
 #[async_trait::async_trait]
 impl IReservationRepo for PostgresReservationRepo {
-    async fn increment(&self, service_id: &ID, timestamp: i64) -> anyhow::Result<()> {
+    async fn increment(&self, service_id: &ID, timestamp: DateTime<Utc>) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
             INSERT INTO service_reservations(service_uid, timestamp)
@@ -45,7 +46,7 @@ impl IReservationRepo for PostgresReservationRepo {
         Ok(())
     }
 
-    async fn decrement(&self, service_id: &ID, timestamp: i64) -> anyhow::Result<()> {
+    async fn decrement(&self, service_id: &ID, timestamp: DateTime<Utc>) -> anyhow::Result<()> {
         sqlx::query_as!(
             ReservationRaw,
             r#"
@@ -68,7 +69,7 @@ impl IReservationRepo for PostgresReservationRepo {
         Ok(())
     }
 
-    async fn count(&self, service_id: &ID, timestamp: i64) -> anyhow::Result<usize> {
+    async fn count(&self, service_id: &ID, timestamp: DateTime<Utc>) -> anyhow::Result<usize> {
         let reservation: Option<ReservationRaw> = sqlx::query_as!(
             ReservationRaw,
             r#"

@@ -34,12 +34,17 @@ impl BaseClient {
         self.api_key = Some(api_key);
     }
 
-    fn get_client(&self, method: Method, path: String) -> RequestBuilder {
+    fn get_client(
+        &self,
+        method: Method,
+        path: String,
+        query: Option<Vec<(String, String)>>,
+    ) -> RequestBuilder {
         let client = Client::new();
         let prefix = "/api/v1/";
         let url = format!("{}{}{}", self.address, prefix, path);
         let builder = match method {
-            Method::GET => client.get(&url),
+            Method::GET => client.get(&url).query(&query.unwrap_or_default()),
             Method::POST => client.post(&url),
             Method::PUT => client.put(&url),
             Method::DELETE => client.delete(&url),
@@ -103,9 +108,14 @@ impl BaseClient {
     pub async fn get<T: for<'de> Deserialize<'de>>(
         &self,
         path: String,
+        query_params: Option<Vec<(String, String)>>,
         expected_status_code: StatusCode,
     ) -> APIResponse<T> {
-        let res = match self.get_client(Method::GET, path).send().await {
+        let res = match self
+            .get_client(Method::GET, path, query_params)
+            .send()
+            .await
+        {
             Ok(res) => res,
             Err(_) => return Err(self.network_error()),
         };
@@ -117,7 +127,7 @@ impl BaseClient {
         path: String,
         expected_status_code: StatusCode,
     ) -> APIResponse<T> {
-        let res = match self.get_client(Method::DELETE, path).send().await {
+        let res = match self.get_client(Method::DELETE, path, None).send().await {
             Ok(res) => res,
             Err(_) => return Err(self.network_error()),
         };
@@ -131,7 +141,7 @@ impl BaseClient {
         expected_status_code: StatusCode,
     ) -> APIResponse<T> {
         let res = match self
-            .get_client(Method::DELETE, path)
+            .get_client(Method::DELETE, path, None)
             .json(&body)
             .send()
             .await
@@ -148,7 +158,12 @@ impl BaseClient {
         path: String,
         expected_status_code: StatusCode,
     ) -> APIResponse<T> {
-        let res = match self.get_client(Method::PUT, path).json(&body).send().await {
+        let res = match self
+            .get_client(Method::PUT, path, None)
+            .json(&body)
+            .send()
+            .await
+        {
             Ok(res) => res,
             Err(_) => return Err(self.network_error()),
         };
@@ -161,7 +176,12 @@ impl BaseClient {
         path: String,
         expected_status_code: StatusCode,
     ) -> APIResponse<T> {
-        let res = match self.get_client(Method::POST, path).json(&body).send().await {
+        let res = match self
+            .get_client(Method::POST, path, None)
+            .json(&body)
+            .send()
+            .await
+        {
             Ok(res) => res,
             Err(_) => return Err(self.network_error()),
         };

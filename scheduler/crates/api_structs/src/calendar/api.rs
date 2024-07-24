@@ -1,4 +1,5 @@
 use crate::dtos::{CalendarDTO, EventWithInstancesDTO};
+use crate::helpers::deserialize_uuids_list::deserialize_stringified_uuids_list;
 use nettu_scheduler_domain::{Calendar, EventInstance, Tz, Weekday, ID};
 use serde::{Deserialize, Serialize};
 
@@ -93,6 +94,7 @@ pub mod delete_calendar {
 }
 
 pub mod get_calendar_events {
+    use chrono::{DateTime, Utc};
     use nettu_scheduler_domain::EventWithInstances;
 
     use crate::dtos::CalendarEventDTO;
@@ -107,8 +109,8 @@ pub mod get_calendar_events {
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct QueryParams {
-        pub start_ts: i64,
-        pub end_ts: i64,
+        pub start_time: DateTime<Utc>,
+        pub end_time: DateTime<Utc>,
     }
 
     #[derive(Serialize, Deserialize)]
@@ -234,6 +236,8 @@ pub mod get_outlook_calendars {
 }
 
 pub mod get_user_freebusy {
+    use chrono::{DateTime, Utc};
+
     use super::*;
     use std::collections::VecDeque;
 
@@ -245,10 +249,10 @@ pub mod get_user_freebusy {
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct QueryParams {
-        pub start_ts: i64,
-        pub end_ts: i64,
-        #[serde(default)]
-        pub calendar_ids: Option<String>,
+        pub start_time: DateTime<Utc>,
+        pub end_time: DateTime<Utc>,
+        #[serde(default, deserialize_with = "deserialize_stringified_uuids_list")]
+        pub calendar_ids: Option<Vec<ID>>,
     }
 
     #[derive(Debug, Serialize, Deserialize)]

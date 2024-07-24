@@ -14,7 +14,7 @@ impl AccountClient {
     }
 
     pub async fn get(&self) -> APIResponse<get_account::APIResponse> {
-        self.base.get("account".into(), StatusCode::OK).await
+        self.base.get("account".into(), None, StatusCode::OK).await
     }
 
     pub async fn create(&self, code: &str) -> APIResponse<create_account::APIResponse> {

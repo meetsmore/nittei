@@ -15,8 +15,8 @@
       },
       {
         "ordinal": 2,
-        "name": "start_ts",
-        "type_info": "Int8"
+        "name": "start_time",
+        "type_info": "Timestamptz"
       },
       {
         "ordinal": 3,
@@ -25,8 +25,8 @@
       },
       {
         "ordinal": 4,
-        "name": "end_ts",
-        "type_info": "Int8"
+        "name": "end_time",
+        "type_info": "Timestamptz"
       },
       {
         "ordinal": 5,
@@ -51,7 +51,7 @@
       {
         "ordinal": 9,
         "name": "exdates",
-        "type_info": "Int8Array"
+        "type_info": "TimestamptzArray"
       },
       {
         "ordinal": 10,

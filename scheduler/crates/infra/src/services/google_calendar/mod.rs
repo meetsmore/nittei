@@ -8,6 +8,7 @@ use calendar_api::{
     FreeBusyCalendar, FreeBusyRequest, GoogleCalendarEvent, GoogleCalendarEventAttributes,
     GoogleCalendarRestApi, GoogleDateTime, ListCalendarsResponse,
 };
+use chrono::{DateTime, Utc};
 use nettu_scheduler_domain::providers::google::GoogleCalendarAccessRole;
 use nettu_scheduler_domain::{CalendarEvent, CompatibleInstances, EventInstance, User};
 use tracing::error;
@@ -32,8 +33,8 @@ impl GoogleCalendarProvider {
 
     pub async fn freebusy(&self, query: FreeBusyProviderQuery) -> CompatibleInstances {
         let body = FreeBusyRequest {
-            time_min: GoogleDateTime::from_timestamp_millis(query.start),
-            time_max: GoogleDateTime::from_timestamp_millis(query.end),
+            time_min: GoogleDateTime::from_timestamp_millis(query.start.timestamp_millis()),
+            time_max: GoogleDateTime::from_timestamp_millis(query.end.timestamp_millis()),
             time_zone: "UTC".to_string(),
             items: query
                 .calendar_ids
@@ -46,8 +47,12 @@ impl GoogleCalendarProvider {
             for (_, calendar_busy) in res.calendars {
                 for instance in calendar_busy.busy {
                     let instance = EventInstance {
-                        start_ts: instance.start.get_timestamp_millis(),
-                        end_ts: instance.end.get_timestamp_millis(),
+                        start_time: DateTime::parse_from_rfc3339(&instance.start.to_string())
+                            .unwrap()
+                            .with_timezone(&Utc),
+                        end_time: DateTime::parse_from_rfc3339(&instance.end.to_string())
+                            .unwrap()
+                            .with_timezone(&Utc),
                         busy: true,
                     };
                     instances.push(instance);

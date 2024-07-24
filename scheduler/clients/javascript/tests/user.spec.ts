@@ -78,8 +78,8 @@ describe('User API', () => {
 
   it('should not show any freebusy with no events', async () => {
     const res = await accountClient.user.freebusy(userId, {
-      endTs: 1000 * 60 * 60 * 24 * 4,
-      startTs: 10,
+      endTime: new Date(1000 * 60 * 60 * 24 * 4),
+      startTime: new Date(10),
       calendarIds: [calendarId],
     })
     expect(res.status).toBe(200)
@@ -93,7 +93,7 @@ describe('User API', () => {
     const event = await client.events.create({
       calendarId,
       duration: 1000 * 60 * 60,
-      startTs: 0,
+      startTime: new Date(0),
       busy: true,
       recurrence: {
         freq: Frequenzy.Daily,
@@ -106,8 +106,8 @@ describe('User API', () => {
     }
 
     const res = await unauthClient.user.freebusy(userId, {
-      endTs: 1000 * 60 * 60 * 24 * 4,
-      startTs: 10,
+      endTime: new Date(1000 * 60 * 60 * 24 * 4),
+      startTime: new Date(10),
       calendarIds: [calendarId],
     })
     if (!res.data) {
@@ -122,7 +122,7 @@ describe('User API', () => {
     const event1 = await client.events.create({
       calendarId,
       duration: 1000 * 60 * 60,
-      startTs: 0,
+      startTime: new Date(0),
       busy: true,
       recurrence: {
         freq: Frequenzy.Daily,
@@ -136,7 +136,7 @@ describe('User API', () => {
     const event2 = await client.events.create({
       calendarId,
       duration: 1000 * 60 * 60,
-      startTs: 1000 * 60 * 60 * 4,
+      startTime: new Date(1000 * 60 * 60 * 4),
       busy: true,
       recurrence: {
         freq: Frequenzy.Daily,
@@ -150,7 +150,7 @@ describe('User API', () => {
     const event3 = await client.events.create({
       calendarId,
       duration: 1000 * 60 * 60,
-      startTs: 0,
+      startTime: new Date(0),
       busy: false,
       recurrence: {
         freq: Frequenzy.Daily,
@@ -163,8 +163,8 @@ describe('User API', () => {
     }
 
     const res = await unauthClient.user.freebusy(userId, {
-      endTs: 1000 * 60 * 60 * 24 * 4,
-      startTs: 0,
+      endTime: new Date(1000 * 60 * 60 * 24 * 4),
+      startTime: new Date(0),
       calendarIds: [calendarId],
     })
     if (!res.data) {

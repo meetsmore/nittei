@@ -5,8 +5,8 @@ import type { User } from './domain/user'
 import type { IntegrationProvider } from '.'
 
 type GetUserFeebusyReq = {
-  startTs: number
-  endTs: number
+  startTime: Date
+  endTime: Date
   calendarIds?: string[]
 }
 
@@ -48,9 +48,12 @@ export class NettuUserClient extends NettuBaseClient {
     skip: number,
     limit: number
   ) {
-    return this.get<User[]>(
-      `/user/meta?skip=${skip}&limit=${limit}&key=${meta.key}&value=${meta.value}`
-    )
+    return this.get<User[]>('/user/meta', {
+      skip,
+      limit,
+      key: meta.key,
+      value: meta.value,
+    })
   }
 
   public remove(userId: string) {
@@ -58,13 +61,11 @@ export class NettuUserClient extends NettuBaseClient {
   }
 
   public freebusy(userId: string, req: GetUserFeebusyReq) {
-    let queryString = `startTs=${req.startTs}&endTs=${req.endTs}`
-    if (req.calendarIds && req.calendarIds.length > 0) {
-      queryString += `&calendarIds=${req.calendarIds.join(',')}`
-    }
-    return this.get<GetUserFeebusyResponse>(
-      `/user/${userId}/freebusy?${queryString}`
-    )
+    return this.get<GetUserFeebusyResponse>(`/user/${userId}/freebusy`, {
+      startTime: req.startTime.toISOString(),
+      endTime: req.endTime.toISOString(),
+      calendarIds: req.calendarIds,
+    })
   }
 
   public oauth(userId: string, code: string, provider: IntegrationProvider) {

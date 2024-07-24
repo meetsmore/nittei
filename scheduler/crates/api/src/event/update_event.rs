@@ -10,6 +10,7 @@ use crate::{
     },
 };
 use actix_web::{web, HttpRequest, HttpResponse};
+use chrono::{DateTime, Utc};
 use event::subscribers::SyncRemindersOnEventUpdated;
 use nettu_scheduler_api_structs::update_event::*;
 use nettu_scheduler_domain::{
@@ -32,7 +33,7 @@ pub async fn update_event_admin_controller(
         user,
         event_id: e.id,
         duration: body.duration,
-        start_ts: body.start_ts,
+        start_time: body.start_time,
         reminders: body.reminders,
         recurrence: body.recurrence,
         busy: body.busy,
@@ -60,7 +61,7 @@ pub async fn update_event_controller(
         user,
         event_id: path_params.event_id.clone(),
         duration: body.duration,
-        start_ts: body.start_ts,
+        start_time: body.start_time,
         reminders: body.reminders,
         recurrence: body.recurrence,
         busy: body.busy,
@@ -79,13 +80,13 @@ pub async fn update_event_controller(
 pub struct UpdateEventUseCase {
     pub user: User,
     pub event_id: ID,
-    pub start_ts: Option<i64>,
+    pub start_time: Option<DateTime<Utc>>,
     pub busy: Option<bool>,
     pub duration: Option<i64>,
     pub reminders: Option<Vec<CalendarEventReminder>>,
     pub recurrence: Option<RRuleOptions>,
     pub service_id: Option<ID>,
-    pub exdates: Option<Vec<i64>>,
+    pub exdates: Option<Vec<DateTime<Utc>>>,
     pub metadata: Option<Metadata>,
 }
 
@@ -127,7 +128,7 @@ impl UseCase for UpdateEventUseCase {
         let UpdateEventUseCase {
             user,
             event_id,
-            start_ts,
+            start_time,
             busy,
             duration,
             recurrence,
@@ -177,9 +178,9 @@ impl UseCase for UpdateEventUseCase {
 
         let mut start_or_duration_change = false;
 
-        if let Some(start_ts) = start_ts {
-            if e.start_ts != *start_ts {
-                e.start_ts = *start_ts;
+        if let Some(start_time) = start_time {
+            if e.start_time != *start_time {
+                e.start_time = *start_time;
                 e.exdates = Vec::new();
                 start_or_duration_change = true;
             }
@@ -242,7 +243,7 @@ mod test {
     #[test]
     async fn update_nonexisting_event() {
         let mut usecase = UpdateEventUseCase {
-            start_ts: Some(500),
+            start_time: Some(DateTime::from_timestamp_millis(500).unwrap()),
             duration: Some(800),
             busy: Some(false),
             ..Default::default()

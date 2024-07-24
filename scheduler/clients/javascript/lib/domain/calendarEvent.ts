@@ -22,12 +22,12 @@ export interface RRuleOptions {
 
 export interface CalendarEvent {
   id: string
-  startTs: number
+  startTime: string
   duration: number
   busy: boolean
   updated: number
   created: number
-  exdates: number[]
+  exdates: string[]
   calendarId: string
   userId: string
   metadata: Metadata
@@ -38,7 +38,7 @@ export interface CalendarEvent {
 }
 
 export interface CalendarEventInstance {
-  startTs: number
-  endTs: number
+  startTime: string
+  endTime: string
   busy: boolean
 }

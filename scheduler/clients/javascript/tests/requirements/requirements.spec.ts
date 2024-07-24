@@ -159,7 +159,7 @@ describe('Requirements', () => {
         const res = await client?.events.create(user1.id, {
           calendarId: user1Calendar1.id,
           duration: 1000 * 60 * 60,
-          startTs: 0,
+          startTime: new Date(0),
           busy: true,
         })
         expect(res?.status).toBe(201)
@@ -180,13 +180,13 @@ describe('Requirements', () => {
         if (!user1Calendar1) {
           throw new Error('No calendar')
         }
-        const startTs = 10
-        const endTs = 1000 * 60 * 60 * 24 * 4
+        const startTime = new Date(10)
+        const endTime = new Date(1000 * 60 * 60 * 24 * 4)
 
         const res = await client?.calendar.getEvents(
           user1Calendar1.id,
-          startTs,
-          endTs
+          startTime,
+          endTime
         )
 
         expect(res?.status).toBe(200)
@@ -224,7 +224,7 @@ describe('Requirements', () => {
         const resEvent = await client?.events.create(user1.id, {
           calendarId: user1Calendar1.id,
           duration: 1000 * 60 * 60,
-          startTs: 0,
+          startTime: new Date(0),
           busy: true,
         })
         expect(resEvent?.status).toBe(201)
@@ -237,7 +237,7 @@ describe('Requirements', () => {
         }
         const res = await client?.events.update(user1Calendar1Event1.id, {
           duration: 1000 * 60 * 60 * 2,
-          startTs: 1000 * 60 * 60,
+          startTime: new Date(1000 * 60 * 60),
         })
         expect(res?.status).toBe(200)
       })
@@ -251,7 +251,9 @@ describe('Requirements', () => {
         expect(res?.data).toBeDefined()
         expect(res?.data?.event.id).toEqual(user1Calendar1Event1.id)
         expect(res?.data?.event.duration).toEqual(1000 * 60 * 60 * 2)
-        expect(res?.data?.event.startTs).toEqual(1000 * 60 * 60)
+        // TODO: We want to get dates instead of strings
+        expect(new Date(res?.data?.event.startTime ?? 0)).toEqual(new Date(1000 * 60 * 60))
+        // expect(res?.data?.event.startTime).toEqual(new Date(1000 * 60 * 60))
       })
     })
 
@@ -283,7 +285,7 @@ describe('Requirements', () => {
         const resEvent = await client?.events.create(user1.id, {
           calendarId: user1Calendar1.id,
           duration: 1000 * 60 * 60,
-          startTs: 0,
+          startTime: new Date(0),
           busy: true,
         })
         expect(resEvent?.status).toBe(201)
@@ -310,13 +312,13 @@ describe('Requirements', () => {
         if (!user1Calendar1) {
           throw new Error('No calendar')
         }
-        const startTs = 10
-        const endTs = 1000 * 60 * 60 * 24 * 4
+        const startTime = new Date(10)
+        const endTime = new Date(1000 * 60 * 60 * 24 * 4)
 
         const res = await client?.calendar.getEvents(
           user1Calendar1.id,
-          startTs,
-          endTs
+          startTime,
+          endTime
         )
 
         expect(res?.status).toBe(200)
@@ -353,7 +355,7 @@ describe('Requirements', () => {
         const resEvent = await client?.events.create(user1.id, {
           calendarId: user1Calendar1.id,
           duration: 1000 * 60 * 60,
-          startTs: 0,
+          startTime: new Date(0),
           busy: true,
         })
         expect(resEvent?.status).toBe(201)
@@ -365,8 +367,8 @@ describe('Requirements', () => {
           throw new Error('No user or calendar')
         }
         const res = await client?.user.freebusy(user1.id, {
-          endTs: 1000 * 60 * 60 * 24 * 4,
-          startTs: 10,
+          endTime: new Date(1000 * 60 * 60 * 24 * 4),
+          startTime: new Date(10),
           calendarIds: [user1Calendar1.id],
         })
         if (!res?.data) {
@@ -420,7 +422,7 @@ describe('Requirements', () => {
         const res = await client?.events.create(user1.id, {
           calendarId: user1Calendar1.id,
           duration: 1000 * 60 * 60,
-          startTs: 1000 * 60 * 60,
+          startTime: new Date(1000 * 60 * 60),
           busy: true,
           // TODO: we need to add a state or pending field to the event
         })
@@ -435,7 +437,7 @@ describe('Requirements', () => {
         const res = await client?.events.create(user1.id, {
           calendarId: user1Calendar1.id,
           duration: 1000 * 60 * 60,
-          startTs: 1000 * 60 * 60, // TODO: change the start time for more realistic tests
+          startTime: new Date(1000 * 60 * 60), // TODO: change the start time for more realistic tests
           busy: true,
         })
         expect(res?.status).toBe(201)
@@ -446,13 +448,13 @@ describe('Requirements', () => {
         if (!user1Calendar1) {
           throw new Error('No calendar')
         }
-        const startTs = 10
-        const endTs = 1000 * 60 * 60 * 24 * 4
+        const startTime = new Date(10)
+        const endTime = new Date(1000 * 60 * 60 * 24 * 4)
 
         const res = await client?.calendar.getEvents(
           user1Calendar1.id,
-          startTs,
-          endTs
+          startTime,
+          endTime
         )
 
         expect(res?.status).toBe(200)
@@ -514,7 +516,7 @@ describe('Requirements', () => {
         const res = await client?.events.create(user1.id, {
           calendarId: user1Calendar1.id,
           duration: 1000 * 60 * 60,
-          startTs: 0,
+          startTime: new Date(0),
           busy: true,
           // name: "日本語のイベント",
         })

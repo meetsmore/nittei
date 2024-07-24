@@ -1,6 +1,6 @@
 use crate::CalendarSettings;
-use chrono::prelude::*;
-use rrule::{Frequenzy, ParsedOptions};
+use chrono::{prelude::*, TimeDelta};
+use rrule::{Frequency, RRule, RRuleSet, Tz};
 use serde::{de::Visitor, Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::{fmt::Display, str::FromStr};
@@ -21,7 +21,7 @@ pub struct RRuleOptions {
     pub freq: RRuleFrequency,
     pub interval: isize,
     pub count: Option<i32>,
-    pub until: Option<isize>,
+    pub until: Option<DateTime<Utc>>,
     pub bysetpos: Option<Vec<isize>>,
     pub byweekday: Option<Vec<WeekDay>>,
     pub bymonthday: Option<Vec<isize>>,
@@ -30,12 +30,12 @@ pub struct RRuleOptions {
     pub byweekno: Option<Vec<isize>>,
 }
 
-fn freq_convert(freq: &RRuleFrequency) -> Frequenzy {
+fn freq_convert(freq: &RRuleFrequency) -> Frequency {
     match freq {
-        RRuleFrequency::Yearly => Frequenzy::Yearly,
-        RRuleFrequency::Monthly => Frequenzy::Monthly,
-        RRuleFrequency::Weekly => Frequenzy::Weekly,
-        RRuleFrequency::Daily => Frequenzy::Daily,
+        RRuleFrequency::Yearly => Frequency::Yearly,
+        RRuleFrequency::Monthly => Frequency::Monthly,
+        RRuleFrequency::Weekly => Frequency::Weekly,
+        RRuleFrequency::Daily => Frequency::Daily,
     }
 }
 
@@ -44,15 +44,15 @@ fn is_none_or_empty<T>(v: &Option<Vec<T>>) -> bool {
 }
 
 impl RRuleOptions {
-    pub fn is_valid(&self, start_ts: i64) -> bool {
+    pub fn is_valid(&self, start_time: DateTime<Utc>) -> bool {
         if let Some(count) = self.count {
             if !(1..740).contains(&count) {
                 return false;
             }
         }
-        let two_years_in_millis = 1000 * 60 * 60 * 24 * 366 * 2;
-        if let Some(until) = self.until.map(|val| val as i64) {
-            if until < start_ts || until - start_ts > two_years_in_millis {
+        let two_years_in_millis = TimeDelta::milliseconds(1000 * 60 * 60 * 24 * 366 * 2);
+        if let Some(until) = self.until {
+            if until < start_time || until - start_time > two_years_in_millis {
                 return false;
             }
         }
@@ -75,26 +75,25 @@ impl RRuleOptions {
     }
 
     pub fn get_parsed_options(
-        self,
-        start_ts: i64,
+        &self,
+        start_time: DateTime<Utc>,
         calendar_settings: &CalendarSettings,
-    ) -> ParsedOptions {
-        let timezone = calendar_settings.timezone;
+    ) -> RRuleSet {
+        let until = self.until;
 
-        let until = self.until.map(|ts| timezone.timestamp(ts as i64 / 1000, 0));
-
-        let dtstart = timezone.timestamp(start_ts / 1000, 0);
+        let dtstart = start_time;
 
         let count = self.count.map(|c| std::cmp::max(c, 0) as u32);
 
-        let mut byweekday = Vec::new();
         let mut bynweekday = Vec::new();
-        if let Some(opts_byweekday) = self.byweekday {
+        if let Some(opts_byweekday) = &self.byweekday {
             for wday in opts_byweekday {
                 match wday.nth() {
-                    None => byweekday.push(wday.weekday() as usize),
+                    None => {
+                        bynweekday.push(rrule::NWeekday::Nth(1, wday.weekday()));
+                    }
                     Some(n) => {
-                        bynweekday.push(vec![wday.weekday() as isize, n]);
+                        bynweekday.push(rrule::NWeekday::Nth(n as i16, wday.weekday()));
                     }
                 }
             }
@@ -102,7 +101,7 @@ impl RRuleOptions {
 
         let mut bymonthday = Vec::new();
         let mut bynmonthday = Vec::new();
-        if let Some(opts_bymonthday) = self.bymonthday {
+        if let Some(opts_bymonthday) = &self.bymonthday {
             for monthday in opts_bymonthday {
                 match monthday.cmp(&0) {
                     Ordering::Greater => bymonthday.push(monthday),
@@ -112,32 +111,75 @@ impl RRuleOptions {
             }
         }
 
-        ParsedOptions {
-            freq: freq_convert(&self.freq),
-            count,
-            dtstart,
-            bymonth: self
-                .bymonth
-                .unwrap_or_default()
-                .into_iter()
-                .map(|m| m as usize)
-                .collect::<Vec<_>>(),
-            bymonthday,
-            bynmonthday,
-            byweekday,
-            bynweekday,
-            byyearday: self.byyearday.unwrap_or_default(),
-            bysetpos: self.bysetpos.unwrap_or_default(),
-            byweekno: self.byweekno.unwrap_or_default(),
-            byhour: vec![dtstart.hour() as usize],
-            byminute: vec![dtstart.minute() as usize],
-            bysecond: vec![dtstart.second() as usize],
-            until,
-            wkst: calendar_settings.week_start as usize,
-            tzid: timezone,
-            interval: self.interval as usize,
-            byeaster: None,
+        let mut rule = RRule::new(freq_convert(&self.freq))
+            .by_month(&self.bymonth.clone().unwrap_or_default())
+            .by_month_day(bymonthday.into_iter().map(|d| *d as i8).collect::<Vec<_>>())
+            // .bynmonthday(bynmonthday) // TODO: TO FIX
+            .by_weekday(bynweekday)
+            .by_year_day(
+                self.byyearday
+                    .clone()
+                    .unwrap_or_default()
+                    .into_iter()
+                    .map(|d| d as i16)
+                    .collect::<Vec<_>>(),
+            )
+            .by_set_pos(
+                self.bysetpos
+                    .clone()
+                    .unwrap_or_default()
+                    .into_iter()
+                    .map(|pos| pos as i32)
+                    .collect::<Vec<_>>(),
+            )
+            .by_week_no(
+                self.byweekno
+                    .clone()
+                    .unwrap_or_default()
+                    .into_iter()
+                    .map(|w| w as i8)
+                    .collect::<Vec<_>>(),
+            )
+            .by_hour(vec![dtstart.hour() as u8])
+            .by_minute(vec![dtstart.minute() as u8])
+            .by_second(vec![dtstart.second() as u8])
+            .week_start(calendar_settings.week_start)
+            .interval(self.interval as u16);
+
+        if let Some(count) = count {
+            rule = rule.count(count);
         }
+
+        if let Some(until) = until {
+            rule = rule.until(until.with_timezone(&rrule::Tz::Tz(chrono_tz::UTC)));
+        }
+
+        rule.build(dtstart.with_timezone(&rrule::Tz::Tz(chrono_tz::UTC)))
+            .unwrap()
+
+        //     dtstart
+        //     bymonth: self
+        //         .bymonth
+        //         .unwrap_or_default()
+        //         .into_iter()
+        //         .map(|m| m as usize)
+        //         .collect::<Vec<_>>(),
+        //     bymonthday,
+        //     bynmonthday,
+        //     byweekday,
+        //     bynweekday,
+        //     byyearday: self.byyearday.unwrap_or_default(),
+        //     bysetpos: self.bysetpos.unwrap_or_default(),
+        //     byweekno: self.byweekno.unwrap_or_default(),
+        //     byhour: vec![dtstart.hour() as usize],
+        //     byminute: vec![dtstart.minute() as usize],
+        //     bysecond: vec![dtstart.second() as usize],
+        //     until,
+        //     wkst: calendar_settings.week_start as usize,
+        //     tzid: timezone,
+        //     interval: self.interval as usize,
+        //     byeaster: None,
+        // }
     }
 }
 

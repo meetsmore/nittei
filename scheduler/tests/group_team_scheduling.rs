@@ -175,7 +175,7 @@ async fn test_group_team_scheduling() {
                     recurrence: None,
                     reminders: Vec::new(),
                     service_id: Some(service.id.clone()),
-                    start_ts: available_slot,
+                    start_time: available_slot,
                 };
                 admin_client
                     .event
@@ -496,7 +496,7 @@ async fn test_group_team_scheduling_increase_max_count() {
             recurrence: None,
             reminders: Vec::new(),
             service_id: Some(service.id.clone()),
-            start_ts: available_slot,
+            start_time: available_slot,
         };
         let service_event = admin_client
             .event
@@ -913,7 +913,7 @@ async fn test_group_team_scheduling_decrease_max_count() {
             recurrence: None,
             reminders: Vec::new(),
             service_id: Some(service.id.clone()),
-            start_ts: available_slot,
+            start_time: available_slot,
         };
         let service_event = admin_client
             .event
@@ -1115,7 +1115,7 @@ async fn test_combination_of_services() {
         recurrence: None,
         reminders: Vec::new(),
         service_id: Some(group_service.id.clone()),
-        start_ts: available_slot,
+        start_time: available_slot,
     };
     admin_client
         .event

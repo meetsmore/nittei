@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use nettu_scheduler_domain::{
     CalendarEvent, CalendarEventReminder, EventInstance, Metadata, RRuleOptions, ID,
 };
@@ -7,13 +8,13 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub struct CalendarEventDTO {
     pub id: ID,
-    pub start_ts: i64,
+    pub start_time: DateTime<Utc>,
     pub duration: i64,
     pub busy: bool,
     pub updated: i64,
     pub created: i64,
     pub recurrence: Option<RRuleOptions>,
-    pub exdates: Vec<i64>,
+    pub exdates: Vec<DateTime<Utc>>,
     pub calendar_id: ID,
     pub user_id: ID,
     pub reminders: Vec<CalendarEventReminder>,
@@ -24,7 +25,7 @@ impl CalendarEventDTO {
     pub fn new(event: CalendarEvent) -> Self {
         Self {
             id: event.id.clone(),
-            start_ts: event.start_ts,
+            start_time: event.start_time,
             duration: event.duration,
             busy: event.busy,
             updated: event.updated,

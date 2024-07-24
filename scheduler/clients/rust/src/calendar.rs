@@ -3,6 +3,7 @@ use crate::{
     shared::MetadataFindInput,
     Tz, Weekday,
 };
+use chrono::{DateTime, Utc};
 use nettu_scheduler_api_structs::*;
 use nettu_scheduler_domain::{
     providers::{google::GoogleCalendarAccessRole, outlook::OutlookCalendarAccessRole},
@@ -39,8 +40,8 @@ pub struct StopCalendarSyncInput {
 
 pub struct GetCalendarEventsInput {
     pub calendar_id: ID,
-    pub start_ts: i64,
-    pub end_ts: i64,
+    pub start_time: DateTime<Utc>,
+    pub end_time: DateTime<Utc>,
 }
 
 pub struct UpdateCalendarInput {
@@ -94,7 +95,11 @@ impl CalendarClient {
 
     pub async fn get(&self, calendar_id: ID) -> APIResponse<get_calendar::APIResponse> {
         self.base
-            .get(format!("user/calendar/{}", calendar_id), StatusCode::OK)
+            .get(
+                format!("user/calendar/{}", calendar_id),
+                None,
+                StatusCode::OK,
+            )
             .await
     }
 
@@ -104,10 +109,11 @@ impl CalendarClient {
     ) -> APIResponse<get_calendar_events::APIResponse> {
         self.base
             .get(
-                format!(
-                    "user/calendar/{}/events?startTs={}&endTs={}",
-                    input.calendar_id, input.start_ts, input.end_ts
-                ),
+                format!("user/calendar/{}/events", input.calendar_id),
+                Some(vec![
+                    ("startTime".to_string(), input.start_time.to_string()),
+                    ("endTime".to_string(), input.end_time.to_string()),
+                ]),
                 StatusCode::OK,
             )
             .await
@@ -119,7 +125,8 @@ impl CalendarClient {
     ) -> APIResponse<get_calendars_by_meta::APIResponse> {
         self.base
             .get(
-                format!("calendar/meta?{}", input.to_query_string()),
+                format!("calendar/meta"),
+                Some(input.to_query()),
                 StatusCode::OK,
             )
             .await
@@ -185,10 +192,11 @@ impl CalendarClient {
     ) -> APIResponse<get_google_calendars::APIResponse> {
         self.base
             .get(
-                format!(
-                    "user/{:?}/calendar/provider/google?minAccessRole={:?}",
-                    input.user_id, input.min_access_role
-                ),
+                format!("user/{:?}/calendar/provider/google", input.user_id),
+                Some(vec![(
+                    "minAccessRole".to_string(),
+                    format!("{:?}", input.min_access_role),
+                )]),
                 StatusCode::OK,
             )
             .await
@@ -200,10 +208,11 @@ impl CalendarClient {
     ) -> APIResponse<get_outlook_calendars::APIResponse> {
         self.base
             .get(
-                format!(
-                    "user/{:?}/calendar/provider/outlook?minAccessRole={:?}",
-                    input.user_id, input.min_access_role
-                ),
+                format!("user/{:?}/calendar/provider/outlook", input.user_id),
+                Some(vec![(
+                    "minAccessRole".to_string(),
+                    format!("{:?}", input.min_access_role),
+                )]),
                 StatusCode::OK,
             )
             .await
