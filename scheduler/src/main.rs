@@ -12,12 +12,6 @@ async fn main() -> std::io::Result<()> {
     // Initialize the subscriber for logging
     init_subscriber();
 
-    // Example log statement
-    tracing::info!("Application started");
-
-    // Simulate some work
-    tracing::info!("Performing some work");
-
     let context = setup_context().await;
 
     let app = Application::new(context).await?;
