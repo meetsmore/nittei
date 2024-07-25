@@ -1,98 +1,94 @@
-import { BusyCalendar, Service, TimePlan } from "./domain/service";
-import { NettuBaseClient } from "./baseClient";
-import { Metadata } from "./domain/metadata";
+import type { BusyCalendar, Service, TimePlan } from './domain/service'
+import { NettuBaseClient } from './baseClient'
+import type { Metadata } from './domain/metadata'
 
 type AddUserToServiceRequest = {
-  userId: string;
-  availability?: TimePlan;
-  bufferBefore?: number;
-  bufferAfter?: number;
-  closestBookingTime?: number;
-  furthestBookingTime?: number;
-};
+  userId: string
+  availability?: TimePlan
+  bufferBefore?: number
+  bufferAfter?: number
+  closestBookingTime?: number
+  furthestBookingTime?: number
+}
 
 type UpdateUserToServiceRequest = {
-  userId: string;
-  availability?: TimePlan;
-  bufferBefore?: number;
-  bufferAfter?: number;
-  closestBookingTime?: number;
-  furthestBookingTime?: number;
-};
+  userId: string
+  availability?: TimePlan
+  bufferBefore?: number
+  bufferAfter?: number
+  closestBookingTime?: number
+  furthestBookingTime?: number
+}
 
 type GetServiceBookingslotsReq = {
-  ianaTz: string;
-  duration: number;
-  interval: number;
-  startDate: string;
-  endDate: string;
-  userIds?: string[];
-};
+  ianaTz: string
+  duration: number
+  interval: number
+  startDate: string
+  endDate: string
+  userIds?: string[]
+}
 
 type ServiceBookingSlot = {
-  start: number;
-  duration: number;
-  userIds: string[];
-};
+  start: number
+  duration: number
+  userIds: string[]
+}
 
 type GetServiceBookingslotsResponse = {
   dates: {
-    date: string;
-    slots: ServiceBookingSlot[];
-  }[];
-};
+    date: string
+    slots: ServiceBookingSlot[]
+  }[]
+}
 
 type CreateServiceRequest = {
-  metadata?: Metadata;
-};
+  metadata?: Metadata
+}
 
 type UpdateServiceRequest = {
-  metadata?: Metadata;
-};
+  metadata?: Metadata
+}
 
 type ServiceResponse = {
-  service: Service;
-};
+  service: Service
+}
 
 type AddBusyCalendar = {
-  serviceId: string;
-  userId: string;
-  calendar: BusyCalendar;
-};
+  serviceId: string
+  userId: string
+  calendar: BusyCalendar
+}
 
 type RemoveBusyCalendar = {
-  serviceId: string;
-  userId: string;
-  calendar: BusyCalendar;
-};
+  serviceId: string
+  userId: string
+  calendar: BusyCalendar
+}
 
 export class NettuServiceClient extends NettuBaseClient {
   public create(data?: CreateServiceRequest) {
-    data = data ? data : {};
-    return this.post<ServiceResponse>("/service", data);
+    return this.post<ServiceResponse>('/service', data ?? {})
   }
 
   public update(serviceId: string, data?: UpdateServiceRequest) {
-    data = data ? data : {};
-    return this.put<ServiceResponse>(`/service/${serviceId}`, data);
+    return this.put<ServiceResponse>(`/service/${serviceId}`, data ?? {})
   }
 
   public find(serviceId: string) {
-    return this.get<Service>(`/service/${serviceId}`);
+    return this.get<Service>(`/service/${serviceId}`)
   }
 
   public remove(serviceId: string) {
-    return this.delete<ServiceResponse>(`/service/${serviceId}`);
+    return this.delete<ServiceResponse>(`/service/${serviceId}`)
   }
 
   public addUser(serviceId: string, data: AddUserToServiceRequest) {
-    return this.post<ServiceResponse>(`/service/${serviceId}/users`, data);
+    return this.post<ServiceResponse>(`/service/${serviceId}/users`, data)
   }
 
   public removeUser(serviceId: string, userId: string) {
-    return this.delete<ServiceResponse>(
-      `/service/${serviceId}/users/${userId}`
-    );
+    return this.delete<ServiceResponse>(`/service/${serviceId}/users/${userId}`)
   }
 
   public updateUserInService(
@@ -102,13 +98,13 @@ export class NettuServiceClient extends NettuBaseClient {
     return this.put<ServiceResponse>(
       `/service/${serviceId}/users/${data.userId}`,
       data
-    );
+    )
   }
 
   public getBookingslots(serviceId: string, req: GetServiceBookingslotsReq) {
     return this.get<GetServiceBookingslotsResponse>(
       `/service/${serviceId}/booking?${getBookingslotsQueryString(req)}`
-    );
+    )
   }
 
   public addBusyCalendar(input: AddBusyCalendar) {
@@ -117,7 +113,7 @@ export class NettuServiceClient extends NettuBaseClient {
       {
         busy: input.calendar,
       }
-    );
+    )
   }
 
   public removeBusyCalendar(input: RemoveBusyCalendar) {
@@ -126,23 +122,23 @@ export class NettuServiceClient extends NettuBaseClient {
       {
         busy: input.calendar,
       }
-    );
+    )
   }
 }
 
 const getBookingslotsQueryString = (req: GetServiceBookingslotsReq): string => {
-  let qs = `startDate=${req.startDate}&endDate=${req.endDate}&ianaTz=${req.ianaTz}&duration=${req.duration}&interval=${req.interval}`;
+  let qs = `startDate=${req.startDate}&endDate=${req.endDate}&ianaTz=${req.ianaTz}&duration=${req.duration}&interval=${req.interval}`
   if (req.userIds) {
-    qs += `&hostUserIds=${req.userIds.join(",")}`;
+    qs += `&hostUserIds=${req.userIds.join(',')}`
   }
 
-  return qs;
-};
+  return qs
+}
 
 export class NettuServiceUserClient extends NettuBaseClient {
   public getBookingslots(serviceId: string, req: GetServiceBookingslotsReq) {
     return this.get<GetServiceBookingslotsResponse>(
       `/service/${serviceId}/booking?${getBookingslotsQueryString(req)}`
-    );
+    )
   }
 }

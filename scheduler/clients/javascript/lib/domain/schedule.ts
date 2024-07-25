@@ -1,41 +1,41 @@
-import { Metadata } from "./metadata";
+import type { Metadata } from './metadata'
 
 export interface Schedule {
-  id: string;
-  timezone: string;
-  rules: ScheduleRule[];
-  metadata: Metadata;
+  id: string
+  timezone: string
+  rules: ScheduleRule[]
+  metadata: Metadata
 }
 
 export enum ScheduleRuleVariant {
-  WDay = "WDay",
-  Date = "Date",
+  WDay = 'WDay',
+  Date = 'Date',
 }
 
 export enum Weekday {
-  Mon = "Mon",
-  Tue = "Tue",
-  Wed = "Wed",
-  Thu = "Thu",
-  Fri = "Fri",
-  Sat = "Sat",
-  Sun = "Sun",
+  Mon = 'Mon',
+  Tue = 'Tue',
+  Wed = 'Wed',
+  Thu = 'Thu',
+  Fri = 'Fri',
+  Sat = 'Sat',
+  Sun = 'Sun',
 }
 
 export interface ScheduleRule {
   variant: {
-    type: ScheduleRuleVariant;
-    value: string;
-  };
-  intervals: ScheduleRuleInterval[];
+    type: ScheduleRuleVariant
+    value: string
+  }
+  intervals: ScheduleRuleInterval[]
 }
 
 export interface Time {
-  hours: number;
-  minutes: number;
+  hours: number
+  minutes: number
 }
 
 export interface ScheduleRuleInterval {
-  start: Time;
-  end: Time;
+  start: Time
+  end: Time
 }

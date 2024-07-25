@@ -1,6 +1,6 @@
-import { Metadata } from "./metadata";
+import type { Metadata } from './metadata'
 
 export type User = {
-    id: string;
-    metadata: Metadata;
+  id: string
+  metadata: Metadata
 }

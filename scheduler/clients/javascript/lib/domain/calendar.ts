@@ -1,51 +1,51 @@
-import { Metadata } from "./metadata";
+import type { Metadata } from './metadata'
 
 export interface Calendar {
-  id: string;
-  userId: string;
+  id: string
+  userId: string
   settings: {
-    weekStart: string;
-    timezone: string;
-  };
-  metadata: Metadata;
+    weekStart: string
+    timezone: string
+  }
+  metadata: Metadata
 }
 
 export enum GoogleCalendarAccessRole {
-  Owner = "owner",
-  Writer = "writer",
-  Reader = "reader",
-  FreeBusyReader = "freeBusyReader",
+  Owner = 'owner',
+  Writer = 'writer',
+  Reader = 'reader',
+  FreeBusyReader = 'freeBusyReader',
 }
 
 export interface GoogleCalendarListEntry {
-  id: string;
-  access_role: GoogleCalendarAccessRole;
-  summary: string;
-  summaryOverride?: string;
-  description?: string;
-  location?: string;
-  timeZone?: string;
-  colorId?: string;
-  backgroundColor?: string;
-  foregroundColor?: string;
-  hidden?: boolean;
-  selected?: boolean;
-  primary?: boolean;
-  deleted?: boolean;
+  id: string
+  access_role: GoogleCalendarAccessRole
+  summary: string
+  summaryOverride?: string
+  description?: string
+  location?: string
+  timeZone?: string
+  colorId?: string
+  backgroundColor?: string
+  foregroundColor?: string
+  hidden?: boolean
+  selected?: boolean
+  primary?: boolean
+  deleted?: boolean
 }
 
 export enum OutlookCalendarAccessRole {
-  Writer = "writer",
-  Reader = "reader",
+  Writer = 'writer',
+  Reader = 'reader',
 }
 
 export interface OutlookCalendar {
-  id: string;
-  name: string;
-  color: string;
-  changeKey: string;
-  canShare: boolean;
-  canViewPrivateItems: boolean;
-  hexColor: string;
-  canEdit: boolean;
+  id: string
+  name: string
+  color: string
+  changeKey: string
+  canShare: boolean
+  canViewPrivateItems: boolean
+  hexColor: string
+  canEdit: boolean
 }

@@ -1,77 +1,77 @@
-import { NettuClient } from "../lib";
+import { NettuClient } from '../lib'
 import {
   setupAccount,
   setupUserClientForAccount,
   CREATE_ACCOUNT_CODE,
-} from "./helpers/fixtures";
-import { readPrivateKey, readPublicKey } from "./helpers/utils";
+} from './helpers/fixtures'
+import { readPrivateKey, readPublicKey } from './helpers/utils'
 
-describe("Account API", () => {
-  const client = NettuClient();
+describe('Account API', () => {
+  const client = NettuClient()
 
-  it("should create account", async () => {
+  it('should create account', async () => {
     const { status, data } = await client.account.create({
       code: CREATE_ACCOUNT_CODE,
-    });
-    expect(status).toBe(201);
-    expect(data).toBeDefined();
-  });
+    })
+    expect(status).toBe(201)
+    expect(data).toBeDefined()
+  })
 
-  it("should find account", async () => {
+  it('should find account', async () => {
     const { status, data } = await client.account.create({
       code: CREATE_ACCOUNT_CODE,
-    });
+    })
     if (!data) {
-      throw new Error("Account not created");
+      throw new Error('Account not created')
     }
-    const accountClient = NettuClient({ apiKey: data.secretApiKey });
-    const res = await accountClient.account.me();
-    expect(res.status).toBe(200);
+    const accountClient = NettuClient({ apiKey: data.secretApiKey })
+    const res = await accountClient.account.me()
+    expect(res.status).toBe(200)
     if (!res.data) {
-      throw new Error("Account not found");
+      throw new Error('Account not found')
     }
-    expect(res.data.account.id).toBe(data.account.id);
-  });
+    expect(res.data.account.id).toBe(data.account.id)
+  })
 
-  it("should not find account when not signed in", async () => {
-    const res = await client.account.me();
-    expect(res.status).toBe(401);
-  });
+  it('should not find account when not signed in', async () => {
+    const res = await client.account.me()
+    expect(res.status).toBe(401)
+  })
 
-  it("should upload account public key and be able to remove it", async () => {
-    const { client } = await setupAccount();
-    const publicKey = await readPublicKey();
-    await client.account.setPublicSigningKey(publicKey);
-    let res = await client.account.me();
+  it('should upload account public key and be able to remove it', async () => {
+    const { client } = await setupAccount()
+    const publicKey = await readPublicKey()
+    await client.account.setPublicSigningKey(publicKey)
+    let res = await client.account.me()
     if (!res.data) {
-      throw new Error("Account not found");
+      throw new Error('Account not found')
     }
-    expect(res.data.account.publicJwtKey).toBe(publicKey);
-    const userRes = await client.user.create();
+    expect(res.data.account.publicJwtKey).toBe(publicKey)
+    const userRes = await client.user.create()
     if (!userRes.data) {
-      throw new Error("User not created");
+      throw new Error('User not created')
     }
-    const user = userRes.data.user;
+    const user = userRes.data.user
     // validate that a user can now use token to interact with api
-    const privateKey = await readPrivateKey();
+    const privateKey = await readPrivateKey()
     const { client: userClient } = setupUserClientForAccount(
       privateKey,
       user.id,
       res.data.account.id
-    );
-    const { status } = await userClient.calendar.create({ timezone: "UTC" });
-    expect(status).toBe(201);
+    )
+    const { status } = await userClient.calendar.create({ timezone: 'UTC' })
+    expect(status).toBe(201)
     // now disable public key and dont allow jwt token anymore
-    await client.account.removePublicSigningKey();
-    res = await client.account.me();
+    await client.account.removePublicSigningKey()
+    res = await client.account.me()
     if (!res.data) {
-      throw new Error("Account not found");
+      throw new Error('Account not found')
     }
-    expect(res.data.account.publicJwtKey).toBeNull();
+    expect(res.data.account.publicJwtKey).toBeNull()
 
     const { status: status2 } = await userClient.calendar.create({
-      timezone: "UTC",
-    });
-    expect(status2).toBe(401);
-  });
-});
+      timezone: 'UTC',
+    })
+    expect(status2).toBe(401)
+  })
+})
