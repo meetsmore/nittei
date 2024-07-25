@@ -75,7 +75,16 @@ type UserResponse = {
   user: User
 }
 
+/**
+ * Client for the user endpoints
+ * This is an admin client
+ */
 export class NettuUserClient extends NettuBaseClient {
+  /**
+   * Create a user
+   * @param data - data for creating the user
+   * @returns UserResponse - created user
+   */
   public create(data?: CreateUserRequest) {
     return this.post<UserResponse>('/user', data ?? {})
   }
@@ -126,6 +135,10 @@ export class NettuUserClient extends NettuBaseClient {
   }
 }
 
+/**
+ * Client for the user endpoints
+ * This is a user client
+ */
 export class NettuUserUserClient extends NettuBaseClient {
   public me() {
     return this.get<UserResponse>('/me')

@@ -48,7 +48,17 @@ type StopCalendarSyncInput = {
   provider: IntegrationProvider
 }
 
+/**
+ * Client for the calendar endpoints
+ * This is an admin client
+ */
 export class NettuCalendarClient extends NettuBaseClient {
+  /**
+   * Create a calendar
+   * @param userId - uuid of the user to create the calendar for
+   * @param data - data for creating the calendar
+   * @returns CalendarResponse - created calendar
+   */
   public create(userId: string, data: CreateCalendarRequest) {
     return this.post<CalendarResponse>(`/user/${userId}/calendar`, data)
   }
@@ -156,6 +166,10 @@ export class NettuCalendarClient extends NettuBaseClient {
   }
 }
 
+/**
+ * Client for the calendar endpoints
+ * This is a user client
+ */
 export class NettuCalendarUserClient extends NettuBaseClient {
   public create(data: CreateCalendarRequest) {
     return this.post<CalendarResponse>('/calendar', data)

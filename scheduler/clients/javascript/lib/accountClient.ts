@@ -55,36 +55,71 @@ type GoogleIntegration = {
   redirectUri: string
 }
 
+/**
+ * Client for the account endpoints
+ * This is an admin client
+ */
 export class NettuAccountClient extends NettuBaseClient {
-  // data will be something in the future
+  /**
+   * Create an account
+   * @param data - data for creating the account
+   * @returns CreateAccountResponse - created account
+   */
   public create(data: CreateAccountRequest) {
     return this.post<CreateAccountResponse>('/account', data)
   }
 
+  /**
+   * Update the public signing key for the account
+   * @param publicSigningKey - new key
+   * @returns AccountResponse - updated account
+   */
   public setPublicSigningKey(publicSigningKey?: string) {
     return this.put<AccountResponse>('/account/pubkey', {
       publicJwtKey: publicSigningKey,
     })
   }
 
+  /**
+   * Remove the public signing key for the account
+   * @returns AccountResponse - updated account
+   */
   public removePublicSigningKey() {
     return this.setPublicSigningKey()
   }
 
+  /**
+   * Set the webhook for the account
+   * @param url - url to set as webhook
+   * @returns {@see AccountResponse} - updated account
+   */
   public setWebhook(url: string) {
     return this.put<AccountResponse>('/account/webhook', {
       webhookUrl: url,
     })
   }
 
+  /**
+   * Enable/connect Google integration
+   * @param data - data for connecting Google integration
+   * @returns AccountResponse - updated account
+   */
   public connectGoogle(data: GoogleIntegration) {
     return this.put<AccountResponse>('/account/integration/google', data)
   }
 
+  /**
+   * Remove the Webhook for the account
+   * @returns AccountResponse - updated account
+   */
   public removeWebhook() {
     return this.delete<AccountResponse>('/account/webhook')
   }
 
+  /**
+   * Get the current account
+   * @returns AccountResponse - account
+   */
   public me() {
     return this.get<AccountResponse>('/account')
   }

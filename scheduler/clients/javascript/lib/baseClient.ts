@@ -1,6 +1,11 @@
 import axios, { type AxiosInstance, type AxiosResponse } from 'axios'
 import { config } from '.'
 
+/**
+ * Base client for the API
+ * This client is used to centralize configuration needed for calling the API
+ * It shouldn't be exposed to the end user
+ */
 export abstract class NettuBaseClient {
   private readonly credentials: ICredentials
   private readonly axiosClient: AxiosInstance
