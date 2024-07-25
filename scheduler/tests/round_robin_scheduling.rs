@@ -1,8 +1,10 @@
 mod helpers;
 
 use chrono::{Duration, Utc, Weekday};
-use helpers::setup::spawn_app;
-use helpers::utils::{assert_equal_user_lists, format_datetime};
+use helpers::{
+    setup::spawn_app,
+    utils::{assert_equal_user_lists, format_datetime},
+};
 use nettu_scheduler_domain::{BusyCalendar, ServiceMultiPersonOptions, TimePlan, ID};
 use nettu_scheduler_sdk::{
     AddBusyCalendar, AddServiceUserInput, Calendar, CreateBookingIntendInput, CreateCalendarInput,
@@ -328,10 +330,8 @@ async fn test_round_robin_equal_distribution_scheduling() {
 
             assert_eq!(booking_intend.selected_hosts.len(), 1);
             assert!(hosts_with_min_upcoming_events.contains(&booking_intend.selected_hosts[0].id));
-            hosts_with_min_upcoming_events = hosts_with_min_upcoming_events
-                .into_iter()
-                .filter(|host_id| host_id != &booking_intend.selected_hosts[0].id)
-                .collect();
+            hosts_with_min_upcoming_events
+                .retain(|host_id| host_id != &booking_intend.selected_hosts[0].id);
 
             // Create service event for booking
             let (host, busy_calendar) = hosts_with_calendars
@@ -498,10 +498,8 @@ async fn test_round_robin_availability_scheduling() {
 
             assert_eq!(booking_intend.selected_hosts.len(), 1);
             assert!(hosts_with_last_assigned_events.contains(&booking_intend.selected_hosts[0].id));
-            hosts_with_last_assigned_events = hosts_with_last_assigned_events
-                .into_iter()
-                .filter(|host_id| host_id != &booking_intend.selected_hosts[0].id)
-                .collect();
+            hosts_with_last_assigned_events
+                .retain(|host_id| host_id != &booking_intend.selected_hosts[0].id);
 
             // Create service event for booking
             let (host, busy_calendar) = hosts_with_calendars

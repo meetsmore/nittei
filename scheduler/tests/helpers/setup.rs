@@ -1,8 +1,8 @@
-use actix_web::rt::task::JoinHandle;
 use nettu_scheduler_api::Application;
 use nettu_scheduler_infra::{setup_context, Config, NettuContext};
 use nettu_scheduler_sdk::NettuSDK;
 
+#[allow(dead_code)]
 pub struct TestApp {
     pub config: Config,
     pub ctx: NettuContext,

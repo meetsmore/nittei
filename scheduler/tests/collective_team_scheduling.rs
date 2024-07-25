@@ -1,8 +1,10 @@
 mod helpers;
 
 use chrono::{Duration, Utc, Weekday};
-use helpers::setup::spawn_app;
-use helpers::utils::{assert_equal_user_lists, format_datetime};
+use helpers::{
+    setup::spawn_app,
+    utils::{assert_equal_user_lists, format_datetime},
+};
 use nettu_scheduler_domain::{BusyCalendar, ServiceMultiPersonOptions, TimePlan, ID};
 use nettu_scheduler_sdk::{
     AddBusyCalendar, AddServiceUserInput, Calendar, CreateBookingIntendInput, CreateCalendarInput,

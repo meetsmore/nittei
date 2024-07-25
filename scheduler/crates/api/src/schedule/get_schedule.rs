@@ -1,12 +1,15 @@
-use crate::shared::{
-    auth::{account_can_modify_schedule, protect_account_route},
-    usecase::{execute, UseCase},
-};
-use crate::{error::NettuError, shared::auth::protect_route};
 use actix_web::{web, HttpRequest, HttpResponse};
 use nettu_scheduler_api_structs::get_schedule::*;
 use nettu_scheduler_domain::{Schedule, ID};
 use nettu_scheduler_infra::NettuContext;
+
+use crate::{
+    error::NettuError,
+    shared::{
+        auth::{account_can_modify_schedule, protect_account_route, protect_route},
+        usecase::{execute, UseCase},
+    },
+};
 
 pub async fn get_schedule_admin_controller(
     http_req: HttpRequest,

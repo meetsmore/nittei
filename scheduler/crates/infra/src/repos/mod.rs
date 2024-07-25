@@ -13,6 +13,8 @@ mod shared;
 pub(crate) mod user;
 mod user_integrations;
 
+use std::sync::Arc;
+
 use account::{IAccountRepo, PostgresAccountRepo};
 use account_integrations::{IAccountIntegrationRepo, PostgresAccountIntegrationRepo};
 use calendar::{ICalendarRepo, PostgresCalendarRepo};
@@ -32,7 +34,6 @@ use service_user_busy_calendars::{
 };
 pub use shared::query_structs::*;
 use sqlx::postgres::PgPoolOptions;
-use std::sync::Arc;
 use tracing::info;
 use user::{IUserRepo, PostgresUserRepo};
 use user_integrations::{IUserIntegrationRepo, PostgresUserIntegrationRepo};

@@ -1,7 +1,8 @@
-use super::ICalendarSyncedRepo;
 use nettu_scheduler_domain::{SyncedCalendar, ID};
 use sqlx::{types::Uuid, FromRow, PgPool};
 use tracing::error;
+
+use super::ICalendarSyncedRepo;
 
 pub struct PostgresCalendarSyncedRepo {
     pool: PgPool,

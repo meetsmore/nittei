@@ -1,9 +1,15 @@
-use crate::shared::usecase::{execute, UseCase};
-use crate::{error::NettuError, shared::auth::protect_account_route};
 use actix_web::{web, HttpRequest, HttpResponse};
 use nettu_scheduler_api_structs::set_account_webhook::{APIResponse, RequestBody};
 use nettu_scheduler_domain::Account;
 use nettu_scheduler_infra::NettuContext;
+
+use crate::{
+    error::NettuError,
+    shared::{
+        auth::protect_account_route,
+        usecase::{execute, UseCase},
+    },
+};
 
 pub async fn set_account_webhook_controller(
     http_req: HttpRequest,

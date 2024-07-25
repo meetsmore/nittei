@@ -1,11 +1,18 @@
-use crate::shared::usecase::{execute, UseCase};
-use crate::{error::NettuError, shared::auth::protect_public_account_route};
+use std::collections::HashMap;
+
 use actix_web::{web, HttpRequest, HttpResponse};
 use futures::future::join_all;
 use nettu_scheduler_api_structs::get_user_freebusy::{APIResponse, PathParams, QueryParams};
 use nettu_scheduler_domain::{CompatibleInstances, EventInstance, TimeSpan, ID};
 use nettu_scheduler_infra::NettuContext;
-use std::collections::HashMap;
+
+use crate::{
+    error::NettuError,
+    shared::{
+        auth::protect_public_account_route,
+        usecase::{execute, UseCase},
+    },
+};
 
 /// "1,2,3" -> Vec<1,2,3>
 pub fn parse_vec_query_value(val: &Option<String>) -> Option<Vec<ID>> {
@@ -156,9 +163,10 @@ impl GetFreeBusyUseCase {
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use nettu_scheduler_domain::{Account, Calendar, CalendarEvent, Entity, RRuleOptions, User};
     use nettu_scheduler_infra::setup_context;
+
+    use super::*;
 
     #[test]
     fn it_parses_vec_query_params_correctly() {

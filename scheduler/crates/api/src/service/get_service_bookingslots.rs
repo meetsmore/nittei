@@ -1,5 +1,3 @@
-use crate::shared::usecase::{execute, UseCase};
-use crate::{error::NettuError, user::parse_vec_query_value};
 use actix_web::{web, HttpRequest, HttpResponse};
 use futures::future::join_all;
 use nettu_scheduler_api_structs::get_service_bookingslots::*;
@@ -17,6 +15,12 @@ use nettu_scheduler_infra::{
     FreeBusyProviderQuery, NettuContext,
 };
 use tracing::error;
+
+use crate::{
+    error::NettuError,
+    shared::usecase::{execute, UseCase},
+    user::parse_vec_query_value,
+};
 
 pub async fn get_service_bookingslots_controller(
     _http_req: HttpRequest,
@@ -476,13 +480,13 @@ impl GetServiceBookingSlotsUseCase {
 mod test {
     use std::sync::Arc;
 
-    use super::*;
-    use chrono::prelude::*;
-    use chrono::Utc;
+    use chrono::{prelude::*, Utc};
     use nettu_scheduler_domain::{
         Account, Calendar, CalendarEvent, RRuleOptions, Service, ServiceResource, User,
     };
     use nettu_scheduler_infra::{setup_context, ISys};
+
+    use super::*;
 
     struct TestContext {
         ctx: NettuContext,

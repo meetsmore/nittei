@@ -1,6 +1,8 @@
-use crate::CalendarEvent;
-use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
+
+use serde::{Deserialize, Serialize};
+
+use crate::CalendarEvent;
 
 /// Occurrence of a `CalendarEvent`
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

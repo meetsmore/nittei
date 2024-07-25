@@ -12,8 +12,9 @@ pub trait IReservationRepo: Send + Sync {
 
 #[cfg(test)]
 mod tests {
-    use crate::setup_context;
     use nettu_scheduler_domain::{Account, Service};
+
+    use crate::setup_context;
 
     #[tokio::test]
     async fn test_reservations_repo() {

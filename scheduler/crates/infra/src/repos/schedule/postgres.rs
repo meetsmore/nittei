@@ -1,5 +1,3 @@
-use super::IScheduleRepo;
-use crate::repos::shared::query_structs::MetadataFindQuery;
 use nettu_scheduler_domain::{Schedule, ID};
 use serde_json::Value;
 use sqlx::{
@@ -7,6 +5,9 @@ use sqlx::{
     FromRow, PgPool,
 };
 use tracing::error;
+
+use super::IScheduleRepo;
+use crate::repos::shared::query_structs::MetadataFindQuery;
 
 pub struct PostgresScheduleRepo {
     pool: PgPool,

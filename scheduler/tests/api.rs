@@ -1,5 +1,7 @@
 mod helpers;
 
+use std::collections::HashMap;
+
 use helpers::setup::spawn_app;
 use nettu_scheduler_domain::{PEMKey, Weekday};
 use nettu_scheduler_sdk::{
@@ -9,7 +11,6 @@ use nettu_scheduler_sdk::{
     RemoveServiceUserInput, UpdateCalendarInput, UpdateEventInput, UpdateScheduleInput,
     UpdateServiceUserInput, ID,
 };
-use std::collections::HashMap;
 
 #[actix_web::main]
 #[test]

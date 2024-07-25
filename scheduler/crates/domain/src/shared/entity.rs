@@ -1,5 +1,6 @@
-use serde::{de::Visitor, Deserialize, Serialize};
 use std::{fmt::Display, str::FromStr};
+
+use serde::{de::Visitor, Deserialize, Serialize};
 use thiserror::Error;
 use uuid::Uuid;
 

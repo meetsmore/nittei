@@ -1,8 +1,9 @@
+use serde::{Deserialize, Serialize};
+
 use crate::{
     shared::entity::{Entity, ID},
     Meta, Metadata,
 };
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Default)]
 pub struct User {

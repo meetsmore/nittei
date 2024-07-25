@@ -1,12 +1,15 @@
-use crate::shared::{
-    auth::{account_can_modify_user, protect_route},
-    usecase::{execute, UseCase},
-};
-use crate::{error::NettuError, shared::auth::protect_account_route};
 use actix_web::{web, HttpRequest, HttpResponse};
 use nettu_scheduler_api_structs::remove_integration::*;
 use nettu_scheduler_domain::{IntegrationProvider, User};
 use nettu_scheduler_infra::NettuContext;
+
+use crate::{
+    error::NettuError,
+    shared::{
+        auth::{account_can_modify_user, protect_account_route, protect_route},
+        usecase::{execute, UseCase},
+    },
+};
 
 pub async fn remove_integration_admin_controller(
     http_req: HttpRequest,

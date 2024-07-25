@@ -1,15 +1,17 @@
-use crate::{
-    base::{APIResponse, BaseClient},
-    shared::MetadataFindInput,
-    Tz, Weekday,
-};
+use std::sync::Arc;
+
 use nettu_scheduler_api_structs::*;
 use nettu_scheduler_domain::{
     providers::{google::GoogleCalendarAccessRole, outlook::OutlookCalendarAccessRole},
     IntegrationProvider, Metadata, ID,
 };
 use reqwest::StatusCode;
-use std::sync::Arc;
+
+use crate::{
+    base::{APIResponse, BaseClient},
+    shared::MetadataFindInput,
+    Tz, Weekday,
+};
 
 #[derive(Clone)]
 pub struct CalendarClient {

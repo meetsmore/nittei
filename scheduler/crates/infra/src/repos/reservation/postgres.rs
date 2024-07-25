@@ -1,7 +1,8 @@
-use super::IReservationRepo;
 use nettu_scheduler_domain::ID;
 use sqlx::{types::Uuid, FromRow, PgPool};
 use tracing::error;
+
+use super::IReservationRepo;
 
 pub struct PostgresReservationRepo {
     pool: PgPool,
@@ -14,6 +15,7 @@ impl PostgresReservationRepo {
 }
 
 #[derive(Debug, FromRow)]
+#[allow(dead_code)]
 struct ReservationRaw {
     count: i64,
     timestamp: i64,

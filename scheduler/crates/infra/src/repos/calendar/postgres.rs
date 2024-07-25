@@ -1,5 +1,3 @@
-use super::ICalendarRepo;
-use crate::repos::shared::query_structs::MetadataFindQuery;
 use nettu_scheduler_domain::{Calendar, ID};
 use serde_json::Value;
 use sqlx::{
@@ -7,6 +5,9 @@ use sqlx::{
     FromRow, PgPool,
 };
 use tracing::error;
+
+use super::ICalendarRepo;
+use crate::repos::shared::query_structs::MetadataFindQuery;
 
 pub struct PostgresCalendarRepo {
     pool: PgPool,

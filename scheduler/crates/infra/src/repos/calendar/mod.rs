@@ -1,8 +1,9 @@
 mod postgres;
 
-use super::shared::query_structs::MetadataFindQuery;
 use nettu_scheduler_domain::{Calendar, ID};
 pub use postgres::PostgresCalendarRepo;
+
+use super::shared::query_structs::MetadataFindQuery;
 
 #[async_trait::async_trait]
 pub trait ICalendarRepo: Send + Sync {
@@ -16,8 +17,9 @@ pub trait ICalendarRepo: Send + Sync {
 
 #[cfg(test)]
 mod tests {
-    use crate::setup_context;
     use nettu_scheduler_domain::{Account, Calendar, Entity, User};
+
+    use crate::setup_context;
 
     #[tokio::test]
     async fn create_and_delete() {

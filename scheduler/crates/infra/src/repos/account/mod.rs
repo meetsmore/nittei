@@ -1,7 +1,6 @@
 mod postgres;
 
-use nettu_scheduler_domain::Account;
-use nettu_scheduler_domain::ID;
+use nettu_scheduler_domain::{Account, ID};
 pub use postgres::PostgresAccountRepo;
 
 #[async_trait::async_trait]
@@ -16,8 +15,9 @@ pub trait IAccountRepo: Send + Sync {
 
 #[cfg(test)]
 mod tests {
-    use crate::setup_context;
     use nettu_scheduler_domain::{Account, Entity, PEMKey};
+
+    use crate::setup_context;
 
     #[tokio::test]
     async fn create_and_delete() {

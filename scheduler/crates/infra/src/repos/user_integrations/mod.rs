@@ -1,7 +1,6 @@
 mod postgres;
 
-use nettu_scheduler_domain::ID;
-use nettu_scheduler_domain::{IntegrationProvider, UserIntegration};
+use nettu_scheduler_domain::{IntegrationProvider, UserIntegration, ID};
 pub use postgres::PostgresUserIntegrationRepo;
 
 #[async_trait::async_trait]
@@ -14,10 +13,11 @@ pub trait IUserIntegrationRepo: Send + Sync {
 
 #[cfg(test)]
 mod tests {
-    use crate::setup_context;
     use nettu_scheduler_domain::{
         Account, AccountIntegration, IntegrationProvider, User, UserIntegration,
     };
+
+    use crate::setup_context;
 
     #[tokio::test]
     async fn test_user_integrations() {

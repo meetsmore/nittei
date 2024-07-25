@@ -1,14 +1,3 @@
-use crate::shared::{
-    auth::{
-        account_can_modify_event, account_can_modify_user, protect_account_route, protect_route,
-        Permission,
-    },
-    usecase::{execute_with_policy, PermissionBoundary},
-};
-use crate::{
-    error::NettuError,
-    shared::usecase::{execute, UseCase},
-};
 use actix_web::{web, HttpRequest, HttpResponse};
 use nettu_scheduler_api_structs::delete_event::*;
 use nettu_scheduler_domain::{CalendarEvent, IntegrationProvider, User, ID};
@@ -17,6 +6,17 @@ use nettu_scheduler_infra::{
     NettuContext,
 };
 use tracing::error;
+
+use crate::{
+    error::NettuError,
+    shared::{
+        auth::{
+            account_can_modify_event, account_can_modify_user, protect_account_route,
+            protect_route, Permission,
+        },
+        usecase::{execute, execute_with_policy, PermissionBoundary, UseCase},
+    },
+};
 
 pub async fn delete_event_admin_controller(
     http_req: HttpRequest,

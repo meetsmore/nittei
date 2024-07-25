@@ -58,7 +58,7 @@ jobs:
       - name: Formatting
         run: |
           cd scheduler
-          cargo fmt --all -- --check
+          cargo +nightly fmt --all -- --check
 
       - name: Clippy
         run: |

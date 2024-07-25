@@ -1,6 +1,7 @@
-use crate::dtos::UserDTO;
 use nettu_scheduler_domain::{User, ID};
 use serde::{Deserialize, Serialize};
+
+use crate::dtos::UserDTO;
 
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -60,8 +61,9 @@ pub mod oauth_integration {
 }
 
 pub mod remove_integration {
-    use super::*;
     use nettu_scheduler_domain::IntegrationProvider;
+
+    use super::*;
 
     #[derive(Debug, Serialize, Deserialize)]
     pub struct PathParams {
@@ -90,8 +92,9 @@ pub mod oauth_outlook {
 }
 
 pub mod update_user {
-    use super::*;
     use nettu_scheduler_domain::Metadata;
+
+    use super::*;
 
     #[derive(Debug, Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]

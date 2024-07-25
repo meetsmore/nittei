@@ -1,11 +1,12 @@
-use crate::shared::usecase::UseCase;
+use std::{collections::HashMap, time::Duration};
+
 use actix_web::rt::time::Instant;
 use nettu_scheduler_api_structs::send_event_reminders::{AccountEventReminder, AccountReminders};
 use nettu_scheduler_domain::{Account, CalendarEvent, Reminder};
 use nettu_scheduler_infra::NettuContext;
-use std::collections::HashMap;
-use std::time::Duration;
 use tracing::error;
+
+use crate::shared::usecase::UseCase;
 
 /// Creates EventReminders for a calendar event
 #[derive(Debug)]
@@ -132,15 +133,16 @@ impl UseCase for GetUpcomingRemindersUseCase {
 
 #[cfg(test)]
 mod tests {
-    use super::super::create_event::CreateEventUseCase;
-    use super::*;
+    use std::sync::Arc;
+
+    use nettu_scheduler_domain::{Calendar, CalendarEventReminder, User};
+    use nettu_scheduler_infra::{setup_context as _setup_ctx, ISys};
+
+    use super::{super::create_event::CreateEventUseCase, *};
     use crate::{
         event::{delete_event::DeleteEventUseCase, update_event::UpdateEventUseCase},
         shared::usecase::execute,
     };
-    use nettu_scheduler_domain::{Calendar, CalendarEventReminder, User};
-    use nettu_scheduler_infra::{setup_context as _setup_ctx, ISys};
-    use std::sync::Arc;
 
     async fn setup_context() -> NettuContext {
         let ctx = _setup_ctx().await;

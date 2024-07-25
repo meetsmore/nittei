@@ -31,11 +31,12 @@ pub trait IServiceUserBusyCalendarRepo: Send + Sync {
 
 #[cfg(test)]
 mod tests {
-    use crate::{setup_context, BusyCalendarIdentifier, ExternalBusyCalendarIdentifier};
     use nettu_scheduler_domain::{
         Account, AccountIntegration, Calendar, IntegrationProvider, Service, ServiceResource,
         TimePlan, User, UserIntegration,
     };
+
+    use crate::{setup_context, BusyCalendarIdentifier, ExternalBusyCalendarIdentifier};
 
     #[tokio::test]
     async fn test_service_user_busy_calendars() {

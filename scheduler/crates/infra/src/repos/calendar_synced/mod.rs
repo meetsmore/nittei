@@ -12,11 +12,12 @@ pub trait ICalendarSyncedRepo: Send + Sync {
 
 #[cfg(test)]
 mod tests {
-    use crate::setup_context;
     use nettu_scheduler_domain::{
         Account, AccountIntegration, Calendar, IntegrationProvider, SyncedCalendar, User,
         UserIntegration,
     };
+
+    use crate::setup_context;
 
     #[tokio::test]
     async fn test_calendar_synced_repo() {

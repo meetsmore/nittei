@@ -9,15 +9,15 @@ mod shared;
 mod status;
 mod user;
 
+use std::net::TcpListener;
+
 use actix_cors::Cors;
-use actix_web::web::Data;
-use actix_web::{dev::Server, middleware, web, App, HttpServer};
+use actix_web::{dev::Server, middleware, web, web::Data, App, HttpServer};
 use job_schedulers::{start_reminder_generation_job_scheduler, start_send_reminders_job};
 use nettu_scheduler_domain::{
     Account, AccountIntegration, AccountWebhookSettings, IntegrationProvider, PEMKey, ID,
 };
 use nettu_scheduler_infra::NettuContext;
-use std::net::TcpListener;
 use tracing::warn;
 use tracing_actix_web::TracingLogger;
 
