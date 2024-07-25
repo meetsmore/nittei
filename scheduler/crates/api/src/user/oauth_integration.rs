@@ -124,11 +124,6 @@ impl UseCase for OAuthIntegrationUseCase {
             redirect_uri: acc_provider_integration.redirect_uri,
             code: self.code.clone(),
         };
-        println!("---------------");
-        println!("---------------");
-        println!("---------------");
-        println!("---------------");
-        println!("{:?}", self.provider);
         let res = self
             .provider
             .exchange_code_token(req)

@@ -1673,6 +1673,7 @@ dependencies = [
  "rrule",
  "serde",
  "thiserror",
+ "tracing",
  "url",
  "uuid",
 ]

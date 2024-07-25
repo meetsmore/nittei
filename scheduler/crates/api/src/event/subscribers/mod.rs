@@ -8,7 +8,7 @@ use nettu_scheduler_domain::{CalendarEvent, IntegrationProvider, SyncedCalendarE
 use nettu_scheduler_infra::{
     google_calendar::GoogleCalendarProvider, outlook_calendar::OutlookCalendarProvider,
 };
-use tracing::error;
+use tracing::{error, info};
 
 pub struct CreateRemindersOnEventCreated;
 
@@ -43,6 +43,7 @@ pub struct CreateSyncedEventsOnEventCreated;
 #[async_trait::async_trait(?Send)]
 impl Subscriber<CreateEventUseCase> for CreateSyncedEventsOnEventCreated {
     async fn notify(&self, e: &CalendarEvent, ctx: &nettu_scheduler_infra::NettuContext) {
+        info!("Calendar event created, going to insert into synced calendars.");
         let synced_calendars = match ctx
             .repos
             .calendar_synced
@@ -52,7 +53,6 @@ impl Subscriber<CreateEventUseCase> for CreateSyncedEventsOnEventCreated {
             Ok(synced_calendars) => synced_calendars,
             Err(e) => {
                 error!("Unable to query synced calendars from repo: {:?}", e);
-                println!("Unable to query synced calendars from repo: {:?}", e);
                 return;
             }
         };
@@ -126,13 +126,12 @@ impl Subscriber<CreateEventUseCase> for CreateSyncedEventsOnEventCreated {
                 {
                     Ok(e) => e,
                     Err(_) => {
-                        println!("Unable to create google external calendar event");
                         error!("Unable to create google external calendar event");
                         continue;
                     }
                 };
 
-                println!("Going to insert google synced events");
+                info!("Going to insert google synced events");
 
                 let synced_event = SyncedCalendarEvent {
                     calendar_id: e.calendar_id.clone(),
@@ -143,10 +142,9 @@ impl Subscriber<CreateEventUseCase> for CreateSyncedEventsOnEventCreated {
                     user_id: user.id.clone(),
                 };
                 if ctx.repos.event_synced.insert(&synced_event).await.is_err() {
-                    println!("Unable to insert google synced calendar event into repo");
                     error!("Unable to insert google synced calendar event into repo");
                 } else {
-                    println!("Inserted google synced events ");
+                    info!("Inserted google synced events ");
                 }
             }
         }
