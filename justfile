@@ -3,6 +3,7 @@ export DATABASE_URL := "postgresql://postgres:postgres@localhost:45432/nettusche
 # Install minimal tools
 install_tools: 
 	cargo install sqlx-cli --no-default-features --features postgres
+	cargo install cargo-nextest
 
 # Install all tools
 install_all_tools: install_tools
@@ -26,9 +27,9 @@ _setup_client_node:
 dev: _setup_db
 	cd scheduler && cargo run
 
-# Test
-test: _setup_db
-	cd scheduler && cargo test --all
+# Run the tests on a temporary DB container
+test:
+	bash ./scripts/run_tests.sh
 
 # Lint
 lint: _setup_db
