@@ -72,7 +72,7 @@ mod tests {
         let ctx = setup_context().await;
         let account = Account::default();
         ctx.repos.accounts.insert(&account).await.unwrap();
-        let user = User::new(account.id.clone());
+        let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.unwrap();
         let calendar = Calendar::new(&user.id, &account.id);
         ctx.repos.calendars.insert(&calendar).await.unwrap();
@@ -431,19 +431,19 @@ mod tests {
         ctx.repos.services.insert(&other_service).await.unwrap();
 
         // User 1
-        let user1 = User::new(account.id.clone());
+        let user1 = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user1).await.unwrap();
         let calendar1 = Calendar::new(&user1.id, &account.id);
         ctx.repos.calendars.insert(&calendar1).await.unwrap();
 
         // User 2
-        let user2 = User::new(account.id.clone());
+        let user2 = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user2).await.unwrap();
         let calendar2 = Calendar::new(&user2.id, &account.id);
         ctx.repos.calendars.insert(&calendar2).await.unwrap();
 
         // User 3
-        let user3 = User::new(account.id.clone());
+        let user3 = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user3).await.unwrap();
         let calendar3 = Calendar::new(&user3.id, &account.id);
         ctx.repos.calendars.insert(&calendar3).await.unwrap();
@@ -546,7 +546,7 @@ mod tests {
         ctx.repos.services.insert(&other_service).await.unwrap();
 
         // User 1
-        let user1 = User::new(account.id.clone());
+        let user1 = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user1).await.unwrap();
         let calendar1 = Calendar::new(&user1.id, &account.id);
         ctx.repos.calendars.insert(&calendar1).await.unwrap();

@@ -291,7 +291,7 @@ mod test {
     async fn decodes_valid_token_for_existing_user_in_account() {
         let ctx = setup_context().await;
         let account = setup_account(&ctx).await;
-        let user = User::new(account.id.clone());
+        let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.unwrap();
         let token = get_token(false, user.id.clone());
 
@@ -309,7 +309,7 @@ mod test {
         let ctx = setup_context().await;
         let account = setup_account(&ctx).await;
         let account2 = setup_account(&ctx).await;
-        let user = User::new(account2.id.clone()); // user belongs to account2
+        let user = User::new(account2.id.clone(), None); // user belongs to account2
         ctx.repos.users.insert(&user).await.unwrap();
         // account1 tries to sign a token with user_id that belongs to account2
         let token = get_token(false, user.id.clone());
@@ -327,7 +327,7 @@ mod test {
     async fn rejects_expired_token() {
         let ctx = setup_context().await;
         let account = setup_account(&ctx).await;
-        let user = User::new(account.id.clone());
+        let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.unwrap();
         let token = get_token(true, user.id.clone());
 
@@ -344,7 +344,7 @@ mod test {
     async fn rejects_valid_token_without_account_header() {
         let ctx = setup_context().await;
         let account = setup_account(&ctx).await;
-        let user = User::new(account.id.clone());
+        let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.unwrap();
         let token = get_token(true, user.id.clone());
 
@@ -360,7 +360,7 @@ mod test {
     async fn rejects_valid_token_with_invalid_account_header() {
         let ctx = setup_context().await;
         let account = setup_account(&ctx).await;
-        let user = User::new(account.id.clone());
+        let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.unwrap();
         let token = get_token(true, user.id.clone());
 
@@ -391,7 +391,7 @@ mod test {
     async fn rejects_invalid_authz_header() {
         let ctx = setup_context().await;
         let account = setup_account(&ctx).await;
-        let user = User::new(account.id.clone());
+        let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.unwrap();
 
         let req = TestRequest::default()

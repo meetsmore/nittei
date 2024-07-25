@@ -12,9 +12,10 @@ pub struct User {
 }
 
 impl User {
-    pub fn new(account_id: ID) -> Self {
+    pub fn new(account_id: ID, user_id: Option<ID>) -> Self {
         Self {
             account_id,
+            id: user_id.unwrap_or_default(),
             ..Default::default()
         }
     }

@@ -1,5 +1,6 @@
 import { INettuClient, NettuClient, Frequenzy, INettuUserClient } from "../lib";
 import { setupUserClient } from "./helpers/fixtures";
+import { v4 } from "uuid";
 
 describe("User API", () => {
   let userId: string;
@@ -28,6 +29,33 @@ describe("User API", () => {
     }
     const { user } = res.data;
     const userId = user.id;
+
+    res = await accountClient.user.find(userId);
+    expect(res.status).toBe(200);
+    if (!res.data) {
+      throw new Error("User not found");
+    }
+    expect(res.data.user.id).toBe(userId);
+
+    res = await accountClient.user.remove(userId);
+    expect(res.status).toBe(200);
+
+    res = await accountClient.user.find(userId);
+    expect(res.status).toBe(404);
+  });
+
+  it("should create a 2nd user, and provide the ID", async () => {
+    const userId = v4();
+    let res = await accountClient.user.create({
+      userId,
+    });
+    expect(res.status).toBe(201);
+    if (!res.data) {
+      throw new Error("User not created");
+    }
+    const { user } = res.data;
+
+    expect(user.id).toBe(userId);
 
     res = await accountClient.user.find(userId);
     expect(res.status).toBe(200);

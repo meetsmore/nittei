@@ -32,6 +32,8 @@ pub mod create_user {
     pub struct RequestBody {
         #[serde(default)]
         pub metadata: Option<Metadata>,
+
+        pub user_id: Option<ID>,
     }
 
     pub type APIResponse = UserResponse;

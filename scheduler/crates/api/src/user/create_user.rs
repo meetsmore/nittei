@@ -15,6 +15,7 @@ pub async fn create_user_controller(
     let usecase = CreateUserUseCase {
         account_id: account.id,
         metadata: body.0.metadata.unwrap_or_default(),
+        user_id: body.0.user_id,
     };
 
     execute(usecase, &ctx)
@@ -27,6 +28,7 @@ pub async fn create_user_controller(
 pub struct CreateUserUseCase {
     pub account_id: ID,
     pub metadata: Metadata,
+    pub user_id: Option<ID>,
 }
 
 #[derive(Debug)]
@@ -58,7 +60,7 @@ impl UseCase for CreateUserUseCase {
     const NAME: &'static str = "CreateUser";
 
     async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
-        let mut user = User::new(self.account_id.clone());
+        let mut user = User::new(self.account_id.clone(), self.user_id.clone());
         user.metadata = self.metadata.clone();
 
         if let Some(_existing_user) = ctx.repos.users.find(&user.id).await {

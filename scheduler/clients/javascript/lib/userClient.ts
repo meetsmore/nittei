@@ -20,6 +20,7 @@ type UpdateUserRequest = {
 
 type CreateUserRequest = {
   metadata?: Metadata;
+  userId?: string;
 };
 
 type UserResponse = {
