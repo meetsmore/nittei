@@ -1,6 +1,7 @@
 use chrono::TimeZone;
 use chrono_tz::{Tz, UTC};
 use serde::{Deserialize, Serialize};
+use tracing::error;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -28,8 +29,7 @@ impl OutlookCalendarEventTime {
                 "%FT%T",
             )
             .map_err(|err| {
-                println!("Outlook parse error : {:?}", err);
-                println!("Value: {:?}", self);
+                error!("Outlook parse error : {:?}", err);
                 err
             })
             .unwrap_or_else(|_| UTC.timestamp(0, 0))

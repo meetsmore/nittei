@@ -68,7 +68,8 @@ describe('Requirements', () => {
       let user1Calendar2: Calendar | undefined
 
       beforeAll(async () => {
-        const res = await client?.user.create()
+        const userUuid = v4()
+        const res = await client?.user.create({ userId: userUuid })
         if (!res?.data) {
           throw new Error('User not created')
         }
