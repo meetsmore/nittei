@@ -40,11 +40,9 @@ nettu_scheduler_sdk = { path = "./clients/rust" }
 unsafe_code = "forbid"
 
 [lints.clippy]
-unsafe_ops_in_unsafe_fn = "forbid"
 print_stdout = "forbid"
 print_err = "forbid"
 
 [workspace.lints.clippy]
-unsafe_ops_in_unsafe_fn = "forbid"
 print_stdout = "forbid"
 print_err = "forbid"
