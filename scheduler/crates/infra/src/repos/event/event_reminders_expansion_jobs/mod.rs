@@ -15,6 +15,7 @@ mod tests {
     use nettu_scheduler_domain::{
         Account, Calendar, CalendarEvent, EventRemindersExpansionJob, User,
     };
+    use tracing::error;
 
     #[tokio::test]
     async fn crud() {
@@ -94,7 +95,7 @@ mod tests {
             .event_reminders_generation_jobs
             .bulk_insert(&jobs)
             .await
-            .map_err(|e| println!("Err: {:?}", e))
+            .map_err(|e| error!("Err: {:?}", e))
             .is_ok());
 
         // Delete before timestamp

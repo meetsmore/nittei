@@ -10,7 +10,7 @@ use awc::Client;
 use nettu_scheduler_api_structs::send_event_reminders::AccountRemindersDTO;
 use nettu_scheduler_infra::NettuContext;
 use std::time::Duration;
-use tracing::error;
+use tracing::{error, info};
 
 pub fn get_start_delay(now_ts: usize, secs_before_min: usize) -> usize {
     let secs_to_next_minute = 60 - (now_ts / 1000) % 60;
@@ -64,7 +64,7 @@ async fn send_reminders(context: NettuContext) {
 
     let send_instant = account_reminders.1;
     sleep_until(send_instant).await;
-    println!(
+    info!(
         "Reminders to send at {} : {:?}",
         context.sys.get_timestamp_millis(),
         account_reminders
