@@ -178,7 +178,8 @@ pub mod get_calendars_by_meta {
 
 pub mod get_google_calendars {
     use nettu_scheduler_domain::providers::google::{
-        GoogleCalendarAccessRole, GoogleCalendarListEntry,
+        GoogleCalendarAccessRole,
+        GoogleCalendarListEntry,
     };
 
     use super::*;

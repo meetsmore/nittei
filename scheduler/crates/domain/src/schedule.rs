@@ -9,7 +9,9 @@ use crate::{
     event_instance::EventInstance,
     shared::entity::{Entity, ID},
     timespan::TimeSpan,
-    CompatibleInstances, Meta, Metadata,
+    CompatibleInstances,
+    Meta,
+    Metadata,
 };
 
 #[derive(Debug, Clone)]

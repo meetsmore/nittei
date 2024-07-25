@@ -1,5 +1,11 @@
 use nettu_scheduler_domain::{
-    BusyCalendar, Service, ServiceResource, ServiceWithUsers, TimePlan, Tz, ID,
+    BusyCalendar,
+    Service,
+    ServiceResource,
+    ServiceWithUsers,
+    TimePlan,
+    Tz,
+    ID,
 };
 use serde::{Deserialize, Serialize};
 
@@ -215,7 +221,9 @@ pub mod update_service {
 
 pub mod get_service_bookingslots {
     use nettu_scheduler_domain::booking_slots::{
-        ServiceBookingSlot, ServiceBookingSlots, ServiceBookingSlotsDate,
+        ServiceBookingSlot,
+        ServiceBookingSlots,
+        ServiceBookingSlotsDate,
     };
 
     use super::*;

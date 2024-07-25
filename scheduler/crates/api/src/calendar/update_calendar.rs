@@ -9,8 +9,11 @@ use crate::{
     error::NettuError,
     shared::{
         auth::{
-            account_can_modify_calendar, account_can_modify_user, protect_account_route,
-            protect_route, Permission,
+            account_can_modify_calendar,
+            account_can_modify_user,
+            protect_account_route,
+            protect_route,
+            Permission,
         },
         usecase::{execute, execute_with_policy, PermissionBoundary, UseCase},
     },

@@ -6,10 +6,13 @@ use nettu_scheduler_api_structs::create_service_event_intend::*;
 use nettu_scheduler_domain::{
     format_date,
     scheduling::{
-        RoundRobinAlgorithm, RoundRobinAvailabilityAssignment,
+        RoundRobinAlgorithm,
+        RoundRobinAvailabilityAssignment,
         RoundRobinEqualDistributionAssignment,
     },
-    ServiceMultiPersonOptions, User, ID,
+    ServiceMultiPersonOptions,
+    User,
+    ID,
 };
 use nettu_scheduler_infra::NettuContext;
 

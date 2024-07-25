@@ -1,5 +1,9 @@
 use nettu_scheduler_domain::{
-    CalendarEvent, CalendarEventReminder, EventInstance, RRuleOptions, ID,
+    CalendarEvent,
+    CalendarEventReminder,
+    EventInstance,
+    RRuleOptions,
+    ID,
 };
 use serde::{Deserialize, Serialize};
 

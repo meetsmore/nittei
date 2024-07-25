@@ -2,7 +2,8 @@ use actix_web::{web, HttpRequest, HttpResponse};
 use nettu_scheduler_api_structs::delete_event::*;
 use nettu_scheduler_domain::{CalendarEvent, IntegrationProvider, User, ID};
 use nettu_scheduler_infra::{
-    google_calendar::GoogleCalendarProvider, outlook_calendar::OutlookCalendarProvider,
+    google_calendar::GoogleCalendarProvider,
+    outlook_calendar::OutlookCalendarProvider,
     NettuContext,
 };
 use tracing::error;
@@ -11,8 +12,11 @@ use crate::{
     error::NettuError,
     shared::{
         auth::{
-            account_can_modify_event, account_can_modify_user, protect_account_route,
-            protect_route, Permission,
+            account_can_modify_event,
+            account_can_modify_user,
+            protect_account_route,
+            protect_route,
+            Permission,
         },
         usecase::{execute, execute_with_policy, PermissionBoundary, UseCase},
     },

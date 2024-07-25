@@ -2,7 +2,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     shared::entity::{Entity, ID},
-    Meta, Metadata,
+    Meta,
+    Metadata,
 };
 
 #[derive(Debug, Clone, Default)]

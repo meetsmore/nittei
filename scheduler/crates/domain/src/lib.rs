@@ -20,12 +20,21 @@ pub use chrono_tz::Tz;
 pub use date::format_date;
 pub use event::{CalendarEvent, CalendarEventReminder, SyncedCalendarEvent};
 pub use event_instance::{
-    get_free_busy, CompatibleInstances, EventInstance, EventWithInstances, FreeBusy,
+    get_free_busy,
+    CompatibleInstances,
+    EventInstance,
+    EventWithInstances,
+    FreeBusy,
 };
 pub use reminder::{EventRemindersExpansionJob, Reminder};
 pub use schedule::{Schedule, ScheduleRule};
 pub use service::{
-    BusyCalendar, Service, ServiceMultiPersonOptions, ServiceResource, ServiceWithUsers, TimePlan,
+    BusyCalendar,
+    Service,
+    ServiceMultiPersonOptions,
+    ServiceResource,
+    ServiceWithUsers,
+    TimePlan,
 };
 pub use shared::{
     entity::{Entity, ID},

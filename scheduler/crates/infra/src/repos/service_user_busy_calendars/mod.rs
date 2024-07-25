@@ -32,8 +32,15 @@ pub trait IServiceUserBusyCalendarRepo: Send + Sync {
 #[cfg(test)]
 mod tests {
     use nettu_scheduler_domain::{
-        Account, AccountIntegration, Calendar, IntegrationProvider, Service, ServiceResource,
-        TimePlan, User, UserIntegration,
+        Account,
+        AccountIntegration,
+        Calendar,
+        IntegrationProvider,
+        Service,
+        ServiceResource,
+        TimePlan,
+        User,
+        UserIntegration,
     };
 
     use crate::{setup_context, BusyCalendarIdentifier, ExternalBusyCalendarIdentifier};

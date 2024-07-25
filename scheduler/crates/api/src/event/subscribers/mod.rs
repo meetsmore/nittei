@@ -1,6 +1,7 @@
 use nettu_scheduler_domain::{CalendarEvent, IntegrationProvider, SyncedCalendarEvent};
 use nettu_scheduler_infra::{
-    google_calendar::GoogleCalendarProvider, outlook_calendar::OutlookCalendarProvider,
+    google_calendar::GoogleCalendarProvider,
+    outlook_calendar::OutlookCalendarProvider,
 };
 use tracing::{error, info};
 

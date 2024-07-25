@@ -3,11 +3,19 @@ pub mod auth_provider;
 mod calendar_api;
 
 use calendar_api::{
-    FreeBusyCalendar, FreeBusyRequest, GoogleCalendarEvent, GoogleCalendarEventAttributes,
-    GoogleCalendarRestApi, GoogleDateTime, ListCalendarsResponse,
+    FreeBusyCalendar,
+    FreeBusyRequest,
+    GoogleCalendarEvent,
+    GoogleCalendarEventAttributes,
+    GoogleCalendarRestApi,
+    GoogleDateTime,
+    ListCalendarsResponse,
 };
 use nettu_scheduler_domain::{
-    providers::google::GoogleCalendarAccessRole, CalendarEvent, CompatibleInstances, EventInstance,
+    providers::google::GoogleCalendarAccessRole,
+    CalendarEvent,
+    CompatibleInstances,
+    EventInstance,
     User,
 };
 use tracing::error;

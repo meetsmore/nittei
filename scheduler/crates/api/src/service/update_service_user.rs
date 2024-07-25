@@ -4,7 +4,9 @@ use nettu_scheduler_domain::{Account, ServiceResource, TimePlan, ID};
 use nettu_scheduler_infra::NettuContext;
 
 use super::add_user_to_service::{
-    update_resource_values, ServiceResourceUpdate, UpdateServiceResourceError,
+    update_resource_values,
+    ServiceResourceUpdate,
+    UpdateServiceResourceError,
 };
 use crate::{
     error::NettuError,

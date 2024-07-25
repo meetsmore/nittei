@@ -49,7 +49,14 @@ pub trait IEventRepo: Send + Sync {
 #[cfg(test)]
 mod tests {
     use nettu_scheduler_domain::{
-        Account, Calendar, CalendarEvent, Entity, Service, TimeSpan, User, ID,
+        Account,
+        Calendar,
+        CalendarEvent,
+        Entity,
+        Service,
+        TimeSpan,
+        User,
+        ID,
     };
 
     use crate::{setup_context, NettuContext};

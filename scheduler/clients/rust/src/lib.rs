@@ -15,42 +15,77 @@ pub(crate) use base::BaseClient;
 pub use base::{APIError, APIErrorVariant, APIResponse};
 use calendar::CalendarClient;
 pub use calendar::{
-    CreateCalendarInput, GetCalendarEventsInput, GetGoogleCalendars, GetOutlookCalendars,
-    StopCalendarSyncInput, SyncCalendarInput, UpdateCalendarInput,
+    CreateCalendarInput,
+    GetCalendarEventsInput,
+    GetGoogleCalendars,
+    GetOutlookCalendars,
+    StopCalendarSyncInput,
+    SyncCalendarInput,
+    UpdateCalendarInput,
 };
 use event::CalendarEventClient;
 pub use event::{CreateEventInput, GetEventsInstancesInput, UpdateEventInput};
 // Domain
 pub use nettu_scheduler_api_structs::dtos::{
-    AccountDTO as Account, AccountSettingsDTO as AccountSettings,
-    AccountWebhookSettingsDTO as AccountWebhookSettings, CalendarDTO as Calendar,
-    CalendarEventDTO as CalendarEvent, CalendarSettingsDTO as CalendarSettings,
-    EventWithInstancesDTO as EventWithIInstances, ScheduleDTO as Schedule,
-    ServiceResourceDTO as ServiceResource, ServiceWithUsersDTO as Service, UserDTO as User,
+    AccountDTO as Account,
+    AccountSettingsDTO as AccountSettings,
+    AccountWebhookSettingsDTO as AccountWebhookSettings,
+    CalendarDTO as Calendar,
+    CalendarEventDTO as CalendarEvent,
+    CalendarSettingsDTO as CalendarSettings,
+    EventWithInstancesDTO as EventWithIInstances,
+    ScheduleDTO as Schedule,
+    ServiceResourceDTO as ServiceResource,
+    ServiceWithUsersDTO as Service,
+    UserDTO as User,
 };
 pub use nettu_scheduler_api_structs::{
-    dtos::*, send_event_reminders::AccountRemindersDTO as AccountReminders,
+    dtos::*,
+    send_event_reminders::AccountRemindersDTO as AccountReminders,
 };
 pub use nettu_scheduler_domain::{
     providers::{google::*, outlook::*},
     scheduling::RoundRobinAlgorithm,
-    BusyCalendar, CalendarEventReminder, IntegrationProvider, Metadata, Month, RRuleFrequency,
-    RRuleOptions, ScheduleRule, ServiceMultiPersonOptions, SyncedCalendar, TimePlan, Tz, WeekDay,
-    Weekday, ID,
+    BusyCalendar,
+    CalendarEventReminder,
+    IntegrationProvider,
+    Metadata,
+    Month,
+    RRuleFrequency,
+    RRuleOptions,
+    ScheduleRule,
+    ServiceMultiPersonOptions,
+    SyncedCalendar,
+    TimePlan,
+    Tz,
+    WeekDay,
+    Weekday,
+    ID,
 };
 use schedule::ScheduleClient;
 pub use schedule::{CreateScheduleInput, UpdateScheduleInput};
 use service::ServiceClient;
 pub use service::{
-    AddBusyCalendar, AddServiceUserInput, CreateBookingIntendInput, CreateServiceInput,
-    GetServiceBookingSlotsInput, RemoveBookingIntendInput, RemoveBusyCalendar,
-    RemoveServiceUserInput, UpdateServiceInput, UpdateServiceUserInput,
+    AddBusyCalendar,
+    AddServiceUserInput,
+    CreateBookingIntendInput,
+    CreateServiceInput,
+    GetServiceBookingSlotsInput,
+    RemoveBookingIntendInput,
+    RemoveBusyCalendar,
+    RemoveServiceUserInput,
+    UpdateServiceInput,
+    UpdateServiceUserInput,
 };
 pub use shared::{KVMetadata, MetadataFindInput};
 use status::StatusClient;
 use user::UserClient;
 pub use user::{
-    CreateUserInput, GetUserFreeBusyInput, OAuthInput, RemoveUserIntegrationInput, UpdateUserInput,
+    CreateUserInput,
+    GetUserFreeBusyInput,
+    OAuthInput,
+    RemoveUserIntegrationInput,
+    UpdateUserInput,
 };
 
 /// Nettu Scheduler Server SDK

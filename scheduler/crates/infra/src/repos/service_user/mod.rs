@@ -15,7 +15,13 @@ pub trait IServiceUserRepo: Send + Sync {
 #[cfg(test)]
 mod tests {
     use nettu_scheduler_domain::{
-        Account, Calendar, Entity, Service, ServiceResource, TimePlan, User,
+        Account,
+        Calendar,
+        Entity,
+        Service,
+        ServiceResource,
+        TimePlan,
+        User,
     };
 
     use crate::setup_context;

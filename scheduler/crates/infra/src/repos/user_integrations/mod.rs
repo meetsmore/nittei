@@ -14,7 +14,11 @@ pub trait IUserIntegrationRepo: Send + Sync {
 #[cfg(test)]
 mod tests {
     use nettu_scheduler_domain::{
-        Account, AccountIntegration, IntegrationProvider, User, UserIntegration,
+        Account,
+        AccountIntegration,
+        IntegrationProvider,
+        User,
+        UserIntegration,
     };
 
     use crate::setup_context;

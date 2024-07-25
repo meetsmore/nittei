@@ -6,7 +6,9 @@ use crate::{
         entity::{Entity, ID},
         metadata::Metadata,
     },
-    IntegrationProvider, Meta, Weekday,
+    IntegrationProvider,
+    Meta,
+    Weekday,
 };
 
 #[derive(Debug, Clone)]

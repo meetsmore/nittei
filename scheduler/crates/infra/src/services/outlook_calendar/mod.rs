@@ -5,7 +5,9 @@ mod calendar_api;
 use calendar_api::OutlookCalendarRestApi;
 use nettu_scheduler_domain::{
     providers::outlook::{OutlookCalendarAccessRole, OutlookCalendarEvent},
-    CalendarEvent, CompatibleInstances, User,
+    CalendarEvent,
+    CompatibleInstances,
+    User,
 };
 
 use self::calendar_api::{FreeBusyRequest, ListCalendarsResponse, OutlookCalendarEventAttributes};

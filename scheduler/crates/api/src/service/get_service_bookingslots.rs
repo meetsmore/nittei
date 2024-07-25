@@ -3,16 +3,33 @@ use futures::future::join_all;
 use nettu_scheduler_api_structs::get_service_bookingslots::*;
 use nettu_scheduler_domain::{
     booking_slots::{
-        get_service_bookingslots, validate_bookingslots_query, validate_slots_interval,
-        BookingQueryError, BookingSlotsOptions, BookingSlotsQuery, ServiceBookingSlots,
+        get_service_bookingslots,
+        validate_bookingslots_query,
+        validate_slots_interval,
+        BookingQueryError,
+        BookingSlotsOptions,
+        BookingSlotsQuery,
+        ServiceBookingSlots,
         UserFreeEvents,
     },
-    get_free_busy, BusyCalendar, Calendar, CompatibleInstances, EventInstance,
-    ServiceMultiPersonOptions, ServiceResource, ServiceWithUsers, TimePlan, TimeSpan, Tz, ID,
+    get_free_busy,
+    BusyCalendar,
+    Calendar,
+    CompatibleInstances,
+    EventInstance,
+    ServiceMultiPersonOptions,
+    ServiceResource,
+    ServiceWithUsers,
+    TimePlan,
+    TimeSpan,
+    Tz,
+    ID,
 };
 use nettu_scheduler_infra::{
-    google_calendar::GoogleCalendarProvider, outlook_calendar::OutlookCalendarProvider,
-    FreeBusyProviderQuery, NettuContext,
+    google_calendar::GoogleCalendarProvider,
+    outlook_calendar::OutlookCalendarProvider,
+    FreeBusyProviderQuery,
+    NettuContext,
 };
 use tracing::error;
 
@@ -482,7 +499,13 @@ mod test {
 
     use chrono::{prelude::*, Utc};
     use nettu_scheduler_domain::{
-        Account, Calendar, CalendarEvent, RRuleOptions, Service, ServiceResource, User,
+        Account,
+        Calendar,
+        CalendarEvent,
+        RRuleOptions,
+        Service,
+        ServiceResource,
+        User,
     };
     use nettu_scheduler_infra::{setup_context, ISys};
 

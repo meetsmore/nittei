@@ -1,7 +1,12 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use nettu_scheduler_api_structs::create_event::*;
 use nettu_scheduler_domain::{
-    CalendarEvent, CalendarEventReminder, Metadata, RRuleOptions, User, ID,
+    CalendarEvent,
+    CalendarEventReminder,
+    Metadata,
+    RRuleOptions,
+    User,
+    ID,
 };
 use nettu_scheduler_infra::NettuContext;
 

@@ -2,11 +2,17 @@ use actix_web::{web, HttpRequest, HttpResponse};
 use nettu_scheduler_api_structs::add_busy_calendar::*;
 use nettu_scheduler_domain::{
     providers::{google::GoogleCalendarAccessRole, outlook::OutlookCalendarAccessRole},
-    Account, BusyCalendar, IntegrationProvider, ID,
+    Account,
+    BusyCalendar,
+    IntegrationProvider,
+    ID,
 };
 use nettu_scheduler_infra::{
-    google_calendar::GoogleCalendarProvider, outlook_calendar::OutlookCalendarProvider,
-    BusyCalendarIdentifier, ExternalBusyCalendarIdentifier, NettuContext,
+    google_calendar::GoogleCalendarProvider,
+    outlook_calendar::OutlookCalendarProvider,
+    BusyCalendarIdentifier,
+    ExternalBusyCalendarIdentifier,
+    NettuContext,
 };
 
 use crate::{

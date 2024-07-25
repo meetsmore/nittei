@@ -20,8 +20,13 @@ use account_integrations::{IAccountIntegrationRepo, PostgresAccountIntegrationRe
 use calendar::{ICalendarRepo, PostgresCalendarRepo};
 use calendar_synced::{ICalendarSyncedRepo, PostgresCalendarSyncedRepo};
 use event::{
-    IEventRemindersGenerationJobsRepo, IEventRepo, IEventSyncedRepo, IReminderRepo,
-    PostgresEventReminderGenerationJobsRepo, PostgresEventRepo, PostgresEventSyncedRepo,
+    IEventRemindersGenerationJobsRepo,
+    IEventRepo,
+    IEventSyncedRepo,
+    IReminderRepo,
+    PostgresEventReminderGenerationJobsRepo,
+    PostgresEventRepo,
+    PostgresEventSyncedRepo,
     PostgresReminderRepo,
 };
 use reservation::{IReservationRepo, PostgresReservationRepo};
@@ -30,7 +35,8 @@ use service::{IServiceRepo, PostgresServiceRepo};
 use service_user::{IServiceUserRepo, PostgresServiceUserRepo};
 pub use service_user_busy_calendars::{BusyCalendarIdentifier, ExternalBusyCalendarIdentifier};
 use service_user_busy_calendars::{
-    IServiceUserBusyCalendarRepo, PostgresServiceUseBusyCalendarRepo,
+    IServiceUserBusyCalendarRepo,
+    PostgresServiceUseBusyCalendarRepo,
 };
 pub use shared::query_structs::*;
 use sqlx::postgres::PgPoolOptions;

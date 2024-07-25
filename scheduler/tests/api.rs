@@ -5,11 +5,25 @@ use std::collections::HashMap;
 use helpers::setup::spawn_app;
 use nettu_scheduler_domain::{PEMKey, Weekday};
 use nettu_scheduler_sdk::{
-    AddServiceUserInput, CreateCalendarInput, CreateEventInput, CreateScheduleInput,
-    CreateServiceInput, CreateUserInput, GetCalendarEventsInput, GetEventsInstancesInput,
-    GetServiceBookingSlotsInput, GetUserFreeBusyInput, KVMetadata, MetadataFindInput, NettuSDK,
-    RemoveServiceUserInput, UpdateCalendarInput, UpdateEventInput, UpdateScheduleInput,
-    UpdateServiceUserInput, ID,
+    AddServiceUserInput,
+    CreateCalendarInput,
+    CreateEventInput,
+    CreateScheduleInput,
+    CreateServiceInput,
+    CreateUserInput,
+    GetCalendarEventsInput,
+    GetEventsInstancesInput,
+    GetServiceBookingSlotsInput,
+    GetUserFreeBusyInput,
+    KVMetadata,
+    MetadataFindInput,
+    NettuSDK,
+    RemoveServiceUserInput,
+    UpdateCalendarInput,
+    UpdateEventInput,
+    UpdateScheduleInput,
+    UpdateServiceUserInput,
+    ID,
 };
 
 #[actix_web::main]

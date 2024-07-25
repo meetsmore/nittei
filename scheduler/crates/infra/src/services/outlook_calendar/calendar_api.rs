@@ -2,11 +2,18 @@ use chrono::{SecondsFormat, TimeZone, Utc};
 use futures::future::join_all;
 use nettu_scheduler_domain::{
     providers::outlook::{
-        OutlookCalendar, OutlookCalendarEvent, OutlookCalendarEventBody,
-        OutlookCalendarEventBodyContentType, OutlookCalendarEventOnlineMeeting,
-        OutlookCalendarEventShowAs, OutlookCalendarEventTime, OutlookOnlineMeetingProvider,
+        OutlookCalendar,
+        OutlookCalendarEvent,
+        OutlookCalendarEventBody,
+        OutlookCalendarEventBodyContentType,
+        OutlookCalendarEventOnlineMeeting,
+        OutlookCalendarEventShowAs,
+        OutlookCalendarEventTime,
+        OutlookOnlineMeetingProvider,
     },
-    CalendarEvent, CompatibleInstances, EventInstance,
+    CalendarEvent,
+    CompatibleInstances,
+    EventInstance,
 };
 use reqwest::Client;
 use serde::{Deserialize, Serialize};

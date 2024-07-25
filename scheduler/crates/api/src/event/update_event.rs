@@ -2,7 +2,12 @@ use actix_web::{web, HttpRequest, HttpResponse};
 use event::subscribers::SyncRemindersOnEventUpdated;
 use nettu_scheduler_api_structs::update_event::*;
 use nettu_scheduler_domain::{
-    CalendarEvent, CalendarEventReminder, Metadata, RRuleOptions, User, ID,
+    CalendarEvent,
+    CalendarEventReminder,
+    Metadata,
+    RRuleOptions,
+    User,
+    ID,
 };
 use nettu_scheduler_infra::NettuContext;
 
@@ -11,8 +16,11 @@ use crate::{
     event::{self, subscribers::UpdateSyncedEventsOnEventUpdated},
     shared::{
         auth::{
-            account_can_modify_event, account_can_modify_user, protect_account_route,
-            protect_route, Permission,
+            account_can_modify_event,
+            account_can_modify_user,
+            protect_account_route,
+            protect_route,
+            Permission,
         },
         usecase::{execute, execute_with_policy, PermissionBoundary, Subscriber, UseCase},
     },

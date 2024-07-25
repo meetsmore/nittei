@@ -5,7 +5,8 @@ mod reminder;
 
 pub use calendar_event::{IEventRepo, PostgresEventRepo};
 pub use event_reminders_expansion_jobs::{
-    IEventRemindersGenerationJobsRepo, PostgresEventReminderGenerationJobsRepo,
+    IEventRemindersGenerationJobsRepo,
+    PostgresEventReminderGenerationJobsRepo,
 };
 pub use event_synced::{IEventSyncedRepo, PostgresEventSyncedRepo};
 pub use reminder::{IReminderRepo, PostgresReminderRepo};

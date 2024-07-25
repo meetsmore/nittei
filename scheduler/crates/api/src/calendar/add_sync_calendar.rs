@@ -2,10 +2,14 @@ use actix_web::{web, HttpRequest, HttpResponse};
 use nettu_scheduler_api_structs::add_sync_calendar::{APIResponse, PathParams, RequestBody};
 use nettu_scheduler_domain::{
     providers::{google::GoogleCalendarAccessRole, outlook::OutlookCalendarAccessRole},
-    IntegrationProvider, SyncedCalendar, User, ID,
+    IntegrationProvider,
+    SyncedCalendar,
+    User,
+    ID,
 };
 use nettu_scheduler_infra::{
-    google_calendar::GoogleCalendarProvider, outlook_calendar::OutlookCalendarProvider,
+    google_calendar::GoogleCalendarProvider,
+    outlook_calendar::OutlookCalendarProvider,
     NettuContext,
 };
 

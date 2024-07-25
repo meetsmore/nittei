@@ -11,7 +11,8 @@ use crate::{
         recurrence::RRuleOptions,
     },
     timespan::TimeSpan,
-    IntegrationProvider, Meta,
+    IntegrationProvider,
+    Meta,
 };
 
 #[derive(Debug, Clone, Default)]

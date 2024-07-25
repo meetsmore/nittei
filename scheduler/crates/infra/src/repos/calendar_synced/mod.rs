@@ -13,7 +13,12 @@ pub trait ICalendarSyncedRepo: Send + Sync {
 #[cfg(test)]
 mod tests {
     use nettu_scheduler_domain::{
-        Account, AccountIntegration, Calendar, IntegrationProvider, SyncedCalendar, User,
+        Account,
+        AccountIntegration,
+        Calendar,
+        IntegrationProvider,
+        SyncedCalendar,
+        User,
         UserIntegration,
     };
 

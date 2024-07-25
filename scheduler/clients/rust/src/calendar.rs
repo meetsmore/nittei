@@ -3,14 +3,17 @@ use std::sync::Arc;
 use nettu_scheduler_api_structs::*;
 use nettu_scheduler_domain::{
     providers::{google::GoogleCalendarAccessRole, outlook::OutlookCalendarAccessRole},
-    IntegrationProvider, Metadata, ID,
+    IntegrationProvider,
+    Metadata,
+    ID,
 };
 use reqwest::StatusCode;
 
 use crate::{
     base::{APIResponse, BaseClient},
     shared::MetadataFindInput,
-    Tz, Weekday,
+    Tz,
+    Weekday,
 };
 
 #[derive(Clone)]
