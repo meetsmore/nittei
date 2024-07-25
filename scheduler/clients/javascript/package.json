@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc --p ./tsconfig.release.json",
     "deploy": "pnpm run build && pnpm publish --no-git-checks",
-    "test": "jest tests/ -i --verbose"
+    "test": "jest -i --verbose"
   },
   "repository": {
     "type": "git",
