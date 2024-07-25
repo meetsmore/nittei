@@ -21,13 +21,31 @@ members = [
 nettu_scheduler_api = { path = "./crates/api" }
 nettu_scheduler_domain = { path = "./crates/domain" }
 nettu_scheduler_infra = { path = "./crates/infra" }
+
 actix-web = "4.8"
-tracing = "0.1.19"
-tracing-subscriber = { version = "0.2.12", features = [
+
+tokio = { version = "1", features = ["full"] }
+
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = [
     "env-filter",
     "fmt",
     "json",
+    "registry",
 ] }
+opentelemetry = { version = "0.23.0", default-features = false, features = [
+    "trace",
+] }
+opentelemetry_sdk = { version = "0.23.0", features = ["rt-tokio"] }
+tracing-opentelemetry = "0.24.0"
+opentelemetry-otlp = { version = "=0.16.0", features = [
+    "reqwest-client",
+    "reqwest-rustls",
+    "http-proto",
+    "tls",
+] }
+tracing-bunyan-formatter = "0.3"
+
 openssl-probe = "0.1.2"
 chrono = "0.4.19"
 chrono-tz = "0.5.3"

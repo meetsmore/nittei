@@ -47,6 +47,10 @@ jobs:
             scheduler/target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
+      # Install Nextest
+      - name: Install nextest
+        uses: taiki-e/install-action@nextest
+
       - name: Run migrations
         run: |
           cd scheduler
@@ -84,4 +88,4 @@ jobs:
       - name: Run server tests
         run: |
           cd scheduler
-          cargo test --all
+          cargo nextest run --workspace
