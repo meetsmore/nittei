@@ -4,26 +4,74 @@ import type { Metadata } from './domain/metadata'
 import type { User } from './domain/user'
 import type { IntegrationProvider } from '.'
 
+/**
+ * Request to get a user's freebusy
+ */
 type GetUserFeebusyReq = {
+  /**
+   * Start time of the period to check for freebusy
+   * @format Date in UTC
+   */
   startTime: Date
+  /**
+   * End time of the period to check for freebusy
+   * @format Date in UTC
+   */
   endTime: Date
+  /**
+   * Optional list of calendar ids to check for freebusy
+   * If not provided, all calendars of the user will be checked
+   * @default []
+   * @format uuid[]
+   */
   calendarIds?: string[]
 }
 
+/**
+ * Response when getting a user's freebusy
+ */
 type GetUserFeebusyResponse = {
+  /**
+   * List of busy instances
+   */
   busy: CalendarEventInstance[]
 }
 
+/**
+ * Optional option to provide when updating a user
+ * @default {}
+ */
 type UpdateUserRequest = {
+  /**
+   * Optional metadata to attach to the user
+   */
   metadata?: Metadata
 }
 
+/**
+ * Optional option to provide when creating a user
+ */
 type CreateUserRequest = {
-  metadata?: Metadata
+  /**
+   * Optional id (uuid!) for the user
+   * If provided, the user will be created with this id
+   * If not provided, a uuid v4 will be generated on the server
+   * @default uuid v4
+   */
   userId?: string
+  /**
+   * Optional metadata to attach to the user
+   */
+  metadata?: Metadata
 }
 
+/**
+ * Response when creating a user
+ */
 type UserResponse = {
+  /**
+   * Created user
+   */
   user: User
 }
 

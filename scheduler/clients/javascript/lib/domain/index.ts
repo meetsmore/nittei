@@ -9,7 +9,7 @@ export {
 export {
   CalendarEvent,
   CalendarEventInstance,
-  Frequenzy,
+  Frequency as Frequenzy,
   RRuleOptions,
 } from './calendarEvent'
 export {

@@ -1,22 +1,57 @@
 import type { Account } from './domain/account'
 import { NettuBaseClient } from './baseClient'
 
+/**
+ * Response when getting an account
+ */
 type AccountResponse = {
+  /**
+   * Account object
+   */
   account: Account
 }
 
+/**
+ * Response when creating an account
+ */
 type CreateAccountResponse = {
+  /**
+   * Account object
+   */
   account: Account
+  /**
+   * Secret api key for this account
+   * This key is used to authenticate the account when making requests to the API
+   */
   secretApiKey: string
 }
 
+/**
+ * Request to create an account
+ */
 type CreateAccountRequest = {
+  /**
+   * Code to use for creating the account
+   * This code is unique on the backend and is required for "admin" requests such as this one 
+   */
   code: string
 }
 
+/**
+ * Request to connect Google integration
+ */
 type GoogleIntegration = {
+  /**
+   * Google client id
+   */
   clientId: string
+  /**
+   * Google client secret
+   */
   clientSecret: string
+  /**
+   * Redirect uri for the Google integration
+   */
   redirectUri: string
 }
 
