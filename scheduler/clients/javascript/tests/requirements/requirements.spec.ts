@@ -251,7 +251,9 @@ describe('Requirements', () => {
         expect(res?.data?.event.id).toEqual(user1Calendar1Event1.id)
         expect(res?.data?.event.duration).toEqual(1000 * 60 * 60 * 2)
         // TODO: We want to get dates instead of strings
-        expect(new Date(res?.data?.event.startTime ?? 0)).toEqual(new Date(1000 * 60 * 60))
+        expect(new Date(res?.data?.event.startTime ?? 0)).toEqual(
+          new Date(1000 * 60 * 60)
+        )
         // expect(res?.data?.event.startTime).toEqual(new Date(1000 * 60 * 60))
       })
     })

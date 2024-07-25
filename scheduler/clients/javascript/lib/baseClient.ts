@@ -12,13 +12,13 @@ export abstract class NettuBaseClient {
       validateStatus: () => true, // allow all status codes without throwing error
       paramsSerializer: {
         indexes: null, // Force to stringify arrays like value1,value2 instead of value1[0],value1[1]
-      }
+      },
     })
   }
 
   protected async get<T>(
     path: string,
-    params: Record<string, any> = {}
+    params: Record<string, unknown> = {}
   ): Promise<APIResponse<T>> {
     const res = await this.axiosClient.get(`${config.baseUrl}${path}`, {
       params,

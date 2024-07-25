@@ -117,7 +117,9 @@ describe('CalendarEvent API', () => {
     // do create exception
     const res2 = await client.events.update(eventId, {
       recurrence: event.recurrence,
-      exdates: [new Date(new Date(event.startTime).getTime() + 24 * 60 * 60 * 1000)],
+      exdates: [
+        new Date(new Date(event.startTime).getTime() + 24 * 60 * 60 * 1000),
+      ],
     })
     expect(res2.status).toBe(200)
 
@@ -159,7 +161,9 @@ describe('CalendarEvent API', () => {
     // do create exception
     const res2 = await client.events.update(eventId, {
       recurrence: event.recurrence,
-      exdates: [new Date(new Date(event.startTime).getTime() + 24 * 60 * 60 * 1000)],
+      exdates: [
+        new Date(new Date(event.startTime).getTime() + 24 * 60 * 60 * 1000),
+      ],
     })
     expect(res2.status).toBe(200)
 
@@ -169,7 +173,9 @@ describe('CalendarEvent API', () => {
     )
     await client.events.update(eventId, {
       recurrence: event.recurrence,
-      startTime: new Date(new Date(event.startTime).getTime() + 24 * 60 * 60 * 1000),
+      startTime: new Date(
+        new Date(event.startTime).getTime() + 24 * 60 * 60 * 1000
+      ),
     })
     const instancesAfterExceptionDeleted = await getInstances()
     expect(instancesAfterExceptionDeleted.length).toBe(
