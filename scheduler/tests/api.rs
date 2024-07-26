@@ -1,5 +1,7 @@
 mod helpers;
 
+use std::collections::HashMap;
+
 use chrono::DateTime;
 use helpers::setup::spawn_app;
 use nettu_scheduler_domain::{PEMKey, Weekday};
