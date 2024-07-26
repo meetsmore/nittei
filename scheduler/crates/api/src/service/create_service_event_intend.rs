@@ -1,9 +1,3 @@
-use super::get_service_bookingslots;
-use crate::error::NettuError;
-use crate::shared::{
-    auth::protect_account_route,
-    usecase::{execute, UseCase},
-};
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::{Duration, TimeZone, Utc};
 use chrono_tz::UTC;
@@ -12,13 +6,24 @@ use nettu_scheduler_api_structs::create_service_event_intend::*;
 use nettu_scheduler_domain::{
     format_date,
     scheduling::{
-        RoundRobinAlgorithm, RoundRobinAvailabilityAssignment,
+        RoundRobinAlgorithm,
+        RoundRobinAvailabilityAssignment,
         RoundRobinEqualDistributionAssignment,
     },
-    ServiceMultiPersonOptions, User,
+    ServiceMultiPersonOptions,
+    User,
+    ID,
 };
-use nettu_scheduler_domain::{Account, ID};
 use nettu_scheduler_infra::NettuContext;
+
+use super::get_service_bookingslots;
+use crate::{
+    error::NettuError,
+    shared::{
+        auth::protect_account_route,
+        usecase::{execute, UseCase},
+    },
+};
 
 pub async fn create_service_event_intend_controller(
     http_req: HttpRequest,
@@ -26,11 +31,10 @@ pub async fn create_service_event_intend_controller(
     mut path: web::Path<PathParams>,
     ctx: web::Data<NettuContext>,
 ) -> Result<HttpResponse, NettuError> {
-    let account = protect_account_route(&http_req, &ctx).await?;
+    protect_account_route(&http_req, &ctx).await?;
 
     let body = body.0;
     let usecase = CreateServiceEventIntendUseCase {
-        account,
         service_id: std::mem::take(&mut path.service_id),
         host_user_ids: body.host_user_ids,
         duration: body.duration,
@@ -51,7 +55,6 @@ pub async fn create_service_event_intend_controller(
 
 #[derive(Debug)]
 struct CreateServiceEventIntendUseCase {
-    pub account: Account,
     pub service_id: ID,
     pub host_user_ids: Option<Vec<ID>>,
     pub timestamp: i64,

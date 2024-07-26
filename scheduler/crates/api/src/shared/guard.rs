@@ -1,5 +1,6 @@
-use crate::error::NettuError;
 use nettu_scheduler_domain::ID;
+
+use crate::error::NettuError;
 
 pub struct Guard {}
 

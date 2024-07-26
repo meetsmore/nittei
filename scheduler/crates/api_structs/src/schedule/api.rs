@@ -1,6 +1,7 @@
-use crate::dtos::ScheduleDTO;
 use nettu_scheduler_domain::{Schedule, Tz, ID};
 use serde::{Deserialize, Serialize};
+
+use crate::dtos::ScheduleDTO;
 
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -60,8 +61,9 @@ pub mod get_schedule {
 }
 
 pub mod update_schedule {
-    use super::*;
     use nettu_scheduler_domain::{Metadata, ScheduleRule};
+
+    use super::*;
 
     #[derive(Deserialize)]
     pub struct PathParams {

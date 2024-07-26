@@ -1,14 +1,19 @@
-use crate::{
-    calendar::CalendarSettings,
-    shared::entity::Entity,
-    shared::{metadata::Metadata, recurrence::RRuleOptions},
-    timespan::TimeSpan,
-    IntegrationProvider, Meta,
-};
-use crate::{event_instance::EventInstance, shared::entity::ID};
 use chrono::{prelude::*, Duration};
 use rrule::{RRule, RRuleSet};
 use serde::{Deserialize, Serialize};
+
+use crate::{
+    calendar::CalendarSettings,
+    event_instance::EventInstance,
+    shared::{
+        entity::{Entity, ID},
+        metadata::Metadata,
+        recurrence::RRuleOptions,
+    },
+    timespan::TimeSpan,
+    IntegrationProvider,
+    Meta,
+};
 
 #[derive(Debug, Clone, Default)]
 pub struct CalendarEvent {
@@ -184,9 +189,10 @@ impl CalendarEvent {
 
 #[cfg(test)]
 mod test {
+    use chrono_tz::UTC;
+
     use super::*;
     use crate::{shared::recurrence::WeekDay, RRuleFrequency};
-    use chrono_tz::UTC;
 
     #[test]
     fn daily_calendar_event() {

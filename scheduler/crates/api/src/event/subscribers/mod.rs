@@ -1,14 +1,16 @@
+use nettu_scheduler_domain::{CalendarEvent, IntegrationProvider, SyncedCalendarEvent};
+use nettu_scheduler_infra::{
+    google_calendar::GoogleCalendarProvider,
+    outlook_calendar::OutlookCalendarProvider,
+};
+use tracing::{error, info};
+
 use super::{
     create_event::CreateEventUseCase,
     sync_event_reminders::{EventOperation, SyncEventRemindersTrigger, SyncEventRemindersUseCase},
     update_event::UpdateEventUseCase,
 };
 use crate::shared::usecase::{execute, Subscriber};
-use nettu_scheduler_domain::{CalendarEvent, IntegrationProvider, SyncedCalendarEvent};
-use nettu_scheduler_infra::{
-    google_calendar::GoogleCalendarProvider, outlook_calendar::OutlookCalendarProvider,
-};
-use tracing::{error, info};
 
 pub struct CreateRemindersOnEventCreated;
 

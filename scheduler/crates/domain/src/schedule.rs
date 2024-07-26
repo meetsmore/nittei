@@ -1,14 +1,18 @@
+use std::{collections::HashMap, str::FromStr};
+
+use chrono::{prelude::*, Duration};
+use chrono_tz::Tz;
+use serde::{Deserialize, Serialize};
+
 use crate::{
     date,
     event_instance::EventInstance,
     shared::entity::{Entity, ID},
     timespan::TimeSpan,
-    CompatibleInstances, Meta, Metadata,
+    CompatibleInstances,
+    Meta,
+    Metadata,
 };
-use chrono::{prelude::*, Duration};
-use chrono_tz::Tz;
-use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, str::FromStr};
 
 #[derive(Debug, Clone)]
 pub struct Schedule {

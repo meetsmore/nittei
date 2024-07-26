@@ -1,9 +1,11 @@
-use crate::{date, event_instance::EventInstance, CompatibleInstances, ID};
+use std::collections::{HashMap, VecDeque};
+
 use chrono::prelude::*;
 use chrono_tz::Tz;
 use date::format_date;
 use serde::Serialize;
-use std::collections::{HashMap, VecDeque};
+
+use crate::{date, event_instance::EventInstance, CompatibleInstances, ID};
 
 #[derive(Serialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]

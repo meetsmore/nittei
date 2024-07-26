@@ -1,8 +1,10 @@
-use crate::{shared::MetadataFindInput, APIResponse, BaseClient, ID};
+use std::sync::Arc;
+
 use nettu_scheduler_api_structs::*;
 use nettu_scheduler_domain::{IntegrationProvider, Metadata};
 use reqwest::StatusCode;
-use std::sync::Arc;
+
+use crate::{shared::MetadataFindInput, APIResponse, BaseClient, ID};
 
 #[derive(Clone)]
 pub struct UserClient {

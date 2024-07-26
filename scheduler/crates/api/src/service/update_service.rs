@@ -1,9 +1,15 @@
-use crate::shared::usecase::{execute, UseCase};
-use crate::{error::NettuError, shared::auth::protect_account_route};
 use actix_web::{web, HttpRequest, HttpResponse};
 use nettu_scheduler_api_structs::update_service::*;
 use nettu_scheduler_domain::{Metadata, Service, ServiceMultiPersonOptions, ID};
 use nettu_scheduler_infra::NettuContext;
+
+use crate::{
+    error::NettuError,
+    shared::{
+        auth::protect_account_route,
+        usecase::{execute, UseCase},
+    },
+};
 
 pub async fn update_service_controller(
     http_req: HttpRequest,

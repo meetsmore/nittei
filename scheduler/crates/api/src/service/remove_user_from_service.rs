@@ -1,3 +1,8 @@
+use actix_web::{web, HttpRequest, HttpResponse};
+use nettu_scheduler_api_structs::remove_user_from_service::*;
+use nettu_scheduler_domain::{Account, ID};
+use nettu_scheduler_infra::NettuContext;
+
 use crate::{
     error::NettuError,
     shared::{
@@ -5,10 +10,6 @@ use crate::{
         usecase::{execute, UseCase},
     },
 };
-use actix_web::{web, HttpRequest, HttpResponse};
-use nettu_scheduler_api_structs::remove_user_from_service::*;
-use nettu_scheduler_domain::{Account, ID};
-use nettu_scheduler_infra::NettuContext;
 
 pub async fn remove_user_from_service_controller(
     http_req: HttpRequest,

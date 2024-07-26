@@ -1,7 +1,8 @@
-use super::IEventSyncedRepo;
 use nettu_scheduler_domain::{SyncedCalendarEvent, ID};
 use sqlx::{types::Uuid, FromRow, PgPool};
 use tracing::error;
+
+use super::IEventSyncedRepo;
 
 pub struct PostgresEventSyncedRepo {
     pool: PgPool,

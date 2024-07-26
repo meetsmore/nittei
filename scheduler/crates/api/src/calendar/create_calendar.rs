@@ -1,18 +1,17 @@
-use crate::shared::auth::{account_can_modify_user, Permission};
-use crate::shared::{
-    auth::{protect_account_route, protect_route},
-    usecase::{execute_with_policy, PermissionBoundary},
-};
-use crate::{
-    error::NettuError,
-    shared::usecase::{execute, UseCase},
-};
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::Weekday;
 use chrono_tz::Tz;
 use nettu_scheduler_api_structs::create_calendar::{APIResponse, PathParams, RequestBody};
 use nettu_scheduler_domain::{Calendar, CalendarSettings, Metadata, ID};
 use nettu_scheduler_infra::NettuContext;
+
+use crate::{
+    error::NettuError,
+    shared::{
+        auth::{account_can_modify_user, protect_account_route, protect_route, Permission},
+        usecase::{execute, execute_with_policy, PermissionBoundary, UseCase},
+    },
+};
 
 pub async fn create_calendar_admin_controller(
     http_req: HttpRequest,

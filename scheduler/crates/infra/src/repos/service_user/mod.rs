@@ -1,8 +1,7 @@
 mod postgres;
 
 use nettu_scheduler_domain::{ServiceResource, ID};
-pub use postgres::PostgresServiceUserRepo;
-pub use postgres::ServiceUserRaw;
+pub use postgres::{PostgresServiceUserRepo, ServiceUserRaw};
 
 #[async_trait::async_trait]
 pub trait IServiceUserRepo: Send + Sync {
@@ -15,10 +14,17 @@ pub trait IServiceUserRepo: Send + Sync {
 
 #[cfg(test)]
 mod tests {
-    use crate::setup_context;
     use nettu_scheduler_domain::{
-        Account, Calendar, Entity, Service, ServiceResource, TimePlan, User,
+        Account,
+        Calendar,
+        Entity,
+        Service,
+        ServiceResource,
+        TimePlan,
+        User,
     };
+
+    use crate::setup_context;
 
     #[tokio::test]
     async fn crud() {

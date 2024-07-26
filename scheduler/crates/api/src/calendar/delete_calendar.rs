@@ -1,12 +1,15 @@
-use crate::shared::{
-    auth::{account_can_modify_calendar, protect_account_route, protect_route, Permission},
-    usecase::{execute, execute_with_policy, PermissionBoundary},
-};
-use crate::{error::NettuError, shared::usecase::UseCase};
 use actix_web::{web, HttpRequest, HttpResponse};
 use nettu_scheduler_api_structs::delete_calendar::{APIResponse, PathParams};
 use nettu_scheduler_domain::{Calendar, ID};
 use nettu_scheduler_infra::NettuContext;
+
+use crate::{
+    error::NettuError,
+    shared::{
+        auth::{account_can_modify_calendar, protect_account_route, protect_route, Permission},
+        usecase::{execute, execute_with_policy, PermissionBoundary, UseCase},
+    },
+};
 
 pub async fn delete_calendar_admin_controller(
     http_req: HttpRequest,

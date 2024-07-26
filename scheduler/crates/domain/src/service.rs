@@ -1,9 +1,11 @@
-use crate::scheduling::RoundRobinAlgorithm;
-use crate::{
-    shared::entity::{Entity, ID},
-    Meta, Metadata,
-};
 use serde::{Deserialize, Serialize};
+
+use crate::{
+    scheduling::RoundRobinAlgorithm,
+    shared::entity::{Entity, ID},
+    Meta,
+    Metadata,
+};
 
 /// A type that describes a time plan and is either a `Calendar` or a `Schedule`
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]

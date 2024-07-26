@@ -11,11 +11,16 @@ pub trait IEventRemindersGenerationJobsRepo: Send + Sync {
 
 #[cfg(test)]
 mod tests {
-    use crate::setup_context;
     use nettu_scheduler_domain::{
-        Account, Calendar, CalendarEvent, EventRemindersExpansionJob, User,
+        Account,
+        Calendar,
+        CalendarEvent,
+        EventRemindersExpansionJob,
+        User,
     };
     use tracing::error;
+
+    use crate::setup_context;
 
     #[tokio::test]
     async fn crud() {

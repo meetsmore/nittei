@@ -1,7 +1,13 @@
-use crate::dtos::CalendarEventDTO;
-use nettu_scheduler_domain::{CalendarEvent, EventInstance};
-use nettu_scheduler_domain::{CalendarEventReminder, RRuleOptions, ID};
+use nettu_scheduler_domain::{
+    CalendarEvent,
+    CalendarEventReminder,
+    EventInstance,
+    RRuleOptions,
+    ID,
+};
 use serde::{Deserialize, Serialize};
+
+use crate::dtos::CalendarEventDTO;
 
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]

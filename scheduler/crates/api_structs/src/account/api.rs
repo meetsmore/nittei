@@ -1,6 +1,7 @@
-use crate::dtos::AccountDTO;
 use nettu_scheduler_domain::Account;
 use serde::{Deserialize, Serialize};
+
+use crate::dtos::AccountDTO;
 
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -96,8 +97,9 @@ pub mod add_account_integration {
 }
 
 pub mod remove_account_integration {
-    use super::*;
     use nettu_scheduler_domain::IntegrationProvider;
+
+    use super::*;
 
     #[derive(Debug, Deserialize, Serialize)]
     pub struct PathParams {

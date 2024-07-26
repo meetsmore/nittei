@@ -18,10 +18,12 @@ use get_calendar::{get_calendar_admin_controller, get_calendar_controller};
 use get_calendar_events::{get_calendar_events_admin_controller, get_calendar_events_controller};
 use get_calendars_by_meta::get_calendars_by_meta_controller;
 use get_google_calendars::{
-    get_google_calendars_admin_controller, get_google_calendars_controller,
+    get_google_calendars_admin_controller,
+    get_google_calendars_controller,
 };
 use get_outlook_calendars::{
-    get_outlook_calendars_admin_controller, get_outlook_calendars_controller,
+    get_outlook_calendars_admin_controller,
+    get_outlook_calendars_controller,
 };
 use remove_sync_calendar::remove_sync_calendar_admin_controller;
 use update_calendar::{update_calendar_admin_controller, update_calendar_controller};

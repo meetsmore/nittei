@@ -1,12 +1,15 @@
+use chrono_tz::{Tz, UTC};
+use serde::{Deserialize, Serialize};
+
 use crate::{
     shared::{
         entity::{Entity, ID},
         metadata::Metadata,
     },
-    IntegrationProvider, Meta, Weekday,
+    IntegrationProvider,
+    Meta,
+    Weekday,
 };
-use chrono_tz::{Tz, UTC};
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone)]
 pub struct Calendar {

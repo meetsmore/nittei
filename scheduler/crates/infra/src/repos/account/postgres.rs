@@ -1,11 +1,13 @@
-use super::IAccountRepo;
 use nettu_scheduler_domain::{Account, PEMKey, ID};
 use serde_json::Value;
 use sqlx::{
     types::{Json, Uuid},
-    FromRow, PgPool,
+    FromRow,
+    PgPool,
 };
 use tracing::error;
+
+use super::IAccountRepo;
 
 pub struct PostgresAccountRepo {
     pool: PgPool,

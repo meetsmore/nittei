@@ -1,7 +1,9 @@
-use crate::{APIResponse, BaseClient};
+use std::sync::Arc;
+
 use nettu_scheduler_api_structs::*;
 use reqwest::StatusCode;
-use std::sync::Arc;
+
+use crate::{APIResponse, BaseClient};
 
 #[derive(Clone)]
 pub struct AccountClient {

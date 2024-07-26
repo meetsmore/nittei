@@ -1,13 +1,16 @@
-use crate::shared::{
-    auth::{account_can_modify_user, protect_route},
-    usecase::{execute, UseCase},
-};
-use crate::{error::NettuError, shared::auth::protect_account_route};
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::Utc;
 use nettu_scheduler_api_structs::oauth_integration::*;
 use nettu_scheduler_domain::{IntegrationProvider, User, UserIntegration};
 use nettu_scheduler_infra::{CodeTokenRequest, NettuContext, ProviderOAuth};
+
+use crate::{
+    error::NettuError,
+    shared::{
+        auth::{account_can_modify_user, protect_account_route, protect_route},
+        usecase::{execute, UseCase},
+    },
+};
 
 pub async fn oauth_integration_admin_controller(
     http_req: HttpRequest,
