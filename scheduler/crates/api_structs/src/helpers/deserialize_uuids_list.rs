@@ -51,10 +51,11 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use nettu_scheduler_domain::ID;
     use serde::Deserialize;
     use serde_urlencoded;
+
+    use super::*;
 
     #[derive(Deserialize)]
     struct QueryParams {
