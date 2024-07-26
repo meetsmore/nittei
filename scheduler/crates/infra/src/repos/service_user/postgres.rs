@@ -1,8 +1,9 @@
-use super::IServiceUserRepo;
 use nettu_scheduler_domain::{ServiceResource, TimePlan, ID};
 use serde::Deserialize;
 use sqlx::{types::Uuid, FromRow, PgPool};
 use tracing::error;
+
+use super::IServiceUserRepo;
 
 pub struct PostgresServiceUserRepo {
     pool: PgPool,

@@ -2,16 +2,27 @@
 pub mod auth_provider;
 mod calendar_api;
 
-use super::FreeBusyProviderQuery;
-use crate::NettuContext;
 use calendar_api::{
-    FreeBusyCalendar, FreeBusyRequest, GoogleCalendarEvent, GoogleCalendarEventAttributes,
-    GoogleCalendarRestApi, GoogleDateTime, ListCalendarsResponse,
+    FreeBusyCalendar,
+    FreeBusyRequest,
+    GoogleCalendarEvent,
+    GoogleCalendarEventAttributes,
+    GoogleCalendarRestApi,
+    GoogleDateTime,
+    ListCalendarsResponse,
 };
 use chrono::{DateTime, Utc};
-use nettu_scheduler_domain::providers::google::GoogleCalendarAccessRole;
-use nettu_scheduler_domain::{CalendarEvent, CompatibleInstances, EventInstance, User};
+use nettu_scheduler_domain::{
+    providers::google::GoogleCalendarAccessRole,
+    CalendarEvent,
+    CompatibleInstances,
+    EventInstance,
+    User,
+};
 use tracing::error;
+
+use super::FreeBusyProviderQuery;
+use crate::NettuContext;
 
 // https://developers.google.com/calendar/v3/reference/events
 // `https://accounts.google.com/o/oauth2/v2/auth?access_type=offline&include_granted_scopes=true&prompt=consent&client_id=${CLIENT_ID}&redirect_uri=${redirect_uri}&response_type=code&scope=https://www.googleapis.com/auth/calendar&state=${state}`;

@@ -1,14 +1,15 @@
-use crate::shared::auth::{account_can_modify_user, Permission};
-use crate::shared::{auth::protect_account_route, usecase::PermissionBoundary};
-use crate::{
-    error::NettuError,
-    shared::usecase::{execute, UseCase},
-};
 use actix_web::{web, HttpRequest, HttpResponse};
 use nettu_scheduler_api_structs::remove_sync_calendar::{APIResponse, PathParams, RequestBody};
-use nettu_scheduler_domain::IntegrationProvider;
-use nettu_scheduler_domain::{User, ID};
+use nettu_scheduler_domain::{IntegrationProvider, ID};
 use nettu_scheduler_infra::NettuContext;
+
+use crate::{
+    error::NettuError,
+    shared::{
+        auth::{account_can_modify_user, protect_account_route, Permission},
+        usecase::{execute, PermissionBoundary, UseCase},
+    },
+};
 
 fn error_handler(e: UseCaseError) -> NettuError {
     match e {
@@ -26,11 +27,11 @@ pub async fn remove_sync_calendar_admin_controller(
     ctx: web::Data<NettuContext>,
 ) -> Result<HttpResponse, NettuError> {
     let account = protect_account_route(&http_req, &ctx).await?;
-    let user = account_can_modify_user(&account, &path_params.user_id, &ctx).await?;
+    // Check if user exists and can be modified by the account
+    account_can_modify_user(&account, &path_params.user_id, &ctx).await?;
 
     let body = body.0;
     let usecase = RemoveSyncCalendarUseCase {
-        user,
         calendar_id: body.calendar_id,
         ext_calendar_id: body.ext_calendar_id,
         provider: body.provider,
@@ -42,34 +43,8 @@ pub async fn remove_sync_calendar_admin_controller(
         .map_err(error_handler)
 }
 
-// pub async fn remove_sync_calendar_controller(
-//     http_req: web::HttpRequest,
-//     body: web::Json<RequestBody>,
-//     ctx: web::Data<NettuContext>,
-// ) -> Result<HttpResponse, NettuError> {
-//     let (user, policy) = protect_route(&http_req, &ctx).await?;
-
-//     let body = body.0;
-
-//     let usecase = RemoveSyncCalendarUseCase {
-//         user,
-//         calendar_id: body.calendar_id,
-//         ext_calendar_id: body.ext_calendar_id,
-//         provider: body.provider,
-//     };
-
-//     execute_with_policy(usecase, &policy, &ctx)
-//         .await
-//         .map(|_| HttpResponse::Ok().json(APIResponse::from("Calendar sync created")))
-//         .map_err(|e| match e {
-//             UseCaseErrorContainer::Unauthorized(e) => NettuError::Unauthorized(e),
-//             UseCaseErrorContainer::UseCase(e) => error_handler(e),
-//         })
-// }
-
 #[derive(Debug)]
 struct RemoveSyncCalendarUseCase {
-    pub user: User,
     pub provider: IntegrationProvider,
     pub calendar_id: ID,
     pub ext_calendar_id: String,

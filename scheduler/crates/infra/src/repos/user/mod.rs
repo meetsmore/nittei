@@ -1,8 +1,9 @@
 mod postgres;
 
-use super::shared::query_structs::MetadataFindQuery;
 use nettu_scheduler_domain::{User, ID};
 pub use postgres::PostgresUserRepo;
+
+use super::shared::query_structs::MetadataFindQuery;
 
 #[async_trait::async_trait]
 pub trait IUserRepo: Send + Sync {
@@ -17,9 +18,10 @@ pub trait IUserRepo: Send + Sync {
 
 #[cfg(test)]
 mod tests {
+    use nettu_scheduler_domain::{Account, Metadata};
+
     use super::*;
     use crate::setup_context;
-    use nettu_scheduler_domain::{Account, Metadata};
 
     #[tokio::test]
     async fn test_metadata_query() {

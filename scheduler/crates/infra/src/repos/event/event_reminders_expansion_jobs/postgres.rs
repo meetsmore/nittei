@@ -1,8 +1,9 @@
-use super::IEventRemindersGenerationJobsRepo;
 use chrono::{DateTime, Utc};
 use nettu_scheduler_domain::EventRemindersExpansionJob;
 use sqlx::{types::Uuid, FromRow, PgPool};
 use tracing::error;
+
+use super::IEventRemindersGenerationJobsRepo;
 
 pub struct PostgresEventReminderGenerationJobsRepo {
     pool: PgPool,

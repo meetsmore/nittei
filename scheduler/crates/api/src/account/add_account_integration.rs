@@ -1,9 +1,15 @@
-use crate::shared::usecase::{execute, UseCase};
-use crate::{error::NettuError, shared::auth::protect_account_route};
 use actix_web::{web, HttpRequest, HttpResponse};
 use nettu_scheduler_api_structs::add_account_integration::{APIResponse, RequestBody};
 use nettu_scheduler_domain::{Account, AccountIntegration, IntegrationProvider};
 use nettu_scheduler_infra::NettuContext;
+
+use crate::{
+    error::NettuError,
+    shared::{
+        auth::protect_account_route,
+        usecase::{execute, UseCase},
+    },
+};
 
 pub async fn add_account_integration_controller(
     http_req: HttpRequest,

@@ -1,10 +1,10 @@
-use crate::shared::usecase::UseCase;
 use chrono::{DateTime, TimeDelta, Utc};
 use futures::future;
 use nettu_scheduler_domain::{Calendar, CalendarEvent, EventRemindersExpansionJob, Reminder};
 use nettu_scheduler_infra::NettuContext;
-use std::iter::Iterator;
 use tracing::error;
+
+use crate::shared::usecase::UseCase;
 
 #[derive(Debug)]
 pub enum EventOperation {

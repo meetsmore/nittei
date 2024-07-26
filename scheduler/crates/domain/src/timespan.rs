@@ -1,8 +1,8 @@
-use chrono::prelude::*;
-use chrono::DateTime;
+use std::error::Error;
+
+use chrono::{prelude::*, DateTime};
 use chrono_tz::Tz;
 use serde::{Deserialize, Serialize};
-use std::error::Error;
 
 /// A `TimeSpan` type represents a time interval (duration of time)
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -1,13 +1,15 @@
-use super::{IEventRepo, MostRecentCreatedServiceEvents};
-use crate::repos::shared::query_structs::MetadataFindQuery;
 use chrono::{DateTime, Utc};
 use nettu_scheduler_domain::{CalendarEvent, CalendarEventReminder, RRuleOptions, ID};
 use serde_json::Value;
 use sqlx::{
     types::{Json, Uuid},
-    FromRow, PgPool,
+    FromRow,
+    PgPool,
 };
 use tracing::error;
+
+use super::{IEventRepo, MostRecentCreatedServiceEvents};
+use crate::repos::shared::query_structs::MetadataFindQuery;
 
 pub struct PostgresEventRepo {
     pool: PgPool,

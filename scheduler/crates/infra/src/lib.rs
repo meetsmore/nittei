@@ -3,13 +3,13 @@ mod repos;
 mod services;
 mod system;
 
+use std::sync::Arc;
+
 pub use config::Config;
 use repos::Repos;
 pub use repos::{BusyCalendarIdentifier, ExternalBusyCalendarIdentifier, MetadataFindQuery};
 pub use services::*;
-use sqlx::migrate::MigrateError;
-use sqlx::postgres::PgPoolOptions;
-use std::sync::Arc;
+use sqlx::{migrate::MigrateError, postgres::PgPoolOptions};
 pub use system::ISys;
 use system::RealSys;
 

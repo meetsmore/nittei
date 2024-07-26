@@ -1,8 +1,9 @@
 mod postgres;
 
-use crate::MetadataFindQuery;
 use nettu_scheduler_domain::{Schedule, ID};
 pub use postgres::PostgresScheduleRepo;
+
+use crate::MetadataFindQuery;
 
 #[async_trait::async_trait]
 pub trait IScheduleRepo: Send + Sync {
@@ -17,9 +18,10 @@ pub trait IScheduleRepo: Send + Sync {
 
 #[cfg(test)]
 mod tests {
-    use crate::setup_context;
     use chrono_tz::US::Pacific;
     use nettu_scheduler_domain::{Account, Entity, Schedule, User};
+
+    use crate::setup_context;
 
     #[tokio::test]
     async fn create_and_delete() {

@@ -1,9 +1,10 @@
 mod postgres;
 
-use crate::repos::shared::query_structs::MetadataFindQuery;
 use chrono::{DateTime, Utc};
 use nettu_scheduler_domain::{CalendarEvent, TimeSpan, ID};
 pub use postgres::PostgresEventRepo;
+
+use crate::repos::shared::query_structs::MetadataFindQuery;
 
 #[derive(Debug)]
 pub struct MostRecentCreatedServiceEvents {
@@ -48,11 +49,19 @@ pub trait IEventRepo: Send + Sync {
 
 #[cfg(test)]
 mod tests {
-    use crate::{setup_context, NettuContext};
     use chrono::{DateTime, Utc};
     use nettu_scheduler_domain::{
-        Account, Calendar, CalendarEvent, Entity, Service, TimeSpan, User, ID,
+        Account,
+        Calendar,
+        CalendarEvent,
+        Entity,
+        Service,
+        TimeSpan,
+        User,
+        ID,
     };
+
+    use crate::{setup_context, NettuContext};
 
     fn generate_default_event(account_id: &ID, calendar_id: &ID, user_id: &ID) -> CalendarEvent {
         CalendarEvent {

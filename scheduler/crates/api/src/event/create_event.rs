@@ -1,17 +1,25 @@
-use super::subscribers::CreateRemindersOnEventCreated;
-use crate::error::NettuError;
-use crate::event::subscribers::CreateSyncedEventsOnEventCreated;
-use crate::shared::{
-    auth::{account_can_modify_user, protect_account_route, protect_route, Permission},
-    usecase::{execute, execute_with_policy, PermissionBoundary, Subscriber, UseCase},
-};
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::{DateTime, TimeDelta, Utc};
 use nettu_scheduler_api_structs::create_event::*;
 use nettu_scheduler_domain::{
-    CalendarEvent, CalendarEventReminder, Metadata, RRuleOptions, User, ID,
+    CalendarEvent,
+    CalendarEventReminder,
+    Metadata,
+    RRuleOptions,
+    User,
+    ID,
 };
 use nettu_scheduler_infra::NettuContext;
+
+use super::subscribers::CreateRemindersOnEventCreated;
+use crate::{
+    error::NettuError,
+    event::subscribers::CreateSyncedEventsOnEventCreated,
+    shared::{
+        auth::{account_can_modify_user, protect_account_route, protect_route, Permission},
+        usecase::{execute, execute_with_policy, PermissionBoundary, Subscriber, UseCase},
+    },
+};
 
 pub async fn create_event_admin_controller(
     http_req: HttpRequest,
@@ -178,11 +186,11 @@ impl PermissionBoundary for CreateEventUseCase {
 
 #[cfg(test)]
 mod test {
-    use super::*;
-    use chrono::prelude::*;
-    use chrono::Utc;
+    use chrono::{prelude::*, Utc};
     use nettu_scheduler_domain::{Account, Calendar, User};
     use nettu_scheduler_infra::setup_context;
+
+    use super::*;
 
     struct TestContext {
         ctx: NettuContext,

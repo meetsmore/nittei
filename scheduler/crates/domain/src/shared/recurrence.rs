@@ -1,10 +1,11 @@
-use crate::CalendarSettings;
+use std::{cmp::Ordering, fmt::Display, str::FromStr};
+
 use chrono::{prelude::*, TimeDelta};
-use rrule::{Frequency, RRule, RRuleSet, Tz};
+use rrule::{Frequency, RRule, RRuleSet};
 use serde::{de::Visitor, Deserialize, Serialize};
-use std::cmp::Ordering;
-use std::{fmt::Display, str::FromStr};
 use thiserror::Error;
+
+use crate::CalendarSettings;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]

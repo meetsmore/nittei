@@ -1,3 +1,8 @@
+use actix_web::{web, HttpRequest, HttpResponse};
+use nettu_scheduler_api_structs::get_user::*;
+use nettu_scheduler_domain::{Account, User, ID};
+use nettu_scheduler_infra::NettuContext;
+
 use crate::{
     error::NettuError,
     shared::{
@@ -5,10 +10,6 @@ use crate::{
         usecase::{execute, UseCase},
     },
 };
-use actix_web::{web, HttpRequest, HttpResponse};
-use nettu_scheduler_api_structs::get_user::*;
-use nettu_scheduler_domain::{Account, User, ID};
-use nettu_scheduler_infra::NettuContext;
 
 pub async fn get_user_controller(
     http_req: HttpRequest,

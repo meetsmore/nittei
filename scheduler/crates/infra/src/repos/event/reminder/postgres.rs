@@ -1,8 +1,9 @@
-use super::IReminderRepo;
 use chrono::{DateTime, Utc};
 use nettu_scheduler_domain::{Reminder, ID};
 use sqlx::{types::Uuid, FromRow, PgPool};
 use tracing::error;
+
+use super::IReminderRepo;
 
 pub struct PostgresReminderRepo {
     pool: PgPool,
@@ -16,6 +17,7 @@ impl PostgresReminderRepo {
 
 #[derive(Debug, FromRow)]
 struct ReminderVersionRaw {
+    #[allow(dead_code)]
     event_uid: Uuid,
     version: i64,
 }

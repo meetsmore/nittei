@@ -2,13 +2,16 @@ use crate::NettuContext;
 pub mod auth_provider;
 mod calendar_api;
 
-use self::calendar_api::{FreeBusyRequest, ListCalendarsResponse, OutlookCalendarEventAttributes};
-use super::FreeBusyProviderQuery;
 use calendar_api::OutlookCalendarRestApi;
 use nettu_scheduler_domain::{
     providers::outlook::{OutlookCalendarAccessRole, OutlookCalendarEvent},
-    CalendarEvent, CompatibleInstances, User,
+    CalendarEvent,
+    CompatibleInstances,
+    User,
 };
+
+use self::calendar_api::{FreeBusyRequest, ListCalendarsResponse, OutlookCalendarEventAttributes};
+use super::FreeBusyProviderQuery;
 
 // https://docs.microsoft.com/en-us/graph/api/resources/event?view=graph-rest-1.0
 

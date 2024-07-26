@@ -1,9 +1,10 @@
-use crate::{APIResponse, BaseClient, ScheduleRule, ID};
-use nettu_scheduler_api_structs::*;
-use nettu_scheduler_domain::Metadata;
-use nettu_scheduler_domain::Tz;
-use reqwest::StatusCode;
 use std::sync::Arc;
+
+use nettu_scheduler_api_structs::*;
+use nettu_scheduler_domain::{Metadata, Tz};
+use reqwest::StatusCode;
+
+use crate::{APIResponse, BaseClient, ScheduleRule, ID};
 
 #[derive(Clone)]
 pub struct ScheduleClient {

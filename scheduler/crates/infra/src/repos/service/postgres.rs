@@ -1,12 +1,14 @@
-use super::IServiceRepo;
-use crate::repos::{service_user::ServiceUserRaw, shared::query_structs::MetadataFindQuery};
 use nettu_scheduler_domain::{Service, ServiceWithUsers, ID};
 use serde_json::Value;
 use sqlx::{
     types::{Json, Uuid},
-    FromRow, PgPool,
+    FromRow,
+    PgPool,
 };
 use tracing::error;
+
+use super::IServiceRepo;
+use crate::repos::{service_user::ServiceUserRaw, shared::query_structs::MetadataFindQuery};
 
 pub struct PostgresServiceRepo {
     pool: PgPool,

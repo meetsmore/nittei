@@ -1,12 +1,14 @@
-use super::IUserRepo;
-use crate::repos::shared::query_structs::MetadataFindQuery;
 use nettu_scheduler_domain::{User, ID};
 use serde_json::Value;
 use sqlx::{
     types::{Json, Uuid},
-    FromRow, PgPool,
+    FromRow,
+    PgPool,
 };
 use tracing::error;
+
+use super::IUserRepo;
+use crate::repos::shared::query_structs::MetadataFindQuery;
 
 pub struct PostgresUserRepo {
     pool: PgPool,

@@ -13,13 +13,20 @@ mod shared;
 pub(crate) mod user;
 mod user_integrations;
 
+use std::sync::Arc;
+
 use account::{IAccountRepo, PostgresAccountRepo};
 use account_integrations::{IAccountIntegrationRepo, PostgresAccountIntegrationRepo};
 use calendar::{ICalendarRepo, PostgresCalendarRepo};
 use calendar_synced::{ICalendarSyncedRepo, PostgresCalendarSyncedRepo};
 use event::{
-    IEventRemindersGenerationJobsRepo, IEventRepo, IEventSyncedRepo, IReminderRepo,
-    PostgresEventReminderGenerationJobsRepo, PostgresEventRepo, PostgresEventSyncedRepo,
+    IEventRemindersGenerationJobsRepo,
+    IEventRepo,
+    IEventSyncedRepo,
+    IReminderRepo,
+    PostgresEventReminderGenerationJobsRepo,
+    PostgresEventRepo,
+    PostgresEventSyncedRepo,
     PostgresReminderRepo,
 };
 use reservation::{IReservationRepo, PostgresReservationRepo};
@@ -28,11 +35,11 @@ use service::{IServiceRepo, PostgresServiceRepo};
 use service_user::{IServiceUserRepo, PostgresServiceUserRepo};
 pub use service_user_busy_calendars::{BusyCalendarIdentifier, ExternalBusyCalendarIdentifier};
 use service_user_busy_calendars::{
-    IServiceUserBusyCalendarRepo, PostgresServiceUseBusyCalendarRepo,
+    IServiceUserBusyCalendarRepo,
+    PostgresServiceUseBusyCalendarRepo,
 };
 pub use shared::query_structs::*;
 use sqlx::postgres::PgPoolOptions;
-use std::sync::Arc;
 use tracing::info;
 use user::{IUserRepo, PostgresUserRepo};
 use user_integrations::{IUserIntegrationRepo, PostgresUserIntegrationRepo};

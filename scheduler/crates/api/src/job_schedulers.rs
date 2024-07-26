@@ -1,3 +1,11 @@
+use std::time::Duration;
+
+use actix_web::rt::time::{interval, sleep_until, Instant};
+use awc::Client;
+use nettu_scheduler_api_structs::send_event_reminders::AccountRemindersDTO;
+use nettu_scheduler_infra::NettuContext;
+use tracing::{error, info};
+
 use crate::{
     event::{
         get_upcoming_reminders::GetUpcomingRemindersUseCase,
@@ -5,12 +13,6 @@ use crate::{
     },
     shared::usecase::execute,
 };
-use actix_web::rt::time::{interval, sleep_until, Instant};
-use awc::Client;
-use nettu_scheduler_api_structs::send_event_reminders::AccountRemindersDTO;
-use nettu_scheduler_infra::NettuContext;
-use std::time::Duration;
-use tracing::{error, info};
 
 pub fn get_start_delay(now_ts: usize, secs_before_min: usize) -> usize {
     let secs_to_next_minute = 60 - (now_ts / 1000) % 60;

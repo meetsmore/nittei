@@ -1,14 +1,15 @@
-use crate::error::NettuError;
-use crate::shared::{
-    auth::protect_account_route,
-    usecase::{execute, UseCase},
-};
 use actix_web::{web, HttpRequest, HttpResponse};
 use nettu_scheduler_api_structs::remove_busy_calendar::*;
-use nettu_scheduler_domain::IntegrationProvider;
-use nettu_scheduler_domain::{Account, BusyCalendar, ID};
-use nettu_scheduler_infra::NettuContext;
-use nettu_scheduler_infra::{BusyCalendarIdentifier, ExternalBusyCalendarIdentifier};
+use nettu_scheduler_domain::{Account, BusyCalendar, IntegrationProvider, ID};
+use nettu_scheduler_infra::{BusyCalendarIdentifier, ExternalBusyCalendarIdentifier, NettuContext};
+
+use crate::{
+    error::NettuError,
+    shared::{
+        auth::protect_account_route,
+        usecase::{execute, UseCase},
+    },
+};
 
 pub async fn remove_busy_calendar_controller(
     http_req: HttpRequest,

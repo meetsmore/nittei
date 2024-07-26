@@ -1,6 +1,8 @@
-use crate::{Entity, ID};
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+use serde::{Deserialize, Serialize};
+
+use crate::{Entity, ID};
 
 #[derive(Serialize, Deserialize, Default, Debug, Clone)]
 pub struct Metadata {

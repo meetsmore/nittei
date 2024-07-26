@@ -11,11 +11,19 @@ pub trait IEventSyncedRepo: Send + Sync {
 
 #[cfg(test)]
 mod tests {
-    use crate::setup_context;
     use nettu_scheduler_domain::{
-        Account, AccountIntegration, Calendar, CalendarEvent, IntegrationProvider, SyncedCalendar,
-        SyncedCalendarEvent, User, UserIntegration,
+        Account,
+        AccountIntegration,
+        Calendar,
+        CalendarEvent,
+        IntegrationProvider,
+        SyncedCalendar,
+        SyncedCalendarEvent,
+        User,
+        UserIntegration,
     };
+
+    use crate::setup_context;
 
     #[tokio::test]
     async fn test_event_synced_repo() {

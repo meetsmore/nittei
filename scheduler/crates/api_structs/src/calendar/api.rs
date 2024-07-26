@@ -1,7 +1,10 @@
-use crate::dtos::{CalendarDTO, EventWithInstancesDTO};
-use crate::helpers::deserialize_uuids_list::deserialize_stringified_uuids_list;
 use nettu_scheduler_domain::{Calendar, EventInstance, Tz, Weekday, ID};
 use serde::{Deserialize, Serialize};
+
+use crate::{
+    dtos::{CalendarDTO, EventWithInstancesDTO},
+    helpers::deserialize_uuids_list::deserialize_stringified_uuids_list,
+};
 
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -18,8 +21,9 @@ impl CalendarResponse {
 }
 
 pub mod create_calendar {
-    use super::*;
     use nettu_scheduler_domain::Metadata;
+
+    use super::*;
 
     #[derive(Deserialize)]
     pub struct PathParams {
@@ -43,8 +47,9 @@ fn default_weekday() -> Weekday {
 }
 
 pub mod add_sync_calendar {
-    use super::*;
     use nettu_scheduler_domain::IntegrationProvider;
+
+    use super::*;
 
     #[derive(Deserialize)]
     pub struct PathParams {
@@ -63,8 +68,9 @@ pub mod add_sync_calendar {
 }
 
 pub mod remove_sync_calendar {
-    use super::*;
     use nettu_scheduler_domain::IntegrationProvider;
+
+    use super::*;
 
     #[derive(Deserialize)]
     pub struct PathParams {
@@ -97,9 +103,8 @@ pub mod get_calendar_events {
     use chrono::{DateTime, Utc};
     use nettu_scheduler_domain::EventWithInstances;
 
-    use crate::dtos::CalendarEventDTO;
-
     use super::*;
+    use crate::dtos::CalendarEventDTO;
 
     #[derive(Debug, Deserialize)]
     pub struct PathParams {
@@ -177,7 +182,8 @@ pub mod get_calendars_by_meta {
 
 pub mod get_google_calendars {
     use nettu_scheduler_domain::providers::google::{
-        GoogleCalendarAccessRole, GoogleCalendarListEntry,
+        GoogleCalendarAccessRole,
+        GoogleCalendarListEntry,
     };
 
     use super::*;
@@ -236,10 +242,11 @@ pub mod get_outlook_calendars {
 }
 
 pub mod get_user_freebusy {
+    use std::collections::VecDeque;
+
     use chrono::{DateTime, Utc};
 
     use super::*;
-    use std::collections::VecDeque;
 
     #[derive(Debug, Deserialize)]
     pub struct PathParams {
@@ -264,8 +271,9 @@ pub mod get_user_freebusy {
 }
 
 pub mod update_calendar {
-    use super::*;
     use nettu_scheduler_domain::{Metadata, Weekday};
+
+    use super::*;
 
     #[derive(Deserialize)]
     pub struct PathParams {

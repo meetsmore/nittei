@@ -1,13 +1,16 @@
-use crate::error::NettuError;
-use crate::shared::{
-    auth::protect_account_route,
-    usecase::{execute, UseCase},
-};
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::{DateTime, Utc};
 use nettu_scheduler_api_structs::remove_service_event_intend::*;
 use nettu_scheduler_domain::{Account, ID};
 use nettu_scheduler_infra::NettuContext;
+
+use crate::{
+    error::NettuError,
+    shared::{
+        auth::protect_account_route,
+        usecase::{execute, UseCase},
+    },
+};
 
 pub async fn remove_service_event_intend_controller(
     http_req: HttpRequest,

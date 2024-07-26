@@ -1,9 +1,11 @@
-use super::auth::{Permission, Policy};
-use crate::error::NettuError;
+use std::fmt::Debug;
+
 use futures::future::join_all;
 use nettu_scheduler_infra::NettuContext;
-use std::fmt::Debug;
 use tracing::{info, warn};
+
+use super::auth::{Permission, Policy};
+use crate::error::NettuError;
 
 /// Subscriber is a side effect to a `UseCase`
 ///

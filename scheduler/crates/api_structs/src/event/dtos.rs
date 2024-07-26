@@ -1,6 +1,11 @@
 use chrono::{DateTime, Utc};
 use nettu_scheduler_domain::{
-    CalendarEvent, CalendarEventReminder, EventInstance, Metadata, RRuleOptions, ID,
+    CalendarEvent,
+    CalendarEventReminder,
+    EventInstance,
+    Metadata,
+    RRuleOptions,
+    ID,
 };
 use serde::{Deserialize, Serialize};
 

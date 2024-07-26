@@ -1,8 +1,15 @@
-use crate::dtos::{ServiceDTO, ServiceResourceDTO, ServiceWithUsersDTO};
 use nettu_scheduler_domain::{
-    BusyCalendar, Service, ServiceResource, ServiceWithUsers, TimePlan, Tz, ID,
+    BusyCalendar,
+    Service,
+    ServiceResource,
+    ServiceWithUsers,
+    TimePlan,
+    Tz,
+    ID,
 };
 use serde::{Deserialize, Serialize};
+
+use crate::dtos::{ServiceDTO, ServiceResourceDTO, ServiceWithUsersDTO};
 
 #[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -138,10 +145,11 @@ pub mod remove_service_event_intend {
 }
 
 pub mod create_service_event_intend {
-    use super::*;
-    use crate::dtos::UserDTO;
     use chrono::{DateTime, Utc};
     use nettu_scheduler_domain::User;
+
+    use super::*;
+    use crate::dtos::UserDTO;
 
     #[derive(Deserialize)]
     pub struct PathParams {
@@ -215,11 +223,14 @@ pub mod update_service {
 }
 
 pub mod get_service_bookingslots {
-    use super::*;
     use chrono::{DateTime, Utc};
     use nettu_scheduler_domain::booking_slots::{
-        ServiceBookingSlot, ServiceBookingSlots, ServiceBookingSlotsDate,
+        ServiceBookingSlot,
+        ServiceBookingSlots,
+        ServiceBookingSlotsDate,
     };
+
+    use super::*;
 
     #[derive(Debug, Deserialize)]
     pub struct PathParams {
@@ -307,9 +318,8 @@ pub mod get_service {
 }
 
 pub mod get_services_by_meta {
-    use crate::dtos::ServiceDTO;
-
     use super::*;
+    use crate::dtos::ServiceDTO;
 
     #[derive(Deserialize)]
     #[serde(rename_all = "camelCase")]

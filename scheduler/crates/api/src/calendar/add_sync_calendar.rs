@@ -1,19 +1,24 @@
-use crate::shared::auth::{account_can_modify_user, Permission};
-use crate::shared::{auth::protect_account_route, usecase::PermissionBoundary};
-use crate::{
-    error::NettuError,
-    shared::usecase::{execute, UseCase},
-};
 use actix_web::{web, HttpRequest, HttpResponse};
 use nettu_scheduler_api_structs::add_sync_calendar::{APIResponse, PathParams, RequestBody};
-use nettu_scheduler_domain::IntegrationProvider;
 use nettu_scheduler_domain::{
     providers::{google::GoogleCalendarAccessRole, outlook::OutlookCalendarAccessRole},
-    SyncedCalendar, User, ID,
+    IntegrationProvider,
+    SyncedCalendar,
+    User,
+    ID,
 };
 use nettu_scheduler_infra::{
-    google_calendar::GoogleCalendarProvider, outlook_calendar::OutlookCalendarProvider,
+    google_calendar::GoogleCalendarProvider,
+    outlook_calendar::OutlookCalendarProvider,
     NettuContext,
+};
+
+use crate::{
+    error::NettuError,
+    shared::{
+        auth::{account_can_modify_user, protect_account_route, Permission},
+        usecase::{execute, PermissionBoundary, UseCase},
+    },
 };
 
 pub async fn add_sync_calendar_admin_controller(

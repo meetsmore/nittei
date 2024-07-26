@@ -1,20 +1,27 @@
-use crate::error::NettuError;
-use crate::shared::{
-    auth::protect_account_route,
-    usecase::{execute, UseCase},
-};
 use actix_web::{web, HttpRequest, HttpResponse};
 use nettu_scheduler_api_structs::add_busy_calendar::*;
-use nettu_scheduler_domain::IntegrationProvider;
 use nettu_scheduler_domain::{
     providers::{google::GoogleCalendarAccessRole, outlook::OutlookCalendarAccessRole},
-    Account, BusyCalendar, ID,
+    Account,
+    BusyCalendar,
+    IntegrationProvider,
+    ID,
 };
 use nettu_scheduler_infra::{
-    google_calendar::GoogleCalendarProvider, outlook_calendar::OutlookCalendarProvider,
+    google_calendar::GoogleCalendarProvider,
+    outlook_calendar::OutlookCalendarProvider,
+    BusyCalendarIdentifier,
+    ExternalBusyCalendarIdentifier,
     NettuContext,
 };
-use nettu_scheduler_infra::{BusyCalendarIdentifier, ExternalBusyCalendarIdentifier};
+
+use crate::{
+    error::NettuError,
+    shared::{
+        auth::protect_account_route,
+        usecase::{execute, UseCase},
+    },
+};
 
 pub async fn add_busy_calendar_controller(
     http_req: HttpRequest,

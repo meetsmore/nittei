@@ -1,9 +1,9 @@
+use std::collections::HashMap;
+
 use chrono::{DateTime, TimeZone, Utc};
-use nettu_scheduler_domain::providers::google::*;
-use nettu_scheduler_domain::CalendarEvent;
+use nettu_scheduler_domain::{providers::google::*, CalendarEvent};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use tracing::error;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -132,6 +132,7 @@ pub struct FreeBusyTimeSpanResponse {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
 pub struct FreeBusyResponse {
     kind: String,
     time_min: GoogleDateTime,
@@ -162,6 +163,7 @@ pub struct FreeBusyRequest {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
 pub struct ListCalendarsResponse {
     kind: String,
     etag: GoogleDateTime,

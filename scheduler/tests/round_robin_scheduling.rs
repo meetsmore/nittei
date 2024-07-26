@@ -1,13 +1,25 @@
 mod helpers;
 
 use chrono::{DateTime, Duration, TimeDelta, Utc, Weekday};
-use helpers::setup::spawn_app;
-use helpers::utils::{assert_equal_user_lists, format_datetime};
+use helpers::{
+    setup::spawn_app,
+    utils::{assert_equal_user_lists, format_datetime},
+};
 use nettu_scheduler_domain::{BusyCalendar, ServiceMultiPersonOptions, TimePlan, ID};
 use nettu_scheduler_sdk::{
-    AddBusyCalendar, AddServiceUserInput, Calendar, CreateBookingIntendInput, CreateCalendarInput,
-    CreateEventInput, CreateScheduleInput, CreateServiceInput, CreateUserInput,
-    GetServiceBookingSlotsInput, NettuSDK, RoundRobinAlgorithm, User,
+    AddBusyCalendar,
+    AddServiceUserInput,
+    Calendar,
+    CreateBookingIntendInput,
+    CreateCalendarInput,
+    CreateEventInput,
+    CreateScheduleInput,
+    CreateServiceInput,
+    CreateUserInput,
+    GetServiceBookingSlotsInput,
+    NettuSDK,
+    RoundRobinAlgorithm,
+    User,
 };
 
 async fn create_default_service_host(admin_client: &NettuSDK, service_id: &ID) -> (User, Calendar) {

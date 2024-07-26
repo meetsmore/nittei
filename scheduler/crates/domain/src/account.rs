@@ -1,9 +1,10 @@
+use nettu_scheduler_utils::create_random_secret;
+use serde::{Deserialize, Serialize};
+
 use crate::{
     shared::entity::{Entity, ID},
     IntegrationProvider,
 };
-use nettu_scheduler_utils::create_random_secret;
-use serde::{Deserialize, Serialize};
 
 const API_KEY_LEN: usize = 30;
 

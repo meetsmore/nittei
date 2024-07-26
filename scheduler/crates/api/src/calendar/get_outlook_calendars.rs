@@ -1,8 +1,3 @@
-use crate::shared::{
-    auth::{account_can_modify_user, protect_account_route},
-    usecase::{execute, UseCase},
-};
-use crate::{error::NettuError, shared::auth::protect_route};
 use actix_web::{web, HttpRequest, HttpResponse};
 use nettu_scheduler_api_structs::get_outlook_calendars::{APIResponse, PathParams, QueryParams};
 use nettu_scheduler_domain::{
@@ -10,6 +5,14 @@ use nettu_scheduler_domain::{
     User,
 };
 use nettu_scheduler_infra::{outlook_calendar::OutlookCalendarProvider, NettuContext};
+
+use crate::{
+    error::NettuError,
+    shared::{
+        auth::{account_can_modify_user, protect_account_route, protect_route},
+        usecase::{execute, UseCase},
+    },
+};
 
 pub async fn get_outlook_calendars_admin_controller(
     http_req: HttpRequest,

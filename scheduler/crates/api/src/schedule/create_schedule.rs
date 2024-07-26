@@ -1,19 +1,16 @@
-use crate::shared::{
-    auth::account_can_modify_user,
-    usecase::{execute, UseCase},
-};
-use crate::{
-    error::NettuError,
-    shared::{
-        auth::{protect_account_route, protect_route, Permission},
-        usecase::{execute_with_policy, PermissionBoundary},
-    },
-};
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono_tz::Tz;
 use nettu_scheduler_api_structs::create_schedule::*;
 use nettu_scheduler_domain::{Metadata, Schedule, ScheduleRule, ID};
 use nettu_scheduler_infra::NettuContext;
+
+use crate::{
+    error::NettuError,
+    shared::{
+        auth::{account_can_modify_user, protect_account_route, protect_route, Permission},
+        usecase::{execute, execute_with_policy, PermissionBoundary, UseCase},
+    },
+};
 
 pub async fn create_schedule_admin_controller(
     http_req: HttpRequest,

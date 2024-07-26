@@ -8,53 +8,85 @@ mod shared;
 mod status;
 mod user;
 
+use std::sync::Arc;
+
 use account::AccountClient;
 pub(crate) use base::BaseClient;
 pub use base::{APIError, APIErrorVariant, APIResponse};
 use calendar::CalendarClient;
 pub use calendar::{
-    CreateCalendarInput, GetCalendarEventsInput, GetGoogleCalendars, GetOutlookCalendars,
-    StopCalendarSyncInput, SyncCalendarInput, UpdateCalendarInput,
+    CreateCalendarInput,
+    GetCalendarEventsInput,
+    GetGoogleCalendars,
+    GetOutlookCalendars,
+    StopCalendarSyncInput,
+    SyncCalendarInput,
+    UpdateCalendarInput,
 };
 use event::CalendarEventClient;
 pub use event::{CreateEventInput, GetEventsInstancesInput, UpdateEventInput};
-pub use nettu_scheduler_api_structs::dtos::*;
-pub use nettu_scheduler_api_structs::send_event_reminders::AccountRemindersDTO as AccountReminders;
+// Domain
+pub use nettu_scheduler_api_structs::dtos::{
+    AccountDTO as Account,
+    AccountSettingsDTO as AccountSettings,
+    AccountWebhookSettingsDTO as AccountWebhookSettings,
+    CalendarDTO as Calendar,
+    CalendarEventDTO as CalendarEvent,
+    CalendarSettingsDTO as CalendarSettings,
+    EventWithInstancesDTO as EventWithIInstances,
+    ScheduleDTO as Schedule,
+    ServiceResourceDTO as ServiceResource,
+    ServiceWithUsersDTO as Service,
+    UserDTO as User,
+};
+pub use nettu_scheduler_api_structs::{
+    dtos::*,
+    send_event_reminders::AccountRemindersDTO as AccountReminders,
+};
 pub use nettu_scheduler_domain::{
-    providers::google::*, providers::outlook::*, scheduling::RoundRobinAlgorithm, BusyCalendar,
-    CalendarEventReminder, IntegrationProvider, Metadata, RRuleFrequency, RRuleOptions,
-    ScheduleRule, ServiceMultiPersonOptions, SyncedCalendar, TimePlan, ID,
+    providers::{google::*, outlook::*},
+    scheduling::RoundRobinAlgorithm,
+    BusyCalendar,
+    CalendarEventReminder,
+    IntegrationProvider,
+    Metadata,
+    Month,
+    RRuleFrequency,
+    RRuleOptions,
+    ScheduleRule,
+    ServiceMultiPersonOptions,
+    SyncedCalendar,
+    TimePlan,
+    Tz,
+    WeekDay,
+    Weekday,
+    ID,
 };
 use schedule::ScheduleClient;
 pub use schedule::{CreateScheduleInput, UpdateScheduleInput};
 use service::ServiceClient;
 pub use service::{
-    AddBusyCalendar, AddServiceUserInput, CreateBookingIntendInput, CreateServiceInput,
-    GetServiceBookingSlotsInput, RemoveBookingIntendInput, RemoveBusyCalendar,
-    RemoveServiceUserInput, UpdateServiceInput, UpdateServiceUserInput,
+    AddBusyCalendar,
+    AddServiceUserInput,
+    CreateBookingIntendInput,
+    CreateServiceInput,
+    GetServiceBookingSlotsInput,
+    RemoveBookingIntendInput,
+    RemoveBusyCalendar,
+    RemoveServiceUserInput,
+    UpdateServiceInput,
+    UpdateServiceUserInput,
 };
 pub use shared::{KVMetadata, MetadataFindInput};
 use status::StatusClient;
-use std::sync::Arc;
 use user::UserClient;
 pub use user::{
-    CreateUserInput, GetUserFreeBusyInput, OAuthInput, RemoveUserIntegrationInput, UpdateUserInput,
+    CreateUserInput,
+    GetUserFreeBusyInput,
+    OAuthInput,
+    RemoveUserIntegrationInput,
+    UpdateUserInput,
 };
-
-// Domain
-pub use nettu_scheduler_api_structs::dtos::AccountDTO as Account;
-pub use nettu_scheduler_api_structs::dtos::AccountSettingsDTO as AccountSettings;
-pub use nettu_scheduler_api_structs::dtos::AccountWebhookSettingsDTO as AccountWebhookSettings;
-pub use nettu_scheduler_api_structs::dtos::CalendarDTO as Calendar;
-pub use nettu_scheduler_api_structs::dtos::CalendarEventDTO as CalendarEvent;
-pub use nettu_scheduler_api_structs::dtos::CalendarSettingsDTO as CalendarSettings;
-pub use nettu_scheduler_api_structs::dtos::EventWithInstancesDTO as EventWithIInstances;
-pub use nettu_scheduler_api_structs::dtos::ScheduleDTO as Schedule;
-pub use nettu_scheduler_api_structs::dtos::ServiceResourceDTO as ServiceResource;
-pub use nettu_scheduler_api_structs::dtos::ServiceWithUsersDTO as Service;
-pub use nettu_scheduler_api_structs::dtos::UserDTO as User;
-
-pub use nettu_scheduler_domain::{Month, Tz, WeekDay, Weekday};
 
 /// Nettu Scheduler Server SDK
 ///

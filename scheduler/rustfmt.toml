@@ -1,0 +1,11 @@
+# rustfmt configuration file
+# Options from https://rust-lang.github.io/rustfmt/?version=master&search=import
+
+# Put all imports for the same crate in the same `use ...` statement
+imports_granularity = "Crate"
+
+# Group imports by type, first `use` std/core/alloc, then `use` external crate, then "self, super and crate" imports
+group_imports = "StdExternalCrate"
+
+# Put the imports in a single line if they fit, otherwise use multiple lines 
+imports_layout = "HorizontalVertical"

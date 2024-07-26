@@ -1,9 +1,9 @@
-use crate::{shared::MetadataFindInput, APIResponse, BaseClient, TimePlan, Tz, ID};
 use chrono::{DateTime, Utc};
 use nettu_scheduler_api_structs::*;
 use nettu_scheduler_domain::{BusyCalendar, Metadata, ServiceMultiPersonOptions};
 use reqwest::StatusCode;
-use std::sync::Arc;
+
+use crate::{shared::MetadataFindInput, APIResponse, BaseClient, TimePlan, Tz, ID};
 
 #[derive(Clone)]
 pub struct ServiceClient {

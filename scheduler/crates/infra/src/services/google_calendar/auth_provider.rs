@@ -1,8 +1,9 @@
-use crate::{CodeTokenRequest, CodeTokenResponse, NettuContext};
 use chrono::Utc;
 use nettu_scheduler_domain::{IntegrationProvider, User};
 use serde::Deserialize;
 use tracing::error;
+
+use crate::{CodeTokenRequest, CodeTokenResponse, NettuContext};
 
 // https://developers.google.com/identity/protocols/oauth2/web-server#httprest_3
 
@@ -17,6 +18,7 @@ struct RefreshTokenRequest {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct RefreshTokenResponse {
     access_token: String,
     scope: String,
