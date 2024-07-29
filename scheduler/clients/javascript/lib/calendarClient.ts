@@ -5,7 +5,7 @@ import type {
   OutlookCalendar,
   OutlookCalendarAccessRole,
 } from './domain/calendar'
-import { APIResponse, NettuBaseClient } from './baseClient'
+import { type APIResponse, NettuBaseClient } from './baseClient'
 import type { Metadata } from './domain/metadata'
 import type {
   CalendarEvent,

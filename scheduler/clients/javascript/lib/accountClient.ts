@@ -32,7 +32,7 @@ type CreateAccountResponse = {
 type CreateAccountRequest = {
   /**
    * Code to use for creating the account
-   * This code is unique on the backend and is required for "admin" requests such as this one 
+   * This code is unique on the backend and is required for "admin" requests such as this one
    */
   code: string
 }
