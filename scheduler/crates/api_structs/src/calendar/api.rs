@@ -155,7 +155,7 @@ pub mod get_calendar {
 pub mod get_calendars_by_meta {
     use super::*;
 
-    #[derive(Deserialize)]
+    #[derive(Deserialize, Debug)]
     #[serde(rename_all = "camelCase")]
     pub struct QueryParams {
         pub key: String,

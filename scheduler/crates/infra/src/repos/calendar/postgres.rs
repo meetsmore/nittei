@@ -2,6 +2,7 @@ use nettu_scheduler_domain::{Calendar, ID};
 use serde_json::Value;
 use sqlx::{
     types::{Json, Uuid},
+    Execute,
     FromRow,
     PgPool,
 };

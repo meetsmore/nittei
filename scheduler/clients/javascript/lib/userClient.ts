@@ -1,8 +1,9 @@
 import type { CalendarEventInstance } from './domain/calendarEvent'
-import { NettuBaseClient } from './baseClient'
+import { type APIResponse, NettuBaseClient } from './baseClient'
 import type { Metadata } from './domain/metadata'
 import type { User } from './domain/user'
 import type { IntegrationProvider } from '.'
+import { convertInstanceDates } from './eventClient'
 
 /**
  * Request to get a user's freebusy
@@ -117,12 +118,30 @@ export class NettuUserClient extends NettuBaseClient {
     return this.delete<UserResponse>(`/user/${userId}`)
   }
 
-  public freebusy(userId: string, req: GetUserFeebusyReq) {
-    return this.get<GetUserFeebusyResponse>(`/user/${userId}/freebusy`, {
-      startTime: req.startTime.toISOString(),
-      endTime: req.endTime.toISOString(),
-      calendarIds: req.calendarIds,
-    })
+  public async freebusy(
+    userId: string,
+    req: GetUserFeebusyReq
+  ): Promise<APIResponse<GetUserFeebusyResponse>> {
+    const res = await this.get<GetUserFeebusyResponse>(
+      `/user/${userId}/freebusy`,
+      {
+        startTime: req.startTime.toISOString(),
+        endTime: req.endTime.toISOString(),
+        calendarIds: req.calendarIds?.join(','),
+      }
+    )
+
+    if (!res.data) {
+      return res
+    }
+
+    return {
+      res: res.res,
+      status: res.status,
+      data: {
+        busy: res.data.busy.map(convertInstanceDates),
+      },
+    }
   }
 
   public oauth(userId: string, code: string, provider: IntegrationProvider) {

@@ -5,8 +5,7 @@ import type {
   OutlookCalendar,
   OutlookCalendarAccessRole,
 } from './domain/calendar'
-import { APIResponse, NettuBaseClient } from './baseClient'
-import type { Metadata } from './domain/metadata'
+import { type APIResponse, NettuBaseClient } from './baseClient'
 import type {
   CalendarEvent,
   CalendarEventInstance,
@@ -17,7 +16,10 @@ import type { Timespan } from './eventClient'
 type CreateCalendarRequest = {
   timezone: string
   weekStart?: number
-  metadata?: Metadata
+  metadata?: {
+    key: string
+    value: string
+  }
 }
 
 type UpdateCalendarRequest = CreateCalendarRequest

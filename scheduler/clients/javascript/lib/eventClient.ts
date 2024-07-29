@@ -1,4 +1,4 @@
-import { APIResponse, NettuBaseClient } from './baseClient'
+import { type APIResponse, NettuBaseClient } from './baseClient'
 import type {
   CalendarEvent,
   CalendarEventInstance,
@@ -57,7 +57,7 @@ function convertEventDates(event: CalendarEvent): CalendarEvent {
   }
 }
 
-function convertInstanceDates(
+export function convertInstanceDates(
   instance: CalendarEventInstance
 ): CalendarEventInstance {
   if (!instance) {
@@ -71,7 +71,10 @@ function convertInstanceDates(
 }
 
 export class NettuEventClient extends NettuBaseClient {
-  public async update(eventId: string, data: UpdateCalendarEventReq): Promise<APIResponse<EventReponse>> {
+  public async update(
+    eventId: string,
+    data: UpdateCalendarEventReq
+  ): Promise<APIResponse<EventReponse>> {
     const res = await this.put<EventReponse>(`/user/events/${eventId}`, data)
 
     if (!res.data) {
@@ -87,7 +90,10 @@ export class NettuEventClient extends NettuBaseClient {
     }
   }
 
-  public async create(userId: string, data: CreateCalendarEventReq): Promise<APIResponse<EventReponse>> {
+  public async create(
+    userId: string,
+    data: CreateCalendarEventReq
+  ): Promise<APIResponse<EventReponse>> {
     const res = await this.post<EventReponse>(`/user/${userId}/events`, data)
 
     if (!res.data) {
@@ -178,7 +184,10 @@ export class NettuEventClient extends NettuBaseClient {
 }
 
 export class NettuEventUserClient extends NettuBaseClient {
-  public async update(eventId: string, data: UpdateCalendarEventReq): Promise<APIResponse<EventReponse>> {
+  public async update(
+    eventId: string,
+    data: UpdateCalendarEventReq
+  ): Promise<APIResponse<EventReponse>> {
     const res = await this.put<EventReponse>(`/events/${eventId}`, data)
 
     if (!res.data) {
@@ -194,7 +203,9 @@ export class NettuEventUserClient extends NettuBaseClient {
     }
   }
 
-  public async create(data: CreateCalendarEventReq): Promise<APIResponse<EventReponse>> {
+  public async create(
+    data: CreateCalendarEventReq
+  ): Promise<APIResponse<EventReponse>> {
     const res = await this.post<EventReponse>('/events', data)
 
     if (!res.data) {
