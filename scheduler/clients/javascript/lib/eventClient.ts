@@ -1,4 +1,4 @@
-import { NettuBaseClient } from './baseClient'
+import { APIResponse, NettuBaseClient } from './baseClient'
 import type {
   CalendarEvent,
   CalendarEventInstance,
@@ -46,71 +46,212 @@ type EventReponse = {
   event: CalendarEvent
 }
 
+function convertEventDates(event: CalendarEvent): CalendarEvent {
+  if (!event) {
+    return event
+  }
+  return {
+    ...event,
+    startTime: new Date(event.startTime),
+    exdates: event.exdates.map(date => new Date(date)),
+  }
+}
+
+function convertInstanceDates(
+  instance: CalendarEventInstance
+): CalendarEventInstance {
+  if (!instance) {
+    return instance
+  }
+  return {
+    ...instance,
+    startTime: new Date(instance.startTime),
+    endTime: new Date(instance.endTime),
+  }
+}
+
 export class NettuEventClient extends NettuBaseClient {
-  public update(eventId: string, data: UpdateCalendarEventReq) {
-    return this.put<EventReponse>(`/user/events/${eventId}`, data)
+  public async update(eventId: string, data: UpdateCalendarEventReq): Promise<APIResponse<EventReponse>> {
+    const res = await this.put<EventReponse>(`/user/events/${eventId}`, data)
+
+    if (!res.data) {
+      return res
+    }
+
+    return {
+      res: res.res,
+      status: res.status,
+      data: {
+        event: convertEventDates(res.data.event),
+      },
+    }
   }
 
-  public create(userId: string, data: CreateCalendarEventReq) {
-    return this.post<EventReponse>(`/user/${userId}/events`, data)
+  public async create(userId: string, data: CreateCalendarEventReq): Promise<APIResponse<EventReponse>> {
+    const res = await this.post<EventReponse>(`/user/${userId}/events`, data)
+
+    if (!res.data) {
+      return res
+    }
+
+    return {
+      res: res.res,
+      status: res.status,
+      data: {
+        event: convertEventDates(res.data.event),
+      },
+    }
   }
 
-  public findById(eventId: string) {
-    return this.get<EventReponse>(`/user/events/${eventId}`)
+  public async findById(eventId: string): Promise<APIResponse<EventReponse>> {
+    const res = await this.get<EventReponse>(`/user/events/${eventId}`)
+
+    if (!res.data) {
+      return res
+    }
+
+    return {
+      res: res.res,
+      status: res.status,
+      data: {
+        event: convertEventDates(res.data.event),
+      },
+    }
   }
 
-  public findByMeta(
+  public async findByMeta(
     meta: {
       key: string
       value: string
     },
     skip: number,
     limit: number
-  ) {
-    return this.get<{ events: CalendarEvent[] }>('/events/meta', {
+  ): Promise<APIResponse<{ events: CalendarEvent[] }>> {
+    const res = await this.get<{ events: CalendarEvent[] }>('/events/meta', {
       skip,
       limit,
       key: meta.key,
       value: meta.value,
     })
+
+    if (!res.data) {
+      return res
+    }
+
+    return {
+      res: res.res,
+      status: res.status,
+      data: {
+        events: res.data.events.map(convertEventDates),
+      },
+    }
   }
 
   public remove(eventId: string) {
     return this.delete<EventReponse>(`/user/events/${eventId}`)
   }
 
-  public getInstances(eventId: string, timespan: Timespan) {
-    return this.get<GetEventInstancesResponse>(
+  public async getInstances(
+    eventId: string,
+    timespan: Timespan
+  ): Promise<APIResponse<GetEventInstancesResponse>> {
+    const res = await this.get<GetEventInstancesResponse>(
       `/user/events/${eventId}/instances`,
       {
         startTime: timespan.startTime.toISOString(),
         endTime: timespan.endTime.toISOString(),
       }
     )
+
+    if (!res.data) {
+      return res
+    }
+
+    return {
+      res: res.res,
+      status: res.status,
+      data: {
+        instances: res.data.instances.map(convertInstanceDates),
+      },
+    }
   }
 }
 
 export class NettuEventUserClient extends NettuBaseClient {
-  public update(eventId: string, data: UpdateCalendarEventReq) {
-    return this.put<EventReponse>(`/events/${eventId}`, data)
+  public async update(eventId: string, data: UpdateCalendarEventReq): Promise<APIResponse<EventReponse>> {
+    const res = await this.put<EventReponse>(`/events/${eventId}`, data)
+
+    if (!res.data) {
+      return res
+    }
+
+    return {
+      res: res.res,
+      status: res.status,
+      data: {
+        event: convertEventDates(res.data.event),
+      },
+    }
   }
 
-  public create(data: CreateCalendarEventReq) {
-    return this.post<EventReponse>('/events', data)
+  public async create(data: CreateCalendarEventReq): Promise<APIResponse<EventReponse>> {
+    const res = await this.post<EventReponse>('/events', data)
+
+    if (!res.data) {
+      return res
+    }
+
+    return {
+      res: res.res,
+      status: res.status,
+      data: {
+        event: convertEventDates(res.data.event),
+      },
+    }
   }
 
-  public findById(eventId: string) {
-    return this.get<EventReponse>(`/events/${eventId}`)
+  public async findById(eventId: string): Promise<APIResponse<EventReponse>> {
+    const res = await this.get<EventReponse>(`/events/${eventId}`)
+
+    if (!res.data) {
+      return res
+    }
+
+    return {
+      res: res.res,
+      status: res.status,
+      data: {
+        event: convertEventDates(res.data.event),
+      },
+    }
   }
 
   public remove(eventId: string) {
     return this.delete<EventReponse>(`/events/${eventId}`)
   }
 
-  public getInstances(eventId: string, timespan: Timespan) {
-    return this.get<GetEventInstancesResponse>(`/events/${eventId}/instances`, {
-      startTime: timespan.startTime.toISOString(),
-      endTime: timespan.endTime.toISOString(),
-    })
+  public async getInstances(
+    eventId: string,
+    timespan: Timespan
+  ): Promise<APIResponse<GetEventInstancesResponse>> {
+    const res = await this.get<GetEventInstancesResponse>(
+      `/events/${eventId}/instances`,
+      {
+        startTime: timespan.startTime.toISOString(),
+        endTime: timespan.endTime.toISOString(),
+      }
+    )
+
+    if (!res.data) {
+      return res
+    }
+
+    return {
+      res: res.res,
+      status: res.status,
+      data: {
+        instances: res.data.instances.map(convertInstanceDates),
+      },
+    }
   }
 }

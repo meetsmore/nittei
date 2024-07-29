@@ -5,7 +5,7 @@ import type {
   OutlookCalendar,
   OutlookCalendarAccessRole,
 } from './domain/calendar'
-import { NettuBaseClient } from './baseClient'
+import { APIResponse, NettuBaseClient } from './baseClient'
 import type { Metadata } from './domain/metadata'
 import type {
   CalendarEvent,
@@ -103,14 +103,38 @@ export class NettuCalendarClient extends NettuBaseClient {
     })
   }
 
-  public getEvents(calendarId: string, startTime: Date, endTime: Date) {
-    return this.get<GetCalendarEventsResponse>(
+  public async getEvents(
+    calendarId: string,
+    startTime: Date,
+    endTime: Date
+  ): Promise<APIResponse<GetCalendarEventsResponse>> {
+    const res = await this.get<GetCalendarEventsResponse>(
       `/user/calendar/${calendarId}/events`,
       {
         startTime: startTime.toISOString(),
         endTime: endTime.toISOString(),
       }
     )
+
+    if (!res?.data) {
+      return res
+    }
+
+    return {
+      res: res.res,
+      status: res.status,
+      data: {
+        calendar: res.data.calendar,
+        events: res.data.events.map(event => ({
+          event: event.event,
+          instances: event.instances.map(instance => ({
+            startTime: new Date(instance.startTime),
+            endTime: new Date(instance.endTime),
+            busy: instance.busy,
+          })),
+        })),
+      },
+    }
   }
 
   public syncCalendar(input: SyncCalendarInput) {
