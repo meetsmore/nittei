@@ -1,6 +1,6 @@
 mod helpers;
 
-use chrono::{Duration, Utc, Weekday};
+use chrono::{DateTime, Duration, TimeDelta, Utc, Weekday};
 use helpers::{
     setup::spawn_app,
     utils::{assert_equal_user_lists, format_datetime},
@@ -192,7 +192,7 @@ async fn test_round_robin_scheduling_simple_test() {
                     recurrence: None,
                     reminders: Vec::new(),
                     service_id: Some(service.id.clone()),
-                    start_ts: available_slot,
+                    start_time: available_slot,
                 };
                 admin_client
                     .event
@@ -286,7 +286,7 @@ async fn test_round_robin_equal_distribution_scheduling() {
             continue;
         }
         let available_slot = bookingslots[0].slots[0].start;
-        let some_time_later = available_slot + 14 * 24 * 60 * 60 * 1000;
+        let some_time_later = available_slot + TimeDelta::milliseconds(14 * 24 * 60 * 60 * 1000);
 
         // Create upcoming service_events
         for (upcoming_service_events, (host, busy_calendar)) in upcoming_service_events_per_host
@@ -304,7 +304,7 @@ async fn test_round_robin_equal_distribution_scheduling() {
                     recurrence: None,
                     reminders: Vec::new(),
                     service_id: Some(service.id.clone()),
-                    start_ts: some_time_later,
+                    start_time: some_time_later,
                 };
                 admin_client
                     .event
@@ -357,7 +357,7 @@ async fn test_round_robin_equal_distribution_scheduling() {
                 recurrence: None,
                 reminders: Vec::new(),
                 service_id: Some(service.id.clone()),
-                start_ts: available_slot,
+                start_time: available_slot,
             };
             admin_client
                 .event
@@ -455,7 +455,7 @@ async fn test_round_robin_availability_scheduling() {
                 recurrence: None,
                 reminders: Vec::new(),
                 service_id: Some(service.id.clone()),
-                start_ts: 0,
+                start_time: DateTime::from_timestamp_millis(0).unwrap(),
             };
             let event_id = admin_client
                 .event
@@ -526,7 +526,7 @@ async fn test_round_robin_availability_scheduling() {
                 recurrence: None,
                 reminders: Vec::new(),
                 service_id: Some(service.id.clone()),
-                start_ts: available_slot,
+                start_time: available_slot,
             };
             admin_client
                 .event

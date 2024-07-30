@@ -11,7 +11,7 @@ export interface RRuleOptions {
   freq: Frequenzy
   interval: number
   count?: number
-  until?: number
+  until?: Date
   bysetpos?: number[]
   byweekday?: number[]
   bymonthday?: number[]
@@ -22,12 +22,12 @@ export interface RRuleOptions {
 
 export interface CalendarEvent {
   id: string
-  startTs: number
+  startTime: Date
   duration: number
   busy: boolean
   updated: number
   created: number
-  exdates: number[]
+  exdates: Date[]
   calendarId: string
   userId: string
   metadata: Metadata
@@ -38,7 +38,7 @@ export interface CalendarEvent {
 }
 
 export interface CalendarEventInstance {
-  startTs: number
-  endTs: number
+  startTime: Date
+  endTime: Date
   busy: boolean
 }

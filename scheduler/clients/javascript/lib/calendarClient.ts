@@ -5,7 +5,7 @@ import type {
   OutlookCalendar,
   OutlookCalendarAccessRole,
 } from './domain/calendar'
-import { NettuBaseClient } from './baseClient'
+import { type APIResponse, NettuBaseClient } from './baseClient'
 import type { Metadata } from './domain/metadata'
 import type {
   CalendarEvent,
@@ -13,6 +13,7 @@ import type {
   IntegrationProvider,
 } from './domain'
 import type { Timespan } from './eventClient'
+import { convertInstanceDates } from './helpers/datesConverters'
 
 type CreateCalendarRequest = {
   timezone: string
@@ -103,14 +104,34 @@ export class NettuCalendarClient extends NettuBaseClient {
     })
   }
 
-  public getEvents(calendarId: string, startTs: number, endTs: number) {
-    return this.get<GetCalendarEventsResponse>(
+  public async getEvents(
+    calendarId: string,
+    startTime: Date,
+    endTime: Date
+  ): Promise<APIResponse<GetCalendarEventsResponse>> {
+    const res = await this.get<GetCalendarEventsResponse>(
       `/user/calendar/${calendarId}/events`,
       {
-        startTs: startTs,
-        endTs: endTs,
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
       }
     )
+
+    if (!res?.data) {
+      return res
+    }
+
+    return {
+      res: res.res,
+      status: res.status,
+      data: {
+        calendar: res.data.calendar,
+        events: res.data.events.map(event => ({
+          event: event.event,
+          instances: event.instances.map(convertInstanceDates),
+        })),
+      },
+    }
   }
 
   public syncCalendar(input: SyncCalendarInput) {
@@ -171,8 +192,8 @@ export class NettuCalendarUserClient extends NettuBaseClient {
     return this.get<GetCalendarEventsResponse>(
       `/user/calendar/${calendarId}/events`,
       {
-        startTs: timespan.startTs,
-        endTs: timespan.endTs,
+        startTime: timespan.startTime.toISOString(),
+        endTime: timespan.endTime.toISOString(),
       }
     )
   }

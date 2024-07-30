@@ -48,7 +48,7 @@ tracing-bunyan-formatter = "0.3"
 
 openssl-probe = "0.1.2"
 chrono = "0.4.19"
-chrono-tz = "0.5.3"
+chrono-tz = "0.8.1"
 
 [dev-dependencies]
 nettu_scheduler_sdk = { path = "./clients/rust" }

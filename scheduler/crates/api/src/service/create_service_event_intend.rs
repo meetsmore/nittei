@@ -1,5 +1,5 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use chrono::{Duration, TimeZone, Utc};
+use chrono::{DateTime, Duration, TimeDelta, TimeZone, Utc};
 use chrono_tz::UTC;
 use get_service_bookingslots::GetServiceBookingSlotsUseCase;
 use nettu_scheduler_api_structs::create_service_event_intend::*;
@@ -57,7 +57,7 @@ pub async fn create_service_event_intend_controller(
 struct CreateServiceEventIntendUseCase {
     pub service_id: ID,
     pub host_user_ids: Option<Vec<ID>>,
-    pub timestamp: i64,
+    pub timestamp: DateTime<Utc>,
     pub duration: i64,
     pub interval: i64,
 }
@@ -96,7 +96,7 @@ impl UseCase for CreateServiceEventIntendUseCase {
     const NAME: &'static str = "CreateServiceEventIntend";
 
     async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
-        let start = UTC.timestamp_millis(self.timestamp);
+        let start = self.timestamp;
         let start_date = format_date(&start);
         let day_after = start + Duration::days(1);
         let end_date = format_date(&day_after);
@@ -203,8 +203,9 @@ impl UseCase for CreateServiceEventIntendUseCase {
                                 if hosts_at_slot.len() == 1 {
                                     vec![hosts_at_slot[0].user_id.clone()]
                                 } else {
-                                    let now = Utc::now().timestamp_millis();
-                                    let timestamp_in_two_months = now + 1000 * 60 * 60 * 24 * 61;
+                                    let now = Utc::now();
+                                    let timestamp_in_two_months =
+                                        now + TimeDelta::milliseconds(1000 * 60 * 60 * 24 * 61);
 
                                     let service_events = ctx
                                         .repos

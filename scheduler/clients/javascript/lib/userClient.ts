@@ -5,8 +5,8 @@ import type { User } from './domain/user'
 import type { IntegrationProvider } from '.'
 
 type GetUserFeebusyReq = {
-  startTs: number
-  endTs: number
+  startTime: Date
+  endTime: Date
   calendarIds?: string[]
 }
 
@@ -62,9 +62,9 @@ export class NettuUserClient extends NettuBaseClient {
 
   public freebusy(userId: string, req: GetUserFeebusyReq) {
     return this.get<GetUserFeebusyResponse>(`/user/${userId}/freebusy`, {
-      startTs: req.startTs,
-      endTs: req.endTs,
-      calendarIds: req.calendarIds?.join(','),
+      startTime: req.startTime.toISOString(),
+      endTime: req.endTime.toISOString(),
+      calendarIds: req.calendarIds,
     })
   }
 

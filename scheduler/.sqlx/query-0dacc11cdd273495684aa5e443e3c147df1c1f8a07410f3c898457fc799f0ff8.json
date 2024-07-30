@@ -6,7 +6,7 @@
     "parameters": {
       "Left": [
         "Uuid",
-        "Int8",
+        "Timestamptz",
         {
           "Custom": {
             "name": "entity_version",

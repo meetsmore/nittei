@@ -1,16 +1,18 @@
 mod postgres;
 
+use chrono::{DateTime, Utc};
 use nettu_scheduler_domain::EventRemindersExpansionJob;
 pub use postgres::PostgresEventReminderGenerationJobsRepo;
 
 #[async_trait::async_trait]
 pub trait IEventRemindersGenerationJobsRepo: Send + Sync {
     async fn bulk_insert(&self, jobs: &[EventRemindersExpansionJob]) -> anyhow::Result<()>;
-    async fn delete_all_before(&self, before: i64) -> Vec<EventRemindersExpansionJob>;
+    async fn delete_all_before(&self, before: DateTime<Utc>) -> Vec<EventRemindersExpansionJob>;
 }
 
 #[cfg(test)]
 mod tests {
+    use chrono::DateTime;
     use nettu_scheduler_domain::{
         Account,
         Calendar,
@@ -35,7 +37,7 @@ mod tests {
             account_id: account.id.clone(),
             calendar_id: calendar.id.clone(),
             duration: 1000 * 60 * 60,
-            start_ts: 1000 * 60 * 60,
+            start_time: DateTime::from_timestamp_millis(1000 * 60 * 60).unwrap(),
             user_id: user.id.clone(),
             ..Default::default()
         };
@@ -44,7 +46,7 @@ mod tests {
             account_id: account.id.clone(),
             calendar_id: calendar.id.clone(),
             duration: 1000 * 60 * 60,
-            start_ts: 1000 * 60 * 60,
+            start_time: DateTime::from_timestamp_millis(1000 * 60 * 60).unwrap(),
             user_id: user.id.clone(),
             ..Default::default()
         };
@@ -53,7 +55,7 @@ mod tests {
             account_id: account.id.clone(),
             calendar_id: calendar.id.clone(),
             duration: 1000 * 60 * 60,
-            start_ts: 1000 * 60 * 60,
+            start_time: DateTime::from_timestamp_millis(1000 * 60 * 60).unwrap(),
             user_id: user.id.clone(),
             ..Default::default()
         };
@@ -81,17 +83,17 @@ mod tests {
         let jobs = vec![
             EventRemindersExpansionJob {
                 event_id: e1.id.clone(),
-                timestamp: 1,
+                timestamp: DateTime::from_timestamp_millis(1).unwrap(),
                 version: v_e1,
             },
             EventRemindersExpansionJob {
                 event_id: e2.id.clone(),
-                timestamp: 2,
+                timestamp: DateTime::from_timestamp_millis(2).unwrap(),
                 version: v_e2,
             },
             EventRemindersExpansionJob {
                 event_id: e3.id.clone(),
-                timestamp: 3,
+                timestamp: DateTime::from_timestamp_millis(3).unwrap(),
                 version: v_e3,
             },
         ];

@@ -29,7 +29,7 @@ describe('CalendarEvent API', () => {
     const res = await unauthClient.events.create(userId, {
       calendarId,
       duration: 1000,
-      startTs: 1000,
+      startTime: new Date(1000),
     })
 
     expect(res.status).toBe(401)
@@ -39,7 +39,7 @@ describe('CalendarEvent API', () => {
     const res = await client.events.create({
       calendarId,
       duration: 1000,
-      startTs: 1000,
+      startTime: new Date(1000),
     })
     expect(res.status).toBe(201)
   })
@@ -49,7 +49,7 @@ describe('CalendarEvent API', () => {
     const res = await client.events.create({
       calendarId,
       duration: 1000,
-      startTs: 1000,
+      startTime: new Date(1000),
       recurrence: {
         freq: Frequenzy.Daily,
         interval: 1,
@@ -62,8 +62,8 @@ describe('CalendarEvent API', () => {
     const eventId = res.data.event.id
     expect(res.status).toBe(201)
     const res2 = await client.events.getInstances(eventId, {
-      startTs: 20,
-      endTs: 1000 * 60 * 60 * 24 * (count + 1),
+      startTime: new Date(20),
+      endTime: new Date(1000 * 60 * 60 * 24 * (count + 1)),
     })
     if (!res2.data) {
       throw new Error('Instances not found')
@@ -73,8 +73,8 @@ describe('CalendarEvent API', () => {
 
     // Query after instances are finished
     const res3 = await client.events.getInstances(eventId, {
-      startTs: 1000 * 60 * 60 * 24 * (count + 1),
-      endTs: 1000 * 60 * 60 * 24 * (count + 30),
+      startTime: new Date(1000 * 60 * 60 * 24 * (count + 1)),
+      endTime: new Date(1000 * 60 * 60 * 24 * (count + 30)),
     })
     if (!res3.data) {
       throw new Error('Instances not found')
@@ -88,7 +88,7 @@ describe('CalendarEvent API', () => {
     const res = await client.events.create({
       calendarId,
       duration: 1000,
-      startTs: 1000,
+      startTime: new Date(1000),
       recurrence: {
         freq: Frequenzy.Daily,
         interval: 1,
@@ -103,8 +103,8 @@ describe('CalendarEvent API', () => {
 
     const getInstances = async () => {
       const res = await client.events.getInstances(eventId, {
-        startTs: 20,
-        endTs: 1000 * 60 * 60 * 24 * (count + 1),
+        startTime: new Date(20),
+        endTime: new Date(1000 * 60 * 60 * 24 * (count + 1)),
       })
       if (!res.data) {
         throw new Error('Instances not found')
@@ -117,7 +117,7 @@ describe('CalendarEvent API', () => {
     // do create exception
     const res2 = await client.events.update(eventId, {
       recurrence: event.recurrence,
-      exdates: [event.startTs + 24 * 60 * 60 * 1000],
+      exdates: [new Date(event.startTime.getTime() + 24 * 60 * 60 * 1000)],
     })
     expect(res2.status).toBe(200)
 
@@ -132,7 +132,7 @@ describe('CalendarEvent API', () => {
     const res = await client.events.create({
       calendarId,
       duration: 1000,
-      startTs: 1000,
+      startTime: new Date(1000),
       recurrence: {
         freq: Frequenzy.Daily,
         interval: 1,
@@ -147,8 +147,8 @@ describe('CalendarEvent API', () => {
 
     const getInstances = async () => {
       const res = await client.events.getInstances(eventId, {
-        startTs: 20,
-        endTs: 1000 * 60 * 60 * 24 * (count + 1),
+        startTime: new Date(20),
+        endTime: new Date(1000 * 60 * 60 * 24 * (count + 1)),
       })
       if (!res.data) {
         throw new Error('Instances not found')
@@ -159,7 +159,7 @@ describe('CalendarEvent API', () => {
     // do create exception
     const res2 = await client.events.update(eventId, {
       recurrence: event.recurrence,
-      exdates: [event.startTs + 24 * 60 * 60 * 1000],
+      exdates: [new Date(event.startTime.getTime() + 24 * 60 * 60 * 1000)],
     })
     expect(res2.status).toBe(200)
 
@@ -169,7 +169,7 @@ describe('CalendarEvent API', () => {
     )
     await client.events.update(eventId, {
       recurrence: event.recurrence,
-      startTs: event.startTs + 24 * 60 * 60 * 1000,
+      startTime: new Date(event.startTime.getTime() + 24 * 60 * 60 * 1000),
     })
     const instancesAfterExceptionDeleted = await getInstances()
     expect(instancesAfterExceptionDeleted.length).toBe(

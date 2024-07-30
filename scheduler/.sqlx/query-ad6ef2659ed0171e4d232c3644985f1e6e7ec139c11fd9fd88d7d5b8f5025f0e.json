@@ -7,7 +7,7 @@
       "Left": [
         "Uuid",
         "Uuid",
-        "Int8",
+        "Timestamptz",
         {
           "Custom": {
             "name": "entity_version",

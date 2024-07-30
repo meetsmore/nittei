@@ -11,7 +11,7 @@
       {
         "ordinal": 1,
         "name": "timestamp",
-        "type_info": "Int8"
+        "type_info": "Timestamptz"
       },
       {
         "ordinal": 2,
@@ -22,7 +22,7 @@
     "parameters": {
       "Left": [
         "Uuid",
-        "Int8"
+        "Timestamptz"
       ]
     },
     "nullable": [

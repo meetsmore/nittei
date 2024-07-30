@@ -16,7 +16,7 @@
       {
         "ordinal": 2,
         "name": "remind_at",
-        "type_info": "Int8"
+        "type_info": "Timestamptz"
       },
       {
         "ordinal": 3,
@@ -31,7 +31,7 @@
     ],
     "parameters": {
       "Left": [
-        "Int8"
+        "Timestamptz"
       ]
     },
     "nullable": [

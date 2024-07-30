@@ -30,7 +30,7 @@ type GetServiceBookingslotsReq = {
 }
 
 type ServiceBookingSlot = {
-  start: number
+  start: string
   duration: number
   userIds: string[]
 }

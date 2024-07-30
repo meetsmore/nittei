@@ -1,3 +1,5 @@
+use chrono::{DateTime, Utc};
+
 use crate::shared::entity::ID;
 
 /// A `Reminder` represents a specific time before the occurrence a
@@ -11,7 +13,7 @@ pub struct Reminder {
     pub account_id: ID,
     /// The timestamp at which the `Account` should be notified.
     /// This is usually some minutes before a `CalendarEvent`
-    pub remind_at: i64,
+    pub remind_at: DateTime<Utc>,
     /// This field is needed to avoid sending duplicate `Reminder`s to the `Account`.
     /// For more info see the db schema comments
     pub version: i64,
@@ -24,6 +26,6 @@ pub struct Reminder {
 #[derive(Debug, Clone, PartialEq)]
 pub struct EventRemindersExpansionJob {
     pub event_id: ID,
-    pub timestamp: i64,
+    pub timestamp: DateTime<Utc>,
     pub version: i64,
 }

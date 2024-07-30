@@ -118,14 +118,14 @@ create trigger
 CREATE TABLE IF NOT EXISTS calendar_events (
                                                event_uid uuid PRIMARY KEY DEFAULT uuid_generate_v4() NOT NULL,
                                                calendar_uid uuid NOT NULL REFERENCES calendars(calendar_uid) ON DELETE CASCADE,
-                                               start_ts BIGINT NOT NULL,
+                                               start_time TIMESTAMPTZ NOT NULL,
                                                duration BIGINT NOT NULL,
-                                               end_ts BIGINT NOT NULL,
+                                               end_time TIMESTAMPTZ NOT NULL,
                                                busy boolean NOT NULL,
                                                created BIGINT NOT NULL,
                                                updated BIGINT NOT NULL,
                                                recurrence JSON,
-                                               exdates BIGINT[] NOT NULL,
+                                               exdates TIMESTAMPTZ[] NOT NULL,
                                                reminders JSON,
                                                service_uid uuid REFERENCES services(service_uid) ON DELETE CASCADE,
                                                metadata jsonb NOT NULL
@@ -179,7 +179,7 @@ COMMENT ON TABLE event_reminder_versions IS
 CREATE TABLE IF NOT EXISTS reminders (
                                          event_uid uuid NOT NULL REFERENCES calendar_events(event_uid) ON DELETE CASCADE,
                                          account_uid uuid NOT NULL REFERENCES accounts(account_uid) ON DELETE CASCADE,
-                                         remind_at BIGINT NOT NULL,
+                                         remind_at TIMESTAMPTZ NOT NULL,
                                          "version" entity_version NOT NULL,
                                          identifier text NOT NULL,
                                          PRIMARY KEY(event_uid, remind_at, identifier),
@@ -198,7 +198,7 @@ create trigger
 CREATE TABLE IF NOT EXISTS calendar_event_reminder_generation_jobs (
     -- There can only be one job at the time for an event
                                                                        event_uid uuid PRIMARY KEY NOT NULL,
-                                                                       "timestamp" BIGINT NOT NULL,
+                                                                       "timestamp" TIMESTAMPTZ NOT NULL,
                                                                        "version" entity_version NOT NULL,
                                                                        FOREIGN KEY (event_uid, "version") REFERENCES event_reminder_versions(event_uid, "version") ON DELETE CASCADE
 );
@@ -277,7 +277,7 @@ create trigger
 
 CREATE TABLE IF NOT EXISTS service_reservations (
                                                     service_uid uuid NOT NULL REFERENCES services(service_uid) ON DELETE CASCADE,
-                                                    "timestamp" BIGINT NOT NULL,
+                                                    "timestamp" TIMESTAMPTZ NOT NULL,
                                                     "count" BIGINT NOT NULL DEFAULT 1 CHECK ("count" >= 0),
                                                     PRIMARY KEY(service_uid, "timestamp")
 );

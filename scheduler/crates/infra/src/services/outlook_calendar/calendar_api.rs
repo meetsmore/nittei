@@ -1,4 +1,4 @@
-use chrono::{SecondsFormat, TimeZone, Utc};
+use chrono::{DateTime, SecondsFormat, TimeZone, Utc};
 use futures::future::join_all;
 use nettu_scheduler_domain::{
     providers::outlook::{
@@ -59,11 +59,11 @@ impl From<CalendarEvent> for OutlookCalendarEventAttributes {
         OutlookCalendarEventAttributes {
             start: OutlookCalendarEventTime {
                 time_zone: "UTC".to_string(),
-                date_time: format!("{}", Utc.timestamp_millis(e.start_ts).format("%+")),
+                date_time: format!("{}", e.start_time.format("%+")),
             },
             end: OutlookCalendarEventTime {
                 time_zone: "UTC".to_string(),
-                date_time: format!("{}", Utc.timestamp_millis(e.end_ts).format("%+")),
+                date_time: format!("{}", e.end_time.format("%+")),
             },
             is_online_meeting: false,
             body: OutlookCalendarEventBody {
@@ -88,8 +88,8 @@ pub struct OutlookCalendarRestApi {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FreeBusyRequest {
-    pub time_min: i64,
-    pub time_max: i64,
+    pub time_min: DateTime<Utc>,
+    pub time_max: DateTime<Utc>,
     pub time_zone: String,
     pub calendars: Vec<String>,
 }
@@ -272,10 +272,8 @@ impl OutlookCalendarRestApi {
                     calendar_id,
                     // format!("{}", Utc.timestamp_millis(body.time_min).format("%+")),
                     // format!("{}", Utc.timestamp_millis(body.time_max).format("%+"))
-                    Utc.timestamp_millis(body.time_min)
-                        .to_rfc3339_opts(SecondsFormat::Secs, true),
-                    Utc.timestamp_millis(body.time_max)
-                        .to_rfc3339_opts(SecondsFormat::Secs, true),
+                    body.time_min.to_rfc3339_opts(SecondsFormat::Secs, true),
+                    body.time_max.to_rfc3339_opts(SecondsFormat::Secs, true),
                 ))
             })
             .collect::<Vec<_>>();
@@ -289,8 +287,11 @@ impl OutlookCalendarRestApi {
                     .filter(|e| matches!(e.show_as, OutlookCalendarEventShowAs::Busy))
                     .map(|e| EventInstance {
                         busy: true,
-                        start_ts: e.start.get_timestamp_millis(),
-                        end_ts: e.end.get_timestamp_millis(),
+                        // TODO: handle unwrap
+                        start_time: DateTime::from_timestamp_millis(e.start.get_timestamp_millis())
+                            .unwrap(),
+                        end_time: DateTime::from_timestamp_millis(e.end.get_timestamp_millis())
+                            .unwrap(),
                     })
                     .collect::<Vec<_>>()
             })

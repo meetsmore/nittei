@@ -1,5 +1,6 @@
 mod postgres;
 
+use chrono::{DateTime, Utc};
 use nettu_scheduler_domain::{CalendarEvent, TimeSpan, ID};
 pub use postgres::PostgresEventRepo;
 
@@ -31,15 +32,15 @@ pub trait IEventRepo: Send + Sync {
         &self,
         service_id: &ID,
         user_ids: &[ID],
-        min_ts: i64,
-        max_ts: i64,
+        min_time: DateTime<Utc>,
+        max_time: DateTime<Utc>,
     ) -> Vec<CalendarEvent>;
     async fn find_user_service_events(
         &self,
         user_id: &ID,
         busy: bool,
-        min_ts: i64,
-        max_ts: i64,
+        min_time: DateTime<Utc>,
+        max_time: DateTime<Utc>,
     ) -> Vec<CalendarEvent>;
     async fn delete(&self, event_id: &ID) -> anyhow::Result<()>;
     async fn delete_by_service(&self, service_id: &ID) -> anyhow::Result<()>;
@@ -48,6 +49,7 @@ pub trait IEventRepo: Send + Sync {
 
 #[cfg(test)]
 mod tests {
+    use chrono::{DateTime, Utc};
     use nettu_scheduler_domain::{
         Account,
         Calendar,
@@ -199,14 +201,14 @@ mod tests {
         calendar_id: &ID,
         user_id: &ID,
         service_id: Option<&ID>,
-        start_ts: i64,
-        end_ts: i64,
+        start_time: DateTime<Utc>,
+        end_time: DateTime<Utc>,
         ctx: &NettuContext,
     ) -> CalendarEvent {
         let mut event = generate_default_event(account_id, calendar_id, user_id);
         event.calendar_id = calendar_id.clone();
-        event.start_ts = start_ts;
-        event.end_ts = end_ts;
+        event.start_time = start_time;
+        event.end_time = end_time;
         event.service_id = service_id.cloned();
         ctx.repos
             .events
@@ -252,8 +254,8 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            start_ts - 2,
-            start_ts - 1,
+            DateTime::from_timestamp_millis(start_ts - 2).unwrap(),
+            DateTime::from_timestamp_millis(start_ts - 1).unwrap(),
             &ctx,
         )
         .await;
@@ -262,8 +264,8 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            start_ts - 1,
-            start_ts,
+            DateTime::from_timestamp_millis(start_ts - 1).unwrap(),
+            DateTime::from_timestamp_millis(start_ts).unwrap(),
             &ctx,
         )
         .await;
@@ -272,8 +274,8 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            start_ts - 1,
-            start_ts + 1,
+            DateTime::from_timestamp_millis(start_ts - 1).unwrap(),
+            DateTime::from_timestamp_millis(start_ts + 1).unwrap(),
             &ctx,
         )
         .await;
@@ -282,8 +284,8 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            start_ts - 1,
-            end_ts,
+            DateTime::from_timestamp_millis(start_ts - 1).unwrap(),
+            DateTime::from_timestamp_millis(end_ts).unwrap(),
             &ctx,
         )
         .await;
@@ -292,8 +294,8 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            start_ts - 1,
-            end_ts + 1,
+            DateTime::from_timestamp_millis(start_ts - 1).unwrap(),
+            DateTime::from_timestamp_millis(end_ts + 1).unwrap(),
             &ctx,
         )
         .await;
@@ -302,8 +304,8 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            start_ts,
-            end_ts - 1,
+            DateTime::from_timestamp_millis(start_ts).unwrap(),
+            DateTime::from_timestamp_millis(end_ts - 1).unwrap(),
             &ctx,
         )
         .await;
@@ -312,8 +314,8 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            start_ts,
-            end_ts,
+            DateTime::from_timestamp_millis(start_ts).unwrap(),
+            DateTime::from_timestamp_millis(end_ts).unwrap(),
             &ctx,
         )
         .await;
@@ -322,8 +324,8 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            start_ts,
-            end_ts + 1,
+            DateTime::from_timestamp_millis(start_ts).unwrap(),
+            DateTime::from_timestamp_millis(end_ts + 1).unwrap(),
             &ctx,
         )
         .await;
@@ -332,8 +334,8 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            start_ts + 1,
-            end_ts - 1,
+            DateTime::from_timestamp_millis(start_ts + 1).unwrap(),
+            DateTime::from_timestamp_millis(end_ts - 1).unwrap(),
             &ctx,
         )
         .await;
@@ -342,8 +344,8 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            start_ts + 1,
-            end_ts,
+            DateTime::from_timestamp_millis(start_ts + 1).unwrap(),
+            DateTime::from_timestamp_millis(end_ts).unwrap(),
             &ctx,
         )
         .await;
@@ -352,8 +354,8 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            start_ts + 1,
-            end_ts + 1,
+            DateTime::from_timestamp_millis(start_ts + 1).unwrap(),
+            DateTime::from_timestamp_millis(end_ts + 1).unwrap(),
             &ctx,
         )
         .await;
@@ -362,8 +364,8 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            end_ts,
-            end_ts + 1,
+            DateTime::from_timestamp_millis(end_ts).unwrap(),
+            DateTime::from_timestamp_millis(end_ts + 1).unwrap(),
             &ctx,
         )
         .await;
@@ -372,8 +374,8 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            end_ts + 1,
-            end_ts + 2,
+            DateTime::from_timestamp_millis(end_ts + 1).unwrap(),
+            DateTime::from_timestamp_millis(end_ts + 2).unwrap(),
             &ctx,
         )
         .await;
@@ -400,7 +402,13 @@ mod tests {
         let events_in_calendar_and_timespan = ctx
             .repos
             .events
-            .find_by_calendar(&calendar.id, Some(&TimeSpan::new(start_ts, end_ts)))
+            .find_by_calendar(
+                &calendar.id,
+                Some(&TimeSpan::new(
+                    DateTime::from_timestamp_millis(start_ts).unwrap(),
+                    DateTime::from_timestamp_millis(end_ts).unwrap(),
+                )),
+            )
             .await
             .expect("To get events");
 
@@ -568,8 +576,8 @@ mod tests {
             &calendar1.id,
             &user1.id,
             Some(&service.id),
-            start_ts - 2,
-            start_ts - 1,
+            DateTime::from_timestamp_millis(start_ts - 2).unwrap(),
+            DateTime::from_timestamp_millis(start_ts - 1).unwrap(),
             &ctx,
         )
         .await;
@@ -578,8 +586,8 @@ mod tests {
             &calendar1.id,
             &user1.id,
             Some(&service.id),
-            start_ts - 1,
-            start_ts,
+            DateTime::from_timestamp_millis(start_ts - 1).unwrap(),
+            DateTime::from_timestamp_millis(start_ts).unwrap(),
             &ctx,
         )
         .await;
@@ -588,8 +596,8 @@ mod tests {
             &calendar1.id,
             &user1.id,
             Some(&service.id),
-            start_ts - 1,
-            start_ts + 1,
+            DateTime::from_timestamp_millis(start_ts - 1).unwrap(),
+            DateTime::from_timestamp_millis(start_ts + 1).unwrap(),
             &ctx,
         )
         .await;
@@ -598,8 +606,8 @@ mod tests {
             &calendar1.id,
             &user1.id,
             Some(&service.id),
-            start_ts - 1,
-            end_ts,
+            DateTime::from_timestamp_millis(start_ts - 1).unwrap(),
+            DateTime::from_timestamp_millis(end_ts).unwrap(),
             &ctx,
         )
         .await;
@@ -608,8 +616,8 @@ mod tests {
             &calendar1.id,
             &user1.id,
             Some(&service.id),
-            start_ts - 1,
-            end_ts + 1,
+            DateTime::from_timestamp_millis(start_ts - 1).unwrap(),
+            DateTime::from_timestamp_millis(end_ts + 1).unwrap(),
             &ctx,
         )
         .await;
@@ -618,8 +626,8 @@ mod tests {
             &calendar1.id,
             &user1.id,
             Some(&service.id),
-            start_ts,
-            end_ts - 1,
+            DateTime::from_timestamp_millis(start_ts).unwrap(),
+            DateTime::from_timestamp_millis(end_ts - 1).unwrap(),
             &ctx,
         )
         .await;
@@ -628,8 +636,8 @@ mod tests {
             &calendar1.id,
             &user1.id,
             Some(&service.id),
-            start_ts,
-            end_ts,
+            DateTime::from_timestamp_millis(start_ts).unwrap(),
+            DateTime::from_timestamp_millis(end_ts).unwrap(),
             &ctx,
         )
         .await;
@@ -638,8 +646,8 @@ mod tests {
             &calendar1.id,
             &user1.id,
             Some(&service.id),
-            start_ts,
-            end_ts + 1,
+            DateTime::from_timestamp_millis(start_ts).unwrap(),
+            DateTime::from_timestamp_millis(end_ts + 1).unwrap(),
             &ctx,
         )
         .await;
@@ -648,8 +656,8 @@ mod tests {
             &calendar1.id,
             &user1.id,
             Some(&service.id),
-            start_ts + 1,
-            end_ts - 1,
+            DateTime::from_timestamp_millis(start_ts + 1).unwrap(),
+            DateTime::from_timestamp_millis(end_ts - 1).unwrap(),
             &ctx,
         )
         .await;
@@ -658,8 +666,8 @@ mod tests {
             &calendar1.id,
             &user1.id,
             Some(&service.id),
-            start_ts + 1,
-            end_ts,
+            DateTime::from_timestamp_millis(start_ts + 1).unwrap(),
+            DateTime::from_timestamp_millis(end_ts).unwrap(),
             &ctx,
         )
         .await;
@@ -668,8 +676,8 @@ mod tests {
             &calendar1.id,
             &user1.id,
             Some(&service.id),
-            start_ts + 1,
-            end_ts + 1,
+            DateTime::from_timestamp_millis(start_ts + 1).unwrap(),
+            DateTime::from_timestamp_millis(end_ts + 1).unwrap(),
             &ctx,
         )
         .await;
@@ -678,8 +686,8 @@ mod tests {
             &calendar1.id,
             &user1.id,
             Some(&service.id),
-            end_ts,
-            end_ts + 1,
+            DateTime::from_timestamp_millis(end_ts).unwrap(),
+            DateTime::from_timestamp_millis(end_ts + 1).unwrap(),
             &ctx,
         )
         .await;
@@ -688,8 +696,8 @@ mod tests {
             &calendar1.id,
             &user1.id,
             Some(&service.id),
-            end_ts + 1,
-            end_ts + 2,
+            DateTime::from_timestamp_millis(end_ts + 1).unwrap(),
+            DateTime::from_timestamp_millis(end_ts + 2).unwrap(),
             &ctx,
         )
         .await;
@@ -716,7 +724,12 @@ mod tests {
         let events_in_service_and_timespan = ctx
             .repos
             .events
-            .find_by_service(&service.id, &[user1.id.clone()], start_ts, end_ts)
+            .find_by_service(
+                &service.id,
+                &[user1.id.clone()],
+                DateTime::from_timestamp_millis(start_ts).unwrap(),
+                DateTime::from_timestamp_millis(end_ts).unwrap(),
+            )
             .await;
 
         assert_eq!(
@@ -732,7 +745,12 @@ mod tests {
         let events_in_service_with_no_users = ctx
             .repos
             .events
-            .find_by_service(&service.id, &Vec::new(), start_ts, end_ts)
+            .find_by_service(
+                &service.id,
+                &Vec::new(),
+                DateTime::from_timestamp_millis(start_ts).unwrap(),
+                DateTime::from_timestamp_millis(end_ts).unwrap(),
+            )
             .await;
         assert_eq!(events_in_service_with_no_users.len(), 0);
     }
@@ -760,8 +778,8 @@ mod tests {
             &calendar.id,
             &user.id,
             Some(&service.id),
-            start_ts,
-            end_ts,
+            DateTime::from_timestamp_millis(start_ts).unwrap(),
+            DateTime::from_timestamp_millis(end_ts).unwrap(),
             &ctx,
         )
         .await;
@@ -770,8 +788,8 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            start_ts,
-            end_ts,
+            DateTime::from_timestamp_millis(start_ts).unwrap(),
+            DateTime::from_timestamp_millis(end_ts).unwrap(),
             &ctx,
         )
         .await;
@@ -779,7 +797,12 @@ mod tests {
         let res = ctx
             .repos
             .events
-            .find_user_service_events(&user.id, false, start_ts, end_ts)
+            .find_user_service_events(
+                &user.id,
+                false,
+                DateTime::from_timestamp_millis(start_ts).unwrap(),
+                DateTime::from_timestamp_millis(end_ts).unwrap(),
+            )
             .await;
 
         assert_eq!(res.len(), 1);

@@ -1,6 +1,7 @@
 use std::{collections::HashMap, time::Duration};
 
 use actix_web::rt::time::Instant;
+use chrono::{DateTime, TimeDelta};
 use nettu_scheduler_api_structs::send_event_reminders::{AccountEventReminder, AccountReminders};
 use nettu_scheduler_domain::{Account, CalendarEvent, Reminder};
 use nettu_scheduler_infra::NettuContext;
@@ -98,7 +99,8 @@ impl UseCase for GetUpcomingRemindersUseCase {
     /// This will run every minute
     async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
         // Find all occurrences for the next interval and delete them
-        let ts = ctx.sys.get_timestamp_millis() + self.reminders_interval;
+        let ts = DateTime::from_timestamp_millis(ctx.sys.get_timestamp_millis()).unwrap()
+            + TimeDelta::milliseconds(self.reminders_interval);
 
         // Get all reminders and filter out invalid / expired reminders
         let reminders = ctx.repos.reminders.delete_all_before(ts).await;
@@ -120,7 +122,7 @@ impl UseCase for GetUpcomingRemindersUseCase {
 
         let grouped_reminders = create_reminders_for_accounts(reminders, event_lookup, ctx).await;
 
-        let millis_to_send = ts - ctx.sys.get_timestamp_millis();
+        let millis_to_send = ts.timestamp_millis() - ctx.sys.get_timestamp_millis();
         let instant = if millis_to_send > 0 {
             Instant::now() + Duration::from_millis(millis_to_send as u64)
         } else {
@@ -135,6 +137,7 @@ impl UseCase for GetUpcomingRemindersUseCase {
 mod tests {
     use std::sync::Arc;
 
+    use chrono::Utc;
     use nettu_scheduler_domain::{Calendar, CalendarEventReminder, User};
     use nettu_scheduler_infra::{setup_context as _setup_ctx, ISys};
 
@@ -148,7 +151,7 @@ mod tests {
         let ctx = _setup_ctx().await;
         ctx.repos
             .reminders
-            .delete_all_before(CalendarEvent::get_max_timestamp())
+            .delete_all_before(DateTime::<Utc>::MAX_UTC)
             .await;
 
         ctx
@@ -199,7 +202,7 @@ mod tests {
         let usecase = CreateEventUseCase {
             user: user.clone(),
             calendar_id: calendar.id.clone(),
-            start_ts: ctx.sys.get_timestamp_millis(),
+            start_time: DateTime::from_timestamp_millis(ctx.sys.get_timestamp_millis()).unwrap(),
             duration: 1000 * 60 * 60 * 2,
             recurrence: Some(Default::default()),
             reminders: vec![
@@ -221,7 +224,8 @@ mod tests {
         let usecase = CreateEventUseCase {
             calendar_id: calendar.id.clone(),
             user,
-            start_ts: sys3.get_timestamp_millis() + 1000 * 60 * 5,
+            start_time: DateTime::from_timestamp_millis(sys3.get_timestamp_millis()).unwrap()
+                + TimeDelta::milliseconds(1000 * 60 * 5),
             duration: 1000 * 60 * 60 * 2,
             reminders: vec![CalendarEventReminder {
                 delta: -10,
@@ -278,14 +282,15 @@ mod tests {
         ctx.sys = Arc::new(StaticTimeSys1 {});
 
         let now = ctx.sys.get_timestamp_millis();
-        let initial_start_ts = now + 30 * 60 * 1000;
+        let initial_start_time =
+            DateTime::from_timestamp_millis(now).unwrap() + TimeDelta::milliseconds(30 * 60 * 1000);
         let delta = -10;
 
         let (user, calendar) = insert_common_data(&ctx).await;
         let usecase = CreateEventUseCase {
             calendar_id: calendar.id.clone(),
             user: user.clone(),
-            start_ts: initial_start_ts,
+            start_time: initial_start_time,
             duration: 1000 * 60 * 60 * 2,
             recurrence: Some(Default::default()),
             reminders: vec![CalendarEventReminder {
@@ -299,7 +304,7 @@ mod tests {
         let old_reminders = ctx
             .repos
             .reminders
-            .delete_all_before(initial_start_ts)
+            .delete_all_before(initial_start_time)
             .await;
         ctx.repos
             .reminders
@@ -307,8 +312,8 @@ mod tests {
             .await
             .unwrap();
 
-        let start_ts_diff = 15 * 60 * 1000; // 15 minutes
-        let new_start = calendar_event.start_ts + start_ts_diff; // Postponed 15 minutes
+        let start_ts_diff = TimeDelta::milliseconds(15 * 60 * 1000); // 15 minutes
+        let new_start = calendar_event.start_time + start_ts_diff; // Postponed 15 minutes
         let user = ctx.repos.users.find(&user.id).await.unwrap();
         let update_event_usecase = UpdateEventUseCase {
             event_id: calendar_event.id,
@@ -318,14 +323,17 @@ mod tests {
                 identifier: "".into(),
             }]),
             recurrence: Some(Default::default()),
-            start_ts: Some(new_start),
+            start_time: Some(new_start),
             ..Default::default()
         };
         execute(update_event_usecase, &ctx).await.unwrap();
         let new_reminders = ctx.repos.reminders.delete_all_before(new_start).await;
         assert_eq!(new_reminders.len(), old_reminders.len());
         assert_eq!(new_reminders.len(), 1);
-        assert_eq!(new_reminders[0].remind_at, new_start + delta * 60 * 1000);
+        assert_eq!(
+            new_reminders[0].remind_at,
+            new_start + TimeDelta::milliseconds(delta * 60 * 1000)
+        );
         assert_eq!(new_reminders[0].event_id, old_reminders[0].event_id);
         assert_eq!(
             new_reminders[0].remind_at,
@@ -340,15 +348,15 @@ mod tests {
         let mut ctx = setup_context().await;
         ctx.sys = Arc::new(StaticTimeSys1 {});
 
-        let now = ctx.sys.get_timestamp_millis();
+        let now = DateTime::from_timestamp_millis(ctx.sys.get_timestamp_millis()).unwrap();
         let delta = 120;
-        let remind_at = now + 120 * 60 * 1000;
+        let remind_at = now + TimeDelta::milliseconds(120 * 60 * 1000);
 
         let (user, calendar) = insert_common_data(&ctx).await;
         let usecase = CreateEventUseCase {
             user: user.clone(),
             calendar_id: calendar.id.clone(),
-            start_ts: now,
+            start_time: now,
             duration: 1000 * 60 * 60 * 2,
             recurrence: Some(Default::default()),
             reminders: vec![CalendarEventReminder {
@@ -395,15 +403,15 @@ mod tests {
         let mut ctx = setup_context().await;
         ctx.sys = Arc::new(StaticTimeSys1 {});
 
-        let now = ctx.sys.get_timestamp_millis();
+        let now = DateTime::from_timestamp_millis(ctx.sys.get_timestamp_millis()).unwrap();
 
         let (user, calendar) = insert_common_data(&ctx).await;
         let delta = 120;
-        let remind_at = now + delta * 60 * 1000;
+        let remind_at = now + TimeDelta::milliseconds(delta * 60 * 1000);
         let usecase = CreateEventUseCase {
             user: user.clone(),
             calendar_id: calendar.id.clone(),
-            start_ts: now,
+            start_time: now,
             duration: 1000 * 60 * 60 * 2,
             recurrence: Some(Default::default()),
             reminders: vec![CalendarEventReminder {
@@ -415,6 +423,7 @@ mod tests {
 
         let calendar_event = execute(usecase, &ctx).await.unwrap();
         let old_reminders = ctx.repos.reminders.delete_all_before(remind_at).await;
+
         ctx.repos
             .reminders
             .bulk_insert(&old_reminders)

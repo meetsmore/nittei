@@ -172,7 +172,7 @@ describe('Service API', () => {
 
     expect(data.dates.length).toBe(1)
     let bookingSlots = data.dates[0].slots
-    expect(bookingSlots[0].start).toBeGreaterThanOrEqual(
+    expect(new Date(bookingSlots[0].start).getTime()).toBeGreaterThanOrEqual(
       now.valueOf() + closestBookingTime
     )
 

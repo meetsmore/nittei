@@ -1,4 +1,5 @@
 use actix_web::{web, HttpRequest, HttpResponse};
+use chrono::{DateTime, TimeDelta, Utc};
 use nettu_scheduler_api_structs::create_event::*;
 use nettu_scheduler_domain::{
     CalendarEvent,
@@ -32,7 +33,7 @@ pub async fn create_event_admin_controller(
     let body = body.0;
     let usecase = CreateEventUseCase {
         busy: body.busy.unwrap_or(false),
-        start_ts: body.start_ts,
+        start_time: body.start_time,
         duration: body.duration,
         user,
         calendar_id: body.calendar_id,
@@ -58,7 +59,7 @@ pub async fn create_event_controller(
     let body = body.0;
     let usecase = CreateEventUseCase {
         busy: body.busy.unwrap_or(false),
-        start_ts: body.start_ts,
+        start_time: body.start_time,
         duration: body.duration,
         calendar_id: body.calendar_id,
         recurrence: body.recurrence,
@@ -78,7 +79,7 @@ pub async fn create_event_controller(
 pub struct CreateEventUseCase {
     pub calendar_id: ID,
     pub user: User,
-    pub start_ts: i64,
+    pub start_time: DateTime<Utc>,
     pub duration: i64,
     pub busy: bool,
     pub recurrence: Option<RRuleOptions>,
@@ -136,12 +137,12 @@ impl UseCase for CreateEventUseCase {
         let mut e = CalendarEvent {
             id: Default::default(),
             busy: self.busy,
-            start_ts: self.start_ts,
+            start_time: self.start_time,
             duration: self.duration,
             created: ctx.sys.get_timestamp_millis(),
             updated: ctx.sys.get_timestamp_millis(),
             recurrence: None,
-            end_ts: self.start_ts + self.duration, // default, if recurrence changes, this will be updated
+            end_time: self.start_time + TimeDelta::milliseconds(self.duration), // default, if recurrence changes, this will be updated
             exdates: Vec::new(),
             calendar_id: calendar.id.clone(),
             user_id: self.user.id.clone(),
@@ -223,7 +224,7 @@ mod test {
         } = setup().await;
 
         let mut usecase = CreateEventUseCase {
-            start_ts: 500,
+            start_time: DateTime::from_timestamp_millis(500).unwrap(),
             duration: 800,
             calendar_id: calendar.id.clone(),
             user,
@@ -245,7 +246,7 @@ mod test {
         } = setup().await;
 
         let mut usecase = CreateEventUseCase {
-            start_ts: 500,
+            start_time: DateTime::from_timestamp_millis(500).unwrap(),
             duration: 800,
             recurrence: Some(Default::default()),
             calendar_id: calendar.id.clone(),
@@ -268,7 +269,7 @@ mod test {
         } = setup().await;
 
         let mut usecase = CreateEventUseCase {
-            start_ts: 500,
+            start_time: DateTime::from_timestamp_millis(500).unwrap(),
             duration: 800,
             recurrence: Some(Default::default()),
             user,
@@ -298,12 +299,12 @@ mod test {
             ..Default::default()
         });
         invalid_rrules.push(RRuleOptions {
-            until: Some(Utc.ymd(2150, 1, 1).and_hms(0, 0, 0).timestamp_millis() as isize), // too big until
+            until: Some(Utc.ymd(2150, 1, 1).and_hms(0, 0, 0)), // too big until
             ..Default::default()
         });
         for rrule in invalid_rrules {
             let mut usecase = CreateEventUseCase {
-                start_ts: 500,
+                start_time: DateTime::from_timestamp_millis(500).unwrap(),
                 duration: 800,
                 recurrence: Some(rrule),
                 calendar_id: calendar.id.clone(),

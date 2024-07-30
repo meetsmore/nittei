@@ -8,17 +8,17 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TimeSpan {
-    start_ts: i64,
-    end_ts: i64,
+    start_time: DateTime<Utc>,
+    end_time: DateTime<Utc>,
     duration: i64,
 }
 
 impl TimeSpan {
-    pub fn new(start_ts: i64, end_ts: i64) -> Self {
+    pub fn new(start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Self {
         Self {
-            start_ts,
-            end_ts,
-            duration: end_ts - start_ts,
+            start_time,
+            end_time,
+            duration: (end_time - start_time).num_milliseconds(),
         }
     }
 
@@ -33,17 +33,17 @@ impl TimeSpan {
 
     pub fn as_datetime(&self, tz: &Tz) -> TimeSpanDateTime {
         TimeSpanDateTime {
-            start: TimeSpan::create_datetime_from_millis(self.start_ts, tz),
-            end: TimeSpan::create_datetime_from_millis(self.end_ts, tz),
+            start: self.start_time.with_timezone(&tz),
+            end: self.end_time.with_timezone(&tz),
         }
     }
 
-    pub fn start(&self) -> i64 {
-        self.start_ts
+    pub fn start(&self) -> DateTime<Utc> {
+        self.start_time
     }
 
-    pub fn end(&self) -> i64 {
-        self.end_ts
+    pub fn end(&self) -> DateTime<Utc> {
+        self.end_time
     }
 }
 

@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use chrono::{DateTime, Utc};
 use nettu_scheduler_api_structs::*;
 use nettu_scheduler_domain::{IntegrationProvider, Metadata};
 use reqwest::StatusCode;
@@ -19,21 +20,24 @@ pub type CreateUserInput = create_user::RequestBody;
 
 pub struct GetUserFreeBusyInput {
     pub user_id: ID,
-    pub start_ts: i64,
-    pub end_ts: i64,
+    pub start_time: DateTime<Utc>,
+    pub end_time: DateTime<Utc>,
     pub calendar_ids: Option<Vec<ID>>,
 }
 
-impl From<GetUserFreeBusyInput> for String {
+impl From<GetUserFreeBusyInput> for Vec<(String, String)> {
     fn from(inp: GetUserFreeBusyInput) -> Self {
-        let mut query = format!("?startTs={}&endTs={}", inp.start_ts, inp.end_ts);
+        let mut query = vec![
+            ("startTime".to_string(), inp.start_time.to_rfc3339()),
+            ("endTime".to_string(), inp.end_time.to_rfc3339()),
+        ];
         if let Some(calendar_ids) = inp.calendar_ids {
             let calendar_ids = calendar_ids
                 .into_iter()
                 .map(|id| id.to_string())
                 .collect::<Vec<_>>()
                 .join(",");
-            query = format!("{}&calendarIds={}", query, calendar_ids);
+            query.push(("calendarIds".to_string(), calendar_ids));
         }
 
         query
@@ -64,7 +68,7 @@ impl UserClient {
 
     pub async fn get(&self, user_id: ID) -> APIResponse<get_user::APIResponse> {
         self.base
-            .get(format!("user/{}", user_id), StatusCode::OK)
+            .get(format!("user/{}", user_id), None, StatusCode::OK)
             .await
     }
 
@@ -85,13 +89,13 @@ impl UserClient {
 
     pub async fn free_busy(
         &self,
-        input: GetUserFreeBusyInput,
+        query: GetUserFreeBusyInput,
     ) -> APIResponse<get_user_freebusy::APIResponse> {
-        let user_id = input.user_id.clone();
-        let query: String = input.into();
+        let user_id = query.user_id.clone();
         self.base
             .get(
-                format!("user/{}/freebusy{}", user_id, query),
+                format!("user/{}/freebusy", user_id),
+                Some(query.into()),
                 StatusCode::OK,
             )
             .await
@@ -127,7 +131,8 @@ impl UserClient {
     ) -> APIResponse<get_users_by_meta::APIResponse> {
         self.base
             .get(
-                format!("user/meta?{}", input.to_query_string()),
+                "user/meta".to_string(),
+                Some(input.to_query()),
                 StatusCode::OK,
             )
             .await

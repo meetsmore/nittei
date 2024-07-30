@@ -16,6 +16,6 @@ impl StatusClient {
     }
 
     pub async fn check_health(&self) -> APIResponse<get_service_health::APIResponse> {
-        self.base.get("".into(), StatusCode::OK).await
+        self.base.get("".into(), None, StatusCode::OK).await
     }
 }

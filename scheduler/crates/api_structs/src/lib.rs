@@ -1,10 +1,12 @@
 mod account;
 mod calendar;
 mod event;
+mod helpers;
 mod schedule;
 mod service;
 mod status;
 mod user;
+
 pub mod dtos {
     pub use crate::{
         account::dtos::*,
