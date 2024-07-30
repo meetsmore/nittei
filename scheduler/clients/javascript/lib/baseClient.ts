@@ -62,6 +62,9 @@ export abstract class NettuBaseClient {
   }
 }
 
+/**
+ * Response from the API
+ */
 export class APIResponse<T> {
   readonly data?: T // Could be a failed response and therefore nullable
   readonly status: number
@@ -74,6 +77,9 @@ export class APIResponse<T> {
   }
 }
 
+/**
+ * Credentials for the API for end users (usually frontend)
+ */
 export class UserCreds implements ICredentials {
   private readonly nettuAccount: string
   private readonly token?: string
@@ -95,6 +101,9 @@ export class UserCreds implements ICredentials {
   }
 }
 
+/**
+ * Credentials for the API for admins (usually backend)
+ */
 export class AccountCreds implements ICredentials {
   private readonly apiKey: string
 
