@@ -1,10 +1,14 @@
-import { APIResponse, NettuBaseClient } from './baseClient'
+import { type APIResponse, NettuBaseClient } from './baseClient'
 import type {
   CalendarEvent,
   CalendarEventInstance,
   RRuleOptions,
 } from './domain/calendarEvent'
 import type { Metadata } from './domain/metadata'
+import {
+  convertEventDates,
+  convertInstanceDates,
+} from './helpers/datesConverters'
 
 interface EventReminder {
   delta: number
@@ -46,32 +50,11 @@ type EventReponse = {
   event: CalendarEvent
 }
 
-function convertEventDates(event: CalendarEvent): CalendarEvent {
-  if (!event) {
-    return event
-  }
-  return {
-    ...event,
-    startTime: new Date(event.startTime),
-    exdates: event.exdates.map(date => new Date(date)),
-  }
-}
-
-function convertInstanceDates(
-  instance: CalendarEventInstance
-): CalendarEventInstance {
-  if (!instance) {
-    return instance
-  }
-  return {
-    ...instance,
-    startTime: new Date(instance.startTime),
-    endTime: new Date(instance.endTime),
-  }
-}
-
 export class NettuEventClient extends NettuBaseClient {
-  public async update(eventId: string, data: UpdateCalendarEventReq): Promise<APIResponse<EventReponse>> {
+  public async update(
+    eventId: string,
+    data: UpdateCalendarEventReq
+  ): Promise<APIResponse<EventReponse>> {
     const res = await this.put<EventReponse>(`/user/events/${eventId}`, data)
 
     if (!res.data) {
@@ -87,7 +70,10 @@ export class NettuEventClient extends NettuBaseClient {
     }
   }
 
-  public async create(userId: string, data: CreateCalendarEventReq): Promise<APIResponse<EventReponse>> {
+  public async create(
+    userId: string,
+    data: CreateCalendarEventReq
+  ): Promise<APIResponse<EventReponse>> {
     const res = await this.post<EventReponse>(`/user/${userId}/events`, data)
 
     if (!res.data) {
@@ -178,7 +164,10 @@ export class NettuEventClient extends NettuBaseClient {
 }
 
 export class NettuEventUserClient extends NettuBaseClient {
-  public async update(eventId: string, data: UpdateCalendarEventReq): Promise<APIResponse<EventReponse>> {
+  public async update(
+    eventId: string,
+    data: UpdateCalendarEventReq
+  ): Promise<APIResponse<EventReponse>> {
     const res = await this.put<EventReponse>(`/events/${eventId}`, data)
 
     if (!res.data) {
@@ -194,7 +183,9 @@ export class NettuEventUserClient extends NettuBaseClient {
     }
   }
 
-  public async create(data: CreateCalendarEventReq): Promise<APIResponse<EventReponse>> {
+  public async create(
+    data: CreateCalendarEventReq
+  ): Promise<APIResponse<EventReponse>> {
     const res = await this.post<EventReponse>('/events', data)
 
     if (!res.data) {
