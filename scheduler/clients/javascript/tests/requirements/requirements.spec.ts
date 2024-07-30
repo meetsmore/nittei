@@ -537,7 +537,72 @@ describe('Requirements', () => {
     })
 
     describe('Multiple calendars of different users can be queried at once', () => {
-      it.todo('To be implemented')
+      let user1: User | undefined
+      let user2: User | undefined
+      beforeAll(async () => {
+        const resUser1 = await client?.user.create()
+        if (!resUser1?.data) {
+          throw new Error('User not created')
+        }
+        expect(resUser1.status).toBe(201)
+        user1 = resUser1.data.user
+
+        const resCal1 = await client?.calendar.create(user1.id, {
+          timezone: 'Asia/Tokyo',
+        })
+        expect(resCal1?.status).toBe(201)
+        const user1Calendar1 = resCal1?.data?.calendar
+
+        const resUser2 = await client?.user.create()
+        if (!resUser2?.data) {
+          throw new Error('User not created')
+        }
+        expect(resUser2.status).toBe(201)
+        user2 = resUser2.data.user
+
+        const resCal2 = await client?.calendar.create(user2.id, {
+          timezone: 'Asia/Tokyo',
+        })
+        expect(resCal2?.status).toBe(201)
+        const user2Calendar1 = resCal2?.data?.calendar
+
+        if (!user1 || !user1Calendar1 || !user2 || !user2Calendar1) {
+          throw new Error('No user or calendar')
+        }
+
+        // Covers from 0h00 to 1h00
+        const resEvent1 = await client?.events.create(user1.id, {
+          calendarId: user1Calendar1.id,
+          duration: 1000 * 60 * 60,
+          startTime: new Date(0),
+          busy: true,
+        })
+        expect(resEvent1?.status).toBe(201)
+
+        // Covers from 1h01 to 2h01
+        const resEvent2 = await client?.events.create(user2.id, {
+          calendarId: user2Calendar1.id,
+          duration: 1000 * 60 * 60,
+          startTime: new Date(1000 * 60 * 61),
+          busy: true,
+        })
+        expect(resEvent2?.status).toBe(201)
+      })
+
+      it('should query on the 2 calendars of the 2 users, and get 2 busy periods', async () => {
+        if (!user1 || !user2) {
+          throw new Error('No user')
+        }
+        const res = await client?.user.freebusyMultipleUsers({
+          endTime: new Date(1000 * 60 * 60 * 24), // 1 day
+          startTime: new Date(10),
+          userIds: [user1.id, user2.id],
+        })
+        if (!res?.data) {
+          throw new Error('Freebusy not found')
+        }
+        expect(res.data.busy.length).toBe(2)
+      })
     })
 
     // describe("Users' calendars can be queried in groups", () => {

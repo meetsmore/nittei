@@ -17,6 +17,7 @@ use nettu_scheduler_sdk::{
     GetServiceBookingSlotsInput,
     GetUserFreeBusyInput,
     KVMetadata,
+    Metadata,
     MetadataFindInput,
     NettuSDK,
     RemoveServiceUserInput,
@@ -72,19 +73,23 @@ async fn test_crud_user() {
 
     let admin_client = NettuSDK::new(address, res.secret_api_key);
 
-    let mut metadata = HashMap::new();
-    metadata.insert("group_id".to_string(), "123".to_string());
+    let metadata = Metadata::new_kv("group_id".to_string(), "123".to_string());
 
     let res = admin_client
         .user
         .create(CreateUserInput {
-            metadata: Some(metadata.into()),
+            metadata: Some(metadata),
             user_id: None,
         })
         .await
         .expect("Expected to create user");
+
     assert_eq!(
-        res.user.metadata.inner.get("group_id").unwrap().clone(),
+        res.user.metadata.inner.get("key").unwrap().clone(),
+        "group_id".to_string()
+    );
+    assert_eq!(
+        res.user.metadata.inner.get("value").unwrap().clone(),
         "123".to_string()
     );
 

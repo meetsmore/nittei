@@ -29,6 +29,26 @@ type GetUserFeebusyReq = {
 }
 
 /**
+ * Request to get multiple users' freebusy status
+ */
+type GetMultipleUsersFeebusyReq = {
+  /**
+   * List of user ids to check for freebusy
+   */
+  userIds: string[]
+  /**
+   * Start time of the period to check for freebusy
+   * @format Date in UTC
+   */
+  startTime: Date
+  /**
+   * End time of the period to check for freebusy
+   * @format Date in UTC
+   */
+  endTime: Date
+}
+
+/**
  * Response when getting a user's freebusy
  */
 type GetUserFeebusyResponse = {
@@ -128,6 +148,31 @@ export class NettuUserClient extends NettuBaseClient {
         startTime: req.startTime.toISOString(),
         endTime: req.endTime.toISOString(),
         calendarIds: req.calendarIds?.join(','),
+      }
+    )
+
+    if (!res.data) {
+      return res
+    }
+
+    return {
+      res: res.res,
+      status: res.status,
+      data: {
+        busy: res.data.busy.map(convertInstanceDates),
+      },
+    }
+  }
+
+  public async freebusyMultipleUsers(
+    req: GetMultipleUsersFeebusyReq
+  ): Promise<APIResponse<GetUserFeebusyResponse>> {
+    const res = await this.post<GetUserFeebusyResponse>(
+      '/user/multipleFreebusy',
+      {
+        userIds: req.userIds,
+        startTime: req.startTime.toISOString(),
+        endTime: req.endTime.toISOString(),
       }
     )
 
