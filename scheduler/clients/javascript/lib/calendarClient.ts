@@ -5,7 +5,7 @@ import type {
   OutlookCalendar,
   OutlookCalendarAccessRole,
 } from './domain/calendar'
-import { APIResponse, NettuBaseClient } from './baseClient'
+import { type APIResponse, NettuBaseClient } from './baseClient'
 import type { Metadata } from './domain/metadata'
 import type {
   CalendarEvent,
@@ -13,6 +13,7 @@ import type {
   IntegrationProvider,
 } from './domain'
 import type { Timespan } from './eventClient'
+import { convertInstanceDates } from './helpers/datesConverters'
 
 type CreateCalendarRequest = {
   timezone: string
@@ -137,11 +138,7 @@ export class NettuCalendarClient extends NettuBaseClient {
         calendar: res.data.calendar,
         events: res.data.events.map(event => ({
           event: event.event,
-          instances: event.instances.map(instance => ({
-            startTime: new Date(instance.startTime),
-            endTime: new Date(instance.endTime),
-            busy: instance.busy,
-          })),
+          instances: event.instances.map(convertInstanceDates),
         })),
       },
     }
