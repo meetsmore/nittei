@@ -77,7 +77,7 @@ type UserResponse = {
 
 /**
  * Client for the user endpoints
- * This is an admin client
+ * This is an admin client (usually backend)
  */
 export class NettuUserClient extends NettuBaseClient {
   /**
@@ -137,7 +137,7 @@ export class NettuUserClient extends NettuBaseClient {
 
 /**
  * Client for the user endpoints
- * This is a user client
+ * This is an end user client (usually frontend)
  */
 export class NettuUserUserClient extends NettuBaseClient {
   public me() {
