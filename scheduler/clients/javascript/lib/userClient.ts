@@ -3,7 +3,7 @@ import { type APIResponse, NettuBaseClient } from './baseClient'
 import type { Metadata } from './domain/metadata'
 import type { User } from './domain/user'
 import type { IntegrationProvider } from '.'
-import { convertInstanceDates } from './eventClient'
+import { convertInstanceDates } from './helpers/datesConverters'
 
 /**
  * Request to get a user's freebusy
@@ -98,7 +98,7 @@ type UserResponse = {
 
 /**
  * Client for the user endpoints
- * This is an admin client
+ * This is an admin client (usually backend)
  */
 export class NettuUserClient extends NettuBaseClient {
   /**
@@ -205,7 +205,7 @@ export class NettuUserClient extends NettuBaseClient {
 
 /**
  * Client for the user endpoints
- * This is a user client
+ * This is an end user client (usually frontend)
  */
 export class NettuUserUserClient extends NettuBaseClient {
   public me() {
