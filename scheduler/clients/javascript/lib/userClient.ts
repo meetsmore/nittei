@@ -53,9 +53,9 @@ type GetMultipleUsersFeebusyReq = {
  */
 type GetUserFeebusyResponse = {
   /**
-   * List of busy instances
+   * List of busy instances per user_id
    */
-  busy: CalendarEventInstance[]
+  [key: string]: CalendarEventInstance[]
 }
 
 /**
@@ -183,9 +183,13 @@ export class NettuUserClient extends NettuBaseClient {
     return {
       res: res.res,
       status: res.status,
-      data: {
-        busy: res.data.busy.map(convertInstanceDates),
-      },
+      data: Object.keys(res.data).reduce((acc, key) => {
+        if (!res?.data?.[key]) {
+          return acc
+        }
+        acc[key] = res.data[key].map(convertInstanceDates)
+        return acc
+      }, {} as GetUserFeebusyResponse),
     }
   }
 

@@ -601,7 +601,8 @@ describe('Requirements', () => {
         if (!res?.data) {
           throw new Error('Freebusy not found')
         }
-        expect(res.data.busy.length).toBe(2)
+        expect(res.data[user1.id].length).toBe(1)
+        expect(res.data[user2.id].length).toBe(1)
       })
     })
 
