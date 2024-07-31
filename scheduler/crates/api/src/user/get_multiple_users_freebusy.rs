@@ -1,10 +1,17 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::{DateTime, Utc};
 use futures::{future::join_all, stream, StreamExt};
 use nettu_scheduler_api_structs::multiple_freebusy::{APIResponse, RequestBody};
-use nettu_scheduler_domain::{Calendar, CompatibleInstances, EventInstance, TimeSpan, ID};
+use nettu_scheduler_domain::{
+    Calendar,
+    CalendarEvent,
+    CompatibleInstances,
+    EventInstance,
+    TimeSpan,
+    ID,
+};
 use nettu_scheduler_infra::NettuContext;
 
 use crate::{
@@ -30,11 +37,7 @@ pub async fn get_multiple_freebusy_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|usecase_res| {
-            HttpResponse::Ok().json(APIResponse {
-                busy: usecase_res.busy.inner(),
-            })
-        })
+        .map(|usecase_res| HttpResponse::Ok().json(APIResponse(usecase_res.0)))
         .map_err(NettuError::from)
 }
 
@@ -46,9 +49,7 @@ pub struct GetMultipleFreeBusyUseCase {
 }
 
 #[derive(Debug)]
-pub struct GetMultipleFreeBusyResponse {
-    pub busy: CompatibleInstances,
-}
+pub struct GetMultipleFreeBusyResponse(pub HashMap<ID, VecDeque<EventInstance>>);
 
 #[derive(Debug)]
 pub enum UseCaseError {
@@ -88,14 +89,9 @@ impl UseCase for GetMultipleFreeBusyUseCase {
 
         let busy_event_instances = self
             .get_event_instances_from_calendars(&timespan, ctx, calendars)
-            .await
-            .into_iter()
-            .filter(|e| e.busy)
-            .collect::<Vec<_>>();
+            .await?;
 
-        let busy = CompatibleInstances::new(busy_event_instances);
-
-        Ok(GetMultipleFreeBusyResponse { busy })
+        Ok(GetMultipleFreeBusyResponse(busy_event_instances))
     }
 }
 
@@ -117,48 +113,67 @@ impl GetMultipleFreeBusyUseCase {
         timespan: &TimeSpan,
         ctx: &NettuContext,
         calendars: Vec<Calendar>,
-    ) -> Vec<EventInstance> {
-        let all_events_futures = calendars.iter().map(|calendar| {
-            ctx.repos
-                .events
-                .find_by_calendar(&calendar.id, Some(timespan))
-        });
-
+    ) -> Result<HashMap<ID, VecDeque<EventInstance>>, UseCaseError> {
+        // For quick lookup by calendar id
         let calendars_lookup = calendars
             .iter()
             .map(|cal| (cal.id.to_string(), cal))
             .collect::<HashMap<_, _>>();
 
-        let mut all_events = Vec::new();
+        // End result
+        let mut events_per_user = HashMap::new();
+
+        // Fetch all events for all calendars
+        // This is not executed yet (lazy)
+        let all_events_futures = calendars.iter().map(|calendar| async move {
+            let events = ctx
+                .repos
+                .events
+                .find_by_calendar(&calendar.id, Some(timespan))
+                .await
+                .unwrap_or_default(); // TODO: Handle error
+            Ok((calendar.user_id.clone(), events)) as Result<(ID, Vec<CalendarEvent>), UseCaseError>
+        });
 
         // Fetch events in chunks of 5
         let mut futures_stream = stream::iter(all_events_futures).chunks(5);
 
-        // Fetch events in parallel
+        // Fetch events in parallel (actual execution)
         while let Some(futures) = futures_stream.next().await {
             let events_res = join_all(futures).await;
-            let instances = events_res
-                .into_iter()
-                .map(|events_res| events_res.unwrap_or_default())
-                .flat_map(|events| {
-                    events
-                        .into_iter()
-                        .map(|event| {
-                            let calendar = calendars_lookup
-                                .get(&event.calendar_id.to_string())
-                                .unwrap();
-                            event.expand(Some(timespan), &calendar.settings)
-                        })
-                        // It is possible that there are no instances in the expanded event, should remove them
-                        .filter(|instances| !instances.is_empty())
-                })
-                .flatten()
-                .collect::<Vec<_>>();
 
-            all_events.extend(instances);
+            for event_result in events_res {
+                match event_result {
+                    Ok((user_id, events)) => {
+                        let expanded_events =
+                            self.expand_events(events, timespan, &calendars_lookup);
+                        events_per_user.insert(user_id, expanded_events);
+                    }
+                    Err(e) => return Err(e),
+                }
+            }
         }
 
-        all_events
+        Ok(events_per_user)
+    }
+
+    fn expand_events(
+        &self,
+        events: Vec<CalendarEvent>,
+        timespan: &TimeSpan,
+        calendars_lookup: &HashMap<String, &Calendar>,
+    ) -> VecDeque<EventInstance> {
+        events
+            .into_iter()
+            .map(|event| {
+                let calendar = calendars_lookup
+                    .get(&event.calendar_id.to_string())
+                    .unwrap();
+                event.expand(Some(timespan), &calendar.settings)
+            })
+            .filter(|instances| !instances.is_empty())
+            .flat_map(|instances| CompatibleInstances::new(instances).inner())
+            .collect()
     }
 }
 
@@ -239,7 +254,10 @@ mod test {
 
         let res = usecase.execute(&ctx).await;
         assert!(res.is_ok());
-        let instances = res.unwrap().busy.inner();
+        let map_instances = res.unwrap().0;
+        assert_eq!(map_instances.len(), 1);
+        assert_eq!(map_instances.contains_key(&user.id()), true);
+        let instances = map_instances.get(&user.id()).unwrap();
         assert_eq!(instances.len(), 2);
         assert_eq!(
             instances[0],

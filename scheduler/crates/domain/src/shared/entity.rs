@@ -44,6 +44,12 @@ impl Default for ID {
     }
 }
 
+impl Hash for ID {
+    fn hash<H: std::hash::Hasher>(&self, content: &mut H) {
+        self.0.hash(content);
+    }
+}
+
 impl Display for ID {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)

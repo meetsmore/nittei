@@ -271,7 +271,7 @@ pub mod get_user_freebusy {
 }
 
 pub mod multiple_freebusy {
-    use std::collections::VecDeque;
+    use std::collections::{HashMap, VecDeque};
 
     use chrono::{DateTime, Utc};
 
@@ -288,9 +288,7 @@ pub mod multiple_freebusy {
 
     #[derive(Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct APIResponse {
-        pub busy: VecDeque<EventInstance>,
-    }
+    pub struct APIResponse(pub HashMap<ID, VecDeque<EventInstance>>);
 }
 
 pub mod update_calendar {
