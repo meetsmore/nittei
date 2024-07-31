@@ -606,13 +606,6 @@ describe('Requirements', () => {
       })
     })
 
-    // describe("Users' calendars can be queried in groups", () => {
-    //   it.todo('To be implemented')
-    // })
-
-    // describe("Users' availability can be queried in groups", () => {
-    //   it.todo('To be implemented')
-    // })
 
     // TODO: we need to add a state or pending field to the event
     describe.skip('A booking can be either pending or confirmed', () => {
@@ -818,10 +811,6 @@ describe('Requirements', () => {
           value: 'B',
         })
       })
-    })
-
-    describe('Empty slots in a set of calendars can be found', () => {
-      it.todo('To be implemented')
     })
   })
 })
