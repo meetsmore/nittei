@@ -1,6 +1,11 @@
 import axios, { type AxiosInstance, type AxiosResponse } from 'axios'
 import { config } from '.'
 
+/**
+ * Base client for the API
+ * This client is used to centralize configuration needed for calling the API
+ * It shouldn't be exposed to the end user
+ */
 export abstract class NettuBaseClient {
   private readonly credentials: ICredentials
   private readonly axiosClient: AxiosInstance
@@ -57,6 +62,9 @@ export abstract class NettuBaseClient {
   }
 }
 
+/**
+ * Response from the API
+ */
 export class APIResponse<T> {
   readonly data?: T // Could be a failed response and therefore nullable
   readonly status: number
@@ -69,6 +77,9 @@ export class APIResponse<T> {
   }
 }
 
+/**
+ * Credentials for the API for end users (usually frontend)
+ */
 export class UserCreds implements ICredentials {
   private readonly nettuAccount: string
   private readonly token?: string
@@ -90,6 +101,9 @@ export class UserCreds implements ICredentials {
   }
 }
 
+/**
+ * Credentials for the API for admins (usually backend)
+ */
 export class AccountCreds implements ICredentials {
   private readonly apiKey: string
 

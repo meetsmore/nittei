@@ -9,7 +9,7 @@ export {
 export {
   CalendarEvent,
   CalendarEventInstance,
-  Frequenzy,
+  Frequency as Frequenzy,
   RRuleOptions,
 } from './calendarEvent'
 export {
@@ -28,3 +28,4 @@ export {
 } from './service'
 export { Permissions } from './permissions'
 export { User } from './user'
+export { UUID} from './utilities'

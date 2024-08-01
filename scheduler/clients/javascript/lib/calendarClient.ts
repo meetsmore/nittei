@@ -11,53 +11,147 @@ import type {
   CalendarEvent,
   CalendarEventInstance,
   IntegrationProvider,
+  UUID,
 } from './domain'
 import type { Timespan } from './eventClient'
 import { convertInstanceDates } from './helpers/datesConverters'
 
+/**
+ * Request for creating a calendar
+ */
 type CreateCalendarRequest = {
+  /**
+   * Timezone used in the calendar
+   */
   timezone: string
+  /**
+   * Start of the week used in the calendar
+   * @format 0-6 - 0 is Monday, 1 is Tuesday, etc.
+   * @default 0
+   */
   weekStart?: number
+  /**
+   * Possible metadata
+   */
   metadata?: Metadata
 }
 
+/**
+ * Request for updating a calendar
+ */
 type UpdateCalendarRequest = CreateCalendarRequest
 
+/**
+ * Response for getting the events of a calendar
+ */
 type GetCalendarEventsResponse = {
+  /**
+   * Calendar object
+   */
   calendar: Calendar
+  /**
+   * List of events with their instances
+   */
   events: {
+    /**
+     * Event object
+     */
     event: CalendarEvent
+    /**
+     * List of instances of the event
+     * Especially useful for recurring events
+     */
     instances: CalendarEventInstance[]
   }[]
 }
 
+/**
+ * Response for getting a calendar
+ */
 type CalendarResponse = {
+  /**
+   * Calendar object
+   */
   calendar: Calendar
 }
 
+/**
+ * Payload sent for enabling the sync of a calendar with an external calendar
+ */
 type SyncCalendarInput = {
-  userId: string
-  calendarId: string
-  extCalendarId: string
+  /**
+   * Uuid of the user
+   */
+  userId: UUID
+  /**
+   * Uuid of the calendar
+   */
+  calendarId: UUID
+  /**
+   * Uuid of the external calendar
+   */
+  extCalendarId: UUID
+  /**
+   * Provider of the external calendar
+   * @format IntegrationProvider (Google, Outlook)
+   */
   provider: IntegrationProvider
 }
 
+/**
+ * Payload sent for disabling the sync of a calendar with an external calendar
+ */
 type StopCalendarSyncInput = {
-  userId: string
-  calendarId: string
-  extCalendarId: string
+  /**
+   * Uuid of the user
+   */
+  userId: UUID
+  /**
+   * Uuid of the calendar
+   */
+  calendarId: UUID
+  /**
+   * Uuid of the external calendar
+   */
+  extCalendarId: UUID
+  /**
+   * Provider of the external calendar
+   * @format IntegrationProvider (Google, Outlook)
+   */
   provider: IntegrationProvider
 }
 
+/**
+ * Client for the calendar endpoints
+ * This is an admin client (usually backend)
+ */
 export class NettuCalendarClient extends NettuBaseClient {
-  public create(userId: string, data: CreateCalendarRequest) {
+  /**
+   * Create a calendar
+   * @param userId - uuid of the user to create the calendar for
+   * @param data - data for creating the calendar
+   * @returns CalendarResponse - created calendar
+   */
+  public create(userId: UUID, data: CreateCalendarRequest) {
     return this.post<CalendarResponse>(`/user/${userId}/calendar`, data)
   }
 
-  public findById(calendarId: string) {
+  /**
+   * Find a calendar by id
+   * @param calendarId - uuid of the calendar to find
+   * @returns CalendarResponse - found calendar, if any
+   */
+  public findById(calendarId: UUID) {
     return this.get<CalendarResponse>(`/user/calendar/${calendarId}`)
   }
 
+  /**
+   * Find calendars by metadata
+   * @param meta - metadata to search for
+   * @param skip - number of calendars to skip
+   * @param limit - number of calendars to return
+   * @returns CalendarResponse - found calendars
+   */
   public findByMeta(
     meta: {
       key: string
@@ -74,7 +168,13 @@ export class NettuCalendarClient extends NettuBaseClient {
     })
   }
 
-  async findGoogle(userId: string, minAccessRole: GoogleCalendarAccessRole) {
+  /**
+   * Find Google calendars for an user
+   * @param userId - uuid of the user to find the calendars for
+   * @param minAccessRole - minimum access role required
+   * @returns - found Google calendars
+   */
+  async findGoogle(userId: UUID, minAccessRole: GoogleCalendarAccessRole) {
     return this.get<{ calendars: GoogleCalendarListEntry[] }>(
       `/user/${userId}/calendar/provider/google`,
       {
@@ -83,18 +183,35 @@ export class NettuCalendarClient extends NettuBaseClient {
     )
   }
 
-  async findOutlook(userId: string, minAccessRole: OutlookCalendarAccessRole) {
+  /**
+   * Find Outlook calendars for an user
+   * @param userId - uuid of the user to find the calendars for
+   * @param minAccessRole - minimum access role required
+   * @returns - found Outlook calendars
+   */
+  async findOutlook(userId: UUID, minAccessRole: OutlookCalendarAccessRole) {
     return this.get<{ calendars: OutlookCalendar[] }>(
       `/user/${userId}/calendar/provider/outlook`,
       { minAccessRole }
     )
   }
 
-  public remove(calendarId: string) {
+  /**
+   * Remove the calendar with the given id
+   * @param calendarId - uuid of the calendar to remove
+   * @returns CalendarResponse - removed calendar
+   */
+  public remove(calendarId: UUID) {
     return this.delete<CalendarResponse>(`/user/calendar/${calendarId}`)
   }
 
-  public update(calendarId: string, data: UpdateCalendarRequest) {
+  /**
+   * Update the calendar with the given id
+   * @param calendarId - uuid of the calendar to update
+   * @param data - data to update the calendar with
+   * @returns CalendarResponse - updated calendar
+   */
+  public update(calendarId: UUID, data: UpdateCalendarRequest) {
     return this.put<CalendarResponse>(`/user/calendar/${calendarId}`, {
       settings: {
         timezone: data.timezone,
@@ -104,8 +221,15 @@ export class NettuCalendarClient extends NettuBaseClient {
     })
   }
 
+  /**
+   * Get the events for a calendar within a timespan
+   * @param calendarId - uuid of the calendar to get the events for
+   * @param startTime - start of the timespan
+   * @param endTime - end of the timespan
+   * @returns GetCalendarEventsResponse - events within the timespan
+   */
   public async getEvents(
-    calendarId: string,
+    calendarId: UUID,
     startTime: Date,
     endTime: Date
   ): Promise<APIResponse<GetCalendarEventsResponse>> {
@@ -134,6 +258,11 @@ export class NettuCalendarClient extends NettuBaseClient {
     }
   }
 
+  /**
+   * Enable automated sync of a calendar with an external calendar
+   * @param input - data for syncing the calendar
+   * @returns - void
+   */
   public syncCalendar(input: SyncCalendarInput) {
     const body = {
       calendarId: input.calendarId,
@@ -143,6 +272,11 @@ export class NettuCalendarClient extends NettuBaseClient {
     return this.put(`user/${input.userId}/calendar/sync`, body)
   }
 
+  /**
+   * Disable automated sync of a calendar with an external calendar
+   * @param input - data for stopping the calendar sync
+   * @returns - void
+   */
   public stopCalendarSync(input: StopCalendarSyncInput) {
     const body = {
       calendarId: input.calendarId,
@@ -153,12 +287,16 @@ export class NettuCalendarClient extends NettuBaseClient {
   }
 }
 
+/**
+ * Client for the calendar endpoints
+ * This is an end user client (usually frontend)
+ */
 export class NettuCalendarUserClient extends NettuBaseClient {
   public create(data: CreateCalendarRequest) {
     return this.post<CalendarResponse>('/calendar', data)
   }
 
-  public findById(calendarId: string) {
+  public findById(calendarId: UUID) {
     return this.get<CalendarResponse>(`/calendar/${calendarId}`)
   }
 
@@ -180,15 +318,15 @@ export class NettuCalendarUserClient extends NettuBaseClient {
     )
   }
 
-  public remove(calendarId: string) {
+  public remove(calendarId: UUID) {
     return this.delete<CalendarResponse>(`/calendar/${calendarId}`)
   }
 
-  public update(calendarId: string, data: UpdateCalendarRequest) {
+  public update(calendarId: UUID, data: UpdateCalendarRequest) {
     return this.put<CalendarResponse>(`/calendar/${calendarId}`, data)
   }
 
-  public getEvents(calendarId: string, timespan: Timespan) {
+  public getEvents(calendarId: UUID, timespan: Timespan) {
     return this.get<GetCalendarEventsResponse>(
       `/user/calendar/${calendarId}/events`,
       {
