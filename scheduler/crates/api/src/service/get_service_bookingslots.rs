@@ -670,7 +670,8 @@ mod test {
             assert_eq!(booking_slot.user_ids.len(), 1);
             assert_eq!(
                 booking_slot.start,
-                Utc.ymd(2010, 1, 1).and_hms(4, 15 * i as u32, 0)
+                Utc.with_ymd_and_hms(2010, 1, 1, 4, 15 * i as u32, 0)
+                    .unwrap()
             );
         }
 
@@ -698,7 +699,8 @@ mod test {
                 assert_eq!(booking_slot.user_ids.len(), 1);
                 assert_eq!(
                     booking_slot.start,
-                    Utc.ymd(1970, 1, 1).and_hms(4, 15 * (i - 1) as u32, 0)
+                    Utc.with_ymd_and_hms(1970, 1, 1, 4, 15 * (i - 1) as u32, 0)
+                        .unwrap()
                 );
             }
         }

@@ -27,10 +27,6 @@ impl TimeSpan {
         self.duration > duration
     }
 
-    fn create_datetime_from_millis(timestamp_millis: i64, tz: &Tz) -> DateTime<Tz> {
-        tz.timestamp_millis(timestamp_millis)
-    }
-
     pub fn as_datetime(&self, tz: &Tz) -> TimeSpanDateTime {
         TimeSpanDateTime {
             start: self.start_time.with_timezone(&tz),
