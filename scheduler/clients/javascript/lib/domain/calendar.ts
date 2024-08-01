@@ -1,4 +1,5 @@
 import type { Metadata } from './metadata'
+import { UUID } from './utilities'
 
 /**
  * Calendar object
@@ -7,11 +8,11 @@ export interface Calendar {
   /**
    * Uuid
    */
-  id: string
+  id: UUID
   /**
    * Uuid of the user that owns this
    */
-  userId: string
+  userId: UUID
   /**
    * Settings
    */

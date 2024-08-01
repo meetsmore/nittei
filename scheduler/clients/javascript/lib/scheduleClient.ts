@@ -1,4 +1,5 @@
 import { NettuBaseClient } from './baseClient'
+import { UUID } from './domain'
 import type { Schedule, ScheduleRule } from './domain/schedule'
 
 interface UpdateScheduleRequest {
@@ -16,22 +17,22 @@ type ScheduleResponse = {
 }
 
 export class NettuScheduleClient extends NettuBaseClient {
-  public async create(userId: string, req: CreateScheduleRequest) {
+  public async create(userId: UUID, req: CreateScheduleRequest) {
     return await this.post<ScheduleResponse>(`/user/${userId}/schedule`, req)
   }
 
-  public async update(scheduleId: string, update: UpdateScheduleRequest) {
+  public async update(scheduleId: UUID, update: UpdateScheduleRequest) {
     return await this.put<ScheduleResponse>(
       `/user/schedule/${scheduleId}`,
       update
     )
   }
 
-  public async remove(scheduleId: string) {
+  public async remove(scheduleId: UUID) {
     return await this.delete<ScheduleResponse>(`/user/schedule/${scheduleId}`)
   }
 
-  public async find(scheduleId: string) {
+  public async find(scheduleId: UUID) {
     return await this.get<ScheduleResponse>(`/user/schedule/${scheduleId}`)
   }
 }
@@ -41,15 +42,15 @@ export class NettuScheduleUserClient extends NettuBaseClient {
     return await this.post<ScheduleResponse>('/schedule', req)
   }
 
-  public async update(scheduleId: string, update: UpdateScheduleRequest) {
+  public async update(scheduleId: UUID, update: UpdateScheduleRequest) {
     return await this.put<ScheduleResponse>(`/schedule/${scheduleId}`, update)
   }
 
-  public async remove(scheduleId: string) {
+  public async remove(scheduleId: UUID) {
     return await this.delete<ScheduleResponse>(`/schedule/${scheduleId}`)
   }
 
-  public async find(scheduleId: string) {
+  public async find(scheduleId: UUID) {
     return await this.get<ScheduleResponse>(`/schedule/${scheduleId}`)
   }
 }

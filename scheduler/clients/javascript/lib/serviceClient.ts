@@ -1,6 +1,7 @@
 import type { BusyCalendar, Service, TimePlan } from './domain/service'
 import { NettuBaseClient } from './baseClient'
 import type { Metadata } from './domain/metadata'
+import { UUID } from './domain'
 
 /**
  * Request for adding a user to a service
@@ -9,7 +10,7 @@ type AddUserToServiceRequest = {
   /**
    * Uuid of the user to add to the service
    */
-  userId: string
+  userId: UUID
   /**
    * Optional availability for the user in the service
    */
@@ -45,7 +46,7 @@ type UpdateUserToServiceRequest = {
   /**
    * Uuid of the user to update in the service
    */
-  userId: string
+  userId: UUID
   /**
    * Optional availability for the user in the service
    */
@@ -108,7 +109,7 @@ type GetServiceBookingslotsReq = {
    * @default []
    * @format uuid[]
    */
-  userIds?: string[]
+  userIds?: UUID[]
 }
 
 /**
@@ -132,7 +133,7 @@ type ServiceBookingSlot = {
    * @default []
    * @format uuid[]
    */
-  userIds: string[]
+  userIds: UUID[]
 }
 
 /**
@@ -191,11 +192,11 @@ type AddBusyCalendar = {
   /**
    * Uuid of the service to add the calendar to
    */
-  serviceId: string
+  serviceId: UUID
   /**
    * Uuid of the user to add the calendar to
    */
-  userId: string
+  userId: UUID
   /**
    * Calendar to add to the user
    * It can be an internal calendar (Nettu) or an external calendar (Google, Outlook)
@@ -210,11 +211,11 @@ type RemoveBusyCalendar = {
   /**
    * Uuid of the service to remove the calendar from
    */
-  serviceId: string
+  serviceId: UUID
   /**
    * Uuid of the user to remove the calendar from
    */
-  userId: string
+  userId: UUID
   /**
    * Calendar to remove from the user
    */
@@ -226,28 +227,28 @@ export class NettuServiceClient extends NettuBaseClient {
     return this.post<ServiceResponse>('/service', data ?? {})
   }
 
-  public update(serviceId: string, data?: UpdateServiceRequest) {
+  public update(serviceId: UUID, data?: UpdateServiceRequest) {
     return this.put<ServiceResponse>(`/service/${serviceId}`, data ?? {})
   }
 
-  public find(serviceId: string) {
+  public find(serviceId: UUID) {
     return this.get<Service>(`/service/${serviceId}`)
   }
 
-  public remove(serviceId: string) {
+  public remove(serviceId: UUID) {
     return this.delete<ServiceResponse>(`/service/${serviceId}`)
   }
 
-  public addUser(serviceId: string, data: AddUserToServiceRequest) {
+  public addUser(serviceId: UUID, data: AddUserToServiceRequest) {
     return this.post<ServiceResponse>(`/service/${serviceId}/users`, data)
   }
 
-  public removeUser(serviceId: string, userId: string) {
+  public removeUser(serviceId: UUID, userId: UUID) {
     return this.delete<ServiceResponse>(`/service/${serviceId}/users/${userId}`)
   }
 
   public updateUserInService(
-    serviceId: string,
+    serviceId: UUID,
     data: UpdateUserToServiceRequest
   ) {
     return this.put<ServiceResponse>(
@@ -256,7 +257,7 @@ export class NettuServiceClient extends NettuBaseClient {
     )
   }
 
-  public getBookingslots(serviceId: string, req: GetServiceBookingslotsReq) {
+  public getBookingslots(serviceId: UUID, req: GetServiceBookingslotsReq) {
     return this.get<GetServiceBookingslotsResponse>(
       `/service/${serviceId}/booking`,
       {
@@ -290,7 +291,7 @@ export class NettuServiceClient extends NettuBaseClient {
 }
 
 export class NettuServiceUserClient extends NettuBaseClient {
-  public getBookingslots(serviceId: string, req: GetServiceBookingslotsReq) {
+  public getBookingslots(serviceId: UUID, req: GetServiceBookingslotsReq) {
     return this.get<GetServiceBookingslotsResponse>(
       `/service/${serviceId}/booking`,
       {

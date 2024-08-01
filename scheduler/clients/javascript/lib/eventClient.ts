@@ -1,4 +1,5 @@
 import { type APIResponse, NettuBaseClient } from './baseClient'
+import { UUID } from './domain'
 import type {
   CalendarEvent,
   CalendarEventInstance,
@@ -30,7 +31,7 @@ interface EventReminder {
  * Request for creating a calendar event
  */
 type CreateCalendarEventReq = {
-  calendarId: string
+  calendarId: UUID
   startTime: Date
   duration: number
   busy?: boolean
@@ -82,7 +83,7 @@ type EventReponse = {
  */
 export class NettuEventClient extends NettuBaseClient {
   public async update(
-    eventId: string,
+    eventId: UUID,
     data: UpdateCalendarEventReq
   ): Promise<APIResponse<EventReponse>> {
     const res = await this.put<EventReponse>(`/user/events/${eventId}`, data)
@@ -101,7 +102,7 @@ export class NettuEventClient extends NettuBaseClient {
   }
 
   public async create(
-    userId: string,
+    userId: UUID,
     data: CreateCalendarEventReq
   ): Promise<APIResponse<EventReponse>> {
     const res = await this.post<EventReponse>(`/user/${userId}/events`, data)
@@ -119,7 +120,7 @@ export class NettuEventClient extends NettuBaseClient {
     }
   }
 
-  public async findById(eventId: string): Promise<APIResponse<EventReponse>> {
+  public async findById(eventId: UUID): Promise<APIResponse<EventReponse>> {
     const res = await this.get<EventReponse>(`/user/events/${eventId}`)
 
     if (!res.data) {
@@ -163,12 +164,12 @@ export class NettuEventClient extends NettuBaseClient {
     }
   }
 
-  public remove(eventId: string) {
+  public remove(eventId: UUID) {
     return this.delete<EventReponse>(`/user/events/${eventId}`)
   }
 
   public async getInstances(
-    eventId: string,
+    eventId: UUID,
     timespan: Timespan
   ): Promise<APIResponse<GetEventInstancesResponse>> {
     const res = await this.get<GetEventInstancesResponse>(
@@ -199,7 +200,7 @@ export class NettuEventClient extends NettuBaseClient {
  */
 export class NettuEventUserClient extends NettuBaseClient {
   public async update(
-    eventId: string,
+    eventId: UUID,
     data: UpdateCalendarEventReq
   ): Promise<APIResponse<EventReponse>> {
     const res = await this.put<EventReponse>(`/events/${eventId}`, data)
@@ -235,7 +236,7 @@ export class NettuEventUserClient extends NettuBaseClient {
     }
   }
 
-  public async findById(eventId: string): Promise<APIResponse<EventReponse>> {
+  public async findById(eventId: UUID): Promise<APIResponse<EventReponse>> {
     const res = await this.get<EventReponse>(`/events/${eventId}`)
 
     if (!res.data) {
@@ -251,12 +252,12 @@ export class NettuEventUserClient extends NettuBaseClient {
     }
   }
 
-  public remove(eventId: string) {
+  public remove(eventId: UUID) {
     return this.delete<EventReponse>(`/events/${eventId}`)
   }
 
   public async getInstances(
-    eventId: string,
+    eventId: UUID,
     timespan: Timespan
   ): Promise<APIResponse<GetEventInstancesResponse>> {
     const res = await this.get<GetEventInstancesResponse>(
