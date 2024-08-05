@@ -1,15 +1,15 @@
 pub mod google_calendar;
 pub mod outlook_calendar;
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset};
 use nettu_scheduler_domain::IntegrationProvider;
 use serde::Deserialize;
 
 #[derive(Debug)]
 pub struct FreeBusyProviderQuery {
     pub calendar_ids: Vec<String>,
-    pub start: DateTime<Utc>,
-    pub end: DateTime<Utc>,
+    pub start: DateTime<FixedOffset>,
+    pub end: DateTime<FixedOffset>,
 }
 
 // https://docs.microsoft.com/en-us/graph/auth-v2-user#token-request

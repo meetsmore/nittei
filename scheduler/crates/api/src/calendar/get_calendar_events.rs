@@ -1,5 +1,5 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset, Utc};
 use nettu_scheduler_api_structs::get_calendar_events::{APIResponse, PathParams, QueryParams};
 use nettu_scheduler_domain::{Calendar, EventWithInstances, TimeSpan, ID};
 use nettu_scheduler_infra::NettuContext;
@@ -62,8 +62,8 @@ pub async fn get_calendar_events_controller(
 pub struct GetCalendarEventsUseCase {
     pub calendar_id: ID,
     pub user_id: ID,
-    pub start_time: DateTime<Utc>,
-    pub end_time: DateTime<Utc>,
+    pub start_time: DateTime<FixedOffset>,
+    pub end_time: DateTime<FixedOffset>,
 }
 
 #[derive(Debug)]

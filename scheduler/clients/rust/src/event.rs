@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset, Utc};
 use nettu_scheduler_api_structs::*;
 use nettu_scheduler_domain::Metadata;
 use reqwest::StatusCode;
@@ -25,7 +25,7 @@ pub struct CalendarEventClient {
 pub struct CreateEventInput {
     pub user_id: ID,
     pub calendar_id: ID,
-    pub start_time: DateTime<Utc>,
+    pub start_time: DateTime<FixedOffset>,
     pub duration: i64,
     #[serde(default)]
     pub busy: Option<bool>,
@@ -41,19 +41,19 @@ pub struct CreateEventInput {
 
 pub struct GetEventsInstancesInput {
     pub event_id: ID,
-    pub start_time: DateTime<Utc>,
-    pub end_time: DateTime<Utc>,
+    pub start_time: DateTime<FixedOffset>,
+    pub end_time: DateTime<FixedOffset>,
 }
 
 pub struct UpdateEventInput {
     pub event_id: ID,
-    pub start_time: Option<DateTime<Utc>>,
+    pub start_time: Option<DateTime<FixedOffset>>,
     pub duration: Option<i64>,
     pub busy: Option<bool>,
     pub reminders: Option<Vec<CalendarEventReminder>>,
     pub rrule_options: Option<RRuleOptions>,
     pub service_id: Option<ID>,
-    pub exdates: Option<Vec<DateTime<Utc>>>,
+    pub exdates: Option<Vec<DateTime<FixedOffset>>>,
     pub metadata: Option<Metadata>,
 }
 

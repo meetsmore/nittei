@@ -1,14 +1,26 @@
 mod postgres;
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset, Utc};
 use nettu_scheduler_domain::ID;
 pub use postgres::PostgresReservationRepo;
 
 #[async_trait::async_trait]
 pub trait IReservationRepo: Send + Sync {
-    async fn increment(&self, service_id: &ID, timestamp: DateTime<Utc>) -> anyhow::Result<()>;
-    async fn decrement(&self, service_id: &ID, timestamp: DateTime<Utc>) -> anyhow::Result<()>;
-    async fn count(&self, service_id: &ID, timestamp: DateTime<Utc>) -> anyhow::Result<usize>;
+    async fn increment(
+        &self,
+        service_id: &ID,
+        timestamp: DateTime<FixedOffset>,
+    ) -> anyhow::Result<()>;
+    async fn decrement(
+        &self,
+        service_id: &ID,
+        timestamp: DateTime<FixedOffset>,
+    ) -> anyhow::Result<()>;
+    async fn count(
+        &self,
+        service_id: &ID,
+        timestamp: DateTime<FixedOffset>,
+    ) -> anyhow::Result<usize>;
 }
 
 #[cfg(test)]
@@ -45,7 +57,10 @@ mod tests {
         let count = ctx
             .repos
             .reservations
-            .count(&service.id, DateTime::from_timestamp_millis(0).unwrap())
+            .count(
+                &service.id,
+                DateTime::from_timestamp_millis(0).unwrap().into(),
+            )
             .await
             .expect("To get reservations count");
         assert_eq!(count, 0);
@@ -53,31 +68,46 @@ mod tests {
         assert!(ctx
             .repos
             .reservations
-            .increment(&service.id, DateTime::from_timestamp_millis(0).unwrap())
+            .increment(
+                &service.id,
+                DateTime::from_timestamp_millis(0).unwrap().into()
+            )
             .await
             .is_ok());
         assert!(ctx
             .repos
             .reservations
-            .increment(&service.id, DateTime::from_timestamp_millis(1).unwrap())
+            .increment(
+                &service.id,
+                DateTime::from_timestamp_millis(1).unwrap().into()
+            )
             .await
             .is_ok());
         assert!(ctx
             .repos
             .reservations
-            .increment(&service.id, DateTime::from_timestamp_millis(2).unwrap())
+            .increment(
+                &service.id,
+                DateTime::from_timestamp_millis(2).unwrap().into()
+            )
             .await
             .is_ok());
         assert!(ctx
             .repos
             .reservations
-            .increment(&service2.id, DateTime::from_timestamp_millis(1).unwrap())
+            .increment(
+                &service2.id,
+                DateTime::from_timestamp_millis(1).unwrap().into()
+            )
             .await
             .is_ok());
         let count = ctx
             .repos
             .reservations
-            .count(&service.id, DateTime::from_timestamp_millis(1).unwrap())
+            .count(
+                &service.id,
+                DateTime::from_timestamp_millis(1).unwrap().into(),
+            )
             .await
             .expect("To get reservations count");
         assert_eq!(count, 1);
@@ -100,7 +130,7 @@ mod tests {
             .await
             .expect("To insert service");
 
-        let timestamp = DateTime::from_timestamp_millis(10).unwrap();
+        let timestamp = DateTime::from_timestamp_millis(10).unwrap().into();
 
         assert!(ctx
             .repos

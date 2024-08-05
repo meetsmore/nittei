@@ -24,7 +24,7 @@ impl CalendarEventResponse {
 }
 
 pub mod create_event {
-    use chrono::{DateTime, Utc};
+    use chrono::{DateTime, FixedOffset, Utc};
     use nettu_scheduler_domain::Metadata;
 
     use super::*;
@@ -38,7 +38,7 @@ pub mod create_event {
     #[serde(rename_all = "camelCase")]
     pub struct RequestBody {
         pub calendar_id: ID,
-        pub start_time: DateTime<Utc>,
+        pub start_time: DateTime<FixedOffset>,
         pub duration: i64,
         #[serde(default)]
         pub busy: Option<bool>,
@@ -68,7 +68,7 @@ pub mod delete_event {
 
 pub mod get_event_instances {
 
-    use chrono::{DateTime, Utc};
+    use chrono::{DateTime, FixedOffset, Utc};
 
     use super::*;
 
@@ -79,8 +79,8 @@ pub mod get_event_instances {
     #[derive(Serialize, Deserialize, Debug)]
     #[serde(rename_all = "camelCase")]
     pub struct QueryParams {
-        pub start_time: DateTime<Utc>,
-        pub end_time: DateTime<Utc>,
+        pub start_time: DateTime<FixedOffset>,
+        pub end_time: DateTime<FixedOffset>,
     }
 
     #[derive(Deserialize, Serialize)]
@@ -140,7 +140,7 @@ pub mod get_events_by_meta {
 }
 
 pub mod update_event {
-    use chrono::{DateTime, Utc};
+    use chrono::{DateTime, FixedOffset, Utc};
     use nettu_scheduler_domain::Metadata;
 
     use super::*;
@@ -149,7 +149,7 @@ pub mod update_event {
     #[serde(rename_all = "camelCase")]
     pub struct RequestBody {
         #[serde(default)]
-        pub start_time: Option<DateTime<Utc>>,
+        pub start_time: Option<DateTime<FixedOffset>>,
         #[serde(default)]
         pub duration: Option<i64>,
         #[serde(default)]
@@ -159,7 +159,7 @@ pub mod update_event {
         #[serde(default)]
         pub service_id: Option<ID>,
         #[serde(default)]
-        pub exdates: Option<Vec<DateTime<Utc>>>,
+        pub exdates: Option<Vec<DateTime<FixedOffset>>>,
         #[serde(default)]
         pub reminders: Option<Vec<CalendarEventReminder>>,
         #[serde(default)]

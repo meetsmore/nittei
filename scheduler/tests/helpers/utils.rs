@@ -1,8 +1,8 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset, Utc};
 use nettu_scheduler_sdk::User;
 
 #[allow(dead_code)]
-pub fn format_datetime(dt: &DateTime<Utc>) -> String {
+pub fn format_datetime(dt: &DateTime<FixedOffset>) -> String {
     // https://docs.rs/chrono/0.4.19/chrono/format/strftime/index.html
     // 2001-07-08
     dt.format("%F").to_string()

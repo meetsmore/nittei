@@ -1,6 +1,6 @@
 use std::collections::{HashMap, VecDeque};
 
-use chrono::{prelude::*, TimeDelta};
+use chrono::{format::Fixed, prelude::*, TimeDelta};
 use chrono_tz::Tz;
 use date::format_date;
 use serde::Serialize;
@@ -10,13 +10,13 @@ use crate::{date, event_instance::EventInstance, CompatibleInstances, ID};
 #[derive(Serialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct BookingSlot {
-    pub start: DateTime<Utc>,
+    pub start: DateTime<FixedOffset>,
     pub duration: i64,
-    pub available_until: DateTime<Utc>,
+    pub available_until: DateTime<FixedOffset>,
 }
 
 fn is_cursor_in_events(
-    cursor: DateTime<Utc>,
+    cursor: DateTime<FixedOffset>,
     duration: i64,
     events: &CompatibleInstances,
 ) -> Option<&EventInstance> {
@@ -26,8 +26,8 @@ fn is_cursor_in_events(
 }
 
 pub struct BookingSlotsOptions {
-    pub start_time: DateTime<Utc>,
-    pub end_time: DateTime<Utc>,
+    pub start_time: DateTime<FixedOffset>,
+    pub end_time: DateTime<FixedOffset>,
     pub duration: i64,
     pub interval: i64,
 }
@@ -40,7 +40,7 @@ pub struct UserFreeEvents {
 
 #[derive(PartialEq, Debug)]
 pub struct ServiceBookingSlot {
-    pub start: DateTime<Utc>,
+    pub start: DateTime<FixedOffset>,
     pub duration: i64,
     pub user_ids: Vec<ID>,
 }
@@ -187,8 +187,8 @@ pub enum BookingQueryError {
 }
 
 pub struct BookingTimespan {
-    pub start_time: DateTime<Utc>,
-    pub end_time: DateTime<Utc>,
+    pub start_time: DateTime<FixedOffset>,
+    pub end_time: DateTime<FixedOffset>,
 }
 
 pub fn validate_bookingslots_query(
@@ -214,10 +214,10 @@ pub fn validate_bookingslots_query(
         parsed_start_date.1,
         parsed_start_date.2,
     );
-    let start_time = start_date.and_hms(0, 0, 0).with_timezone(&Utc);
+    let start_time = start_date.and_hms(0, 0, 0).fixed_offset();
     let end_date = tz.ymd(parsed_end_date.0, parsed_end_date.1, parsed_end_date.2);
-    let end_time = end_date.and_hms(0, 0, 0).with_timezone(&Utc)
-        + TimeDelta::milliseconds(1000 * 60 * 60 * 24);
+    let end_time =
+        end_date.and_hms(0, 0, 0).fixed_offset() + TimeDelta::milliseconds(1000 * 60 * 60 * 24);
 
     Ok(BookingTimespan {
         start_time,
@@ -235,8 +235,8 @@ mod test {
         let slots = get_booking_slots(
             &CompatibleInstances::new(Vec::new()),
             &BookingSlotsOptions {
-                start_time: DateTime::from_timestamp_millis(0).unwrap(),
-                end_time: DateTime::from_timestamp_millis(100).unwrap(),
+                start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(100).unwrap().into(),
                 duration: 10,
                 interval: 10,
             },
@@ -248,15 +248,15 @@ mod test {
     fn get_booking_slots_from_one_event_1() {
         let e1 = EventInstance {
             busy: false,
-            start_time: DateTime::from_timestamp_millis(2).unwrap(),
-            end_time: DateTime::from_timestamp_millis(12).unwrap(),
+            start_time: DateTime::from_timestamp_millis(2).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(12).unwrap().into(),
         };
 
         let slots = get_booking_slots(
             &CompatibleInstances::new(vec![e1]),
             &BookingSlotsOptions {
-                start_time: DateTime::from_timestamp_millis(0).unwrap(),
-                end_time: DateTime::from_timestamp_millis(100).unwrap(),
+                start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(100).unwrap().into(),
                 duration: 10,
                 interval: 10,
             },
@@ -269,15 +269,15 @@ mod test {
     fn get_booking_slots_from_one_event_2() {
         let e1 = EventInstance {
             busy: false,
-            start_time: DateTime::from_timestamp_millis(2).unwrap(),
-            end_time: DateTime::from_timestamp_millis(22).unwrap(),
+            start_time: DateTime::from_timestamp_millis(2).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(22).unwrap().into(),
         };
 
         let slots = get_booking_slots(
             &CompatibleInstances::new(vec![e1]),
             &BookingSlotsOptions {
-                start_time: DateTime::from_timestamp_millis(0).unwrap(),
-                end_time: DateTime::from_timestamp_millis(100).unwrap(),
+                start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(100).unwrap().into(),
                 duration: 10,
                 interval: 10,
             },
@@ -287,9 +287,9 @@ mod test {
         assert_eq!(
             slots[0],
             BookingSlot {
-                available_until: DateTime::from_timestamp_millis(22).unwrap(),
+                available_until: DateTime::from_timestamp_millis(22).unwrap().into(),
                 duration: 10,
-                start: DateTime::from_timestamp_millis(10).unwrap()
+                start: DateTime::from_timestamp_millis(10).unwrap().into()
             }
         );
     }
@@ -298,15 +298,15 @@ mod test {
     fn get_booking_slots_from_one_event_3() {
         let e1 = EventInstance {
             busy: false,
-            start_time: DateTime::from_timestamp_millis(2).unwrap(),
-            end_time: DateTime::from_timestamp_millis(42).unwrap(),
+            start_time: DateTime::from_timestamp_millis(2).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(42).unwrap().into(),
         };
 
         let slots = get_booking_slots(
             &CompatibleInstances::new(vec![e1]),
             &BookingSlotsOptions {
-                start_time: DateTime::from_timestamp_millis(0).unwrap(),
-                end_time: DateTime::from_timestamp_millis(100).unwrap(),
+                start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(100).unwrap().into(),
                 duration: 10,
                 interval: 10,
             },
@@ -316,25 +316,25 @@ mod test {
         assert_eq!(
             slots[0],
             BookingSlot {
-                available_until: DateTime::from_timestamp_millis(42).unwrap(),
+                available_until: DateTime::from_timestamp_millis(42).unwrap().into(),
                 duration: 10,
-                start: DateTime::from_timestamp_millis(10).unwrap()
+                start: DateTime::from_timestamp_millis(10).unwrap().into()
             }
         );
         assert_eq!(
             slots[1],
             BookingSlot {
-                available_until: DateTime::from_timestamp_millis(42).unwrap(),
+                available_until: DateTime::from_timestamp_millis(42).unwrap().into(),
                 duration: 10,
-                start: DateTime::from_timestamp_millis(20).unwrap()
+                start: DateTime::from_timestamp_millis(20).unwrap().into()
             }
         );
         assert_eq!(
             slots[2],
             BookingSlot {
-                available_until: DateTime::from_timestamp_millis(42).unwrap(),
+                available_until: DateTime::from_timestamp_millis(42).unwrap().into(),
                 duration: 10,
-                start: DateTime::from_timestamp_millis(30).unwrap()
+                start: DateTime::from_timestamp_millis(30).unwrap().into()
             }
         );
     }
@@ -343,21 +343,21 @@ mod test {
     fn get_booking_slots_from_two_events() {
         let e1 = EventInstance {
             busy: false,
-            start_time: DateTime::from_timestamp_millis(0).unwrap(),
-            end_time: DateTime::from_timestamp_millis(22).unwrap(),
+            start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(22).unwrap().into(),
         };
 
         let e2 = EventInstance {
             busy: false,
-            start_time: DateTime::from_timestamp_millis(30).unwrap(),
-            end_time: DateTime::from_timestamp_millis(50).unwrap(),
+            start_time: DateTime::from_timestamp_millis(30).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(50).unwrap().into(),
         };
 
         let slots = get_booking_slots(
             &CompatibleInstances::new(vec![e1, e2]),
             &BookingSlotsOptions {
-                start_time: DateTime::from_timestamp_millis(0).unwrap(),
-                end_time: DateTime::from_timestamp_millis(100).unwrap(),
+                start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(100).unwrap().into(),
                 duration: 10,
                 interval: 10,
             },
@@ -367,33 +367,33 @@ mod test {
         assert_eq!(
             slots[0],
             BookingSlot {
-                available_until: DateTime::from_timestamp_millis(22).unwrap(),
+                available_until: DateTime::from_timestamp_millis(22).unwrap().into(),
                 duration: 10,
-                start: DateTime::from_timestamp_millis(0).unwrap()
+                start: DateTime::from_timestamp_millis(0).unwrap().into()
             }
         );
         assert_eq!(
             slots[1],
             BookingSlot {
-                available_until: DateTime::from_timestamp_millis(22).unwrap(),
+                available_until: DateTime::from_timestamp_millis(22).unwrap().into(),
                 duration: 10,
-                start: DateTime::from_timestamp_millis(10).unwrap()
+                start: DateTime::from_timestamp_millis(10).unwrap().into()
             }
         );
         assert_eq!(
             slots[2],
             BookingSlot {
-                available_until: DateTime::from_timestamp_millis(50).unwrap(),
+                available_until: DateTime::from_timestamp_millis(50).unwrap().into(),
                 duration: 10,
-                start: DateTime::from_timestamp_millis(30).unwrap()
+                start: DateTime::from_timestamp_millis(30).unwrap().into()
             }
         );
         assert_eq!(
             slots[3],
             BookingSlot {
-                available_until: DateTime::from_timestamp_millis(50).unwrap(),
+                available_until: DateTime::from_timestamp_millis(50).unwrap().into(),
                 duration: 10,
-                start: DateTime::from_timestamp_millis(40).unwrap()
+                start: DateTime::from_timestamp_millis(40).unwrap().into()
             }
         );
     }
@@ -402,46 +402,46 @@ mod test {
     fn get_booking_slots_from_many_events() {
         let e1 = EventInstance {
             busy: false,
-            start_time: DateTime::from_timestamp_millis(0).unwrap(),
-            end_time: DateTime::from_timestamp_millis(2).unwrap(),
+            start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(2).unwrap().into(),
         };
 
         let e2 = EventInstance {
             busy: false,
-            start_time: DateTime::from_timestamp_millis(33).unwrap(),
-            end_time: DateTime::from_timestamp_millis(50).unwrap(),
+            start_time: DateTime::from_timestamp_millis(33).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(50).unwrap().into(),
         };
 
         let e3 = EventInstance {
             busy: false,
-            start_time: DateTime::from_timestamp_millis(80).unwrap(),
-            end_time: DateTime::from_timestamp_millis(90).unwrap(),
+            start_time: DateTime::from_timestamp_millis(80).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(90).unwrap().into(),
         };
 
         let e4 = EventInstance {
             busy: false,
-            start_time: DateTime::from_timestamp_millis(90).unwrap(),
-            end_time: DateTime::from_timestamp_millis(100).unwrap(),
+            start_time: DateTime::from_timestamp_millis(90).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(100).unwrap().into(),
         };
 
         let e5 = EventInstance {
             busy: false,
-            start_time: DateTime::from_timestamp_millis(99).unwrap(),
-            end_time: DateTime::from_timestamp_millis(120).unwrap(),
+            start_time: DateTime::from_timestamp_millis(99).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(120).unwrap().into(),
         };
 
         let e6 = EventInstance {
             busy: false,
-            start_time: DateTime::from_timestamp_millis(140).unwrap(),
-            end_time: DateTime::from_timestamp_millis(160).unwrap(),
+            start_time: DateTime::from_timestamp_millis(140).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(160).unwrap().into(),
         };
         let availability = CompatibleInstances::new(vec![e1, e3, e4, e2, e6, e5]);
 
         let slots = get_booking_slots(
             &availability,
             &BookingSlotsOptions {
-                start_time: DateTime::from_timestamp_millis(0).unwrap(),
-                end_time: DateTime::from_timestamp_millis(99).unwrap(),
+                start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(99).unwrap().into(),
                 duration: 10,
                 interval: 10,
             },
@@ -451,17 +451,17 @@ mod test {
         assert_eq!(
             slots[0],
             BookingSlot {
-                available_until: DateTime::from_timestamp_millis(50).unwrap(),
+                available_until: DateTime::from_timestamp_millis(50).unwrap().into(),
                 duration: 10,
-                start: DateTime::from_timestamp_millis(40).unwrap()
+                start: DateTime::from_timestamp_millis(40).unwrap().into()
             }
         );
         assert_eq!(
             slots[1],
             BookingSlot {
-                available_until: DateTime::from_timestamp_millis(120).unwrap(),
+                available_until: DateTime::from_timestamp_millis(120).unwrap().into(),
                 duration: 10,
-                start: DateTime::from_timestamp_millis(80).unwrap()
+                start: DateTime::from_timestamp_millis(80).unwrap().into()
             }
         );
     }
@@ -470,15 +470,15 @@ mod test {
     fn slot_that_fits_right_at_end() {
         let e1 = EventInstance {
             busy: false,
-            start_time: DateTime::from_timestamp_millis(81).unwrap(),
-            end_time: DateTime::from_timestamp_millis(100).unwrap(),
+            start_time: DateTime::from_timestamp_millis(81).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(100).unwrap().into(),
         };
 
         let slots = get_booking_slots(
             &CompatibleInstances::new(vec![e1]),
             &BookingSlotsOptions {
-                start_time: DateTime::from_timestamp_millis(0).unwrap(),
-                end_time: DateTime::from_timestamp_millis(100).unwrap(),
+                start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(100).unwrap().into(),
                 duration: 10,
                 interval: 10,
             },
@@ -488,9 +488,9 @@ mod test {
         assert_eq!(
             slots[0],
             BookingSlot {
-                available_until: DateTime::from_timestamp_millis(100).unwrap(),
+                available_until: DateTime::from_timestamp_millis(100).unwrap().into(),
                 duration: 10,
-                start: DateTime::from_timestamp_millis(90).unwrap()
+                start: DateTime::from_timestamp_millis(90).unwrap().into()
             }
         );
     }
@@ -499,15 +499,15 @@ mod test {
     fn slot_that_crosses_end() {
         let e1 = EventInstance {
             busy: false,
-            start_time: DateTime::from_timestamp_millis(81).unwrap(),
-            end_time: DateTime::from_timestamp_millis(120).unwrap(),
+            start_time: DateTime::from_timestamp_millis(81).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(120).unwrap().into(),
         };
 
         let slots = get_booking_slots(
             &CompatibleInstances::new(vec![e1]),
             &BookingSlotsOptions {
-                start_time: DateTime::from_timestamp_millis(0).unwrap(),
-                end_time: DateTime::from_timestamp_millis(100).unwrap(),
+                start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(100).unwrap().into(),
                 duration: 10,
                 interval: 10,
             },
@@ -517,9 +517,9 @@ mod test {
         assert_eq!(
             slots[0],
             BookingSlot {
-                available_until: DateTime::from_timestamp_millis(120).unwrap(),
+                available_until: DateTime::from_timestamp_millis(120).unwrap().into(),
                 duration: 10,
-                start: DateTime::from_timestamp_millis(90).unwrap()
+                start: DateTime::from_timestamp_millis(90).unwrap().into()
             }
         );
     }
@@ -528,15 +528,15 @@ mod test {
     fn slot_that_crosses_start() {
         let e1 = EventInstance {
             busy: false,
-            start_time: DateTime::from_timestamp_millis(2).unwrap(),
-            end_time: DateTime::from_timestamp_millis(30).unwrap(),
+            start_time: DateTime::from_timestamp_millis(2).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(30).unwrap().into(),
         };
 
         let slots = get_booking_slots(
             &CompatibleInstances::new(vec![e1]),
             &BookingSlotsOptions {
-                start_time: DateTime::from_timestamp_millis(10).unwrap(),
-                end_time: DateTime::from_timestamp_millis(100).unwrap(),
+                start_time: DateTime::from_timestamp_millis(10).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(100).unwrap().into(),
                 duration: 10,
                 interval: 10,
             },
@@ -546,17 +546,17 @@ mod test {
         assert_eq!(
             slots[0],
             BookingSlot {
-                available_until: DateTime::from_timestamp_millis(30).unwrap(),
+                available_until: DateTime::from_timestamp_millis(30).unwrap().into(),
                 duration: 10,
-                start: DateTime::from_timestamp_millis(10).unwrap()
+                start: DateTime::from_timestamp_millis(10).unwrap().into()
             }
         );
         assert_eq!(
             slots[1],
             BookingSlot {
-                available_until: DateTime::from_timestamp_millis(30).unwrap(),
+                available_until: DateTime::from_timestamp_millis(30).unwrap().into(),
                 duration: 10,
-                start: DateTime::from_timestamp_millis(20).unwrap()
+                start: DateTime::from_timestamp_millis(20).unwrap().into()
             }
         );
     }
@@ -565,8 +565,8 @@ mod test {
     fn generate_service_bookingslots_with_one_user_in_service() {
         let e1 = EventInstance {
             busy: false,
-            start_time: DateTime::from_timestamp_millis(2).unwrap(),
-            end_time: DateTime::from_timestamp_millis(30).unwrap(),
+            start_time: DateTime::from_timestamp_millis(2).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(30).unwrap().into(),
         };
 
         let user_id = ID::default();
@@ -579,8 +579,8 @@ mod test {
         let slots = get_service_bookingslots(
             users_free,
             &BookingSlotsOptions {
-                start_time: DateTime::from_timestamp_millis(10).unwrap(),
-                end_time: DateTime::from_timestamp_millis(100).unwrap(),
+                start_time: DateTime::from_timestamp_millis(10).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(100).unwrap().into(),
                 duration: 10,
                 interval: 10,
             },
@@ -591,7 +591,7 @@ mod test {
             slots[0],
             ServiceBookingSlot {
                 duration: 10,
-                start: DateTime::from_timestamp_millis(10).unwrap(),
+                start: DateTime::from_timestamp_millis(10).unwrap().into(),
                 user_ids: vec![user_id.clone()]
             }
         );
@@ -599,7 +599,7 @@ mod test {
             slots[1],
             ServiceBookingSlot {
                 duration: 10,
-                start: DateTime::from_timestamp_millis(20).unwrap(),
+                start: DateTime::from_timestamp_millis(20).unwrap().into(),
                 user_ids: vec![user_id.clone()]
             }
         );
@@ -609,14 +609,14 @@ mod test {
     fn generate_service_bookingslots_with_two_users_in_service() {
         let e1 = EventInstance {
             busy: false,
-            start_time: DateTime::from_timestamp_millis(2).unwrap(),
-            end_time: DateTime::from_timestamp_millis(30).unwrap(),
+            start_time: DateTime::from_timestamp_millis(2).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(30).unwrap().into(),
         };
 
         let e2 = EventInstance {
             busy: false,
-            start_time: DateTime::from_timestamp_millis(33).unwrap(),
-            end_time: DateTime::from_timestamp_millis(52).unwrap(),
+            start_time: DateTime::from_timestamp_millis(33).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(52).unwrap().into(),
         };
 
         let user_id_1 = ID::default();
@@ -635,8 +635,8 @@ mod test {
         let slots = get_service_bookingslots(
             users_free,
             &BookingSlotsOptions {
-                start_time: DateTime::from_timestamp_millis(10).unwrap(),
-                end_time: DateTime::from_timestamp_millis(100).unwrap(),
+                start_time: DateTime::from_timestamp_millis(10).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(100).unwrap().into(),
                 duration: 10,
                 interval: 10,
             },
@@ -646,7 +646,7 @@ mod test {
             slots[0],
             ServiceBookingSlot {
                 duration: 10,
-                start: DateTime::from_timestamp_millis(10).unwrap(),
+                start: DateTime::from_timestamp_millis(10).unwrap().into(),
                 user_ids: vec![user_id_1.clone(), user_id_2.clone()]
             }
         );
@@ -654,7 +654,7 @@ mod test {
             slots[1],
             ServiceBookingSlot {
                 duration: 10,
-                start: DateTime::from_timestamp_millis(20).unwrap(),
+                start: DateTime::from_timestamp_millis(20).unwrap().into(),
                 user_ids: vec![user_id_1.clone(), user_id_2.clone()]
             }
         );
@@ -662,7 +662,7 @@ mod test {
             slots[2],
             ServiceBookingSlot {
                 duration: 10,
-                start: DateTime::from_timestamp_millis(40).unwrap(),
+                start: DateTime::from_timestamp_millis(40).unwrap().into(),
                 user_ids: vec![user_id_2.clone()]
             }
         );
@@ -679,7 +679,7 @@ mod test {
         let user_id = ID::default();
         let slots = vec![ServiceBookingSlot {
             duration: 1000 * 60 * 15,
-            start: DateTime::from_timestamp_millis(0).unwrap(),
+            start: DateTime::from_timestamp_millis(0).unwrap().into(),
             user_ids: vec![user_id],
         }];
 
@@ -699,7 +699,9 @@ mod test {
             for i in 0..slots_per_day * number_of_days {
                 slots.push(ServiceBookingSlot {
                     duration: 1000 * 60 * interval,
-                    start: DateTime::from_timestamp_millis(i * 1000 * 60 * interval).unwrap(),
+                    start: DateTime::from_timestamp_millis(i * 1000 * 60 * interval)
+                        .unwrap()
+                        .into(),
                     user_ids: vec![user_id.clone()],
                 });
             }

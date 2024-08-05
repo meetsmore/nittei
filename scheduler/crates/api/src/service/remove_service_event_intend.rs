@@ -1,5 +1,5 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset, Utc};
 use nettu_scheduler_api_structs::remove_service_event_intend::*;
 use nettu_scheduler_domain::{Account, ID};
 use nettu_scheduler_infra::NettuContext;
@@ -37,7 +37,7 @@ pub async fn remove_service_event_intend_controller(
 struct RemoveServiceEventIntendUseCase {
     pub account: Account,
     pub service_id: ID,
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime<FixedOffset>,
 }
 
 #[derive(Debug)]

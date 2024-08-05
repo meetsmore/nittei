@@ -94,8 +94,8 @@ async fn test_crud_user() {
     );
 
     let free_busy_req = GetUserFreeBusyInput {
-        start_time: DateTime::from_timestamp_millis(0).unwrap(),
-        end_time: DateTime::from_timestamp_millis(10).unwrap(),
+        start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
+        end_time: DateTime::from_timestamp_millis(10).unwrap().into(),
         calendar_ids: None,
         user_id: res.user.id.clone(),
     };
@@ -381,7 +381,7 @@ async fn test_crud_calendars() {
         .calendar
         .get_events(GetCalendarEventsInput {
             calendar_id: calendar.id.clone(),
-            start_time: DateTime::from_timestamp_millis(0).unwrap(),
+            start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
             end_time: DateTime::from_timestamp_millis(1000 * 60 * 60 * 24).unwrap(),
         })
         .await
@@ -460,7 +460,7 @@ async fn test_crud_events() {
             busy: None,
             recurrence: None,
             service_id: None,
-            start_time: DateTime::from_timestamp_millis(0).unwrap(),
+            start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
             metadata: None,
         })
         .await
@@ -479,7 +479,7 @@ async fn test_crud_events() {
         .event
         .get_instances(GetEventsInstancesInput {
             event_id: event.id.clone(),
-            start_time: DateTime::from_timestamp_millis(0).unwrap(),
+            start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
             end_time: DateTime::from_timestamp_millis(1000 * 60 * 60 * 24).unwrap(),
         })
         .await
@@ -490,7 +490,7 @@ async fn test_crud_events() {
         .event
         .update(UpdateEventInput {
             event_id: event.id.clone(),
-            exdates: Some(vec![DateTime::from_timestamp_millis(0).unwrap()]),
+            exdates: Some(vec![DateTime::from_timestamp_millis(0).unwrap().into()]),
             busy: None,
             duration: None,
             reminders: None,
@@ -505,7 +505,7 @@ async fn test_crud_events() {
         .event
         .get_instances(GetEventsInstancesInput {
             event_id: event.id.clone(),
-            start_time: DateTime::from_timestamp_millis(0).unwrap(),
+            start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
             end_time: DateTime::from_timestamp_millis(1000 * 60 * 60 * 24).unwrap(),
         })
         .await

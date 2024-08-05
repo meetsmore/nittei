@@ -1,13 +1,16 @@
 mod postgres;
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset, Utc};
 use nettu_scheduler_domain::EventRemindersExpansionJob;
 pub use postgres::PostgresEventReminderGenerationJobsRepo;
 
 #[async_trait::async_trait]
 pub trait IEventRemindersGenerationJobsRepo: Send + Sync {
     async fn bulk_insert(&self, jobs: &[EventRemindersExpansionJob]) -> anyhow::Result<()>;
-    async fn delete_all_before(&self, before: DateTime<Utc>) -> Vec<EventRemindersExpansionJob>;
+    async fn delete_all_before(
+        &self,
+        before: DateTime<FixedOffset>,
+    ) -> Vec<EventRemindersExpansionJob>;
 }
 
 #[cfg(test)]
@@ -37,7 +40,9 @@ mod tests {
             account_id: account.id.clone(),
             calendar_id: calendar.id.clone(),
             duration: 1000 * 60 * 60,
-            start_time: DateTime::from_timestamp_millis(1000 * 60 * 60).unwrap(),
+            start_time: DateTime::from_timestamp_millis(1000 * 60 * 60)
+                .unwrap()
+                .fixed_offset(),
             user_id: user.id.clone(),
             ..Default::default()
         };
@@ -46,7 +51,9 @@ mod tests {
             account_id: account.id.clone(),
             calendar_id: calendar.id.clone(),
             duration: 1000 * 60 * 60,
-            start_time: DateTime::from_timestamp_millis(1000 * 60 * 60).unwrap(),
+            start_time: DateTime::from_timestamp_millis(1000 * 60 * 60)
+                .unwrap()
+                .fixed_offset(),
             user_id: user.id.clone(),
             ..Default::default()
         };
@@ -55,7 +62,9 @@ mod tests {
             account_id: account.id.clone(),
             calendar_id: calendar.id.clone(),
             duration: 1000 * 60 * 60,
-            start_time: DateTime::from_timestamp_millis(1000 * 60 * 60).unwrap(),
+            start_time: DateTime::from_timestamp_millis(1000 * 60 * 60)
+                .unwrap()
+                .fixed_offset(),
             user_id: user.id.clone(),
             ..Default::default()
         };
@@ -83,17 +92,17 @@ mod tests {
         let jobs = vec![
             EventRemindersExpansionJob {
                 event_id: e1.id.clone(),
-                timestamp: DateTime::from_timestamp_millis(1).unwrap(),
+                timestamp: DateTime::from_timestamp_millis(1).unwrap().into(),
                 version: v_e1,
             },
             EventRemindersExpansionJob {
                 event_id: e2.id.clone(),
-                timestamp: DateTime::from_timestamp_millis(2).unwrap(),
+                timestamp: DateTime::from_timestamp_millis(2).unwrap().into(),
                 version: v_e2,
             },
             EventRemindersExpansionJob {
                 event_id: e3.id.clone(),
-                timestamp: DateTime::from_timestamp_millis(3).unwrap(),
+                timestamp: DateTime::from_timestamp_millis(3).unwrap().into(),
                 version: v_e3,
             },
         ];

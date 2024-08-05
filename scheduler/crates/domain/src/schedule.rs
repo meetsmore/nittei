@@ -168,8 +168,8 @@ impl ScheduleRuleInterval {
 
         Some(EventInstance {
             busy: false,
-            start_time: start.with_timezone(&chrono::Utc),
-            end_time: end.with_timezone(&chrono::Utc),
+            start_time: start.fixed_offset(),
+            end_time: end.fixed_offset(),
         })
     }
 }
@@ -481,8 +481,10 @@ mod test {
         };
 
         let timespan = TimeSpan::new(
-            DateTime::from_timestamp_millis(0).unwrap(),
-            DateTime::from_timestamp_millis(1000 * 60 * 60 * 24 * 30).unwrap(),
+            DateTime::from_timestamp_millis(0).unwrap().into(),
+            DateTime::from_timestamp_millis(1000 * 60 * 60 * 24 * 30)
+                .unwrap()
+                .fixed_offset(),
         );
         let freebusy = schedule.freebusy(&timespan).inner();
 
@@ -490,8 +492,8 @@ mod test {
         assert_eq!(
             freebusy[0],
             EventInstance {
-                start_time: DateTime::from_timestamp_millis(374400000).unwrap(),
-                end_time: DateTime::from_timestamp_millis(383400000).unwrap(),
+                start_time: DateTime::from_timestamp_millis(374400000).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(383400000).unwrap().into(),
                 busy: false
             }
         );
@@ -499,24 +501,24 @@ mod test {
         assert_eq!(
             freebusy[1],
             EventInstance {
-                start_time: DateTime::from_timestamp_millis(982800000).unwrap(),
-                end_time: DateTime::from_timestamp_millis(995400000).unwrap(),
+                start_time: DateTime::from_timestamp_millis(982800000).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(995400000).unwrap().into(),
                 busy: false
             }
         );
         assert_eq!(
             freebusy[2],
             EventInstance {
-                start_time: DateTime::from_timestamp_millis(1584000000).unwrap(),
-                end_time: DateTime::from_timestamp_millis(1593000000).unwrap(),
+                start_time: DateTime::from_timestamp_millis(1584000000).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(1593000000).unwrap().into(),
                 busy: false
             }
         );
         assert_eq!(
             freebusy[3],
             EventInstance {
-                start_time: DateTime::from_timestamp_millis(2188800000).unwrap(),
-                end_time: DateTime::from_timestamp_millis(2197800000).unwrap(),
+                start_time: DateTime::from_timestamp_millis(2188800000).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(2197800000).unwrap().into(),
                 busy: false
             }
         );
@@ -611,8 +613,12 @@ mod test {
     fn schedule_freebusy() {
         let schedule = Schedule::new(Default::default(), Default::default(), &chrono_tz::UTC);
         let timespan = TimeSpan::new(
-            DateTime::from_timestamp_millis(1602108000000).unwrap(),
-            DateTime::from_timestamp_millis(1602194400000).unwrap(),
+            DateTime::from_timestamp_millis(1602108000000)
+                .unwrap()
+                .into(),
+            DateTime::from_timestamp_millis(1602194400000)
+                .unwrap()
+                .into(),
         );
         let free = schedule.freebusy(&timespan);
         assert!(!free.is_empty());
@@ -648,8 +654,12 @@ mod test {
 
         // start -> 2021.4.1 at 00:00 and end -> 2021.5.1 at 00:00 in Europe/Oslo
         let timespan = TimeSpan::new(
-            DateTime::from_timestamp_millis(1617228000000).unwrap(),
-            DateTime::from_timestamp_millis(1617314400000).unwrap(),
+            DateTime::from_timestamp_millis(1617228000000)
+                .unwrap()
+                .into(),
+            DateTime::from_timestamp_millis(1617314400000)
+                .unwrap()
+                .into(),
         );
         let noon_utc = Utc.ymd(2021, 4, 1).and_hms(0, 0, 0);
 

@@ -1,5 +1,5 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use chrono::{DateTime, TimeDelta, Utc};
+use chrono::{DateTime, FixedOffset, TimeDelta, Utc};
 use nettu_scheduler_api_structs::create_event::*;
 use nettu_scheduler_domain::{
     CalendarEvent,
@@ -79,7 +79,7 @@ pub async fn create_event_controller(
 pub struct CreateEventUseCase {
     pub calendar_id: ID,
     pub user: User,
-    pub start_time: DateTime<Utc>,
+    pub start_time: DateTime<FixedOffset>,
     pub duration: i64,
     pub busy: bool,
     pub recurrence: Option<RRuleOptions>,
@@ -224,7 +224,7 @@ mod test {
         } = setup().await;
 
         let mut usecase = CreateEventUseCase {
-            start_time: DateTime::from_timestamp_millis(500).unwrap(),
+            start_time: DateTime::from_timestamp_millis(500).unwrap().into(),
             duration: 800,
             calendar_id: calendar.id.clone(),
             user,
@@ -246,7 +246,7 @@ mod test {
         } = setup().await;
 
         let mut usecase = CreateEventUseCase {
-            start_time: DateTime::from_timestamp_millis(500).unwrap(),
+            start_time: DateTime::from_timestamp_millis(500).unwrap().into(),
             duration: 800,
             recurrence: Some(Default::default()),
             calendar_id: calendar.id.clone(),
@@ -269,7 +269,7 @@ mod test {
         } = setup().await;
 
         let mut usecase = CreateEventUseCase {
-            start_time: DateTime::from_timestamp_millis(500).unwrap(),
+            start_time: DateTime::from_timestamp_millis(500).unwrap().into(),
             duration: 800,
             recurrence: Some(Default::default()),
             user,
@@ -304,7 +304,7 @@ mod test {
         });
         for rrule in invalid_rrules {
             let mut usecase = CreateEventUseCase {
-                start_time: DateTime::from_timestamp_millis(500).unwrap(),
+                start_time: DateTime::from_timestamp_millis(500).unwrap().into(),
                 duration: 800,
                 recurrence: Some(rrule),
                 calendar_id: calendar.id.clone(),

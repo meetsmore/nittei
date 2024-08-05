@@ -8,13 +8,13 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TimeSpan {
-    start_time: DateTime<Utc>,
-    end_time: DateTime<Utc>,
+    start_time: DateTime<FixedOffset>,
+    end_time: DateTime<FixedOffset>,
     duration: i64,
 }
 
 impl TimeSpan {
-    pub fn new(start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Self {
+    pub fn new(start_time: DateTime<FixedOffset>, end_time: DateTime<FixedOffset>) -> Self {
         Self {
             start_time,
             end_time,
@@ -38,11 +38,11 @@ impl TimeSpan {
         }
     }
 
-    pub fn start(&self) -> DateTime<Utc> {
+    pub fn start(&self) -> DateTime<FixedOffset> {
         self.start_time
     }
 
-    pub fn end(&self) -> DateTime<Utc> {
+    pub fn end(&self) -> DateTime<FixedOffset> {
         self.end_time
     }
 }
