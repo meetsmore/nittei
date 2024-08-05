@@ -1,6 +1,6 @@
 use std::{collections::HashMap, str::FromStr};
 
-use chrono::{prelude::*, Duration};
+use chrono::{offset::LocalResult, prelude::*, Duration};
 use chrono_tz::Tz;
 use serde::{Deserialize, Serialize};
 
@@ -48,8 +48,12 @@ impl Schedule {
 
     pub fn set_rules(&mut self, rules: &[ScheduleRule]) {
         let now = Utc::now();
-        let min_date = self.timezone.ymd(now.year(), now.month(), now.day()) - Duration::days(2);
-        let max_date = self.timezone.ymd(min_date.year() + 5, 1, 1);
+        let min_date = now - Duration::days(2);
+        let max_date = (now + Duration::days(365 * 5))
+            .with_month(1)
+            .unwrap()
+            .with_day(1)
+            .unwrap();
         let allowed_rules = rules
             .iter()
             .filter(|&r| match &r.variant {
@@ -91,21 +95,6 @@ struct Time {
     pub minutes: i64,
 }
 
-// impl Time {
-//     pub fn to_millis(&self, day: &Day, tzid: &Tz) -> i64 {
-//         let dt = tzid.ymd(day.year, day.month, day.day).and_hms(0, 0, 0)
-//             + Duration::minutes(self.minutes)
-//             + Duration::hours(self.hours);
-//         let millis = dt.timestamp_millis();
-//         if dt.hour() != self.hours as u32 {
-//             // DST probably
-//             return millis - 1000 * 60 * 60 * 24;
-//         }
-
-//         millis
-//     }
-// }
-
 impl std::cmp::PartialOrd for Time {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         match self.hours.cmp(&other.hours) {
@@ -131,16 +120,31 @@ impl ScheduleRuleInterval {
     /// but still within the origin timerange then that timerange will be
     /// returned.
     pub fn to_event(&self, day: &Day, tzid: &Tz) -> Option<EventInstance> {
-        let mut hours = self.start.hours as u32;
-        let date = tzid.ymd(day.year, day.month, day.day);
+        let mut start_hours = self.start.hours as u32;
+        let date = tzid
+            .with_ymd_and_hms(day.year, day.month, day.day, 0, 0, 0)
+            .unwrap();
 
         // Try to find an hour in this day that is not invalid (DST) and greater than
         // or equals to `self.start.hour`
-        let mut start = date.and_hms_opt(self.start.hours as u32, self.start.minutes as u32, 0);
-        while start.is_none() {
-            hours = (hours + 1) % 24;
+
+        let mut start_naive_time =
+            NaiveTime::from_hms_opt(start_hours, self.start.minutes as u32, 0);
+
+        let mut start = if let Some(start_naive_time) = start_naive_time {
+            date.with_time(start_naive_time)
+        } else {
+            LocalResult::None
+        };
+        while start_naive_time.is_none() || start.single().is_none() {
+            start_hours = (start_hours + 1) % 24;
             // Minutes can be zero now
-            start = date.and_hms_opt(hours, 0, 0);
+            start_naive_time = NaiveTime::from_hms_opt(start_hours, self.start.minutes as u32, 0);
+            start = if let Some(start_naive_time) = start_naive_time {
+                date.with_time(start_naive_time)
+            } else {
+                LocalResult::None
+            };
         }
         let start = start.unwrap();
         if self.start.hours as u32 > start.hour() {
@@ -150,10 +154,27 @@ impl ScheduleRuleInterval {
 
         // Try to find an hour in this day that is not invalid (DST) and less than
         // or equals to `self.end.hour`
-        let mut end = date.and_hms_opt(self.end.hours as u32, self.end.minutes as u32, 0);
-        while end.is_none() {
-            hours = if hours == 0 { 23 } else { hours - 1 };
-            end = date.and_hms_opt(hours, self.end.minutes as u32, 0);
+        let end_hours = self.end.hours as u32;
+
+        let mut end_naive_time = NaiveTime::from_hms_opt(end_hours, self.end.minutes as u32, 0);
+        let mut end = if let Some(end_naive_time) = end_naive_time {
+            date.with_time(end_naive_time)
+        } else {
+            LocalResult::None
+        };
+        while end_naive_time.is_none() || end.single().is_none() {
+            start_hours = if start_hours == 0 {
+                23
+            } else {
+                start_hours - 1
+            };
+
+            end_naive_time = NaiveTime::from_hms_opt(end_hours, self.end.minutes as u32, 0);
+            end = if let Some(end_naive_time) = end_naive_time {
+                date.with_time(end_naive_time)
+            } else {
+                LocalResult::None
+            };
         }
         let end = end.unwrap();
         if end.hour() < self.end.hours as u32 {
@@ -291,8 +312,9 @@ impl Day {
         self.date(tzid).weekday()
     }
 
-    pub fn date(&self, tzid: &Tz) -> Date<Tz> {
-        tzid.ymd(self.year, self.month, self.day)
+    pub fn date(&self, tzid: &Tz) -> DateTime<Tz> {
+        tzid.with_ymd_and_hms(self.year, self.month, self.day, 0, 0, 0)
+            .unwrap()
     }
 }
 
@@ -651,7 +673,7 @@ mod test {
             DateTime::from_timestamp_millis(1617228000000).unwrap(),
             DateTime::from_timestamp_millis(1617314400000).unwrap(),
         );
-        let noon_utc = Utc.ymd(2021, 4, 1).and_hms(0, 0, 0);
+        let noon_utc = Utc.with_ymd_and_hms(2021, 4, 1, 0, 0, 0).unwrap();
 
         let free = schedule.freebusy(&timespan).inner();
         assert_eq!(free.len(), 2);

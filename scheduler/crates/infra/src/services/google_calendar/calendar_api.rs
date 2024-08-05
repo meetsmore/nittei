@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt};
 
 use chrono::{DateTime, TimeZone, Utc};
 use nettu_scheduler_domain::{providers::google::*, CalendarEvent};
@@ -100,9 +100,15 @@ impl GoogleCalendarRestApi {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GoogleDateTime(String);
 
+impl fmt::Display for GoogleDateTime {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0.clone())
+    }
+}
+
 impl GoogleDateTime {
     pub fn from_timestamp_millis(timestamp: i64) -> Self {
-        let datetime_str = Utc.timestamp_millis(timestamp).to_rfc3339();
+        let datetime_str = Utc.timestamp_millis_opt(timestamp).unwrap().to_rfc3339();
         Self(datetime_str)
     }
 
@@ -110,10 +116,6 @@ impl GoogleDateTime {
         DateTime::parse_from_rfc3339(&self.0)
             .expect("Inner string to always be valid RFC3339 string")
             .timestamp_millis()
-    }
-
-    pub fn to_string(&self) -> String {
-        self.0.clone()
     }
 }
 
