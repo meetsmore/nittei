@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{format::Fixed, DateTime, FixedOffset, Utc};
 use nettu_scheduler_domain::{CalendarEvent, CalendarEventReminder, RRuleOptions, ID};
 use serde_json::Value;
 use sqlx::{
@@ -42,14 +42,14 @@ struct EventRaw {
     calendar_uid: Uuid,
     user_uid: Uuid,
     account_uid: Uuid,
-    start_time: DateTime<Utc>,
+    start_time: DateTime<FixedOffset>,
     duration: i64,
     busy: bool,
-    end_time: DateTime<Utc>,
+    end_time: DateTime<FixedOffset>,
     created: i64,
     updated: i64,
     recurrence: Option<Value>,
-    exdates: Vec<DateTime<Utc>>,
+    exdates: Vec<DateTime<FixedOffset>>,
     reminders: Option<Value>,
     service_uid: Option<Uuid>,
     metadata: Value,
@@ -329,8 +329,8 @@ impl IEventRepo for PostgresEventRepo {
         &self,
         service_id: &ID,
         user_ids: &[ID],
-        min_time: DateTime<Utc>,
-        max_time: DateTime<Utc>,
+        min_time: DateTime<FixedOffset>,
+        max_time: DateTime<FixedOffset>,
     ) -> Vec<CalendarEvent> {
         let user_ids = user_ids.iter().map(|id| *id.as_ref()).collect::<Vec<_>>();
         let events: Vec<EventRaw> = match sqlx::query_as!(
@@ -374,8 +374,8 @@ impl IEventRepo for PostgresEventRepo {
         &self,
         user_id: &ID,
         busy: bool,
-        min_time: DateTime<Utc>,
-        max_time: DateTime<Utc>,
+        min_time: DateTime<FixedOffset>,
+        max_time: DateTime<FixedOffset>,
     ) -> Vec<CalendarEvent> {
         let events: Vec<EventRaw> = match sqlx::query_as!(
             EventRaw,

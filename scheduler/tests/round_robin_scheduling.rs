@@ -455,7 +455,7 @@ async fn test_round_robin_availability_scheduling() {
                 recurrence: None,
                 reminders: Vec::new(),
                 service_id: Some(service.id.clone()),
-                start_time: DateTime::from_timestamp_millis(0).unwrap(),
+                start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
             };
             let event_id = admin_client
                 .event

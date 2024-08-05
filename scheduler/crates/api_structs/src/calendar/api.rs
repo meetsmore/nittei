@@ -100,7 +100,7 @@ pub mod delete_calendar {
 }
 
 pub mod get_calendar_events {
-    use chrono::{DateTime, Utc};
+    use chrono::{DateTime, FixedOffset};
     use nettu_scheduler_domain::EventWithInstances;
 
     use super::*;
@@ -114,8 +114,8 @@ pub mod get_calendar_events {
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct QueryParams {
-        pub start_time: DateTime<Utc>,
-        pub end_time: DateTime<Utc>,
+        pub start_time: DateTime<FixedOffset>,
+        pub end_time: DateTime<FixedOffset>,
     }
 
     #[derive(Serialize, Deserialize)]
@@ -244,7 +244,7 @@ pub mod get_outlook_calendars {
 pub mod get_user_freebusy {
     use std::collections::VecDeque;
 
-    use chrono::{DateTime, Utc};
+    use chrono::{DateTime, FixedOffset};
 
     use super::*;
 
@@ -256,8 +256,8 @@ pub mod get_user_freebusy {
     #[derive(Debug, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct QueryParams {
-        pub start_time: DateTime<Utc>,
-        pub end_time: DateTime<Utc>,
+        pub start_time: DateTime<FixedOffset>,
+        pub end_time: DateTime<FixedOffset>,
         #[serde(default, deserialize_with = "deserialize_stringified_uuids_list")]
         pub calendar_ids: Option<Vec<ID>>,
     }
@@ -273,7 +273,7 @@ pub mod get_user_freebusy {
 pub mod multiple_freebusy {
     use std::collections::{HashMap, VecDeque};
 
-    use chrono::{DateTime, Utc};
+    use chrono::{DateTime, FixedOffset};
 
     use super::*;
 
@@ -282,8 +282,8 @@ pub mod multiple_freebusy {
     pub struct RequestBody {
         #[serde(default)]
         pub user_ids: Vec<ID>,
-        pub start_time: DateTime<Utc>,
-        pub end_time: DateTime<Utc>,
+        pub start_time: DateTime<FixedOffset>,
+        pub end_time: DateTime<FixedOffset>,
     }
 
     #[derive(Debug, Serialize, Deserialize)]

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset, Utc};
 use nettu_scheduler_api_structs::*;
 use nettu_scheduler_domain::{BusyCalendar, Metadata, ServiceMultiPersonOptions};
 use reqwest::StatusCode;
@@ -47,14 +47,14 @@ pub struct UpdateServiceUserInput {
 pub struct CreateBookingIntendInput {
     pub service_id: ID,
     pub host_user_ids: Option<Vec<ID>>,
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime<FixedOffset>,
     pub duration: i64,
     pub interval: i64,
 }
 
 pub struct RemoveBookingIntendInput {
     pub service_id: ID,
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime<FixedOffset>,
 }
 
 pub struct RemoveServiceUserInput {

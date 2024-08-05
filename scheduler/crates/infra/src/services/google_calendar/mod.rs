@@ -11,7 +11,7 @@ use calendar_api::{
     GoogleDateTime,
     ListCalendarsResponse,
 };
-use chrono::{DateTime, Utc};
+use chrono::DateTime;
 use nettu_scheduler_domain::{
     providers::google::GoogleCalendarAccessRole,
     CalendarEvent,
@@ -60,10 +60,10 @@ impl GoogleCalendarProvider {
                     let instance = EventInstance {
                         start_time: DateTime::parse_from_rfc3339(&instance.start.to_string())
                             .unwrap()
-                            .with_timezone(&Utc),
+                            .fixed_offset(),
                         end_time: DateTime::parse_from_rfc3339(&instance.end.to_string())
                             .unwrap()
-                            .with_timezone(&Utc),
+                            .fixed_offset(),
                         busy: true,
                     };
                     instances.push(instance);

@@ -18,14 +18,14 @@ use crate::{
 #[derive(Debug, Clone, Default)]
 pub struct CalendarEvent {
     pub id: ID,
-    pub start_time: DateTime<Utc>,
+    pub start_time: DateTime<FixedOffset>,
     pub duration: i64,
     pub busy: bool,
-    pub end_time: DateTime<Utc>,
+    pub end_time: DateTime<FixedOffset>,
     pub created: i64,
     pub updated: i64,
     pub recurrence: Option<RRuleOptions>,
-    pub exdates: Vec<DateTime<Utc>>,
+    pub exdates: Vec<DateTime<FixedOffset>>,
     pub calendar_id: ID,
     pub user_id: ID,
     pub account_id: ID,
@@ -87,9 +87,9 @@ impl CalendarEvent {
                     self.end_time = expand
                         .last()
                         .map(|l| l.end_time)
-                        .unwrap_or(DateTime::<Utc>::MIN_UTC);
+                        .unwrap_or(DateTime::<Utc>::MIN_UTC.into());
                 } else {
-                    self.end_time = DateTime::<Utc>::MAX_UTC;
+                    self.end_time = DateTime::<Utc>::MAX_UTC.into();
                 }
                 true
             }
@@ -169,8 +169,8 @@ impl CalendarEvent {
                     .dates
                     .iter()
                     .map(|occurrence| EventInstance {
-                        start_time: occurrence.with_timezone(&Utc),
-                        end_time: occurrence.with_timezone(&Utc)
+                        start_time: occurrence.fixed_offset(),
+                        end_time: occurrence.fixed_offset()
                             + TimeDelta::milliseconds(self.duration),
                         busy: self.busy,
                     })
@@ -205,7 +205,9 @@ mod test {
             week_start: Weekday::Mon,
         };
         let event = CalendarEvent {
-            start_time: DateTime::from_timestamp_millis(1521317491239).unwrap(),
+            start_time: DateTime::from_timestamp_millis(1521317491239)
+                .unwrap()
+                .into(),
             duration: 1000 * 60 * 60,
             recurrence: Some(RRuleOptions {
                 freq: RRuleFrequency::Daily,
@@ -213,8 +215,12 @@ mod test {
                 count: Some(4),
                 ..Default::default()
             }),
-            end_time: DateTime::from_timestamp_millis(2521317491239).unwrap(),
-            exdates: vec![DateTime::from_timestamp_millis(1521317491239).unwrap()],
+            end_time: DateTime::from_timestamp_millis(2521317491239)
+                .unwrap()
+                .into(),
+            exdates: vec![DateTime::from_timestamp_millis(1521317491239)
+                .unwrap()
+                .into()],
             ..Default::default()
         };
 
@@ -234,9 +240,13 @@ mod test {
             week_start: Weekday::Mon,
         };
         let mut event = CalendarEvent {
-            start_time: DateTime::from_timestamp_millis(1521317491239).unwrap(),
+            start_time: DateTime::from_timestamp_millis(1521317491239)
+                .unwrap()
+                .into(),
             duration: 1000 * 60 * 60,
-            end_time: DateTime::from_timestamp_millis(2521317491239).unwrap(),
+            end_time: DateTime::from_timestamp_millis(2521317491239)
+                .unwrap()
+                .into(),
             ..Default::default()
         };
 
@@ -261,7 +271,7 @@ mod test {
             ..Default::default()
         });
         invalid_rrules.push(RRuleOptions {
-            until: Some(Utc.ymd(2150, 1, 1).and_hms(0, 0, 0)), // too big until
+            until: Some(Utc.ymd(2150, 1, 1).and_hms(0, 0, 0).fixed_offset()), // too big until
             ..Default::default()
         });
         invalid_rrules.push(RRuleOptions {
@@ -272,9 +282,13 @@ mod test {
         });
         for rrule in invalid_rrules {
             let mut event = CalendarEvent {
-                start_time: DateTime::from_timestamp_millis(1521317491239).unwrap(),
+                start_time: DateTime::from_timestamp_millis(1521317491239)
+                    .unwrap()
+                    .into(),
                 duration: 1000 * 60 * 60,
-                end_time: DateTime::from_timestamp_millis(2521317491239).unwrap(),
+                end_time: DateTime::from_timestamp_millis(2521317491239)
+                    .unwrap()
+                    .into(),
                 ..Default::default()
             };
 
@@ -289,7 +303,9 @@ mod test {
             week_start: Weekday::Mon,
         };
         let mut valid_rrules = Vec::new();
-        let start_time = DateTime::from_timestamp_millis(1521317491239).unwrap();
+        let start_time = DateTime::from_timestamp_millis(1521317491239)
+            .unwrap()
+            .into();
         valid_rrules.push(Default::default());
         valid_rrules.push(RRuleOptions {
             count: Some(100),
@@ -312,7 +328,9 @@ mod test {
             let mut event = CalendarEvent {
                 start_time,
                 duration: 1000 * 60 * 60,
-                end_time: DateTime::from_timestamp_millis(2521317491239).unwrap(),
+                end_time: DateTime::from_timestamp_millis(2521317491239)
+                    .unwrap()
+                    .into(),
                 ..Default::default()
             };
 

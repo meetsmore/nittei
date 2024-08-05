@@ -22,7 +22,7 @@ pub struct RRuleOptions {
     pub freq: RRuleFrequency,
     pub interval: isize,
     pub count: Option<i32>,
-    pub until: Option<DateTime<Utc>>,
+    pub until: Option<DateTime<FixedOffset>>,
     pub bysetpos: Option<Vec<isize>>,
     pub byweekday: Option<Vec<WeekDay>>,
     pub bymonthday: Option<Vec<isize>>,
@@ -45,7 +45,7 @@ fn is_none_or_empty<T>(v: &Option<Vec<T>>) -> bool {
 }
 
 impl RRuleOptions {
-    pub fn is_valid(&self, start_time: DateTime<Utc>) -> bool {
+    pub fn is_valid(&self, start_time: DateTime<FixedOffset>) -> bool {
         if let Some(count) = self.count {
             if !(1..740).contains(&count) {
                 return false;
@@ -77,7 +77,7 @@ impl RRuleOptions {
 
     pub fn get_parsed_options(
         &self,
-        start_time: DateTime<Utc>,
+        start_time: DateTime<FixedOffset>,
         calendar_settings: &CalendarSettings,
     ) -> RRuleSet {
         let until = self.until;

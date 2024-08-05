@@ -1,5 +1,5 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use chrono::{DateTime, Duration, TimeDelta, TimeZone, Utc};
+use chrono::{DateTime, Duration, FixedOffset, TimeDelta, TimeZone, Utc};
 use chrono_tz::UTC;
 use get_service_bookingslots::GetServiceBookingSlotsUseCase;
 use nettu_scheduler_api_structs::create_service_event_intend::*;
@@ -57,7 +57,7 @@ pub async fn create_service_event_intend_controller(
 struct CreateServiceEventIntendUseCase {
     pub service_id: ID,
     pub host_user_ids: Option<Vec<ID>>,
-    pub timestamp: DateTime<Utc>,
+    pub timestamp: DateTime<FixedOffset>,
     pub duration: i64,
     pub interval: i64,
 }

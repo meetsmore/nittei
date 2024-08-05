@@ -1,6 +1,6 @@
 mod postgres;
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset, Utc};
 use nettu_scheduler_domain::{CalendarEvent, TimeSpan, ID};
 pub use postgres::PostgresEventRepo;
 
@@ -32,15 +32,15 @@ pub trait IEventRepo: Send + Sync {
         &self,
         service_id: &ID,
         user_ids: &[ID],
-        min_time: DateTime<Utc>,
-        max_time: DateTime<Utc>,
+        min_time: DateTime<FixedOffset>,
+        max_time: DateTime<FixedOffset>,
     ) -> Vec<CalendarEvent>;
     async fn find_user_service_events(
         &self,
         user_id: &ID,
         busy: bool,
-        min_time: DateTime<Utc>,
-        max_time: DateTime<Utc>,
+        min_time: DateTime<FixedOffset>,
+        max_time: DateTime<FixedOffset>,
     ) -> Vec<CalendarEvent>;
     async fn delete(&self, event_id: &ID) -> anyhow::Result<()>;
     async fn delete_by_service(&self, service_id: &ID) -> anyhow::Result<()>;
@@ -49,7 +49,7 @@ pub trait IEventRepo: Send + Sync {
 
 #[cfg(test)]
 mod tests {
-    use chrono::{DateTime, Utc};
+    use chrono::{DateTime, FixedOffset, Utc};
     use nettu_scheduler_domain::{
         Account,
         Calendar,
@@ -201,8 +201,8 @@ mod tests {
         calendar_id: &ID,
         user_id: &ID,
         service_id: Option<&ID>,
-        start_time: DateTime<Utc>,
-        end_time: DateTime<Utc>,
+        start_time: DateTime<FixedOffset>,
+        end_time: DateTime<FixedOffset>,
         ctx: &NettuContext,
     ) -> CalendarEvent {
         let mut event = generate_default_event(account_id, calendar_id, user_id);
@@ -254,8 +254,12 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            DateTime::from_timestamp_millis(start_ts - 2).unwrap(),
-            DateTime::from_timestamp_millis(start_ts - 1).unwrap(),
+            DateTime::from_timestamp_millis(start_ts - 2)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(start_ts - 1)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;
@@ -264,8 +268,12 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            DateTime::from_timestamp_millis(start_ts - 1).unwrap(),
-            DateTime::from_timestamp_millis(start_ts).unwrap(),
+            DateTime::from_timestamp_millis(start_ts - 1)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(start_ts)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;
@@ -274,8 +282,12 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            DateTime::from_timestamp_millis(start_ts - 1).unwrap(),
-            DateTime::from_timestamp_millis(start_ts + 1).unwrap(),
+            DateTime::from_timestamp_millis(start_ts - 1)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(start_ts + 1)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;
@@ -284,8 +296,12 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            DateTime::from_timestamp_millis(start_ts - 1).unwrap(),
-            DateTime::from_timestamp_millis(end_ts).unwrap(),
+            DateTime::from_timestamp_millis(start_ts - 1)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(end_ts)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;
@@ -294,8 +310,12 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            DateTime::from_timestamp_millis(start_ts - 1).unwrap(),
-            DateTime::from_timestamp_millis(end_ts + 1).unwrap(),
+            DateTime::from_timestamp_millis(start_ts - 1)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(end_ts + 1)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;
@@ -304,8 +324,12 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            DateTime::from_timestamp_millis(start_ts).unwrap(),
-            DateTime::from_timestamp_millis(end_ts - 1).unwrap(),
+            DateTime::from_timestamp_millis(start_ts)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(end_ts - 1)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;
@@ -314,8 +338,12 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            DateTime::from_timestamp_millis(start_ts).unwrap(),
-            DateTime::from_timestamp_millis(end_ts).unwrap(),
+            DateTime::from_timestamp_millis(start_ts)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(end_ts)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;
@@ -324,8 +352,12 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            DateTime::from_timestamp_millis(start_ts).unwrap(),
-            DateTime::from_timestamp_millis(end_ts + 1).unwrap(),
+            DateTime::from_timestamp_millis(start_ts)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(end_ts + 1)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;
@@ -334,8 +366,12 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            DateTime::from_timestamp_millis(start_ts + 1).unwrap(),
-            DateTime::from_timestamp_millis(end_ts - 1).unwrap(),
+            DateTime::from_timestamp_millis(start_ts + 1)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(end_ts - 1)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;
@@ -344,8 +380,12 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            DateTime::from_timestamp_millis(start_ts + 1).unwrap(),
-            DateTime::from_timestamp_millis(end_ts).unwrap(),
+            DateTime::from_timestamp_millis(start_ts + 1)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(end_ts)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;
@@ -354,8 +394,12 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            DateTime::from_timestamp_millis(start_ts + 1).unwrap(),
-            DateTime::from_timestamp_millis(end_ts + 1).unwrap(),
+            DateTime::from_timestamp_millis(start_ts + 1)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(end_ts + 1)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;
@@ -364,8 +408,12 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            DateTime::from_timestamp_millis(end_ts).unwrap(),
-            DateTime::from_timestamp_millis(end_ts + 1).unwrap(),
+            DateTime::from_timestamp_millis(end_ts)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(end_ts + 1)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;
@@ -374,8 +422,12 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            DateTime::from_timestamp_millis(end_ts + 1).unwrap(),
-            DateTime::from_timestamp_millis(end_ts + 2).unwrap(),
+            DateTime::from_timestamp_millis(end_ts + 1)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(end_ts + 2)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;
@@ -405,8 +457,12 @@ mod tests {
             .find_by_calendar(
                 &calendar.id,
                 Some(&TimeSpan::new(
-                    DateTime::from_timestamp_millis(start_ts).unwrap(),
-                    DateTime::from_timestamp_millis(end_ts).unwrap(),
+                    DateTime::from_timestamp_millis(start_ts)
+                        .unwrap()
+                        .fixed_offset(),
+                    DateTime::from_timestamp_millis(end_ts)
+                        .unwrap()
+                        .fixed_offset(),
                 )),
             )
             .await
@@ -576,8 +632,12 @@ mod tests {
             &calendar1.id,
             &user1.id,
             Some(&service.id),
-            DateTime::from_timestamp_millis(start_ts - 2).unwrap(),
-            DateTime::from_timestamp_millis(start_ts - 1).unwrap(),
+            DateTime::from_timestamp_millis(start_ts - 2)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(start_ts - 1)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;
@@ -586,8 +646,12 @@ mod tests {
             &calendar1.id,
             &user1.id,
             Some(&service.id),
-            DateTime::from_timestamp_millis(start_ts - 1).unwrap(),
-            DateTime::from_timestamp_millis(start_ts).unwrap(),
+            DateTime::from_timestamp_millis(start_ts - 1)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(start_ts)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;
@@ -596,8 +660,12 @@ mod tests {
             &calendar1.id,
             &user1.id,
             Some(&service.id),
-            DateTime::from_timestamp_millis(start_ts - 1).unwrap(),
-            DateTime::from_timestamp_millis(start_ts + 1).unwrap(),
+            DateTime::from_timestamp_millis(start_ts - 1)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(start_ts + 1)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;
@@ -606,8 +674,12 @@ mod tests {
             &calendar1.id,
             &user1.id,
             Some(&service.id),
-            DateTime::from_timestamp_millis(start_ts - 1).unwrap(),
-            DateTime::from_timestamp_millis(end_ts).unwrap(),
+            DateTime::from_timestamp_millis(start_ts - 1)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(end_ts)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;
@@ -616,8 +688,12 @@ mod tests {
             &calendar1.id,
             &user1.id,
             Some(&service.id),
-            DateTime::from_timestamp_millis(start_ts - 1).unwrap(),
-            DateTime::from_timestamp_millis(end_ts + 1).unwrap(),
+            DateTime::from_timestamp_millis(start_ts - 1)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(end_ts + 1)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;
@@ -626,8 +702,12 @@ mod tests {
             &calendar1.id,
             &user1.id,
             Some(&service.id),
-            DateTime::from_timestamp_millis(start_ts).unwrap(),
-            DateTime::from_timestamp_millis(end_ts - 1).unwrap(),
+            DateTime::from_timestamp_millis(start_ts)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(end_ts - 1)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;
@@ -636,8 +716,12 @@ mod tests {
             &calendar1.id,
             &user1.id,
             Some(&service.id),
-            DateTime::from_timestamp_millis(start_ts).unwrap(),
-            DateTime::from_timestamp_millis(end_ts).unwrap(),
+            DateTime::from_timestamp_millis(start_ts)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(end_ts)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;
@@ -646,8 +730,12 @@ mod tests {
             &calendar1.id,
             &user1.id,
             Some(&service.id),
-            DateTime::from_timestamp_millis(start_ts).unwrap(),
-            DateTime::from_timestamp_millis(end_ts + 1).unwrap(),
+            DateTime::from_timestamp_millis(start_ts)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(end_ts + 1)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;
@@ -656,8 +744,12 @@ mod tests {
             &calendar1.id,
             &user1.id,
             Some(&service.id),
-            DateTime::from_timestamp_millis(start_ts + 1).unwrap(),
-            DateTime::from_timestamp_millis(end_ts - 1).unwrap(),
+            DateTime::from_timestamp_millis(start_ts + 1)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(end_ts - 1)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;
@@ -666,8 +758,12 @@ mod tests {
             &calendar1.id,
             &user1.id,
             Some(&service.id),
-            DateTime::from_timestamp_millis(start_ts + 1).unwrap(),
-            DateTime::from_timestamp_millis(end_ts).unwrap(),
+            DateTime::from_timestamp_millis(start_ts + 1)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(end_ts)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;
@@ -676,8 +772,12 @@ mod tests {
             &calendar1.id,
             &user1.id,
             Some(&service.id),
-            DateTime::from_timestamp_millis(start_ts + 1).unwrap(),
-            DateTime::from_timestamp_millis(end_ts + 1).unwrap(),
+            DateTime::from_timestamp_millis(start_ts + 1)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(end_ts + 1)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;
@@ -686,8 +786,12 @@ mod tests {
             &calendar1.id,
             &user1.id,
             Some(&service.id),
-            DateTime::from_timestamp_millis(end_ts).unwrap(),
-            DateTime::from_timestamp_millis(end_ts + 1).unwrap(),
+            DateTime::from_timestamp_millis(end_ts)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(end_ts + 1)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;
@@ -696,8 +800,12 @@ mod tests {
             &calendar1.id,
             &user1.id,
             Some(&service.id),
-            DateTime::from_timestamp_millis(end_ts + 1).unwrap(),
-            DateTime::from_timestamp_millis(end_ts + 2).unwrap(),
+            DateTime::from_timestamp_millis(end_ts + 1)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(end_ts + 2)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;
@@ -778,8 +886,12 @@ mod tests {
             &calendar.id,
             &user.id,
             Some(&service.id),
-            DateTime::from_timestamp_millis(start_ts).unwrap(),
-            DateTime::from_timestamp_millis(end_ts).unwrap(),
+            DateTime::from_timestamp_millis(start_ts)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(end_ts)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;
@@ -788,8 +900,12 @@ mod tests {
             &calendar.id,
             &user.id,
             None,
-            DateTime::from_timestamp_millis(start_ts).unwrap(),
-            DateTime::from_timestamp_millis(end_ts).unwrap(),
+            DateTime::from_timestamp_millis(start_ts)
+                .unwrap()
+                .fixed_offset(),
+            DateTime::from_timestamp_millis(end_ts)
+                .unwrap()
+                .fixed_offset(),
             &ctx,
         )
         .await;

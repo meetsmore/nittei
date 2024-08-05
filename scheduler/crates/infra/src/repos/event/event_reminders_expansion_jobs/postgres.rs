@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset, Utc};
 use nettu_scheduler_domain::EventRemindersExpansionJob;
 use sqlx::{types::Uuid, FromRow, PgPool};
 use tracing::error;
@@ -18,7 +18,7 @@ impl PostgresEventReminderGenerationJobsRepo {
 #[derive(Debug, FromRow)]
 struct JobRaw {
     event_uid: Uuid,
-    timestamp: DateTime<Utc>,
+    timestamp: DateTime<FixedOffset>,
     version: i64,
 }
 
@@ -59,7 +59,10 @@ impl IEventRemindersGenerationJobsRepo for PostgresEventReminderGenerationJobsRe
         Ok(())
     }
 
-    async fn delete_all_before(&self, before: DateTime<Utc>) -> Vec<EventRemindersExpansionJob> {
+    async fn delete_all_before(
+        &self,
+        before: DateTime<FixedOffset>,
+    ) -> Vec<EventRemindersExpansionJob> {
         sqlx::query_as!(
             JobRaw,
             r#"

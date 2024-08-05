@@ -1,4 +1,4 @@
-use chrono::{DateTime, SecondsFormat, TimeZone, Utc};
+use chrono::{format::Fixed, DateTime, FixedOffset, SecondsFormat, TimeZone, Utc};
 use futures::future::join_all;
 use nettu_scheduler_domain::{
     providers::outlook::{
@@ -88,8 +88,8 @@ pub struct OutlookCalendarRestApi {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FreeBusyRequest {
-    pub time_min: DateTime<Utc>,
-    pub time_max: DateTime<Utc>,
+    pub time_min: DateTime<FixedOffset>,
+    pub time_max: DateTime<FixedOffset>,
     pub time_zone: String,
     pub calendars: Vec<String>,
 }
@@ -289,9 +289,11 @@ impl OutlookCalendarRestApi {
                         busy: true,
                         // TODO: handle unwrap
                         start_time: DateTime::from_timestamp_millis(e.start.get_timestamp_millis())
-                            .unwrap(),
+                            .unwrap()
+                            .fixed_offset(),
                         end_time: DateTime::from_timestamp_millis(e.end.get_timestamp_millis())
-                            .unwrap(),
+                            .unwrap()
+                            .fixed_offset(),
                     })
                     .collect::<Vec<_>>()
             })

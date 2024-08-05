@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use actix_web::{web, HttpRequest, HttpResponse};
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset, Utc};
 use futures::future::join_all;
 use nettu_scheduler_api_structs::get_user_freebusy::{APIResponse, PathParams, QueryParams};
 use nettu_scheduler_domain::{CompatibleInstances, EventInstance, TimeSpan, ID};
@@ -55,8 +55,8 @@ pub async fn get_freebusy_controller(
 pub struct GetFreeBusyUseCase {
     pub user_id: ID,
     pub calendar_ids: Option<Vec<ID>>,
-    pub start_time: DateTime<Utc>,
-    pub end_time: DateTime<Utc>,
+    pub start_time: DateTime<FixedOffset>,
+    pub end_time: DateTime<FixedOffset>,
 }
 
 #[derive(Debug)]
@@ -250,8 +250,8 @@ mod test {
         let mut usecase = GetFreeBusyUseCase {
             user_id: user.id().clone(),
             calendar_ids: Some(vec![calendar.id.clone()]),
-            start_time: DateTime::from_timestamp_millis(86400000).unwrap(),
-            end_time: DateTime::from_timestamp_millis(172800000).unwrap(),
+            start_time: DateTime::from_timestamp_millis(86400000).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(172800000).unwrap().into(),
         };
 
         let res = usecase.execute(&ctx).await;
@@ -262,16 +262,16 @@ mod test {
             instances[0],
             EventInstance {
                 busy: true,
-                start_time: DateTime::from_timestamp_millis(86400000).unwrap(),
-                end_time: DateTime::from_timestamp_millis(90000000).unwrap(),
+                start_time: DateTime::from_timestamp_millis(86400000).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(90000000).unwrap().into(),
             }
         );
         assert_eq!(
             instances[1],
             EventInstance {
                 busy: true,
-                start_time: DateTime::from_timestamp_millis(100800000).unwrap(),
-                end_time: DateTime::from_timestamp_millis(104400000).unwrap(),
+                start_time: DateTime::from_timestamp_millis(100800000).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(104400000).unwrap().into(),
             }
         );
     }

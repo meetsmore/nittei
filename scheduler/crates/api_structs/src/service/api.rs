@@ -114,7 +114,7 @@ pub mod remove_busy_calendar {
 }
 
 pub mod remove_service_event_intend {
-    use chrono::{DateTime, Utc};
+    use chrono::{DateTime, FixedOffset};
 
     use super::*;
 
@@ -126,7 +126,7 @@ pub mod remove_service_event_intend {
     #[derive(Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct QueryParams {
-        pub timestamp: DateTime<Utc>,
+        pub timestamp: DateTime<FixedOffset>,
     }
 
     #[derive(Deserialize, Serialize, Debug)]
@@ -145,7 +145,7 @@ pub mod remove_service_event_intend {
 }
 
 pub mod create_service_event_intend {
-    use chrono::{DateTime, Utc};
+    use chrono::{DateTime, FixedOffset};
     use nettu_scheduler_domain::User;
 
     use super::*;
@@ -161,7 +161,7 @@ pub mod create_service_event_intend {
     pub struct RequestBody {
         #[serde(default)]
         pub host_user_ids: Option<Vec<ID>>,
-        pub timestamp: DateTime<Utc>,
+        pub timestamp: DateTime<FixedOffset>,
         pub duration: i64,
         pub interval: i64,
     }
@@ -223,7 +223,7 @@ pub mod update_service {
 }
 
 pub mod get_service_bookingslots {
-    use chrono::{DateTime, Utc};
+    use chrono::{DateTime, FixedOffset, Utc};
     use nettu_scheduler_domain::booking_slots::{
         ServiceBookingSlot,
         ServiceBookingSlots,
@@ -252,7 +252,7 @@ pub mod get_service_bookingslots {
     #[derive(Deserialize, Serialize, Debug)]
     #[serde(rename_all = "camelCase")]
     pub struct ServiceBookingSlotDTO {
-        pub start: DateTime<Utc>,
+        pub start: DateTime<FixedOffset>,
         pub duration: i64,
         pub user_ids: Vec<ID>,
     }

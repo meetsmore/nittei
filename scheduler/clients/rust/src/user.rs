@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset, Utc};
 use nettu_scheduler_api_structs::*;
 use nettu_scheduler_domain::{IntegrationProvider, Metadata};
 use reqwest::StatusCode;
@@ -20,8 +20,8 @@ pub type CreateUserInput = create_user::RequestBody;
 
 pub struct GetUserFreeBusyInput {
     pub user_id: ID,
-    pub start_time: DateTime<Utc>,
-    pub end_time: DateTime<Utc>,
+    pub start_time: DateTime<FixedOffset>,
+    pub end_time: DateTime<FixedOffset>,
     pub calendar_ids: Option<Vec<ID>>,
 }
 

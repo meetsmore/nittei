@@ -1,5 +1,5 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset, Utc};
 use event::subscribers::SyncRemindersOnEventUpdated;
 use nettu_scheduler_api_structs::update_event::*;
 use nettu_scheduler_domain::{
@@ -89,13 +89,13 @@ pub async fn update_event_controller(
 pub struct UpdateEventUseCase {
     pub user: User,
     pub event_id: ID,
-    pub start_time: Option<DateTime<Utc>>,
+    pub start_time: Option<DateTime<FixedOffset>>,
     pub busy: Option<bool>,
     pub duration: Option<i64>,
     pub reminders: Option<Vec<CalendarEventReminder>>,
     pub recurrence: Option<RRuleOptions>,
     pub service_id: Option<ID>,
-    pub exdates: Option<Vec<DateTime<Utc>>>,
+    pub exdates: Option<Vec<DateTime<FixedOffset>>>,
     pub metadata: Option<Metadata>,
 }
 
@@ -252,7 +252,7 @@ mod test {
     #[test]
     async fn update_nonexisting_event() {
         let mut usecase = UpdateEventUseCase {
-            start_time: Some(DateTime::from_timestamp_millis(500).unwrap()),
+            start_time: Some(DateTime::from_timestamp_millis(500).unwrap().into()),
             duration: Some(800),
             busy: Some(false),
             ..Default::default()

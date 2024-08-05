@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
 use crate::CalendarEvent;
@@ -9,8 +9,8 @@ use crate::CalendarEvent;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EventInstance {
-    pub start_time: DateTime<Utc>,
-    pub end_time: DateTime<Utc>,
+    pub start_time: DateTime<FixedOffset>,
+    pub end_time: DateTime<FixedOffset>,
     pub busy: bool,
 }
 
@@ -80,7 +80,7 @@ impl CompatibleInstances {
         true
     }
 
-    pub fn remove_all_before(&mut self, timespan: DateTime<Utc>) {
+    pub fn remove_all_before(&mut self, timespan: DateTime<FixedOffset>) {
         while let Some(e) = self.events.get_mut(0) {
             if e.start_time >= timespan {
                 break;
@@ -94,7 +94,7 @@ impl CompatibleInstances {
         }
     }
 
-    pub fn remove_all_after(&mut self, timespan: DateTime<Utc>) {
+    pub fn remove_all_after(&mut self, timespan: DateTime<FixedOffset>) {
         while !self.events.is_empty() {
             let last = self.events.get_mut(self.events.len() - 1).unwrap();
             if last.end_time <= timespan {
@@ -336,14 +336,14 @@ mod test {
         #[test]
         fn no_overlap() {
             let e1 = EventInstance {
-                start_time: DateTime::from_timestamp_millis(0).unwrap(),
-                end_time: DateTime::from_timestamp_millis(4).unwrap(),
+                start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(4).unwrap().into(),
                 busy: false,
             };
 
             let e2 = EventInstance {
-                start_time: DateTime::from_timestamp_millis(5).unwrap(),
-                end_time: DateTime::from_timestamp_millis(10).unwrap(),
+                start_time: DateTime::from_timestamp_millis(5).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(10).unwrap().into(),
                 busy: false,
             };
 
@@ -354,14 +354,14 @@ mod test {
         #[test]
         fn overlap_without_extending() {
             let e1 = EventInstance {
-                start_time: DateTime::from_timestamp_millis(1).unwrap(),
-                end_time: DateTime::from_timestamp_millis(10).unwrap(),
+                start_time: DateTime::from_timestamp_millis(1).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(10).unwrap().into(),
                 busy: false,
             };
 
             let e2 = EventInstance {
-                start_time: DateTime::from_timestamp_millis(5).unwrap(),
-                end_time: DateTime::from_timestamp_millis(7).unwrap(),
+                start_time: DateTime::from_timestamp_millis(5).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(7).unwrap().into(),
                 busy: false,
             };
 
@@ -373,14 +373,14 @@ mod test {
         #[test]
         fn overlap_with_extending() {
             let e1 = EventInstance {
-                start_time: DateTime::from_timestamp_millis(1).unwrap(),
-                end_time: DateTime::from_timestamp_millis(10).unwrap(),
+                start_time: DateTime::from_timestamp_millis(1).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(10).unwrap().into(),
                 busy: false,
             };
 
             let e2 = EventInstance {
-                start_time: DateTime::from_timestamp_millis(5).unwrap(),
-                end_time: DateTime::from_timestamp_millis(15).unwrap(),
+                start_time: DateTime::from_timestamp_millis(5).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(15).unwrap().into(),
                 busy: false,
             };
 
@@ -389,8 +389,8 @@ mod test {
             assert_eq!(
                 res.unwrap(),
                 EventInstance {
-                    start_time: DateTime::from_timestamp_millis(1).unwrap(),
-                    end_time: DateTime::from_timestamp_millis(15).unwrap(),
+                    start_time: DateTime::from_timestamp_millis(1).unwrap().into(),
+                    end_time: DateTime::from_timestamp_millis(15).unwrap().into(),
                     busy: false
                 }
             );
@@ -399,14 +399,14 @@ mod test {
         #[test]
         fn remove_busy_from_free_no_overlap() {
             let e1 = EventInstance {
-                start_time: DateTime::from_timestamp_millis(0).unwrap(),
-                end_time: DateTime::from_timestamp_millis(4).unwrap(),
+                start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(4).unwrap().into(),
                 busy: false,
             };
 
             let e2 = EventInstance {
-                start_time: DateTime::from_timestamp_millis(5).unwrap(),
-                end_time: DateTime::from_timestamp_millis(10).unwrap(),
+                start_time: DateTime::from_timestamp_millis(5).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(10).unwrap().into(),
                 busy: true,
             };
 
@@ -417,14 +417,14 @@ mod test {
         #[test]
         fn remove_busy_from_free_complete_overlap() {
             let e1 = EventInstance {
-                start_time: DateTime::from_timestamp_millis(0).unwrap(),
-                end_time: DateTime::from_timestamp_millis(4).unwrap(),
+                start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(4).unwrap().into(),
                 busy: false,
             };
 
             let e2 = EventInstance {
-                start_time: DateTime::from_timestamp_millis(0).unwrap(),
-                end_time: DateTime::from_timestamp_millis(10).unwrap(),
+                start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(10).unwrap().into(),
                 busy: true,
             };
 
@@ -435,21 +435,21 @@ mod test {
         #[test]
         fn remove_busy_from_free_complete_partial_split_in_1() {
             let mut e1 = EventInstance {
-                start_time: DateTime::from_timestamp_millis(0).unwrap(),
-                end_time: DateTime::from_timestamp_millis(4).unwrap(),
+                start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(4).unwrap().into(),
                 busy: false,
             };
 
             let mut e2 = EventInstance {
-                start_time: DateTime::from_timestamp_millis(3).unwrap(),
-                end_time: DateTime::from_timestamp_millis(10).unwrap(),
+                start_time: DateTime::from_timestamp_millis(3).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(10).unwrap().into(),
                 busy: true,
             };
 
             let res = EventInstance::remove_instance(&e1, &e2);
             let expected_e = CompatibleInstances::new(vec![EventInstance {
-                start_time: DateTime::from_timestamp_millis(0).unwrap(),
-                end_time: DateTime::from_timestamp_millis(3).unwrap(),
+                start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(3).unwrap().into(),
                 busy: false,
             }]);
             let expected_res = SubtractInstanceResult::OverlapEnd(expected_e);
@@ -461,8 +461,8 @@ mod test {
 
             let res = EventInstance::remove_instance(&e2, &e1);
             let expected_e = CompatibleInstances::new(vec![EventInstance {
-                start_time: DateTime::from_timestamp_millis(4).unwrap(),
-                end_time: DateTime::from_timestamp_millis(10).unwrap(),
+                start_time: DateTime::from_timestamp_millis(4).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(10).unwrap().into(),
                 busy: false,
             }]);
             let expected_res = SubtractInstanceResult::OverlapBeginning(expected_e);
@@ -472,27 +472,27 @@ mod test {
         #[test]
         fn remove_busy_from_free_complete_partial_split_in_2() {
             let mut e1 = EventInstance {
-                start_time: DateTime::from_timestamp_millis(2).unwrap(),
-                end_time: DateTime::from_timestamp_millis(14).unwrap(),
+                start_time: DateTime::from_timestamp_millis(2).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(14).unwrap().into(),
                 busy: false,
             };
 
             let mut e2 = EventInstance {
-                start_time: DateTime::from_timestamp_millis(3).unwrap(),
-                end_time: DateTime::from_timestamp_millis(10).unwrap(),
+                start_time: DateTime::from_timestamp_millis(3).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(10).unwrap().into(),
                 busy: true,
             };
 
             let res = EventInstance::remove_instance(&e1, &e2);
             let expected_events = CompatibleInstances::new(vec![
                 EventInstance {
-                    start_time: DateTime::from_timestamp_millis(2).unwrap(),
-                    end_time: DateTime::from_timestamp_millis(3).unwrap(),
+                    start_time: DateTime::from_timestamp_millis(2).unwrap().into(),
+                    end_time: DateTime::from_timestamp_millis(3).unwrap().into(),
                     busy: false,
                 },
                 EventInstance {
-                    start_time: DateTime::from_timestamp_millis(10).unwrap(),
-                    end_time: DateTime::from_timestamp_millis(14).unwrap(),
+                    start_time: DateTime::from_timestamp_millis(10).unwrap().into(),
+                    end_time: DateTime::from_timestamp_millis(14).unwrap().into(),
                     busy: false,
                 },
             ]);
@@ -511,25 +511,25 @@ mod test {
     #[test]
     fn remove_busy_from_free_test_1() {
         let free1 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(5).unwrap(),
-            end_time: DateTime::from_timestamp_millis(100).unwrap(),
+            start_time: DateTime::from_timestamp_millis(5).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(100).unwrap().into(),
             busy: false,
         };
         let mut free = CompatibleInstances::new(vec![free1]);
 
         let busy1 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(2).unwrap(),
-            end_time: DateTime::from_timestamp_millis(40).unwrap(),
+            start_time: DateTime::from_timestamp_millis(2).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(40).unwrap().into(),
             busy: false,
         };
         let busy2 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(50).unwrap(),
-            end_time: DateTime::from_timestamp_millis(70).unwrap(),
+            start_time: DateTime::from_timestamp_millis(50).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(70).unwrap().into(),
             busy: false,
         };
         let busy3 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(72).unwrap(),
-            end_time: DateTime::from_timestamp_millis(75).unwrap(),
+            start_time: DateTime::from_timestamp_millis(72).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(75).unwrap().into(),
             busy: false,
         };
         let busy = CompatibleInstances::new(vec![busy1, busy2, busy3]);
@@ -539,24 +539,24 @@ mod test {
         assert_eq!(
             res[0],
             EventInstance {
-                start_time: DateTime::from_timestamp_millis(40).unwrap(),
-                end_time: DateTime::from_timestamp_millis(50).unwrap(),
+                start_time: DateTime::from_timestamp_millis(40).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(50).unwrap().into(),
                 busy: false
             }
         );
         assert_eq!(
             res[1],
             EventInstance {
-                start_time: DateTime::from_timestamp_millis(70).unwrap(),
-                end_time: DateTime::from_timestamp_millis(72).unwrap(),
+                start_time: DateTime::from_timestamp_millis(70).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(72).unwrap().into(),
                 busy: false
             }
         );
         assert_eq!(
             res[2],
             EventInstance {
-                start_time: DateTime::from_timestamp_millis(75).unwrap(),
-                end_time: DateTime::from_timestamp_millis(100).unwrap(),
+                start_time: DateTime::from_timestamp_millis(75).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(100).unwrap().into(),
                 busy: false
             }
         );
@@ -565,35 +565,35 @@ mod test {
     #[test]
     fn remove_busy_from_free_test_2() {
         let free1 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(0).unwrap(),
-            end_time: DateTime::from_timestamp_millis(71).unwrap(),
+            start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(71).unwrap().into(),
             busy: false,
         };
         let free2 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(72).unwrap(),
-            end_time: DateTime::from_timestamp_millis(74).unwrap(),
+            start_time: DateTime::from_timestamp_millis(72).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(74).unwrap().into(),
             busy: false,
         };
         let free3 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(100).unwrap(),
-            end_time: DateTime::from_timestamp_millis(140).unwrap(),
+            start_time: DateTime::from_timestamp_millis(100).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(140).unwrap().into(),
             busy: false,
         };
         let mut free = CompatibleInstances::new(vec![free1, free2, free3]);
 
         let busy1 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(2).unwrap(),
-            end_time: DateTime::from_timestamp_millis(40).unwrap(),
+            start_time: DateTime::from_timestamp_millis(2).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(40).unwrap().into(),
             busy: false,
         };
         let busy2 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(50).unwrap(),
-            end_time: DateTime::from_timestamp_millis(70).unwrap(),
+            start_time: DateTime::from_timestamp_millis(50).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(70).unwrap().into(),
             busy: false,
         };
         let busy3 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(72).unwrap(),
-            end_time: DateTime::from_timestamp_millis(75).unwrap(),
+            start_time: DateTime::from_timestamp_millis(72).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(75).unwrap().into(),
             busy: false,
         };
         let busy = CompatibleInstances::new(vec![busy1, busy2, busy3]);
@@ -604,32 +604,32 @@ mod test {
         assert_eq!(
             res[0],
             EventInstance {
-                start_time: DateTime::from_timestamp_millis(0).unwrap(),
-                end_time: DateTime::from_timestamp_millis(2).unwrap(),
+                start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(2).unwrap().into(),
                 busy: false
             }
         );
         assert_eq!(
             res[1],
             EventInstance {
-                start_time: DateTime::from_timestamp_millis(40).unwrap(),
-                end_time: DateTime::from_timestamp_millis(50).unwrap(),
+                start_time: DateTime::from_timestamp_millis(40).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(50).unwrap().into(),
                 busy: false
             }
         );
         assert_eq!(
             res[2],
             EventInstance {
-                start_time: DateTime::from_timestamp_millis(70).unwrap(),
-                end_time: DateTime::from_timestamp_millis(71).unwrap(),
+                start_time: DateTime::from_timestamp_millis(70).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(71).unwrap().into(),
                 busy: false
             }
         );
         assert_eq!(
             res[3],
             EventInstance {
-                start_time: DateTime::from_timestamp_millis(100).unwrap(),
-                end_time: DateTime::from_timestamp_millis(140).unwrap(),
+                start_time: DateTime::from_timestamp_millis(100).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(140).unwrap().into(),
                 busy: false
             }
         );
@@ -646,8 +646,8 @@ mod test {
     #[test]
     fn compatible_events_test_2() {
         let e1 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(0).unwrap(),
-            end_time: DateTime::from_timestamp_millis(2).unwrap(),
+            start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(2).unwrap().into(),
             busy: false,
         };
         let c_events = CompatibleInstances::new(vec![e1.clone()]);
@@ -659,13 +659,13 @@ mod test {
     #[test]
     fn compatible_events_test_3() {
         let e1 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(0).unwrap(),
-            end_time: DateTime::from_timestamp_millis(2).unwrap(),
+            start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(2).unwrap().into(),
             busy: false,
         };
         let e2 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(0).unwrap(),
-            end_time: DateTime::from_timestamp_millis(2).unwrap(),
+            start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(2).unwrap().into(),
             busy: false,
         };
         let c_events = CompatibleInstances::new(vec![e1.clone(), e2.clone()]);
@@ -677,13 +677,13 @@ mod test {
     #[test]
     fn compatible_events_test_4() {
         let e1 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(0).unwrap(),
-            end_time: DateTime::from_timestamp_millis(2).unwrap(),
+            start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(2).unwrap().into(),
             busy: false,
         };
         let e2 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(5).unwrap(),
-            end_time: DateTime::from_timestamp_millis(10).unwrap(),
+            start_time: DateTime::from_timestamp_millis(5).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(10).unwrap().into(),
             busy: false,
         };
         let c_events = CompatibleInstances::new(vec![e1.clone(), e2.clone()]);
@@ -696,33 +696,33 @@ mod test {
     #[test]
     fn compatible_events_test_5() {
         let e1 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(5).unwrap(),
-            end_time: DateTime::from_timestamp_millis(10).unwrap(),
+            start_time: DateTime::from_timestamp_millis(5).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(10).unwrap().into(),
             busy: false,
         };
         let e2 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(1).unwrap(),
-            end_time: DateTime::from_timestamp_millis(7).unwrap(),
+            start_time: DateTime::from_timestamp_millis(1).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(7).unwrap().into(),
             busy: false,
         };
         let e3 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(6).unwrap(),
-            end_time: DateTime::from_timestamp_millis(14).unwrap(),
+            start_time: DateTime::from_timestamp_millis(6).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(14).unwrap().into(),
             busy: false,
         };
         let e4 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(20).unwrap(),
-            end_time: DateTime::from_timestamp_millis(30).unwrap(),
+            start_time: DateTime::from_timestamp_millis(20).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(30).unwrap().into(),
             busy: false,
         };
         let e5 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(24).unwrap(),
-            end_time: DateTime::from_timestamp_millis(40).unwrap(),
+            start_time: DateTime::from_timestamp_millis(24).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(40).unwrap().into(),
             busy: false,
         };
         let e6 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(44).unwrap(),
-            end_time: DateTime::from_timestamp_millis(50).unwrap(),
+            start_time: DateTime::from_timestamp_millis(44).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(50).unwrap().into(),
             busy: false,
         };
         let c_events = CompatibleInstances::new(vec![
@@ -738,16 +738,16 @@ mod test {
         assert_eq!(
             c_events[0],
             EventInstance {
-                start_time: DateTime::from_timestamp_millis(1).unwrap(),
-                end_time: DateTime::from_timestamp_millis(14).unwrap(),
+                start_time: DateTime::from_timestamp_millis(1).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(14).unwrap().into(),
                 busy: false
             }
         );
         assert_eq!(
             c_events[1],
             EventInstance {
-                start_time: DateTime::from_timestamp_millis(20).unwrap(),
-                end_time: DateTime::from_timestamp_millis(40).unwrap(),
+                start_time: DateTime::from_timestamp_millis(20).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(40).unwrap().into(),
                 busy: false
             }
         );
@@ -757,28 +757,28 @@ mod test {
     #[test]
     fn compatible_events_test_6() {
         let e1 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(5).unwrap(),
-            end_time: DateTime::from_timestamp_millis(10).unwrap(),
+            start_time: DateTime::from_timestamp_millis(5).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(10).unwrap().into(),
             busy: false,
         };
         let e2 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(1).unwrap(),
-            end_time: DateTime::from_timestamp_millis(7).unwrap(),
+            start_time: DateTime::from_timestamp_millis(1).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(7).unwrap().into(),
             busy: false,
         };
         let e3 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(6).unwrap(),
-            end_time: DateTime::from_timestamp_millis(14).unwrap(),
+            start_time: DateTime::from_timestamp_millis(6).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(14).unwrap().into(),
             busy: false,
         };
         let e4 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(20).unwrap(),
-            end_time: DateTime::from_timestamp_millis(30).unwrap(),
+            start_time: DateTime::from_timestamp_millis(20).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(30).unwrap().into(),
             busy: false,
         };
         let e5 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(24).unwrap(),
-            end_time: DateTime::from_timestamp_millis(40).unwrap(),
+            start_time: DateTime::from_timestamp_millis(24).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(40).unwrap().into(),
             busy: false,
         };
         let c_events = CompatibleInstances::new(vec![
@@ -793,16 +793,16 @@ mod test {
         assert_eq!(
             c_events[0],
             EventInstance {
-                start_time: DateTime::from_timestamp_millis(1).unwrap(),
-                end_time: DateTime::from_timestamp_millis(14).unwrap(),
+                start_time: DateTime::from_timestamp_millis(1).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(14).unwrap().into(),
                 busy: false
             }
         );
         assert_eq!(
             c_events[1],
             EventInstance {
-                start_time: DateTime::from_timestamp_millis(20).unwrap(),
-                end_time: DateTime::from_timestamp_millis(40).unwrap(),
+                start_time: DateTime::from_timestamp_millis(20).unwrap().into(),
+                end_time: DateTime::from_timestamp_millis(40).unwrap().into(),
                 busy: false
             }
         );
@@ -813,8 +813,8 @@ mod test {
         let mut free = CompatibleInstances::new(
             (0..100)
                 .map(|i| EventInstance {
-                    start_time: DateTime::from_timestamp_millis(i * 10 + 5).unwrap(),
-                    end_time: DateTime::from_timestamp_millis(i * 10 + 8).unwrap(),
+                    start_time: DateTime::from_timestamp_millis(i * 10 + 5).unwrap().into(),
+                    end_time: DateTime::from_timestamp_millis(i * 10 + 8).unwrap().into(),
                     busy: false,
                 })
                 .collect(),
@@ -822,8 +822,8 @@ mod test {
         let busy = CompatibleInstances::new(
             (0..200)
                 .map(|i| EventInstance {
-                    start_time: DateTime::from_timestamp_millis(i * 10 + 6).unwrap(),
-                    end_time: DateTime::from_timestamp_millis(i * 10 + 7).unwrap(),
+                    start_time: DateTime::from_timestamp_millis(i * 10 + 6).unwrap().into(),
+                    end_time: DateTime::from_timestamp_millis(i * 10 + 7).unwrap().into(),
                     busy: false,
                 })
                 .collect(),
@@ -837,8 +837,8 @@ mod test {
     #[test]
     fn single_event() {
         let e1 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(0).unwrap(),
-            end_time: DateTime::from_timestamp_millis(10).unwrap(),
+            start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(10).unwrap().into(),
             busy: false,
         };
 
@@ -851,8 +851,8 @@ mod test {
     #[test]
     fn no_free_event() {
         let e1 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(0).unwrap(),
-            end_time: DateTime::from_timestamp_millis(10).unwrap(),
+            start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(10).unwrap().into(),
             busy: true,
         };
 
@@ -864,14 +864,14 @@ mod test {
     #[test]
     fn simple_freebusy() {
         let e1 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(0).unwrap(),
-            end_time: DateTime::from_timestamp_millis(10).unwrap(),
+            start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(10).unwrap().into(),
             busy: false,
         };
 
         let e2 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(3).unwrap(),
-            end_time: DateTime::from_timestamp_millis(5).unwrap(),
+            start_time: DateTime::from_timestamp_millis(3).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(5).unwrap().into(),
             busy: true,
         };
 
@@ -882,13 +882,13 @@ mod test {
             freebusy,
             vec![
                 EventInstance {
-                    start_time: DateTime::from_timestamp_millis(0).unwrap(),
-                    end_time: DateTime::from_timestamp_millis(3).unwrap(),
+                    start_time: DateTime::from_timestamp_millis(0).unwrap().into(),
+                    end_time: DateTime::from_timestamp_millis(3).unwrap().into(),
                     busy: false
                 },
                 EventInstance {
-                    start_time: DateTime::from_timestamp_millis(5).unwrap(),
-                    end_time: DateTime::from_timestamp_millis(10).unwrap(),
+                    start_time: DateTime::from_timestamp_millis(5).unwrap().into(),
+                    end_time: DateTime::from_timestamp_millis(10).unwrap().into(),
                     busy: false
                 }
             ]
@@ -896,8 +896,8 @@ mod test {
     }
 
     fn validate_bounds(
-        before: DateTime<Utc>,
-        after: DateTime<Utc>,
+        before: DateTime<FixedOffset>,
+        after: DateTime<FixedOffset>,
         len: usize,
         events: &CompatibleInstances,
     ) {
@@ -913,33 +913,33 @@ mod test {
 
     #[test]
     fn removes_all_before() {
-        let inf = DateTime::from_timestamp_millis(10000).unwrap();
+        let inf = DateTime::from_timestamp_millis(10000).unwrap().into();
 
         // First case
         let e1 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(3).unwrap(),
-            end_time: DateTime::from_timestamp_millis(10).unwrap(),
+            start_time: DateTime::from_timestamp_millis(3).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(10).unwrap().into(),
             busy: false,
         };
         let mut all_events = CompatibleInstances::new(vec![e1.clone()]);
-        all_events.remove_all_before(DateTime::from_timestamp_millis(2).unwrap());
+        all_events.remove_all_before(DateTime::from_timestamp_millis(2).unwrap().into());
         validate_bounds(
-            DateTime::from_timestamp_millis(2).unwrap(),
+            DateTime::from_timestamp_millis(2).unwrap().into(),
             inf,
             1,
             &all_events,
         );
 
-        all_events.remove_all_before(DateTime::from_timestamp_millis(5).unwrap());
+        all_events.remove_all_before(DateTime::from_timestamp_millis(5).unwrap().into());
         validate_bounds(
-            DateTime::from_timestamp_millis(5).unwrap(),
+            DateTime::from_timestamp_millis(5).unwrap().into(),
             inf,
             1,
             &all_events,
         );
         all_events.remove_all_before(e1.end_time);
         validate_bounds(
-            DateTime::from_timestamp_millis(5).unwrap(),
+            DateTime::from_timestamp_millis(5).unwrap().into(),
             inf,
             0,
             &all_events,
@@ -947,19 +947,19 @@ mod test {
 
         // Second case
         let e1 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(3).unwrap(),
-            end_time: DateTime::from_timestamp_millis(10).unwrap(),
+            start_time: DateTime::from_timestamp_millis(3).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(10).unwrap().into(),
             busy: false,
         };
         let e2 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(12).unwrap(),
-            end_time: DateTime::from_timestamp_millis(20).unwrap(),
+            start_time: DateTime::from_timestamp_millis(12).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(20).unwrap().into(),
             busy: false,
         };
         let mut all_events = CompatibleInstances::new(vec![e1.clone(), e2.clone()]);
-        all_events.remove_all_before(DateTime::from_timestamp_millis(5).unwrap());
+        all_events.remove_all_before(DateTime::from_timestamp_millis(5).unwrap().into());
         validate_bounds(
-            DateTime::from_timestamp_millis(5).unwrap(),
+            DateTime::from_timestamp_millis(5).unwrap().into(),
             inf,
             2,
             &all_events,
@@ -981,12 +981,14 @@ mod test {
 
     #[test]
     fn removes_all_after() {
-        let neg_inf = DateTime::from_timestamp_millis(-10000).unwrap();
+        let neg_inf = DateTime::from_timestamp_millis(-10000)
+            .unwrap()
+            .fixed_offset();
 
         // First case
         let e1 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(3).unwrap(),
-            end_time: DateTime::from_timestamp_millis(10).unwrap(),
+            start_time: DateTime::from_timestamp_millis(3).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(10).unwrap().into(),
             busy: false,
         };
         let mut all_events = CompatibleInstances::new(vec![e1.clone()]);
@@ -994,10 +996,10 @@ mod test {
         validate_bounds(neg_inf, e1.end_time, 1, &all_events);
 
         let mut all_events = CompatibleInstances::new(vec![e1.clone()]);
-        all_events.remove_all_after(DateTime::from_timestamp_millis(5).unwrap());
+        all_events.remove_all_after(DateTime::from_timestamp_millis(5).unwrap().into());
         validate_bounds(
             neg_inf,
-            DateTime::from_timestamp_millis(5).unwrap(),
+            DateTime::from_timestamp_millis(5).unwrap().into(),
             1,
             &all_events,
         );
@@ -1008,13 +1010,13 @@ mod test {
 
         // Second case
         let e1 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(3).unwrap(),
-            end_time: DateTime::from_timestamp_millis(10).unwrap(),
+            start_time: DateTime::from_timestamp_millis(3).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(10).unwrap().into(),
             busy: false,
         };
         let e2 = EventInstance {
-            start_time: DateTime::from_timestamp_millis(12).unwrap(),
-            end_time: DateTime::from_timestamp_millis(20).unwrap(),
+            start_time: DateTime::from_timestamp_millis(12).unwrap().into(),
+            end_time: DateTime::from_timestamp_millis(20).unwrap().into(),
             busy: false,
         };
         let mut all_events = CompatibleInstances::new(vec![e1.clone(), e2.clone()]);

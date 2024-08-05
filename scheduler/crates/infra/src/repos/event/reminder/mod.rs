@@ -1,6 +1,6 @@
 mod postgres;
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset, Utc};
 use nettu_scheduler_domain::{Reminder, ID};
 pub use postgres::PostgresReminderRepo;
 
@@ -9,7 +9,7 @@ pub trait IReminderRepo: Send + Sync {
     async fn bulk_insert(&self, reminders: &[Reminder]) -> anyhow::Result<()>;
     async fn init_version(&self, event_id: &ID) -> anyhow::Result<i64>;
     async fn inc_version(&self, event_id: &ID) -> anyhow::Result<i64>;
-    async fn delete_all_before(&self, before: DateTime<Utc>) -> Vec<Reminder>;
+    async fn delete_all_before(&self, before: DateTime<FixedOffset>) -> Vec<Reminder>;
 }
 
 #[cfg(test)]
@@ -32,7 +32,9 @@ mod tests {
             account_id: account.id.clone(),
             calendar_id: calendar.id.clone(),
             duration: 1000 * 60 * 60,
-            start_time: DateTime::from_timestamp_millis(1000 * 60 * 60).unwrap(),
+            start_time: DateTime::from_timestamp_millis(1000 * 60 * 60)
+                .unwrap()
+                .fixed_offset(),
             user_id: user.id.clone(),
             ..Default::default()
         };
@@ -50,28 +52,28 @@ mod tests {
                 account_id: account.id.clone(),
                 event_id: event.id.clone(),
                 version,
-                remind_at: DateTime::from_timestamp_millis(1).unwrap(),
+                remind_at: DateTime::from_timestamp_millis(1).unwrap().into(),
                 identifier: "".into(),
             },
             Reminder {
                 account_id: account.id.clone(),
                 event_id: event.id.clone(),
                 version,
-                remind_at: DateTime::from_timestamp_millis(2).unwrap(),
+                remind_at: DateTime::from_timestamp_millis(2).unwrap().into(),
                 identifier: "".into(),
             },
             Reminder {
                 account_id: account.id.clone(),
                 event_id: event.id.clone(),
                 version,
-                remind_at: DateTime::from_timestamp_millis(3).unwrap(),
+                remind_at: DateTime::from_timestamp_millis(3).unwrap().into(),
                 identifier: "".into(),
             },
             Reminder {
                 account_id: account.id.clone(),
                 event_id: event.id.clone(),
                 version,
-                remind_at: DateTime::from_timestamp_millis(4).unwrap(),
+                remind_at: DateTime::from_timestamp_millis(4).unwrap().into(),
                 identifier: "".into(),
             },
         ];
