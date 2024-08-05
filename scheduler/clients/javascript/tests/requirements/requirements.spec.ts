@@ -606,7 +606,6 @@ describe('Requirements', () => {
       })
     })
 
-
     // TODO: we need to add a state or pending field to the event
     describe.skip('A booking can be either pending or confirmed', () => {
       let user1: User | undefined

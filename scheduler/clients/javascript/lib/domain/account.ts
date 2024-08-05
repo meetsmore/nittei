@@ -1,3 +1,5 @@
+import { UUID } from './utilities'
+
 /**
  * Account domain model
  */
@@ -5,7 +7,7 @@ export interface Account {
   /**
    * Uuid
    */
-  id: string
+  id: UUID
   /**
    * Public key
    * This key can be used to authenticate the users of the account

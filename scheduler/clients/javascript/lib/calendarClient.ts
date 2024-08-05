@@ -10,9 +10,11 @@ import type {
   CalendarEvent,
   CalendarEventInstance,
   IntegrationProvider,
+  UUID,
 } from './domain'
 import type { Timespan } from './eventClient'
 import { convertInstanceDates } from './helpers/datesConverters'
+import { Metadata } from './domain/metadata'
 
 /**
  * Request for creating a calendar
@@ -31,10 +33,7 @@ type CreateCalendarRequest = {
   /**
    * Possible metadata
    */
-  metadata?: {
-    key: string
-    value: string
-  }
+  metadata?: Metadata
 }
 
 /**
@@ -83,15 +82,15 @@ type SyncCalendarInput = {
   /**
    * Uuid of the user
    */
-  userId: string
+  userId: UUID
   /**
    * Uuid of the calendar
    */
-  calendarId: string
+  calendarId: UUID
   /**
    * Uuid of the external calendar
    */
-  extCalendarId: string
+  extCalendarId: UUID
   /**
    * Provider of the external calendar
    * @format IntegrationProvider (Google, Outlook)
@@ -106,15 +105,15 @@ type StopCalendarSyncInput = {
   /**
    * Uuid of the user
    */
-  userId: string
+  userId: UUID
   /**
    * Uuid of the calendar
    */
-  calendarId: string
+  calendarId: UUID
   /**
    * Uuid of the external calendar
    */
-  extCalendarId: string
+  extCalendarId: UUID
   /**
    * Provider of the external calendar
    * @format IntegrationProvider (Google, Outlook)
@@ -133,7 +132,7 @@ export class NettuCalendarClient extends NettuBaseClient {
    * @param data - data for creating the calendar
    * @returns CalendarResponse - created calendar
    */
-  public create(userId: string, data: CreateCalendarRequest) {
+  public create(userId: UUID, data: CreateCalendarRequest) {
     return this.post<CalendarResponse>(`/user/${userId}/calendar`, data)
   }
 
@@ -142,7 +141,7 @@ export class NettuCalendarClient extends NettuBaseClient {
    * @param calendarId - uuid of the calendar to find
    * @returns CalendarResponse - found calendar, if any
    */
-  public findById(calendarId: string) {
+  public findById(calendarId: UUID) {
     return this.get<CalendarResponse>(`/user/calendar/${calendarId}`)
   }
 
@@ -175,7 +174,7 @@ export class NettuCalendarClient extends NettuBaseClient {
    * @param minAccessRole - minimum access role required
    * @returns - found Google calendars
    */
-  async findGoogle(userId: string, minAccessRole: GoogleCalendarAccessRole) {
+  async findGoogle(userId: UUID, minAccessRole: GoogleCalendarAccessRole) {
     return this.get<{ calendars: GoogleCalendarListEntry[] }>(
       `/user/${userId}/calendar/provider/google`,
       {
@@ -190,7 +189,7 @@ export class NettuCalendarClient extends NettuBaseClient {
    * @param minAccessRole - minimum access role required
    * @returns - found Outlook calendars
    */
-  async findOutlook(userId: string, minAccessRole: OutlookCalendarAccessRole) {
+  async findOutlook(userId: UUID, minAccessRole: OutlookCalendarAccessRole) {
     return this.get<{ calendars: OutlookCalendar[] }>(
       `/user/${userId}/calendar/provider/outlook`,
       { minAccessRole }
@@ -202,7 +201,7 @@ export class NettuCalendarClient extends NettuBaseClient {
    * @param calendarId - uuid of the calendar to remove
    * @returns CalendarResponse - removed calendar
    */
-  public remove(calendarId: string) {
+  public remove(calendarId: UUID) {
     return this.delete<CalendarResponse>(`/user/calendar/${calendarId}`)
   }
 
@@ -212,7 +211,7 @@ export class NettuCalendarClient extends NettuBaseClient {
    * @param data - data to update the calendar with
    * @returns CalendarResponse - updated calendar
    */
-  public update(calendarId: string, data: UpdateCalendarRequest) {
+  public update(calendarId: UUID, data: UpdateCalendarRequest) {
     return this.put<CalendarResponse>(`/user/calendar/${calendarId}`, {
       settings: {
         timezone: data.timezone,
@@ -230,7 +229,7 @@ export class NettuCalendarClient extends NettuBaseClient {
    * @returns GetCalendarEventsResponse - events within the timespan
    */
   public async getEvents(
-    calendarId: string,
+    calendarId: UUID,
     startTime: Date,
     endTime: Date
   ): Promise<APIResponse<GetCalendarEventsResponse>> {
@@ -297,7 +296,7 @@ export class NettuCalendarUserClient extends NettuBaseClient {
     return this.post<CalendarResponse>('/calendar', data)
   }
 
-  public findById(calendarId: string) {
+  public findById(calendarId: UUID) {
     return this.get<CalendarResponse>(`/calendar/${calendarId}`)
   }
 
@@ -319,15 +318,15 @@ export class NettuCalendarUserClient extends NettuBaseClient {
     )
   }
 
-  public remove(calendarId: string) {
+  public remove(calendarId: UUID) {
     return this.delete<CalendarResponse>(`/calendar/${calendarId}`)
   }
 
-  public update(calendarId: string, data: UpdateCalendarRequest) {
+  public update(calendarId: UUID, data: UpdateCalendarRequest) {
     return this.put<CalendarResponse>(`/calendar/${calendarId}`, data)
   }
 
-  public getEvents(calendarId: string, timespan: Timespan) {
+  public getEvents(calendarId: UUID, timespan: Timespan) {
     return this.get<GetCalendarEventsResponse>(
       `/user/calendar/${calendarId}/events`,
       {

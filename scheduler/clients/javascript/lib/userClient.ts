@@ -1,8 +1,8 @@
 import type { CalendarEventInstance } from './domain/calendarEvent'
-import { type APIResponse, NettuBaseClient } from './baseClient'
+import { APIResponse, NettuBaseClient } from './baseClient'
 import type { Metadata } from './domain/metadata'
 import type { User } from './domain/user'
-import type { IntegrationProvider } from '.'
+import type { IntegrationProvider, UUID } from '.'
 import { convertInstanceDates } from './helpers/datesConverters'
 
 /**
@@ -35,7 +35,7 @@ type GetMultipleUsersFeebusyReq = {
   /**
    * List of user ids to check for freebusy
    */
-  userIds: string[]
+  userIds: UUID[]
   /**
    * Start time of the period to check for freebusy
    * @format Date in UTC
@@ -79,7 +79,7 @@ type CreateUserRequest = {
    * If not provided, a uuid v4 will be generated on the server
    * @default uuid v4
    */
-  userId?: string
+  userId?: UUID
   /**
    * Optional metadata to attach to the user
    */
@@ -110,11 +110,11 @@ export class NettuUserClient extends NettuBaseClient {
     return this.post<UserResponse>('/user', data ?? {})
   }
 
-  public find(userId: string) {
+  public find(userId: UUID) {
     return this.get<UserResponse>(`/user/${userId}`)
   }
 
-  public update(userId: string, data: UpdateUserRequest) {
+  public update(userId: UUID, data: UpdateUserRequest) {
     return this.put<UserResponse>(`/user/${userId}`, data)
   }
 
@@ -134,12 +134,12 @@ export class NettuUserClient extends NettuBaseClient {
     })
   }
 
-  public remove(userId: string) {
+  public remove(userId: UUID) {
     return this.delete<UserResponse>(`/user/${userId}`)
   }
 
   public async freebusy(
-    userId: string,
+    userId: UUID,
     req: GetUserFeebusyReq
   ): Promise<APIResponse<GetUserFeebusyResponse>> {
     const res = await this.get<GetUserFeebusyResponse>(
@@ -193,12 +193,12 @@ export class NettuUserClient extends NettuBaseClient {
     }
   }
 
-  public oauth(userId: string, code: string, provider: IntegrationProvider) {
+  public oauth(userId: UUID, code: string, provider: IntegrationProvider) {
     const body = { code, provider }
     return this.post(`user/${userId}/oauth`, body)
   }
 
-  public removeIntegration(userId: string, provider: IntegrationProvider) {
+  public removeIntegration(userId: UUID, provider: IntegrationProvider) {
     return this.delete(`user/${userId}/oauth/${provider}`)
   }
 }
