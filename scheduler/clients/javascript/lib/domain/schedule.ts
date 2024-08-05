@@ -1,4 +1,5 @@
 import type { Metadata } from './metadata'
+import { UUID } from './utilities'
 
 /**
  * Schedule object
@@ -8,7 +9,7 @@ export interface Schedule {
   /**
    * Uuid
    */
-  id: string
+  id: UUID
   /**
    * Timezone
    * @example Europe/Oslo

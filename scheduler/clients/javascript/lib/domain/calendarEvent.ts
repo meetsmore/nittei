@@ -1,4 +1,5 @@
 import type { Metadata } from './metadata'
+import { UUID } from './utilities'
 
 /**
  * Enum for the possible frequencies of a recurrence rule
@@ -35,7 +36,7 @@ export interface CalendarEvent {
   /**
    * Uuid
    */
-  id: string
+  id: UUID
   /**
    * Start time of the event
    * @format Date in UTC
@@ -67,11 +68,11 @@ export interface CalendarEvent {
   /**
    * Uuid of the calendar this event belongs to
    */
-  calendarId: string
+  calendarId: UUID
   /**
    * Uuid of the user that owns this event
    */
-  userId: string
+  userId: UUID
   /**
    * Possible metadata
    */

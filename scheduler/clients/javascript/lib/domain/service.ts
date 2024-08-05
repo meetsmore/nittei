@@ -1,4 +1,5 @@
 import type { Metadata } from './metadata'
+import { UUID } from './utilities'
 
 /**
  * Time plan object
@@ -16,11 +17,11 @@ export interface UserServiceResource {
   /**
    * Uuid
    */
-  id: string
+  id: UUID
   /**
    * Uuid of the user
    */
-  userId: string
+  userId: UUID
   /**
    * Availability of the user
    * This allow to decide if the availability checks should be done
@@ -68,7 +69,7 @@ export interface BusyCalendar {
   /**
    * Uuid
    */
-  id: string
+  id: UUID
   /**
    * Provider of the busy calendar
    */
@@ -82,11 +83,11 @@ export interface Service {
   /**
    * Uuid
    */
-  id: string
+  id: UUID
   /**
    * Uuid of the account that owns this service
    */
-  accountId: string
+  accountId: UUID
   /**
    * List of configurations for this service
    * There is one configuration per user that have added this service

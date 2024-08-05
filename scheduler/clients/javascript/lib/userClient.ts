@@ -2,7 +2,7 @@ import type { CalendarEventInstance } from './domain/calendarEvent'
 import { NettuBaseClient } from './baseClient'
 import type { Metadata } from './domain/metadata'
 import type { User } from './domain/user'
-import type { IntegrationProvider } from '.'
+import type { IntegrationProvider, UUID } from '.'
 
 /**
  * Request to get a user's freebusy
@@ -58,7 +58,7 @@ type CreateUserRequest = {
    * If not provided, a uuid v4 will be generated on the server
    * @default uuid v4
    */
-  userId?: string
+  userId?: UUID
   /**
    * Optional metadata to attach to the user
    */
@@ -89,11 +89,11 @@ export class NettuUserClient extends NettuBaseClient {
     return this.post<UserResponse>('/user', data ?? {})
   }
 
-  public find(userId: string) {
+  public find(userId: UUID) {
     return this.get<UserResponse>(`/user/${userId}`)
   }
 
-  public update(userId: string, data: UpdateUserRequest) {
+  public update(userId: UUID, data: UpdateUserRequest) {
     return this.put<UserResponse>(`/user/${userId}`, data)
   }
 
@@ -113,11 +113,11 @@ export class NettuUserClient extends NettuBaseClient {
     })
   }
 
-  public remove(userId: string) {
+  public remove(userId: UUID) {
     return this.delete<UserResponse>(`/user/${userId}`)
   }
 
-  public freebusy(userId: string, req: GetUserFeebusyReq) {
+  public freebusy(userId: UUID, req: GetUserFeebusyReq) {
     return this.get<GetUserFeebusyResponse>(`/user/${userId}/freebusy`, {
       startTime: req.startTime.toISOString(),
       endTime: req.endTime.toISOString(),
@@ -125,12 +125,12 @@ export class NettuUserClient extends NettuBaseClient {
     })
   }
 
-  public oauth(userId: string, code: string, provider: IntegrationProvider) {
+  public oauth(userId: UUID, code: string, provider: IntegrationProvider) {
     const body = { code, provider }
     return this.post(`user/${userId}/oauth`, body)
   }
 
-  public removeIntegration(userId: string, provider: IntegrationProvider) {
+  public removeIntegration(userId: UUID, provider: IntegrationProvider) {
     return this.delete(`user/${userId}/oauth/${provider}`)
   }
 }
