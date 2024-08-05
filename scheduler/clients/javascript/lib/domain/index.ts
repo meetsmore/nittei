@@ -28,3 +28,4 @@ export {
 } from './service'
 export { Permissions } from './permissions'
 export { User } from './user'
+export { UUID} from './utilities'
