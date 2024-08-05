@@ -51,10 +51,7 @@ mod tests {
             .is_empty());
 
         // Now add metadata
-        let mut metadata = Metadata::default();
-        metadata
-            .inner
-            .insert("group_id".to_string(), "123".to_string());
+        let mut metadata = Metadata::new_kv("group_id".to_string(), "123".to_string());
 
         user.metadata = metadata;
         ctx.repos.users.save(&user).await.expect("To save user");

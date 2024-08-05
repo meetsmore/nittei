@@ -32,7 +32,7 @@ type CreateAccountResponse = {
 type CreateAccountRequest = {
   /**
    * Code to use for creating the account
-   * This code is unique on the backend and is required for "admin" requests such as this one 
+   * This code is unique on the backend and is required for "admin" requests such as this one
    * If not provided at startup via "CREATE_ACCOUNT_SECRET_CODE" environment variable
    * Then the backend will generate one for you and log it
    * @example "jXtS54fVjZlvJsRA" (auto-generated)

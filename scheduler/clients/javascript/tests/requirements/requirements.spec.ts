@@ -380,12 +380,230 @@ describe('Requirements', () => {
       it.todo('To be implemented')
     })
 
-    describe("Users' calendars can be queried in groups", () => {
-      it.todo('To be implemented')
+    describe('Multiple calendars of the same user can be queried at once', () => {
+      let user1: User | undefined
+      let user1Calendar1: Calendar | undefined
+      let user1Calendar1Event1: CalendarEvent | undefined
+      let user1Calendar2: Calendar | undefined
+      let user1Calendar2Event1: CalendarEvent | undefined
+      let user1Calendar2Event2: CalendarEvent | undefined
+
+      beforeAll(async () => {
+        const res = await client?.user.create()
+        if (!res?.data) {
+          throw new Error('User not created')
+        }
+        expect(res?.status).toBe(201)
+        user1 = res.data.user
+
+        // Calendar1
+        const resCal1 = await client?.calendar.create(user1.id, {
+          timezone: 'Asia/Tokyo',
+        })
+        expect(resCal1?.status).toBe(201)
+        user1Calendar1 = resCal1?.data?.calendar
+
+        // Calendar2
+        const resCal2 = await client?.calendar.create(user1.id, {
+          timezone: 'Asia/Tokyo',
+        })
+        expect(resCal2?.status).toBe(201)
+        user1Calendar2 = resCal2?.data?.calendar
+      })
+
+      it('should query on the 2 calendars of of the user, and get no events', async () => {
+        if (!user1 || !user1Calendar1 || !user1Calendar2) {
+          throw new Error('No user or calendar')
+        }
+        const res = await client?.user.freebusy(user1.id, {
+          endTime: new Date(1000 * 60 * 60 * 24 * 4),
+          startTime: new Date(10),
+          calendarIds: [user1Calendar1.id, user1Calendar2.id],
+        })
+        if (!res?.data) {
+          throw new Error('Freebusy not found')
+        }
+        expect(res.data.busy.length).toBe(0)
+      })
+
+      it('should create an event in the first calendar', async () => {
+        if (!user1 || !user1Calendar1) {
+          throw new Error('No user or calendar')
+        }
+        // Covers from 0h00 to 1h00
+        const res = await client?.events.create(user1.id, {
+          calendarId: user1Calendar1.id,
+          duration: 1000 * 60 * 60,
+          startTime: new Date(0),
+          busy: true,
+        })
+        expect(res?.status).toBe(201)
+        user1Calendar1Event1 = res?.data?.event
+      })
+
+      it('should query on the 2 calendars of the user, and get one busy period', async () => {
+        if (!user1 || !user1Calendar1 || !user1Calendar2) {
+          throw new Error('No user or calendar')
+        }
+        const res = await client?.user.freebusy(user1.id, {
+          endTime: new Date(1000 * 60 * 60 * 24), // 1 day
+          startTime: new Date(10),
+          calendarIds: [user1Calendar1.id, user1Calendar2.id],
+        })
+        if (!res?.data) {
+          throw new Error('Freebusy not found')
+        }
+        expect(res.data.busy.length).toBe(1)
+        expect(res.data.busy[0].startTime).toEqual(
+          user1Calendar1Event1?.startTime
+        )
+      })
+
+      it('should create an event in the second calendar', async () => {
+        if (!user1 || !user1Calendar2) {
+          throw new Error('No user or calendar')
+        }
+        // Covers from 1h01 to 2h01
+        const res = await client?.events.create(user1.id, {
+          calendarId: user1Calendar2.id,
+          duration: 1000 * 60 * 60, // 1h
+          startTime: new Date(1000 * 60 * 61), // 1h01
+          busy: true,
+        })
+        expect(res?.status).toBe(201)
+        user1Calendar2Event1 = res?.data?.event
+      })
+
+      it('should query on the 2 calendars of of the user, and get two busy periods', async () => {
+        if (!user1 || !user1Calendar1 || !user1Calendar2) {
+          throw new Error('No user or calendar')
+        }
+        const res = await client?.user.freebusy(user1.id, {
+          endTime: new Date(1000 * 60 * 60 * 24), // 1 day
+          startTime: new Date(10),
+          calendarIds: [user1Calendar1.id, user1Calendar2.id],
+        })
+
+        if (!res?.data) {
+          throw new Error('Freebusy not found')
+        }
+
+        expect(res.data.busy.length).toBe(2)
+        expect(res.data.busy).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              startTime: user1Calendar1Event1?.startTime,
+            }),
+            expect.objectContaining({
+              startTime: user1Calendar2Event1?.startTime,
+            }),
+          ])
+        )
+      })
+
+      it('should create a 2nd event in the second calendar', async () => {
+        if (!user1 || !user1Calendar2) {
+          throw new Error('No user or calendar')
+        }
+        // Covers from 1h to 1h01
+        const res = await client?.events.create(user1.id, {
+          calendarId: user1Calendar2.id,
+          duration: 1000 * 60, // 1min
+          startTime: new Date(1000 * 60 * 60), // 1h
+          busy: true,
+        })
+        expect(res?.status).toBe(201)
+        user1Calendar2Event2 = res?.data?.event
+      })
+
+      it('should query on the 2 calendars of of the user, and get one busy period covering the 3 events', async () => {
+        if (!user1 || !user1Calendar1 || !user1Calendar2) {
+          throw new Error('No user or calendar')
+        }
+        const res = await client?.user.freebusy(user1.id, {
+          endTime: new Date(1000 * 60 * 60 * 24), // 1 day
+          startTime: new Date(10),
+          calendarIds: [user1Calendar1.id, user1Calendar2.id],
+        })
+        if (!res?.data) {
+          throw new Error('Freebusy not found')
+        }
+        expect(res.data.busy.length).toBe(1)
+        expect(res.data.busy[0].startTime).toEqual(
+          user1Calendar1Event1?.startTime
+        )
+        expect(res.data.busy[0].endTime).toEqual(new Date(1000 * 60 * 121)) // 2h01
+      })
     })
 
-    describe("Users' availability can be queried in groups", () => {
-      it.todo('To be implemented')
+    describe('Multiple calendars of different users can be queried at once', () => {
+      let user1: User | undefined
+      let user2: User | undefined
+      beforeAll(async () => {
+        const resUser1 = await client?.user.create()
+        if (!resUser1?.data) {
+          throw new Error('User not created')
+        }
+        expect(resUser1.status).toBe(201)
+        user1 = resUser1.data.user
+
+        const resCal1 = await client?.calendar.create(user1.id, {
+          timezone: 'Asia/Tokyo',
+        })
+        expect(resCal1?.status).toBe(201)
+        const user1Calendar1 = resCal1?.data?.calendar
+
+        const resUser2 = await client?.user.create()
+        if (!resUser2?.data) {
+          throw new Error('User not created')
+        }
+        expect(resUser2.status).toBe(201)
+        user2 = resUser2.data.user
+
+        const resCal2 = await client?.calendar.create(user2.id, {
+          timezone: 'Asia/Tokyo',
+        })
+        expect(resCal2?.status).toBe(201)
+        const user2Calendar1 = resCal2?.data?.calendar
+
+        if (!user1 || !user1Calendar1 || !user2 || !user2Calendar1) {
+          throw new Error('No user or calendar')
+        }
+
+        // Covers from 0h00 to 1h00
+        const resEvent1 = await client?.events.create(user1.id, {
+          calendarId: user1Calendar1.id,
+          duration: 1000 * 60 * 60,
+          startTime: new Date(0),
+          busy: true,
+        })
+        expect(resEvent1?.status).toBe(201)
+
+        // Covers from 1h01 to 2h01
+        const resEvent2 = await client?.events.create(user2.id, {
+          calendarId: user2Calendar1.id,
+          duration: 1000 * 60 * 60,
+          startTime: new Date(1000 * 60 * 61),
+          busy: true,
+        })
+        expect(resEvent2?.status).toBe(201)
+      })
+
+      it('should query on the 2 calendars of the 2 users, and get 2 busy periods', async () => {
+        if (!user1 || !user2) {
+          throw new Error('No user')
+        }
+        const res = await client?.user.freebusyMultipleUsers({
+          endTime: new Date(1000 * 60 * 60 * 24), // 1 day
+          startTime: new Date(10),
+          userIds: [user1.id, user2.id],
+        })
+        if (!res?.data) {
+          throw new Error('Freebusy not found')
+        }
+        expect(res.data[user1.id].length).toBe(1)
+        expect(res.data[user2.id].length).toBe(1)
+      })
     })
 
     // TODO: we need to add a state or pending field to the event
@@ -482,8 +700,7 @@ describe('Requirements', () => {
   })
 
   describe('Technical requirements', () => {
-    // TODO: We need to add a name field to the event
-    describe.skip('Japanese must be supported', () => {
+    describe('Japanese must be supported', () => {
       let user1: User | undefined
       let user1Calendar1: Calendar | undefined
       let user1Calendar1Event1: CalendarEvent | undefined
@@ -506,7 +723,6 @@ describe('Requirements', () => {
         user1Calendar1 = resCal?.data?.calendar
       })
 
-      // TODO: We need to add a name field to the event
       it('should create an event with a Japanese event name', async () => {
         if (!user1 || !user1Calendar1) {
           throw new Error('No user or calendar')
@@ -516,13 +732,16 @@ describe('Requirements', () => {
           duration: 1000 * 60 * 60,
           startTime: new Date(0),
           busy: true,
-          // name: "日本語のイベント",
+          metadata: {
+            name: '日本語のイベント',
+          },
         })
         expect(res?.status).toBe(201)
         user1Calendar1Event1 = res?.data?.event
+        expect(res?.data?.event.metadata.name).toEqual('日本語のイベント')
       })
 
-      it.skip('should fetch the event', async () => {
+      it('should fetch the event', async () => {
         if (!user1Calendar1Event1) {
           throw new Error('No event')
         }
@@ -530,7 +749,7 @@ describe('Requirements', () => {
         expect(res?.status).toBe(200)
         expect(res?.data).toBeDefined()
         expect(res?.data?.event.id).toEqual(user1Calendar1Event1.id)
-        // expect(res?.data?.event.name).toEqual("日本語のイベント");
+        expect(res?.data?.event.metadata.name).toEqual('日本語のイベント')
       })
     })
 
@@ -538,16 +757,59 @@ describe('Requirements', () => {
       it.todo('To be implemented')
     })
 
-    describe('Multiple calendars can be queried at once', () => {
-      it.todo('To be implemented')
-    })
-
     describe('Calendars can be filtered out by metadata', () => {
-      it.todo('To be implemented')
-    })
+      let user1: User | undefined
 
-    describe('Empty slots in a set of calendars can be found', () => {
-      it.todo('To be implemented')
+      beforeAll(async () => {
+        const resUser1 = await client?.user.create()
+        if (!resUser1?.data) {
+          throw new Error('User not created')
+        }
+        expect(resUser1.status).toBe(201)
+        user1 = resUser1.data.user
+
+        const resCal1 = await client?.calendar.create(user1.id, {
+          timezone: 'Asia/Tokyo',
+          metadata: { key: 'group', value: 'A' },
+        })
+        expect(resCal1?.status).toBe(201)
+
+        const resCal2 = await client?.calendar.create(user1.id, {
+          timezone: 'Asia/Tokyo',
+          metadata: { key: 'group', value: 'B' },
+        })
+        expect(resCal2?.status).toBe(201)
+      })
+
+      it('should query the calendars with metadata key group and value A', async () => {
+        const res = await client?.calendar.findByMeta(
+          { key: 'group', value: 'A' },
+          0,
+          10
+        )
+        expect(res?.status).toBe(200)
+        expect(res?.data).toBeDefined()
+        expect(res?.data?.calendars.length).toBe(1)
+        expect(res?.data?.calendars[0].metadata).toEqual({
+          key: 'group',
+          value: 'A',
+        })
+      })
+
+      it('should query the calendars with metadata key group and value B', async () => {
+        const res = await client?.calendar.findByMeta(
+          { key: 'group', value: 'B' },
+          0,
+          10
+        )
+        expect(res?.status).toBe(200)
+        expect(res?.data).toBeDefined()
+        expect(res?.data?.calendars.length).toBe(1)
+        expect(res?.data?.calendars[0].metadata).toEqual({
+          key: 'group',
+          value: 'B',
+        })
+      })
     })
   })
 })

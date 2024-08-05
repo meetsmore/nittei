@@ -68,10 +68,13 @@ docker run --rm -d -l ${LABEL} --name $RANDOM_NAME -p $PORT:5432 -e POSTGRES_USE
 # Set the DATABASE_URL environment variable
 export DATABASE_URL="postgres://postgres:postgres@localhost:${PORT}/scheduler"
 
+# Sleep
+sleep 1
+
 # Run the migrations
 cd crates/infra && sqlx migrate run && cd ../..
 
 # Run the tests
-cargo nextest run --workspace && cd ..
+cargo test --workspace && cd ..
 
 # The cleanup function will be called automatically

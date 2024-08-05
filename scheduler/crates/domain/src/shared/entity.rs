@@ -1,4 +1,4 @@
-use std::{fmt::Display, str::FromStr};
+use std::{fmt::Display, hash::Hash, str::FromStr};
 
 use serde::{de::Visitor, Deserialize, Serialize};
 use thiserror::Error;
@@ -11,7 +11,7 @@ pub trait Entity<T: PartialEq> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq)]
 pub struct ID(Uuid);
 
 impl AsMut<Uuid> for ID {
@@ -41,6 +41,12 @@ impl From<Uuid> for ID {
 impl Default for ID {
     fn default() -> Self {
         Self(Uuid::new_v4())
+    }
+}
+
+impl Hash for ID {
+    fn hash<H: std::hash::Hasher>(&self, content: &mut H) {
+        self.0.hash(content);
     }
 }
 
