@@ -1,6 +1,12 @@
+import dayjs from 'dayjs'
 import type { Calendar, INettuClient, User, CalendarEvent } from '../../lib'
 import { setupAccount } from '../helpers/fixtures'
 import { v4 } from 'uuid'
+import utc from 'dayjs/plugin/utc'
+import timezone from 'dayjs/plugin/timezone'
+
+dayjs.extend(utc)
+dayjs.extend(timezone)
 
 // This test suite is testing the specifications for our use cases
 
@@ -753,8 +759,105 @@ describe('Requirements', () => {
       })
     })
 
-    describe('Multiple timezones are supported', () => {
-      it.todo('To be implemented')
+    describe.only('Multiple timezones are supported', () => {
+      let user1: User | undefined
+      let user1Calendar1: Calendar | undefined
+
+      let date1 = dayjs.tz('2024-01-01T00:00:00', 'Asia/Tokyo') // 1st January 2024 at 0h00 in JST
+      let date2 = dayjs.tz('2024-01-01T00:00:00', 'UTC') // 1st January 2024 at 0h00 in UTC
+
+      beforeAll(async () => {
+        const res = await client?.user.create()
+        if (!res?.data) {
+          throw new Error('User not created')
+        }
+        expect(res?.status).toBe(201)
+        user1 = res.data.user
+
+        // Create JST calendar
+        const resCal1 = await client?.calendar.create(res.data.user.id, {
+          timezone: 'Asia/Tokyo',
+        })
+        if (!resCal1?.data) {
+          throw new Error('Calendar not created')
+        }
+        expect(resCal1?.status).toBe(201)
+        user1Calendar1 = resCal1.data.calendar
+      })
+
+      it('should create an event in JST timezone', async () => {
+        if (!user1 || !user1Calendar1) {
+          throw new Error('No user or calendar')
+        }
+        const res = await client?.events.create(user1.id, {
+          calendarId: user1Calendar1.id,
+          duration: 1000 * 60 * 60, // 1h
+          startTime: date1.toDate(), // 1st January 2024 at 0h00 in JST
+          busy: true,
+        })
+        expect(res?.status).toBe(201)
+      })
+
+      it('should fetch the event and times should match', async () => {
+        if (!user1Calendar1) {
+          throw new Error('No calendar')
+        }
+        const res = await client?.calendar.getEvents(
+          user1Calendar1.id,
+          date1.toDate(),
+          date1.add(1, 'day').toDate()
+        )
+        expect(res?.status).toBe(200)
+        expect(res?.data).toBeDefined()
+        expect(res?.data?.events.length).toBe(1)
+        console.log('res?.data?.events[0].event.startTime', res?.data?.events[0].event.startTime)
+        expect(res?.data?.events[0].event.startTime).toEqual(date1.toDate())
+      })
+
+      it('should create a 2nd event, in UTC timezone', async () => {
+        if (!user1 || !user1Calendar1) {
+          throw new Error('No user or calendar')
+        }
+        const res = await client?.events.create(user1.id, {
+          calendarId: user1Calendar1.id,
+          duration: 1000 * 60 * 60, // 1h
+          startTime: date2.toDate(), // 1st January 2024 at 0h00 in UTC
+          busy: true,
+        })
+        expect(res?.status).toBe(201)
+      })
+
+      it('should fetch the 2nd event, and times should match', async () => {
+        if (!user1Calendar1) {
+          throw new Error('No calendar')
+        }
+        const res = await client?.calendar.getEvents(
+          user1Calendar1.id,
+          date2.toDate(),
+          date2.add(1, 'day').toDate()
+        )
+        expect(res?.status).toBe(200)
+        expect(res?.data).toBeDefined()
+        expect(res?.data?.events.length).toBe(1)
+        expect(res?.data?.events[0].event.startTime).toEqual(date2.toDate())
+      })
+
+      // Free busy
+      it('should query the freebusy in JST timezone', async () => {
+        if (!user1 || !user1Calendar1) {
+          throw new Error('No user or calendar')
+        }
+        const res = await client?.user.freebusy(user1.id, {
+          endTime: date1.add(1, 'day').toDate(),
+          startTime: date1.toDate(),
+          calendarIds: [user1Calendar1.id],
+        })
+        expect(res?.status).toBe(200)
+        expect(res?.data).toBeDefined()
+        expect(res?.data?.busy.length).toBe(2)
+        expect(res?.data?.busy[0].startTime).toEqual(date1.toDate())
+        expect(res?.data?.busy[1].startTime).toEqual(date2.toDate())
+      })
     })
 
     describe('Calendars can be filtered out by metadata', () => {
