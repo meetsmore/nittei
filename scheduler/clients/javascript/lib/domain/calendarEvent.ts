@@ -111,3 +111,18 @@ export interface CalendarEventInstance {
    */
   busy: boolean
 }
+
+/**
+ * Calendar event with instances
+ */
+export type CalendarEventWithInstances = {
+  /**
+   * Event object
+   */
+  event: CalendarEvent
+  /**
+   * List of instances of the event
+   * Especially useful for recurring events
+   */
+  instances: CalendarEventInstance[]
+}

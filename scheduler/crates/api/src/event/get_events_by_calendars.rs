@@ -14,14 +14,19 @@ use crate::{
 
 pub async fn get_events_by_calendars_controller(
     http_req: HttpRequest,
-    mut query: web::Query<QueryParams>,
+    query: web::Query<QueryParams>,
     ctx: web::Data<NettuContext>,
 ) -> Result<HttpResponse, NettuError> {
     let account = protect_account_route(&http_req, &ctx).await?;
 
+    let calendar_ids = match &query.calendar_ids {
+        Some(ids) => ids.clone(),
+        None => vec![],
+    };
+
     let usecase = GetEventsByCalendarsUseCase {
         account_id: account.id,
-        calendar_ids: std::mem::take(&mut query.calendar_ids),
+        calendar_ids,
         start_time: query.start_time,
         end_time: query.end_time,
     };

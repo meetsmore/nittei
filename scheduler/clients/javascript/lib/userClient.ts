@@ -1,9 +1,36 @@
-import type { CalendarEventInstance } from './domain/calendarEvent'
+import type {
+  CalendarEvent,
+  CalendarEventInstance,
+  CalendarEventWithInstances,
+} from './domain/calendarEvent'
 import { APIResponse, NettuBaseClient } from './baseClient'
 import type { Metadata } from './domain/metadata'
 import type { User } from './domain/user'
 import type { IntegrationProvider, UUID } from '.'
-import { convertInstanceDates } from './helpers/datesConverters'
+import {
+  convertEventDates,
+  convertInstanceDates,
+} from './helpers/datesConverters'
+
+/**
+ * Request to get events of multiple calendars
+ */
+type GetEventsOfMultipleCalendars = {
+  /**
+   * List of calendar ids to get events from
+   */
+  calendarIds: UUID[]
+  /**
+   * Start time of the period to get events
+   * @format Date in UTC
+   */
+  startTime: Date
+  /**
+   * End time of the period to get events
+   * @format Date in UTC
+   */
+  endTime: Date
+}
 
 /**
  * Request to get a user's freebusy
@@ -97,6 +124,13 @@ type UserResponse = {
 }
 
 /**
+ * Response when getting events of multiple calendars
+ */
+type GetEventsOfMultipleCalendarsResponse = {
+  events: CalendarEventWithInstances[]
+}
+
+/**
  * Client for the user endpoints
  * This is an admin client (usually backend)
  */
@@ -136,6 +170,37 @@ export class NettuUserClient extends NettuBaseClient {
 
   public remove(userId: UUID) {
     return this.delete<UserResponse>(`/user/${userId}`)
+  }
+
+  public async getEventsOfMultipleCalendars(
+    userId: UUID,
+    req: GetEventsOfMultipleCalendars
+  ): Promise<APIResponse<GetEventsOfMultipleCalendarsResponse>> {
+    const res = await this.get<GetEventsOfMultipleCalendarsResponse>(
+      `/user/${userId}/events`,
+      {
+        calendarIds: req.calendarIds.join(','),
+        startTime: req.startTime.toISOString(),
+        endTime: req.endTime.toISOString(),
+      }
+    )
+
+    if (!res.data) {
+      return res
+    }
+
+    return {
+      res: res.res,
+      status: res.status,
+      data: {
+        events: res.data.events.map(event => {
+        return {
+          event: convertEventDates(event.event),
+          instances: event.instances.map(convertInstanceDates),
+        }
+      }),
+    }
+    }
   }
 
   public async freebusy(

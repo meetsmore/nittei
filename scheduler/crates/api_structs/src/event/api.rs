@@ -116,11 +116,13 @@ pub mod get_events_by_calendars {
     use nettu_scheduler_domain::EventWithInstances;
 
     use super::*;
+    use crate::helpers::deserialize_uuids_list::deserialize_stringified_uuids_list;
 
     #[derive(Deserialize, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct QueryParams {
-        pub calendar_ids: Vec<ID>,
+        #[serde(default, deserialize_with = "deserialize_stringified_uuids_list")]
+        pub calendar_ids: Option<Vec<ID>>,
         pub start_time: DateTime<Utc>,
         pub end_time: DateTime<Utc>,
     }
