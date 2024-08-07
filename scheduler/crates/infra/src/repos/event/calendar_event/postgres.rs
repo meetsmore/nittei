@@ -288,6 +288,43 @@ impl IEventRepo for PostgresEventRepo {
         Ok(events.into_iter().map(|e| e.into()).collect())
     }
 
+    async fn find_by_calendars(
+        &self,
+        calendar_ids: Vec<ID>,
+        timespan: &nettu_scheduler_domain::TimeSpan,
+    ) -> anyhow::Result<Vec<CalendarEvent>> {
+        let calendar_ids: Vec<Uuid> = calendar_ids
+            .into_iter()
+            .map(|id| id.clone().into())
+            .collect();
+        let events: Vec<EventRaw> = sqlx::query_as!(
+            EventRaw,
+            r#"
+                    SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+                    INNER JOIN calendars AS c
+                        ON c.calendar_uid = e.calendar_uid
+                    INNER JOIN users AS u
+                        ON u.user_uid = c.user_uid
+                    WHERE e.calendar_uid  = any($1) AND
+                    e.start_time <= $2 AND e.end_time >= $3
+                    "#,
+            calendar_ids.as_slice(),
+            timespan.end(),
+            timespan.start()
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(|e| {
+            error!(
+                "Find calendar events for calendar ids: {:?} failed. DB returned error: {:?}",
+                calendar_ids, e
+            );
+            e
+        })
+        .unwrap_or_default();
+        Ok(events.into_iter().map(|e| e.into()).collect())
+    }
+
     async fn find_most_recently_created_service_events(
         &self,
         service_id: &ID,

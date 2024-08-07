@@ -15,7 +15,7 @@ use crate::{
     Meta,
 };
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct CalendarEvent {
     pub id: ID,
     pub start_time: DateTime<Utc>,

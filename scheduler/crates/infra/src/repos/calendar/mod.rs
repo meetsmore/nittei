@@ -10,6 +10,7 @@ pub trait ICalendarRepo: Send + Sync {
     async fn insert(&self, calendar: &Calendar) -> anyhow::Result<()>;
     async fn save(&self, calendar: &Calendar) -> anyhow::Result<()>;
     async fn find(&self, calendar_id: &ID) -> Option<Calendar>;
+    async fn find_multiple(&self, calendar_ids: Vec<&ID>) -> Vec<Calendar>;
     async fn find_by_user(&self, user_id: &ID) -> Vec<Calendar>;
     async fn delete(&self, calendar_id: &ID) -> anyhow::Result<()>;
     async fn find_by_metadata(&self, query: MetadataFindQuery) -> Vec<Calendar>;

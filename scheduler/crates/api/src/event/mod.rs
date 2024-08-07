@@ -2,6 +2,7 @@ mod create_event;
 mod delete_event;
 mod get_event;
 mod get_event_instances;
+mod get_events_by_calendars;
 mod get_events_by_meta;
 pub mod get_upcoming_reminders;
 mod subscribers;
@@ -21,6 +22,11 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.route(
         "/user/{user_id}/events",
         web::post().to(create_event_admin_controller),
+    );
+
+    cfg.route(
+        "/user/{user_id}/events",
+        web::get().to(get_events_by_calendars::get_events_by_calendars_controller),
     );
 
     cfg.route("/events/meta", web::get().to(get_events_by_meta_controller));

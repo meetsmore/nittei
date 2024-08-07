@@ -28,6 +28,10 @@ _setup_client_node:
 dev: _setup_db
 	cd scheduler && cargo run
 
+# Prepare offline SQLx
+prepare_sqlx:
+	cd scheduler && cargo sqlx prepare --workspace
+
 # Run the tests on a temporary DB container
 test:
 	bash ./scripts/run_tests.sh
