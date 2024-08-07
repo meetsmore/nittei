@@ -111,6 +111,61 @@ pub mod get_event {
     pub type APIResponse = CalendarEventResponse;
 }
 
+pub mod get_events_by_calendars {
+    use chrono::{DateTime, Utc};
+    use nettu_scheduler_domain::EventWithInstances;
+
+    use super::*;
+
+    #[derive(Deserialize, Serialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct QueryParams {
+        pub calendar_ids: Vec<ID>,
+        pub start_time: DateTime<Utc>,
+        pub end_time: DateTime<Utc>,
+    }
+
+    #[derive(Serialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct APIResponse {
+        pub events: Vec<EventWithInstances>,
+    }
+
+    impl APIResponse {
+        pub fn new(events: Vec<EventWithInstances>) -> Self {
+            Self { events }
+        }
+    }
+}
+
+pub mod get_events_by_users {
+    use chrono::{DateTime, Utc};
+
+    use super::*;
+
+    #[derive(Deserialize, Serialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct RequestBody {
+        pub user_ids: Vec<ID>,
+        pub start_ts: DateTime<Utc>,
+        pub end_ts: DateTime<Utc>,
+    }
+
+    #[derive(Deserialize, Serialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct APIResponse {
+        pub events: Vec<CalendarEventDTO>,
+    }
+
+    impl APIResponse {
+        pub fn new(events: Vec<CalendarEvent>) -> Self {
+            Self {
+                events: events.into_iter().map(CalendarEventDTO::new).collect(),
+            }
+        }
+    }
+}
+
 pub mod get_events_by_meta {
     use super::*;
 
