@@ -775,6 +775,4 @@ async fn test_freebusy_multiple() {
         user2_free_busy.front().unwrap().end_time,
         DateTime::from_timestamp_millis(1000 * 60 * 60 * 2).unwrap(),
     );
-
-    println!("{:?}", multiple_free_busy_res);
 }
