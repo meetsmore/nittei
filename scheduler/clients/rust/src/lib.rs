@@ -83,6 +83,8 @@ use user::UserClient;
 pub use user::{
     CreateUserInput,
     GetUserFreeBusyInput,
+    MultipleFreeBusyAPIResponse,
+    MultipleFreeBusyRequestBody,
     OAuthInput,
     RemoveUserIntegrationInput,
     UpdateUserInput,
