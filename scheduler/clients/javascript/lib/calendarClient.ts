@@ -13,7 +13,10 @@ import type {
   UUID,
 } from './domain'
 import type { Timespan } from './eventClient'
-import { convertInstanceDates } from './helpers/datesConverters'
+import {
+  convertEventDates,
+  convertInstanceDates,
+} from './helpers/datesConverters'
 import { Metadata } from './domain/metadata'
 import { Dayjs } from 'dayjs'
 
@@ -252,7 +255,7 @@ export class NettuCalendarClient extends NettuBaseClient {
       data: {
         calendar: res.data.calendar,
         events: res.data.events.map(event => ({
-          event: event.event,
+          event: convertEventDates(event.event),
           instances: event.instances.map(convertInstanceDates),
         })),
       },
@@ -327,13 +330,32 @@ export class NettuCalendarUserClient extends NettuBaseClient {
     return this.put<CalendarResponse>(`/calendar/${calendarId}`, data)
   }
 
-  public getEvents(calendarId: UUID, timespan: Timespan) {
-    return this.get<GetCalendarEventsResponse>(
+  public async getEvents(
+    calendarId: UUID,
+    timespan: Timespan
+  ): Promise<APIResponse<GetCalendarEventsResponse>> {
+    const res = await this.get<GetCalendarEventsResponse>(
       `/user/calendar/${calendarId}/events`,
       {
         startTime: timespan.startTime.toISOString(),
         endTime: timespan.endTime.toISOString(),
       }
     )
+
+    if (!res?.data) {
+      return res
+    }
+
+    return {
+      res: res.res,
+      status: res.status,
+      data: {
+        calendar: res.data.calendar,
+        events: res.data.events.map(event => ({
+          event: convertEventDates(event.event),
+          instances: event.instances.map(convertInstanceDates),
+        })),
+      },
+    }
   }
 }
