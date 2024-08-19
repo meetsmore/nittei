@@ -1,4 +1,4 @@
-import { UUID } from "./utilities"
+import { UUID } from './utilities'
 
 /**
  * Account domain model

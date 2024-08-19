@@ -19,7 +19,8 @@ impl Metadata {
 
     pub fn new_kv(key: String, value: String) -> Self {
         let mut inner = HashMap::new();
-        inner.insert(key, value);
+        inner.insert(String::from("key"), key);
+        inner.insert(String::from("value"), value);
         Self::from(inner)
     }
 }

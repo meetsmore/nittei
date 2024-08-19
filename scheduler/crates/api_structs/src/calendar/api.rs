@@ -270,6 +270,27 @@ pub mod get_user_freebusy {
     }
 }
 
+pub mod multiple_freebusy {
+    use std::collections::{HashMap, VecDeque};
+
+    use chrono::{DateTime, Utc};
+
+    use super::*;
+
+    #[derive(Debug, Deserialize, Serialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct RequestBody {
+        #[serde(default)]
+        pub user_ids: Vec<ID>,
+        pub start_time: DateTime<Utc>,
+        pub end_time: DateTime<Utc>,
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct APIResponse(pub HashMap<ID, VecDeque<EventInstance>>);
+}
+
 pub mod update_calendar {
     use nettu_scheduler_domain::{Metadata, Weekday};
 
