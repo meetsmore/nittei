@@ -4,6 +4,7 @@ import type { Metadata } from './domain/metadata'
 import type { User } from './domain/user'
 import type { IntegrationProvider, UUID } from '.'
 import { convertInstanceDates } from './helpers/datesConverters'
+import { Dayjs } from 'dayjs'
 
 /**
  * Request to get a user's freebusy
@@ -11,14 +12,14 @@ import { convertInstanceDates } from './helpers/datesConverters'
 type GetUserFeebusyReq = {
   /**
    * Start time of the period to check for freebusy
-   * @format Date in UTC
+   * @format Dayjs object, with timezone
    */
-  startTime: Date
+  startTime: Dayjs
   /**
    * End time of the period to check for freebusy
-   * @format Date in UTC
+   * @format Datejs object, with timezone
    */
-  endTime: Date
+  endTime: Dayjs
   /**
    * Optional list of calendar ids to check for freebusy
    * If not provided, all calendars of the user will be checked
@@ -38,14 +39,14 @@ type GetMultipleUsersFeebusyReq = {
   userIds: UUID[]
   /**
    * Start time of the period to check for freebusy
-   * @format Date in UTC
+   * @format Datejs object, with timezone
    */
-  startTime: Date
+  startTime: Dayjs
   /**
    * End time of the period to check for freebusy
-   * @format Date in UTC
+   * @format Datejs object, with timezone
    */
-  endTime: Date
+  endTime: Dayjs
 }
 
 /**
@@ -167,14 +168,11 @@ export class NettuUserClient extends NettuBaseClient {
   public async freebusyMultipleUsers(
     req: GetMultipleUsersFeebusyReq
   ): Promise<APIResponse<GetUserFeebusyResponse>> {
-    const res = await this.post<GetUserFeebusyResponse>(
-      '/user/freebusy',
-      {
-        userIds: req.userIds,
-        startTime: req.startTime.toISOString(),
-        endTime: req.endTime.toISOString(),
-      }
-    )
+    const res = await this.post<GetUserFeebusyResponse>('/user/freebusy', {
+      userIds: req.userIds,
+      startTime: req.startTime.toISOString(),
+      endTime: req.endTime.toISOString(),
+    })
 
     if (!res.data) {
       return res

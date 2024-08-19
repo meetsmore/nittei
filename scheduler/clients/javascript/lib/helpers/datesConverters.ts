@@ -1,3 +1,4 @@
+import dayjs from 'dayjs'
 import type { CalendarEvent, CalendarEventInstance } from '../domain'
 
 /**
@@ -11,8 +12,8 @@ export function convertEventDates(event: CalendarEvent): CalendarEvent {
   }
   return {
     ...event,
-    startTime: new Date(event.startTime),
-    exdates: event.exdates.map(date => new Date(date)),
+    startTime: dayjs(event.startTime),
+    exdates: event.exdates.map(date => dayjs(date)),
   }
 }
 
@@ -29,7 +30,7 @@ export function convertInstanceDates(
   }
   return {
     ...instance,
-    startTime: new Date(instance.startTime),
-    endTime: new Date(instance.endTime),
+    startTime: dayjs(instance.startTime),
+    endTime: dayjs(instance.endTime),
   }
 }

@@ -15,6 +15,7 @@ import type {
 import type { Timespan } from './eventClient'
 import { convertInstanceDates } from './helpers/datesConverters'
 import { Metadata } from './domain/metadata'
+import { Dayjs } from 'dayjs'
 
 /**
  * Request for creating a calendar
@@ -230,8 +231,8 @@ export class NettuCalendarClient extends NettuBaseClient {
    */
   public async getEvents(
     calendarId: UUID,
-    startTime: Date,
-    endTime: Date
+    startTime: Dayjs,
+    endTime: Dayjs
   ): Promise<APIResponse<GetCalendarEventsResponse>> {
     const res = await this.get<GetCalendarEventsResponse>(
       `/user/calendar/${calendarId}/events`,

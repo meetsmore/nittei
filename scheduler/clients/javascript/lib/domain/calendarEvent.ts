@@ -1,3 +1,4 @@
+import { Dayjs } from 'dayjs'
 import type { Metadata } from './metadata'
 import { UUID } from './utilities'
 
@@ -19,7 +20,7 @@ export interface RRuleOptions {
   freq: Frequency
   interval: number
   count?: number
-  until?: Date
+  until?: Dayjs
   bysetpos?: number[]
   byweekday?: number[]
   bymonthday?: number[]
@@ -39,9 +40,9 @@ export interface CalendarEvent {
   id: UUID
   /**
    * Start time of the event
-   * @format Date in UTC
+   * @format Dayjs object, with timezone
    */
-  startTime: Date
+  startTime: Dayjs
   /**
    * Duration of the event in milliseconds
    * @format milliseconds
@@ -62,9 +63,10 @@ export interface CalendarEvent {
   created: number
   /**
    * Excluded dates
-   * These are dates that are excluded from the recurrence rule (Date in UTC)
+   * These are dates that are excluded from the recurrence rule
+   * @format List of Dayjs objects, with timezone
    */
-  exdates: Date[]
+  exdates: Dayjs[]
   /**
    * Uuid of the calendar this event belongs to
    */
@@ -96,16 +98,14 @@ export interface CalendarEvent {
 export interface CalendarEventInstance {
   /**
    * Start time of this instance
-   * @format Date in UTC
-   * @example new Date('2021-01-01T12:00:00Z')
+   * @format Dayjs object, with timezone
    */
-  startTime: Date
+  startTime: Dayjs
   /**
    * End time of this instance
-   * @format Date in UTC
-   * @example new Date('2021-01-01T13:00:00Z')
+   * @format Dayjs object, with timezone
    */
-  endTime: Date
+  endTime: Dayjs
   /**
    * Flag to indicate if the user is busy during this instance
    */

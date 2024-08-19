@@ -1,3 +1,4 @@
+import { Dayjs } from 'dayjs'
 import { type APIResponse, NettuBaseClient } from './baseClient'
 import { UUID } from './domain'
 import type {
@@ -32,7 +33,7 @@ interface EventReminder {
  */
 type CreateCalendarEventReq = {
   calendarId: UUID
-  startTime: Date
+  startTime: Dayjs
   duration: number
   busy?: boolean
   recurrence?: RRuleOptions
@@ -45,12 +46,12 @@ type CreateCalendarEventReq = {
  * Request for updating a calendar event
  */
 type UpdateCalendarEventReq = {
-  startTime?: Date
+  startTime?: Dayjs
   duration?: number
   busy?: boolean
   recurrence?: RRuleOptions
   serviceId?: boolean
-  exdates?: Date[]
+  exdates?: Dayjs[]
   reminders?: EventReminder[]
   metadata?: Metadata
 }
@@ -59,8 +60,8 @@ type UpdateCalendarEventReq = {
  * Timespan for getting event instances
  */
 export type Timespan = {
-  startTime: Date
-  endTime: Date
+  startTime: Dayjs
+  endTime: Dayjs
 }
 
 /**

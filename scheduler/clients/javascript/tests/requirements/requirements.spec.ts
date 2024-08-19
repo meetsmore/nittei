@@ -1,6 +1,7 @@
-import type { Calendar, INettuClient, User, CalendarEvent } from '../../lib'
+import { type Calendar, type INettuClient, type User, type CalendarEvent } from '../../lib'
 import { setupAccount } from '../helpers/fixtures'
 import { v4 } from 'uuid'
+import dayjs from 'dayjs'
 
 // This test suite is testing the specifications for our use cases
 
@@ -159,7 +160,7 @@ describe('Requirements', () => {
         const res = await client?.events.create(user1.id, {
           calendarId: user1Calendar1.id,
           duration: 1000 * 60 * 60,
-          startTime: new Date(0),
+          startTime: dayjs(0),
           busy: true,
         })
         expect(res?.status).toBe(201)
@@ -180,8 +181,8 @@ describe('Requirements', () => {
         if (!user1Calendar1) {
           throw new Error('No calendar')
         }
-        const startTime = new Date(10)
-        const endTime = new Date(1000 * 60 * 60 * 24 * 4)
+        const startTime = dayjs(10)
+        const endTime = dayjs(1000 * 60 * 60 * 24 * 4)
 
         const res = await client?.calendar.getEvents(
           user1Calendar1.id,
@@ -224,7 +225,7 @@ describe('Requirements', () => {
         const resEvent = await client?.events.create(user1.id, {
           calendarId: user1Calendar1.id,
           duration: 1000 * 60 * 60,
-          startTime: new Date(0),
+          startTime: dayjs(0),
           busy: true,
         })
         expect(resEvent?.status).toBe(201)
@@ -237,7 +238,7 @@ describe('Requirements', () => {
         }
         const res = await client?.events.update(user1Calendar1Event1.id, {
           duration: 1000 * 60 * 60 * 2,
-          startTime: new Date(1000 * 60 * 60),
+          startTime: dayjs(1000 * 60 * 60),
         })
         expect(res?.status).toBe(200)
       })
@@ -251,7 +252,7 @@ describe('Requirements', () => {
         expect(res?.data).toBeDefined()
         expect(res?.data?.event.id).toEqual(user1Calendar1Event1.id)
         expect(res?.data?.event.duration).toEqual(1000 * 60 * 60 * 2)
-        expect(res?.data?.event.startTime).toEqual(new Date(1000 * 60 * 60))
+        expect(res?.data?.event.startTime).toEqual(dayjs(1000 * 60 * 60))
       })
     })
 
@@ -283,7 +284,7 @@ describe('Requirements', () => {
         const resEvent = await client?.events.create(user1.id, {
           calendarId: user1Calendar1.id,
           duration: 1000 * 60 * 60,
-          startTime: new Date(0),
+          startTime: dayjs(0),
           busy: true,
         })
         expect(resEvent?.status).toBe(201)
@@ -310,8 +311,8 @@ describe('Requirements', () => {
         if (!user1Calendar1) {
           throw new Error('No calendar')
         }
-        const startTime = new Date(10)
-        const endTime = new Date(1000 * 60 * 60 * 24 * 4)
+        const startTime = dayjs(10)
+        const endTime = dayjs(1000 * 60 * 60 * 24 * 4)
 
         const res = await client?.calendar.getEvents(
           user1Calendar1.id,
@@ -353,7 +354,7 @@ describe('Requirements', () => {
         const resEvent = await client?.events.create(user1.id, {
           calendarId: user1Calendar1.id,
           duration: 1000 * 60 * 60,
-          startTime: new Date(0),
+          startTime: dayjs(0),
           busy: true,
         })
         expect(resEvent?.status).toBe(201)
@@ -365,8 +366,8 @@ describe('Requirements', () => {
           throw new Error('No user or calendar')
         }
         const res = await client?.user.freebusy(user1.id, {
-          endTime: new Date(1000 * 60 * 60 * 24 * 4),
-          startTime: new Date(10),
+          endTime: dayjs(1000 * 60 * 60 * 24 * 4),
+          startTime: dayjs(10),
           calendarIds: [user1Calendar1.id],
         })
         if (!res?.data) {
@@ -416,8 +417,8 @@ describe('Requirements', () => {
           throw new Error('No user or calendar')
         }
         const res = await client?.user.freebusy(user1.id, {
-          endTime: new Date(1000 * 60 * 60 * 24 * 4),
-          startTime: new Date(10),
+          endTime: dayjs(1000 * 60 * 60 * 24 * 4),
+          startTime: dayjs(10),
           calendarIds: [user1Calendar1.id, user1Calendar2.id],
         })
         if (!res?.data) {
@@ -434,7 +435,7 @@ describe('Requirements', () => {
         const res = await client?.events.create(user1.id, {
           calendarId: user1Calendar1.id,
           duration: 1000 * 60 * 60,
-          startTime: new Date(0),
+          startTime: dayjs(0),
           busy: true,
         })
         expect(res?.status).toBe(201)
@@ -446,8 +447,8 @@ describe('Requirements', () => {
           throw new Error('No user or calendar')
         }
         const res = await client?.user.freebusy(user1.id, {
-          endTime: new Date(1000 * 60 * 60 * 24), // 1 day
-          startTime: new Date(10),
+          endTime: dayjs(1000 * 60 * 60 * 24), // 1 day
+          startTime: dayjs(10),
           calendarIds: [user1Calendar1.id, user1Calendar2.id],
         })
         if (!res?.data) {
@@ -467,7 +468,7 @@ describe('Requirements', () => {
         const res = await client?.events.create(user1.id, {
           calendarId: user1Calendar2.id,
           duration: 1000 * 60 * 60, // 1h
-          startTime: new Date(1000 * 60 * 61), // 1h01
+          startTime: dayjs(1000 * 60 * 61), // 1h01
           busy: true,
         })
         expect(res?.status).toBe(201)
@@ -479,8 +480,8 @@ describe('Requirements', () => {
           throw new Error('No user or calendar')
         }
         const res = await client?.user.freebusy(user1.id, {
-          endTime: new Date(1000 * 60 * 60 * 24), // 1 day
-          startTime: new Date(10),
+          endTime: dayjs(1000 * 60 * 60 * 24), // 1 day
+          startTime: dayjs(10),
           calendarIds: [user1Calendar1.id, user1Calendar2.id],
         })
 
@@ -509,7 +510,7 @@ describe('Requirements', () => {
         const res = await client?.events.create(user1.id, {
           calendarId: user1Calendar2.id,
           duration: 1000 * 60, // 1min
-          startTime: new Date(1000 * 60 * 60), // 1h
+          startTime: dayjs(1000 * 60 * 60), // 1h
           busy: true,
         })
         expect(res?.status).toBe(201)
@@ -521,8 +522,8 @@ describe('Requirements', () => {
           throw new Error('No user or calendar')
         }
         const res = await client?.user.freebusy(user1.id, {
-          endTime: new Date(1000 * 60 * 60 * 24), // 1 day
-          startTime: new Date(10),
+          endTime: dayjs(1000 * 60 * 60 * 24), // 1 day
+          startTime: dayjs(10),
           calendarIds: [user1Calendar1.id, user1Calendar2.id],
         })
         if (!res?.data) {
@@ -532,7 +533,7 @@ describe('Requirements', () => {
         expect(res.data.busy[0].startTime).toEqual(
           user1Calendar1Event1?.startTime
         )
-        expect(res.data.busy[0].endTime).toEqual(new Date(1000 * 60 * 121)) // 2h01
+        expect(res.data.busy[0].endTime).toEqual(dayjs(1000 * 60 * 121)) // 2h01
       })
     })
 
@@ -574,7 +575,7 @@ describe('Requirements', () => {
         const resEvent1 = await client?.events.create(user1.id, {
           calendarId: user1Calendar1.id,
           duration: 1000 * 60 * 60,
-          startTime: new Date(0),
+          startTime: dayjs(0),
           busy: true,
         })
         expect(resEvent1?.status).toBe(201)
@@ -583,7 +584,7 @@ describe('Requirements', () => {
         const resEvent2 = await client?.events.create(user2.id, {
           calendarId: user2Calendar1.id,
           duration: 1000 * 60 * 60,
-          startTime: new Date(1000 * 60 * 61),
+          startTime: dayjs(1000 * 60 * 61),
           busy: true,
         })
         expect(resEvent2?.status).toBe(201)
@@ -594,8 +595,8 @@ describe('Requirements', () => {
           throw new Error('No user')
         }
         const res = await client?.user.freebusyMultipleUsers({
-          endTime: new Date(1000 * 60 * 60 * 24), // 1 day
-          startTime: new Date(10),
+          endTime: dayjs(1000 * 60 * 60 * 24), // 1 day
+          startTime: dayjs(10),
           userIds: [user1.id, user2.id],
         })
         if (!res?.data) {
@@ -638,7 +639,7 @@ describe('Requirements', () => {
         const res = await client?.events.create(user1.id, {
           calendarId: user1Calendar1.id,
           duration: 1000 * 60 * 60,
-          startTime: new Date(1000 * 60 * 60),
+          startTime: dayjs(1000 * 60 * 60),
           busy: true,
           // TODO: we need to add a state or pending field to the event
         })
@@ -653,7 +654,7 @@ describe('Requirements', () => {
         const res = await client?.events.create(user1.id, {
           calendarId: user1Calendar1.id,
           duration: 1000 * 60 * 60,
-          startTime: new Date(1000 * 60 * 60), // TODO: change the start time for more realistic tests
+          startTime: dayjs(1000 * 60 * 60), // TODO: change the start time for more realistic tests
           busy: true,
         })
         expect(res?.status).toBe(201)
@@ -664,8 +665,8 @@ describe('Requirements', () => {
         if (!user1Calendar1) {
           throw new Error('No calendar')
         }
-        const startTime = new Date(10)
-        const endTime = new Date(1000 * 60 * 60 * 24 * 4)
+        const startTime = dayjs(10)
+        const endTime = dayjs(1000 * 60 * 60 * 24 * 4)
 
         const res = await client?.calendar.getEvents(
           user1Calendar1.id,
@@ -730,7 +731,7 @@ describe('Requirements', () => {
         const res = await client?.events.create(user1.id, {
           calendarId: user1Calendar1.id,
           duration: 1000 * 60 * 60,
-          startTime: new Date(0),
+          startTime: dayjs(0),
           busy: true,
           metadata: {
             name: '日本語のイベント',

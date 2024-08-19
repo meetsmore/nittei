@@ -1,3 +1,7 @@
+// Re-export dayjs
+import dayjs from 'dayjs'
+export { dayjs }
+
 import { NettuAccountClient } from './accountClient'
 import {
   AccountCreds,
