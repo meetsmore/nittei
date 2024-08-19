@@ -1,5 +1,5 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use chrono::{DateTime, TimeDelta, Utc};
+use chrono::{DateTime, FixedOffset, TimeDelta, Utc};
 use nettu_scheduler_api_structs::create_event::*;
 use nettu_scheduler_domain::{
     CalendarEvent,
@@ -33,7 +33,7 @@ pub async fn create_event_admin_controller(
     let body = body.0;
     let usecase = CreateEventUseCase {
         busy: body.busy.unwrap_or(false),
-        start_time: body.start_time,
+        start_time: body.start_time.to_utc(),
         duration: body.duration,
         user,
         calendar_id: body.calendar_id,
@@ -59,7 +59,7 @@ pub async fn create_event_controller(
     let body = body.0;
     let usecase = CreateEventUseCase {
         busy: body.busy.unwrap_or(false),
-        start_time: body.start_time,
+        start_time: body.start_time.to_utc(),
         duration: body.duration,
         calendar_id: body.calendar_id,
         recurrence: body.recurrence,
@@ -79,7 +79,7 @@ pub async fn create_event_controller(
 pub struct CreateEventUseCase {
     pub calendar_id: ID,
     pub user: User,
-    pub start_time: DateTime<Utc>,
+    pub start_time: DateTime<FixedOffset>,
     pub duration: i64,
     pub busy: bool,
     pub recurrence: Option<RRuleOptions>,

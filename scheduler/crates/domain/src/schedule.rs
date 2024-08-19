@@ -168,8 +168,8 @@ impl ScheduleRuleInterval {
 
         Some(EventInstance {
             busy: false,
-            start_time: start.with_timezone(&chrono::Utc),
-            end_time: end.with_timezone(&chrono::Utc),
+            start_time: start.with_timezone(tzid).fixed_offset(),
+            end_time: end.with_timezone(tzid).fixed_offset(),
         })
     }
 }

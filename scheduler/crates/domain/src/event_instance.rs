@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset, Utc};
 use serde::{Deserialize, Serialize};
 
 use crate::CalendarEvent;
@@ -9,8 +9,8 @@ use crate::CalendarEvent;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EventInstance {
-    pub start_time: DateTime<Utc>,
-    pub end_time: DateTime<Utc>,
+    pub start_time: DateTime<FixedOffset>,
+    pub end_time: DateTime<FixedOffset>,
     pub busy: bool,
 }
 
@@ -80,7 +80,7 @@ impl CompatibleInstances {
         true
     }
 
-    pub fn remove_all_before(&mut self, timespan: DateTime<Utc>) {
+    pub fn remove_all_before(&mut self, timespan: DateTime<FixedOffset>) {
         while let Some(e) = self.events.get_mut(0) {
             if e.start_time >= timespan {
                 break;
@@ -94,7 +94,7 @@ impl CompatibleInstances {
         }
     }
 
-    pub fn remove_all_after(&mut self, timespan: DateTime<Utc>) {
+    pub fn remove_all_after(&mut self, timespan: DateTime<FixedOffset>) {
         while !self.events.is_empty() {
             let last = self.events.get_mut(self.events.len() - 1).unwrap();
             if last.end_time <= timespan {

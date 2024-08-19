@@ -60,7 +60,7 @@ pub fn get_month_length(year: i32, month: u32) -> u32 {
     }
 }
 
-pub fn format_date(date: &DateTime<Utc>) -> String {
+pub fn format_date(date: &DateTime<FixedOffset>) -> String {
     format!("{}-{}-{}", date.year(), date.month(), date.day())
 }
 

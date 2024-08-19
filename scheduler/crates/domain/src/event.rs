@@ -18,14 +18,14 @@ use crate::{
 #[derive(Debug, Clone, Default)]
 pub struct CalendarEvent {
     pub id: ID,
-    pub start_time: DateTime<Utc>,
+    pub start_time: DateTime<FixedOffset>,
     pub duration: i64,
     pub busy: bool,
-    pub end_time: DateTime<Utc>,
+    pub end_time: DateTime<FixedOffset>,
     pub created: i64,
     pub updated: i64,
     pub recurrence: Option<RRuleOptions>,
-    pub exdates: Vec<DateTime<Utc>>,
+    pub exdates: Vec<DateTime<FixedOffset>>,
     pub calendar_id: ID,
     pub user_id: ID,
     pub account_id: ID,
@@ -84,12 +84,15 @@ impl CalendarEvent {
                 let options = rrule_options.get_rrule().first().unwrap();
                 if (options.get_count().unwrap_or(0) > 0) || options.get_until().is_some() {
                     let expand = self.expand(None, calendar_settings);
-                    self.end_time = expand
-                        .last()
-                        .map(|l| l.end_time)
-                        .unwrap_or(DateTime::<Utc>::MIN_UTC);
+                    self.end_time = expand.last().map(|l| l.end_time).unwrap_or(
+                        DateTime::<Utc>::MIN_UTC
+                            .with_timezone(&calendar_settings.timezone)
+                            .fixed_offset(),
+                    );
                 } else {
-                    self.end_time = DateTime::<Utc>::MAX_UTC;
+                    self.end_time = DateTime::<Utc>::MAX_UTC
+                        .with_timezone(&calendar_settings.timezone)
+                        .fixed_offset();
                 }
                 true
             }
@@ -169,8 +172,12 @@ impl CalendarEvent {
                     .dates
                     .iter()
                     .map(|occurrence| EventInstance {
-                        start_time: occurrence.with_timezone(&Utc),
-                        end_time: occurrence.with_timezone(&Utc)
+                        start_time: occurrence
+                            .with_timezone(&calendar_settings.timezone)
+                            .fixed_offset(),
+                        end_time: occurrence
+                            .with_timezone(&calendar_settings.timezone)
+                            .fixed_offset()
                             + TimeDelta::milliseconds(self.duration),
                         busy: self.busy,
                     })

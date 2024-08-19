@@ -49,7 +49,7 @@ pub trait IEventRepo: Send + Sync {
 
 #[cfg(test)]
 mod tests {
-    use chrono::{DateTime, Utc};
+    use chrono::{DateTime, FixedOffset, Utc};
     use nettu_scheduler_domain::{
         Account,
         Calendar,
@@ -201,8 +201,8 @@ mod tests {
         calendar_id: &ID,
         user_id: &ID,
         service_id: Option<&ID>,
-        start_time: DateTime<Utc>,
-        end_time: DateTime<Utc>,
+        start_time: DateTime<FixedOffset>,
+        end_time: DateTime<FixedOffset>,
         ctx: &NettuContext,
     ) -> CalendarEvent {
         let mut event = generate_default_event(account_id, calendar_id, user_id);

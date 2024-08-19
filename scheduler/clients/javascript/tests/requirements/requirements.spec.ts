@@ -811,7 +811,7 @@ describe('Requirements', () => {
         expect(res?.data).toBeDefined()
         expect(res?.data?.events.length).toBe(1)
         console.log('res?.data?.events[0].event.startTime', res?.data?.events[0].event.startTime)
-        expect(res?.data?.events[0].event.startTime).toEqual(date1.toDate())
+        expect(res?.data?.events[0].event.startTime).toEqual(date1)
       })
 
       it('should create a 2nd event, in UTC timezone', async () => {

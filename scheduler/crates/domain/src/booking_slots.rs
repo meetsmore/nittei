@@ -10,13 +10,13 @@ use crate::{date, event_instance::EventInstance, CompatibleInstances, ID};
 #[derive(Serialize, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct BookingSlot {
-    pub start: DateTime<Utc>,
+    pub start: DateTime<FixedOffset>,
     pub duration: i64,
-    pub available_until: DateTime<Utc>,
+    pub available_until: DateTime<FixedOffset>,
 }
 
 fn is_cursor_in_events(
-    cursor: DateTime<Utc>,
+    cursor: DateTime<FixedOffset>,
     duration: i64,
     events: &CompatibleInstances,
 ) -> Option<&EventInstance> {
@@ -26,8 +26,8 @@ fn is_cursor_in_events(
 }
 
 pub struct BookingSlotsOptions {
-    pub start_time: DateTime<Utc>,
-    pub end_time: DateTime<Utc>,
+    pub start_time: DateTime<FixedOffset>,
+    pub end_time: DateTime<FixedOffset>,
     pub duration: i64,
     pub interval: i64,
 }
@@ -40,7 +40,7 @@ pub struct UserFreeEvents {
 
 #[derive(PartialEq, Debug)]
 pub struct ServiceBookingSlot {
-    pub start: DateTime<Utc>,
+    pub start: DateTime<FixedOffset>,
     pub duration: i64,
     pub user_ids: Vec<ID>,
 }

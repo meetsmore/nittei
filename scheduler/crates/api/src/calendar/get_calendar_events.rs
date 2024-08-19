@@ -24,7 +24,7 @@ pub async fn get_calendar_events_admin_controller(
     let usecase = GetCalendarEventsUseCase {
         user_id: cal.user_id,
         calendar_id: cal.id,
-        start_time: query_params.start_time,
+        start_time: query_params.start_time.to_utc(),
         end_time: query_params.end_time,
     };
 
