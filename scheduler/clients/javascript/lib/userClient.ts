@@ -56,7 +56,7 @@ type GetUserFeebusyResponse = {
   /**
    * List of busy instances per user_id
    */
-  [key: string]: CalendarEventInstance[]
+  [key: UUID]: CalendarEventInstance[]
 }
 
 /**
