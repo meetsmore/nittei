@@ -759,7 +759,7 @@ describe('Requirements', () => {
       })
     })
 
-    describe.only('Multiple timezones are supported', () => {
+    describe('Multiple timezones are supported', () => {
       let user1: User | undefined
       let user1Calendar1: Calendar | undefined
 

@@ -55,7 +55,7 @@ type GetUserFeebusyResponse = {
   /**
    * List of busy instances per user_id
    */
-  [key: string]: CalendarEventInstance[]
+  [key: UUID]: CalendarEventInstance[]
 }
 
 /**
@@ -168,7 +168,7 @@ export class NettuUserClient extends NettuBaseClient {
     req: GetMultipleUsersFeebusyReq
   ): Promise<APIResponse<GetUserFeebusyResponse>> {
     const res = await this.post<GetUserFeebusyResponse>(
-      '/user/multipleFreebusy',
+      '/user/freebusy',
       {
         userIds: req.userIds,
         startTime: req.startTime.toISOString(),
