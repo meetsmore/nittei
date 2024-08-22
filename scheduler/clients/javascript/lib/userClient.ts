@@ -1,8 +1,9 @@
 import type { CalendarEventInstance } from './domain/calendarEvent'
-import { NettuBaseClient } from './baseClient'
+import { APIResponse, NettuBaseClient } from './baseClient'
 import type { Metadata } from './domain/metadata'
 import type { User } from './domain/user'
 import type { IntegrationProvider, UUID } from '.'
+import { convertInstanceDates } from './helpers/datesConverters'
 
 /**
  * Request to get a user's freebusy
@@ -28,13 +29,33 @@ type GetUserFeebusyReq = {
 }
 
 /**
+ * Request to get multiple users' freebusy status
+ */
+type GetMultipleUsersFeebusyReq = {
+  /**
+   * List of user ids to check for freebusy
+   */
+  userIds: UUID[]
+  /**
+   * Start time of the period to check for freebusy
+   * @format Date in UTC
+   */
+  startTime: Date
+  /**
+   * End time of the period to check for freebusy
+   * @format Date in UTC
+   */
+  endTime: Date
+}
+
+/**
  * Response when getting a user's freebusy
  */
 type GetUserFeebusyResponse = {
   /**
-   * List of busy instances
+   * List of busy instances per user_id
    */
-  busy: CalendarEventInstance[]
+  [key: UUID]: CalendarEventInstance[]
 }
 
 /**
@@ -117,12 +138,59 @@ export class NettuUserClient extends NettuBaseClient {
     return this.delete<UserResponse>(`/user/${userId}`)
   }
 
-  public freebusy(userId: UUID, req: GetUserFeebusyReq) {
-    return this.get<GetUserFeebusyResponse>(`/user/${userId}/freebusy`, {
-      startTime: req.startTime.toISOString(),
-      endTime: req.endTime.toISOString(),
-      calendarIds: req.calendarIds,
-    })
+  public async freebusy(
+    userId: UUID,
+    req: GetUserFeebusyReq
+  ): Promise<APIResponse<GetUserFeebusyResponse>> {
+    const res = await this.get<GetUserFeebusyResponse>(
+      `/user/${userId}/freebusy`,
+      {
+        startTime: req.startTime.toISOString(),
+        endTime: req.endTime.toISOString(),
+        calendarIds: req.calendarIds?.join(','),
+      }
+    )
+
+    if (!res.data) {
+      return res
+    }
+
+    return {
+      res: res.res,
+      status: res.status,
+      data: {
+        busy: res.data.busy.map(convertInstanceDates),
+      },
+    }
+  }
+
+  public async freebusyMultipleUsers(
+    req: GetMultipleUsersFeebusyReq
+  ): Promise<APIResponse<GetUserFeebusyResponse>> {
+    const res = await this.post<GetUserFeebusyResponse>(
+      '/user/freebusy',
+      {
+        userIds: req.userIds,
+        startTime: req.startTime.toISOString(),
+        endTime: req.endTime.toISOString(),
+      }
+    )
+
+    if (!res.data) {
+      return res
+    }
+
+    return {
+      res: res.res,
+      status: res.status,
+      data: Object.keys(res.data).reduce((acc, key) => {
+        if (!res?.data?.[key]) {
+          return acc
+        }
+        acc[key] = res.data[key].map(convertInstanceDates)
+        return acc
+      }, {} as GetUserFeebusyResponse),
+    }
   }
 
   public oauth(userId: UUID, code: string, provider: IntegrationProvider) {

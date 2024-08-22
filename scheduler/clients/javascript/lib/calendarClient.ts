@@ -6,7 +6,6 @@ import type {
   OutlookCalendarAccessRole,
 } from './domain/calendar'
 import { type APIResponse, NettuBaseClient } from './baseClient'
-import type { Metadata } from './domain/metadata'
 import type {
   CalendarEvent,
   CalendarEventInstance,
@@ -15,6 +14,7 @@ import type {
 } from './domain'
 import type { Timespan } from './eventClient'
 import { convertInstanceDates } from './helpers/datesConverters'
+import { Metadata } from './domain/metadata'
 
 /**
  * Request for creating a calendar

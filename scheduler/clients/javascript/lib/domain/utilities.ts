@@ -1,5 +1,3 @@
-
-
 /**
  * UUID type
  * @format uuid (v4) - `xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx`

@@ -27,7 +27,7 @@ export interface Calendar {
     timezone: string
   }
   /**
-   * Possible metadata 
+   * Possible metadata
    */
   metadata: Metadata
 }
