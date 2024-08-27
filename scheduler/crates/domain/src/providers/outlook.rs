@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::DateTime;
 use chrono_tz::{Tz, UTC};
 use serde::{Deserialize, Serialize};
 use tracing::error;
@@ -22,7 +22,7 @@ impl OutlookCalendarEventTime {
     pub fn get_timestamp_millis(&self) -> i64 {
         let timezone = self.time_zone.parse::<Tz>().unwrap_or(UTC);
 
-        NaiveDateTime::parse_from_str(
+        DateTime::parse_from_str(
             &self.date_time[..self.date_time.find('.').unwrap()],
             "%FT%T",
         )
@@ -30,8 +30,7 @@ impl OutlookCalendarEventTime {
             error!("Outlook parse error : {:?}", err);
             err
         })
-        .unwrap_or(NaiveDateTime::UNIX_EPOCH)
-        .and_utc()
+        .unwrap_or(DateTime::UNIX_EPOCH.fixed_offset())
         .with_timezone(&timezone)
         .timestamp_millis()
     }
