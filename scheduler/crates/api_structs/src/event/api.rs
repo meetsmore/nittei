@@ -140,34 +140,6 @@ pub mod get_events_by_calendars {
     }
 }
 
-pub mod get_events_by_users {
-    use chrono::{DateTime, Utc};
-
-    use super::*;
-
-    #[derive(Deserialize, Serialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct RequestBody {
-        pub user_ids: Vec<ID>,
-        pub start_ts: DateTime<Utc>,
-        pub end_ts: DateTime<Utc>,
-    }
-
-    #[derive(Deserialize, Serialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct APIResponse {
-        pub events: Vec<CalendarEventDTO>,
-    }
-
-    impl APIResponse {
-        pub fn new(events: Vec<CalendarEvent>) -> Self {
-            Self {
-                events: events.into_iter().map(CalendarEventDTO::new).collect(),
-            }
-        }
-    }
-}
-
 pub mod get_events_by_meta {
     use super::*;
 
