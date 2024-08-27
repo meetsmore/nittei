@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fmt};
 
-use chrono::{DateTime, TimeZone, Utc};
+use chrono::{TimeZone, Utc};
 use nettu_scheduler_domain::{providers::google::*, CalendarEvent};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -112,11 +112,11 @@ impl GoogleDateTime {
         Self(datetime_str)
     }
 
-    pub fn get_timestamp_millis(&self) -> i64 {
-        DateTime::parse_from_rfc3339(&self.0)
-            .expect("Inner string to always be valid RFC3339 string")
-            .timestamp_millis()
-    }
+    // pub fn get_timestamp_millis(&self) -> i64 {
+    //     DateTime::parse_from_rfc3339(&self.0)
+    //         .expect("Inner string to always be valid RFC3339 string")
+    //         .timestamp_millis()
+    // }
 }
 
 #[derive(Debug, Deserialize)]

@@ -70,7 +70,7 @@ pub struct ServiceBookingSlotsDate {
 }
 
 impl ServiceBookingSlotsDate {
-    pub fn new(slots: &mut VecDeque<ServiceBookingSlot>, tz: Tz) -> Self {
+    pub fn new(slots: &mut VecDeque<ServiceBookingSlot>, _tz: Tz) -> Self {
         assert!(!slots.is_empty());
         let first_date = slots[0].start;
         let date = format_date(&first_date);

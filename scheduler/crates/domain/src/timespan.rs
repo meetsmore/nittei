@@ -29,8 +29,8 @@ impl TimeSpan {
 
     pub fn as_datetime(&self, tz: &Tz) -> TimeSpanDateTime {
         TimeSpanDateTime {
-            start: self.start_time.with_timezone(&tz),
-            end: self.end_time.with_timezone(&tz),
+            start: self.start_time.with_timezone(tz),
+            end: self.end_time.with_timezone(tz),
         }
     }
 
