@@ -8,23 +8,13 @@
     "strict": true,
     "alwaysStrict": true,
     "sourceMap": true,
-    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "moduleResolution": "node",
     "downlevelIteration": true,
-    "lib": [
-      "es2015",
-      "dom",
-      "esnext.asynciterable",
-      "es2017.object",
-    ],
+    "lib": ["es2015", "dom", "esnext.asynciterable", "es2017.object"],
     "noImplicitAny": true,
     "resolveJsonModule": true
   },
-  "include": [
-    "lib/**/*",
-    "tests/**/*"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["lib/**/*", "tests/**/*"],
+  "exclude": ["node_modules"]
 }
