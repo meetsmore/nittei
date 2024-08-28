@@ -256,7 +256,7 @@ mod test {
         assert!(res.is_ok());
         let map_instances = res.unwrap().0;
         assert_eq!(map_instances.len(), 1);
-        assert_eq!(map_instances.contains_key(&user.id()), true);
+        assert!(map_instances.contains_key(&user.id()));
         let instances = map_instances.get(&user.id()).unwrap();
         assert_eq!(instances.len(), 2);
         assert_eq!(

@@ -331,7 +331,79 @@ describe('Requirements', () => {
       })
     })
 
-    describe('A user calendar can be queried for availability', () => {
+    describe('A user can see the events during a timespan of all his calendars', () => {
+      let user1: User | undefined
+      let user1Calendar1: Calendar | undefined
+      let user1Calendar2: Calendar | undefined
+      let user1Calendar1Event1: CalendarEvent | undefined
+      let user1Calendar2Event1: CalendarEvent | undefined
+
+      beforeAll(async () => {
+        const res = await client?.user.create()
+        if (!res?.data) {
+          throw new Error('User not created')
+        }
+        expect(res?.status).toBe(201)
+        user1 = res.data.user
+
+        if (!user1) {
+          throw new Error('No user')
+        }
+        const resCal1 = await client?.calendar.create(user1.id, {
+          timezone: 'Asia/Tokyo',
+        })
+        expect(resCal1?.status).toBe(201)
+        user1Calendar1 = resCal1?.data?.calendar
+
+        const resCal2 = await client?.calendar.create(user1.id, {
+          timezone: 'Asia/Tokyo',
+        })
+        expect(resCal2?.status).toBe(201)
+        user1Calendar2 = resCal2?.data?.calendar
+
+        if (!user1 || !user1Calendar1 || !user1Calendar2) {
+          throw new Error('No user or calendar')
+        }
+        const resEvent1 = await client?.events.create(user1.id, {
+          calendarId: user1Calendar1.id,
+          duration: 1000 * 60 * 60,
+          startTime: dayjs(0),
+          busy: true,
+        })
+        expect(resEvent1?.status).toBe(201)
+        user1Calendar1Event1 = resEvent1?.data?.event
+
+        const resEvent2 = await client?.events.create(user1.id, {
+          calendarId: user1Calendar2.id,
+          duration: 1000 * 60 * 60,
+          startTime: dayjs(1000 * 60 * 60),
+          busy: true,
+        })
+        expect(resEvent2?.status).toBe(201)
+        user1Calendar2Event1 = resEvent2?.data?.event
+      })
+
+      it('should list the events in the calendars', async () => {
+        if (!user1 || !user1Calendar1 || !user1Calendar2) {
+          throw new Error('One or both calendars are missing')
+        }
+        const startTime = new Date(10)
+        const endTime = new Date(1000 * 60 * 60 * 24 * 4)
+
+        const res = await client?.user.getEventsOfMultipleCalendars(user1.id, {
+          calendarIds: [user1Calendar1.id, user1Calendar2.id],
+          startTime,
+          endTime,
+        })
+        expect(res?.status).toBe(200)
+        expect(res?.data).toBeDefined()
+        expect(res?.data?.events.length).toBe(2)
+        expect(res?.data?.events[0].event.id).toEqual(user1Calendar1Event1?.id)
+        expect(res?.data?.events[1].event.id).toEqual(user1Calendar2Event1?.id)
+      })
+    })
+
+    describe('A user calendar can be queried for availability (freebusy)', () => {
       let user1: User | undefined
       let user1Calendar1: Calendar | undefined
       let user1Calendar1Event1: CalendarEvent | undefined
@@ -382,11 +454,7 @@ describe('Requirements', () => {
       })
     })
 
-    describe('A user can be in groups', () => {
-      it.todo('To be implemented')
-    })
-
-    describe('Multiple calendars of the same user can be queried at once', () => {
+    describe('Multiple calendars of the same user can be queried at once (freebusy)', () => {
       let user1: User | undefined
       let user1Calendar1: Calendar | undefined
       let user1Calendar1Event1: CalendarEvent | undefined

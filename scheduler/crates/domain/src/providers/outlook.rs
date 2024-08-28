@@ -1,4 +1,4 @@
-use chrono::TimeZone;
+use chrono::DateTime;
 use chrono_tz::{Tz, UTC};
 use serde::{Deserialize, Serialize};
 use tracing::error;
@@ -20,20 +20,19 @@ pub struct OutlookCalendarEventTime {
 
 impl OutlookCalendarEventTime {
     pub fn get_timestamp_millis(&self) -> i64 {
-        self.time_zone
-            .parse::<Tz>()
-            .unwrap_or(UTC)
-            // This is so weird formatting, but it works
-            .datetime_from_str(
-                &self.date_time[..self.date_time.find('.').unwrap()],
-                "%FT%T",
-            )
-            .map_err(|err| {
-                error!("Outlook parse error : {:?}", err);
-                err
-            })
-            .unwrap_or_else(|_| UTC.timestamp(0, 0))
-            .timestamp_millis()
+        let timezone = self.time_zone.parse::<Tz>().unwrap_or(UTC);
+
+        DateTime::parse_from_str(
+            &self.date_time[..self.date_time.find('.').unwrap()],
+            "%FT%T",
+        )
+        .map_err(|err| {
+            error!("Outlook parse error : {:?}", err);
+            err
+        })
+        .unwrap_or(DateTime::UNIX_EPOCH.fixed_offset())
+        .with_timezone(&timezone)
+        .timestamp_millis()
     }
 }
 

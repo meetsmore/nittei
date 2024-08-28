@@ -15,7 +15,7 @@ use crate::{
     Meta,
 };
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct CalendarEvent {
     pub id: ID,
     pub start_time: DateTime<FixedOffset>,
@@ -268,7 +268,7 @@ mod test {
             ..Default::default()
         });
         invalid_rrules.push(RRuleOptions {
-            until: Some(Utc.ymd(2150, 1, 1).and_hms(0, 0, 0)), // too big until
+            until: Some(Utc.with_ymd_and_hms(2150, 1, 1, 0, 0, 0).unwrap()), // too big until
             ..Default::default()
         });
         invalid_rrules.push(RRuleOptions {

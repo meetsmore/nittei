@@ -299,7 +299,7 @@ mod test {
             ..Default::default()
         });
         invalid_rrules.push(RRuleOptions {
-            until: Some(Utc.ymd(2150, 1, 1).and_hms(0, 0, 0)), // too big until
+            until: Some(Utc.with_ymd_and_hms(2150, 1, 1, 0, 0, 0).unwrap()), // too big until
             ..Default::default()
         });
         for rrule in invalid_rrules {
