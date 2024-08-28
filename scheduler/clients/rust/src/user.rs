@@ -106,6 +106,9 @@ impl UserClient {
             .await
     }
 
+    /// Get free/busy information for multiple users between a time range
+    ///
+    /// Response will contain a hashmap of user's UUID with their free/busy information
     pub async fn multiple_users_free_busy(
         &self,
         body: MultipleFreeBusyRequestBody,
