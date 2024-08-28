@@ -130,7 +130,7 @@ impl CalendarClient {
     ) -> APIResponse<get_calendars_by_meta::APIResponse> {
         self.base
             .get(
-                format!("calendar/meta"),
+                "calendar/meta".to_string(),
                 Some(input.to_query()),
                 StatusCode::OK,
             )
