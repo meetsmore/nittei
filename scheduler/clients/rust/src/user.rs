@@ -111,7 +111,7 @@ impl UserClient {
         body: MultipleFreeBusyRequestBody,
     ) -> APIResponse<MultipleFreeBusyAPIResponse> {
         self.base
-            .post(body, "user/multipleFreebusy".to_string(), StatusCode::OK)
+            .post(body, "user/freebusy".to_string(), StatusCode::OK)
             .await
     }
 
