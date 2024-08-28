@@ -23,6 +23,11 @@ pub trait IEventRepo: Send + Sync {
         calendar_id: &ID,
         timespan: Option<&TimeSpan>,
     ) -> anyhow::Result<Vec<CalendarEvent>>;
+    async fn find_by_calendars(
+        &self,
+        calendar_ids: Vec<ID>,
+        timespan: &TimeSpan,
+    ) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn find_most_recently_created_service_events(
         &self,
         service_id: &ID,

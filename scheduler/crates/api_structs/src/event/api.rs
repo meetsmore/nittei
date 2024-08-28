@@ -111,6 +111,35 @@ pub mod get_event {
     pub type APIResponse = CalendarEventResponse;
 }
 
+pub mod get_events_by_calendars {
+    use chrono::{DateTime, Utc};
+    use nettu_scheduler_domain::EventWithInstances;
+
+    use super::*;
+    use crate::helpers::deserialize_uuids_list::deserialize_stringified_uuids_list;
+
+    #[derive(Deserialize, Serialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct QueryParams {
+        #[serde(default, deserialize_with = "deserialize_stringified_uuids_list")]
+        pub calendar_ids: Option<Vec<ID>>,
+        pub start_time: DateTime<Utc>,
+        pub end_time: DateTime<Utc>,
+    }
+
+    #[derive(Serialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct APIResponse {
+        pub events: Vec<EventWithInstances>,
+    }
+
+    impl APIResponse {
+        pub fn new(events: Vec<EventWithInstances>) -> Self {
+            Self { events }
+        }
+    }
+}
+
 pub mod get_events_by_meta {
     use super::*;
 
