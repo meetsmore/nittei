@@ -1,6 +1,5 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use chrono::{DateTime, Duration, TimeDelta, TimeZone, Utc};
-use chrono_tz::UTC;
+use chrono::{DateTime, Duration, TimeDelta, Utc};
 use get_service_bookingslots::GetServiceBookingSlotsUseCase;
 use nettu_scheduler_api_structs::create_service_event_intend::*;
 use nettu_scheduler_domain::{

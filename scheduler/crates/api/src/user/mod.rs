@@ -28,7 +28,7 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.route("/user/meta", web::get().to(get_users_by_meta_controller));
     // This is a POST route !
     cfg.route(
-        "/user/multipleFreebusy",
+        "/user/freebusy",
         web::post().to(get_multiple_freebusy_controller),
     );
     cfg.route("/user/{user_id}", web::get().to(get_user_controller));

@@ -70,7 +70,7 @@ pub struct ServiceBookingSlotsDate {
 }
 
 impl ServiceBookingSlotsDate {
-    pub fn new(slots: &mut VecDeque<ServiceBookingSlot>, tz: Tz) -> Self {
+    pub fn new(slots: &mut VecDeque<ServiceBookingSlot>, _tz: Tz) -> Self {
         assert!(!slots.is_empty());
         let first_date = slots[0].start;
         let date = format_date(&first_date);
@@ -209,14 +209,34 @@ pub fn validate_bookingslots_query(
         Err(_) => return Err(BookingQueryError::InvalidDate(query.end_date.clone())),
     };
 
-    let start_date = tz.ymd(
-        parsed_start_date.0,
-        parsed_start_date.1,
-        parsed_start_date.2,
-    );
-    let start_time = start_date.and_hms(0, 0, 0).with_timezone(&Utc);
-    let end_date = tz.ymd(parsed_end_date.0, parsed_end_date.1, parsed_end_date.2);
-    let end_time = end_date.and_hms(0, 0, 0).with_timezone(&Utc)
+    let start_date = tz
+        .with_ymd_and_hms(
+            parsed_start_date.0,
+            parsed_start_date.1,
+            parsed_start_date.2,
+            0,
+            0,
+            0,
+        )
+        .unwrap();
+    let start_time = start_date
+        .with_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap())
+        .unwrap()
+        .with_timezone(&Utc);
+    let end_date = tz
+        .with_ymd_and_hms(
+            parsed_end_date.0,
+            parsed_end_date.1,
+            parsed_end_date.2,
+            0,
+            0,
+            0,
+        )
+        .unwrap();
+    let end_time = end_date
+        .with_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap())
+        .unwrap()
+        .with_timezone(&Utc)
         + TimeDelta::milliseconds(1000 * 60 * 60 * 24);
 
     Ok(BookingTimespan {

@@ -1,4 +1,4 @@
-use chrono::{DateTime, SecondsFormat, TimeZone, Utc};
+use chrono::{DateTime, SecondsFormat, Utc};
 use futures::future::join_all;
 use nettu_scheduler_domain::{
     providers::outlook::{
