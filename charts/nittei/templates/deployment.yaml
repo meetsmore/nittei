@@ -1,5 +1,3 @@
-{{- $database_url := .Values.DATABASE_URL | required ".Values.DATABASE_URL is required." -}}
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
