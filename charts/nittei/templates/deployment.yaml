@@ -51,9 +51,10 @@ spec:
           {{- with .Values.volumeMounts }}
           volumeMounts:
             {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.env }}
           env:
-            - name: DATABASE_URL
-              value: {{ $database_url }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}
       {{- with .Values.volumes }}
       volumes:
