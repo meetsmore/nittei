@@ -1,24 +1,22 @@
-FROM ekidd/rust-musl-builder as builder
+ARG ARCH=x86_64
+FROM messense/rust-musl-cross:${ARCH}-musl AS builder
 
-WORKDIR /home/rust/
+ARG ARCH=x86_64
+ARG APP_NAME=nettu_scheduler
 
+# Copy source code from previous stage
 COPY . .
 
-USER root
-RUN chown -R rust:rust .
-USER rust
+# Build application
+RUN cargo build --release --target ${ARCH}-unknown-linux-musl && \
+  cp ./target/${ARCH}-unknown-linux-musl/release/${APP_NAME} /${APP_NAME}
 
-ENV DATABASE_URL "postgresql://postgres:postgres@172.17.0.1:5432/nettuscheduler"
+#Create a new stage with a minimal image
+FROM busybox:musl
 
-# RUN cargo test
-RUN cargo build --release
+ARG APP_NAME=nettu_scheduler
+ENV APP_NAME=${APP_NAME}
 
-# Size optimization
-RUN strip target/x86_64-unknown-linux-musl/release/nettu_scheduler
+COPY --from=builder /${APP_NAME} /${APP_NAME}
 
-# Start building the final image
-FROM scratch
-WORKDIR /home/rust/
-COPY --from=builder /home/rust/target/x86_64-unknown-linux-musl/release/nettu_scheduler .
-
-ENTRYPOINT ["./nettu_scheduler"]
+CMD /${APP_NAME}

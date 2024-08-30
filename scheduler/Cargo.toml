@@ -17,6 +17,9 @@ members = [
     "clients/rust",
 ]
 
+
+######################
+# Runtime dependencies
 [dependencies]
 nettu_scheduler_api = { path = "./crates/api" }
 nettu_scheduler_domain = { path = "./crates/domain" }
@@ -50,9 +53,19 @@ openssl-probe = "0.1.2"
 chrono = "0.4.19"
 chrono-tz = "0.8.1"
 
+# Used Jemalloc for musl targets
+[target.'cfg(all(target_env = "musl", target_pointer_width = "64"))'.dependencies.jemallocator]
+version = "0.5"
+
+
+##################
+# Dev dependencies
 [dev-dependencies]
 nettu_scheduler_sdk = { path = "./clients/rust" }
 
+
+#############
+# Lint stuff
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
