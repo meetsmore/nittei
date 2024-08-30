@@ -1,6 +1,11 @@
 use std::sync::Arc;
 
 use chrono::{DateTime, Utc};
+// Re-export API structs
+pub use multiple_freebusy::{
+    APIResponse as MultipleFreeBusyAPIResponse,
+    RequestBody as MultipleFreeBusyRequestBody,
+};
 use nettu_scheduler_api_structs::*;
 use nettu_scheduler_domain::{IntegrationProvider, Metadata};
 use reqwest::StatusCode;
@@ -98,6 +103,18 @@ impl UserClient {
                 Some(query.into()),
                 StatusCode::OK,
             )
+            .await
+    }
+
+    /// Get free/busy information for multiple users between a time range
+    ///
+    /// Response will contain a hashmap of user's UUID with their free/busy information
+    pub async fn multiple_users_free_busy(
+        &self,
+        body: MultipleFreeBusyRequestBody,
+    ) -> APIResponse<MultipleFreeBusyAPIResponse> {
+        self.base
+            .post(body, "user/freebusy".to_string(), StatusCode::OK)
             .await
     }
 

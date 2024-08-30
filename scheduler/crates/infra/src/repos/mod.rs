@@ -73,8 +73,16 @@ impl Repos {
             .connect(connection_string)
             .await
             .expect("TO CONNECT TO POSTGRES");
-
         info!("DB CHECKING CONNECTION ... [done]");
+
+        if std::env::var("NETTU_SKIP_MIGRATION").is_err() {
+            info!("DB EXECUTING MIGRATION ...");
+            sqlx::migrate!().run(&pool).await?;
+            info!("DB EXECUTING MIGRATION ... [done]");
+        } else {
+            info!("DB MIGRATION SKIPPED");
+        }
+
         Ok(Self {
             accounts: Arc::new(PostgresAccountRepo::new(pool.clone())),
             account_integrations: Arc::new(PostgresAccountIntegrationRepo::new(pool.clone())),

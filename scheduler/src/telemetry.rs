@@ -1,5 +1,6 @@
-use opentelemetry::global;
+use opentelemetry::global::{self, set_error_handler};
 use opentelemetry_sdk::propagation::TraceContextPropagator;
+use tracing::warn;
 use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
 use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
 
@@ -9,8 +10,6 @@ use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
 pub fn init_subscriber() {
     // Filter the spans that are shown based on the RUST_LOG env var or the default value ("info")
     let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
-
-    // TODO: add the `env` on all logs
 
     // If the binary is compiled in debug mode (aka for development)
     // use the compact format for logs
@@ -65,5 +64,11 @@ pub fn init_subscriber() {
         // Set the global subscriber
         tracing::subscriber::set_global_default(subscriber)
             .expect("Unable to set global subscriber");
+
+        // Set a global error handler to log the tracing internal errors to the console
+        set_error_handler(|e| {
+            warn!("Error when exporting traces: {}", e);
+        })
+        .expect("Failed to set global error handler");
     }
 }

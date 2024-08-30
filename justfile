@@ -3,8 +3,8 @@ export RUST_BACKTRACE := "1"
 
 # Install minimal tools
 install_tools: 
-	cargo install sqlx-cli --no-default-features --features postgres
-	cargo install cargo-nextest
+	cargo install sqlx-cli
+	cargo install cargo-pretty-test
 
 # Install all tools
 install_all_tools: install_tools
@@ -33,8 +33,8 @@ prepare_sqlx:
 	cd scheduler && cargo sqlx prepare --workspace
 
 # Run the tests on a temporary DB container
-test:
-	bash ./scripts/run_tests.sh
+test test_name="":
+	bash ./scripts/run_tests.sh {{test_name}}
 
 # Lint
 lint: _setup_db
