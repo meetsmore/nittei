@@ -19,6 +19,7 @@ use nettu_scheduler_sdk::{
     KVMetadata,
     Metadata,
     MetadataFindInput,
+    MultipleFreeBusyRequestBody,
     NettuSDK,
     RemoveServiceUserInput,
     UpdateCalendarInput,
@@ -649,4 +650,129 @@ async fn test_crud_service() {
 
     // Get now returns 404
     assert!(admin_client.service.get(service.id.clone()).await.is_err());
+}
+
+#[actix_web::main]
+#[test]
+async fn test_freebusy_multiple() {
+    let (app, sdk, address) = spawn_app().await;
+    let res = sdk
+        .account
+        .create(&app.config.create_account_secret_code)
+        .await
+        .expect("Expected to create account");
+    let admin_client = NettuSDK::new(address, res.secret_api_key);
+    let user1 = admin_client
+        .user
+        .create(CreateUserInput {
+            metadata: None,
+            user_id: None,
+        })
+        .await
+        .unwrap()
+        .user;
+    let user2 = admin_client
+        .user
+        .create(CreateUserInput {
+            metadata: None,
+            user_id: None,
+        })
+        .await
+        .unwrap()
+        .user;
+
+    let calendar1 = admin_client
+        .calendar
+        .create(CreateCalendarInput {
+            user_id: user1.id.clone(),
+            timezone: chrono_tz::UTC,
+            week_start: Weekday::Mon,
+            metadata: None,
+        })
+        .await
+        .unwrap()
+        .calendar;
+    let calendar2 = admin_client
+        .calendar
+        .create(CreateCalendarInput {
+            user_id: user2.id.clone(),
+            timezone: chrono_tz::UTC,
+            week_start: Weekday::Mon,
+            metadata: None,
+        })
+        .await
+        .unwrap()
+        .calendar;
+
+    let _event1 = admin_client
+        .event
+        .create(CreateEventInput {
+            user_id: user1.id.clone(),
+            calendar_id: calendar1.id.clone(),
+            duration: 1000 * 60 * 60,
+            reminders: Vec::new(),
+            busy: None,
+            recurrence: None,
+            service_id: None,
+            start_time: DateTime::from_timestamp_millis(0).unwrap(),
+            metadata: None,
+        })
+        .await
+        .unwrap()
+        .event;
+    let _event2 = admin_client
+        .event
+        .create(CreateEventInput {
+            user_id: user2.id.clone(),
+            calendar_id: calendar2.id.clone(),
+            duration: 1000 * 60 * 60,
+            reminders: Vec::new(),
+            busy: None,
+            recurrence: None,
+            service_id: None,
+            start_time: DateTime::from_timestamp_millis(1000 * 60 * 60).unwrap(),
+            metadata: None,
+        })
+        .await
+        .unwrap()
+        .event;
+
+    let multiple_free_busy_req = MultipleFreeBusyRequestBody {
+        start_time: DateTime::from_timestamp_millis(0).unwrap(),
+        end_time: DateTime::from_timestamp_millis(1000 * 60 * 60 * 24).unwrap(),
+        user_ids: vec![user1.id.clone(), user2.id.clone()],
+    };
+
+    let multiple_free_busy_res = admin_client
+        .user
+        .multiple_users_free_busy(multiple_free_busy_req)
+        .await
+        .unwrap();
+
+    let user_ids = multiple_free_busy_res.0.keys();
+    assert_eq!(user_ids.len(), 2);
+    // Check that user1 and user2 are in the response
+    assert!(user_ids.clone().any(|id| id == &user1.id));
+    assert!(user_ids.clone().any(|id| id == &user2.id));
+
+    let user1_free_busy = multiple_free_busy_res.0.get(&user1.id).unwrap();
+    let user2_free_busy = multiple_free_busy_res.0.get(&user2.id).unwrap();
+
+    assert_eq!(
+        user1_free_busy.front().unwrap().start_time,
+        DateTime::from_timestamp_millis(0).unwrap(),
+    );
+    assert_eq!(
+        user1_free_busy.front().unwrap().end_time,
+        DateTime::from_timestamp_millis(1000 * 60 * 60).unwrap(),
+    );
+
+    assert_eq!(
+        user2_free_busy.front().unwrap().start_time,
+        DateTime::from_timestamp_millis(1000 * 60 * 60).unwrap(),
+    );
+    assert_eq!(
+        user2_free_busy.front().unwrap().end_time,
+        DateTime::from_timestamp_millis(1000 * 60 * 60 * 2).unwrap(),
+    );
 }

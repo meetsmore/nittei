@@ -75,6 +75,15 @@ sleep 1
 cd crates/infra && sqlx migrate run && cd ../..
 
 # Run the tests
-cargo test --workspace && cd ..
+# Argument
+TEST_NAME=$1
+
+# Add `-- --nocapture` if DEBUG is set
+if [ -n "$DEBUG" ]; then
+  cargo test --workspace $1 -- --nocapture && cd ..
+else
+  # If not in debug mode, run the tests with `cargo-pretty-test`
+  cargo-pretty-test --workspace $1 && cd ..
+fi
 
 # The cleanup function will be called automatically
