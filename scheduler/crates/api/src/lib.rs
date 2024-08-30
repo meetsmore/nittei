@@ -23,7 +23,7 @@ use nettu_scheduler_domain::{
     ID,
 };
 use nettu_scheduler_infra::NettuContext;
-use tracing::warn;
+use tracing::{info, warn};
 use tracing_actix_web::TracingLogger;
 
 pub fn configure_server_api(cfg: &mut web::ServiceConfig) {
@@ -82,8 +82,10 @@ impl Application {
 
     async fn configure_server(context: NettuContext) -> Result<(Server, u16), std::io::Error> {
         let port = context.config.port;
-        let address = format!("127.0.0.1:{}", port);
-        let listener = TcpListener::bind(address)?;
+        let address = std::env::var("NITTEI_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+        let address_and_port = format!("{}:{}", address, port);
+        info!("Starting server on: {}", address_and_port);
+        let listener = TcpListener::bind(address_and_port)?;
         let port = listener.local_addr().unwrap().port();
 
         let server = HttpServer::new(move || {
