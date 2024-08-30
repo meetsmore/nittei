@@ -2,6 +2,7 @@ mod account;
 mod calendar;
 mod error;
 mod event;
+mod http_logger;
 mod job_schedulers;
 mod schedule;
 mod service;
@@ -13,6 +14,7 @@ use std::net::TcpListener;
 
 use actix_cors::Cors;
 use actix_web::{dev::Server, middleware, web, web::Data, App, HttpServer};
+use http_logger::NitteiTracingRootSpanBuilder;
 use job_schedulers::{start_reminder_generation_job_scheduler, start_send_reminders_job};
 use nettu_scheduler_domain::{
     Account,
@@ -94,7 +96,7 @@ impl Application {
             App::new()
                 .wrap(Cors::permissive())
                 .wrap(middleware::Compress::default())
-                .wrap(TracingLogger::default())
+                .wrap(TracingLogger::<NitteiTracingRootSpanBuilder>::new())
                 .app_data(Data::new(ctx))
                 .service(web::scope("/api/v1").configure(configure_server_api))
         })
