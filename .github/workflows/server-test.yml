@@ -148,4 +148,4 @@ jobs:
           push: true
           file: "./scheduler/musl.Dockerfile"
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:musl-test
