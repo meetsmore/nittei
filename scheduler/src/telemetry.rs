@@ -106,6 +106,7 @@ fn get_tracer(
 }
 
 /// Get the tracer based on the tracing endpoint
+/// This is for the (unofficial) Datadog exporter
 fn get_tracer_datadog(
     datadog_endpoint: String,
     service_name: String,
@@ -120,13 +121,15 @@ fn get_tracer_datadog(
         .with_agent_endpoint(datadog_endpoint)
         .with_trace_config(
             trace::Config::default()
-                .with_sampler(Sampler::AlwaysOn)
+                .with_sampler(Sampler::AlwaysOn) // Leave the decision to DD agent
                 .with_id_generator(RandomIdGenerator::default()),
         )
         .install_batch(opentelemetry_sdk::runtime::Tokio)
         .unwrap()
 }
 
+/// Get the tracer based on the OTLP endpoint
+/// This is for the OpenTelemetry Protocol (OTLP) exporter
 fn get_tracer_otlp(
     otlp_endpoint: String,
     service_name: String,
@@ -138,16 +141,29 @@ fn get_tracer_otlp(
         .with_protocol(opentelemetry_otlp::Protocol::HttpJson)
         .with_endpoint(otlp_endpoint);
 
+    // Get the sample ratio from the env var, default to 0.1
+    let ratio_to_sample = std::env::var("TRACING_SAMPLE_RATIO")
+        .unwrap_or_else(|_| "0.1".to_string())
+        .parse::<f64>()
+        .unwrap_or(0.1);
+
+    // Create sampler based on
+    // (1) parent => so if parent exists always sample
+    // (2) if no parent, then the trace id ratio
+    let sampler = Sampler::ParentBased(Box::new(Sampler::TraceIdRatioBased(ratio_to_sample)));
+
     // Then pass it into pipeline builder
     opentelemetry_otlp::new_pipeline()
         .tracing()
-        .with_trace_config(opentelemetry_sdk::trace::config().with_resource(
-            opentelemetry_sdk::Resource::new(vec![
-                opentelemetry::KeyValue::new("service.name", service_name.clone()),
-                opentelemetry::KeyValue::new("service.version", service_version),
-                opentelemetry::KeyValue::new("deployment.environment", service_env),
-            ]),
-        ))
+        .with_trace_config(
+            opentelemetry_sdk::trace::config()
+                .with_resource(opentelemetry_sdk::Resource::new(vec![
+                    opentelemetry::KeyValue::new("service.name", service_name.clone()),
+                    opentelemetry::KeyValue::new("service.version", service_version),
+                    opentelemetry::KeyValue::new("deployment.environment", service_env),
+                ]))
+                .with_sampler(sampler),
+        )
         .with_exporter(otlp_exporter)
         .install_batch(opentelemetry_sdk::runtime::Tokio)
         .unwrap()
