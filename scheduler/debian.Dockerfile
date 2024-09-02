@@ -1,4 +1,4 @@
-ARG RUST_VERSION=1.79.0
+ARG RUST_VERSION=1.80.1
 ARG APP_NAME=nettu_scheduler
 
 FROM rust:${RUST_VERSION}-slim AS builder

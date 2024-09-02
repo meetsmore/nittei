@@ -68,8 +68,14 @@ docker run --rm -d -l ${LABEL} --name $RANDOM_NAME -p $PORT:5432 -e POSTGRES_USE
 # Set the DATABASE_URL environment variable
 export DATABASE_URL="postgres://postgres:postgres@localhost:${PORT}/scheduler"
 
-# Sleep
-sleep 1
+# Wait for PostgreSQL to be ready
+RETRIES=5
+until
+  docker exec $RANDOM_NAME pg_isready >/dev/null 2>&1 ||
+    [ $((RETRIES--)) -eq 0 ]
+do
+  sleep 1
+done
 
 # Run the migrations
 cd crates/infra && sqlx migrate run && cd ../..
