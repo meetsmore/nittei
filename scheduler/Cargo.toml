@@ -44,6 +44,7 @@ opentelemetry-otlp = { version = "=0.16.0", features = [
     "http-proto",
     "tls",
 ] }
+opentelemetry-datadog = { version = "0.12.0", features = ["reqwest-client"] }
 tracing-bunyan-formatter = "0.3"
 
 openssl-probe = "0.1.2"
