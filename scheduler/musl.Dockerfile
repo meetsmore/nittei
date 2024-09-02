@@ -1,3 +1,7 @@
+# Usage:
+# docker buildx build -f musl.Dockerfile -t image:tag --build-arg='ARCH=x86_64' --platform linux/amd64 .
+# docker buildx build -f musl.Dockerfile -t image:tag --build-arg='ARCH=aarch64' --platform linux/arm64 .
+
 ARG ARCH=x86_64
 FROM messense/rust-musl-cross:${ARCH}-musl AS builder
 
