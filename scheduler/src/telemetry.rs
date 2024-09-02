@@ -121,7 +121,7 @@ fn get_tracer_datadog(
         .with_agent_endpoint(datadog_endpoint)
         .with_trace_config(
             trace::Config::default()
-                .with_sampler(Sampler::AlwaysOn) // Leave the decision to DD agent
+                .with_sampler(get_sampler())
                 .with_id_generator(RandomIdGenerator::default()),
         )
         .install_batch(opentelemetry_sdk::runtime::Tokio)
@@ -141,17 +141,6 @@ fn get_tracer_otlp(
         .with_protocol(opentelemetry_otlp::Protocol::HttpJson)
         .with_endpoint(otlp_endpoint);
 
-    // Get the sample ratio from the env var, default to 0.1
-    let ratio_to_sample = std::env::var("TRACING_SAMPLE_RATIO")
-        .unwrap_or_else(|_| "0.1".to_string())
-        .parse::<f64>()
-        .unwrap_or(0.1);
-
-    // Create sampler based on
-    // (1) parent => so if parent exists always sample
-    // (2) if no parent, then the trace id ratio
-    let sampler = Sampler::ParentBased(Box::new(Sampler::TraceIdRatioBased(ratio_to_sample)));
-
     // Then pass it into pipeline builder
     opentelemetry_otlp::new_pipeline()
         .tracing()
@@ -162,9 +151,25 @@ fn get_tracer_otlp(
                     opentelemetry::KeyValue::new("service.version", service_version),
                     opentelemetry::KeyValue::new("deployment.environment", service_env),
                 ]))
-                .with_sampler(sampler),
+                .with_sampler(get_sampler()),
         )
         .with_exporter(otlp_exporter)
         .install_batch(opentelemetry_sdk::runtime::Tokio)
         .unwrap()
+}
+
+/// Get the sampler to be used
+/// This is a parent-based sampler, so if a parent exists, always sample
+/// If there is no parent, then this is based on the TRACING_SAMPLE_RATIO env var, defaults to 0.1
+fn get_sampler() -> Sampler {
+    // Get the sample ratio from the env var, default to 0.1
+    let ratio_to_sample = std::env::var("TRACING_SAMPLE_RATIO")
+        .unwrap_or_else(|_| "0.1".to_string())
+        .parse::<f64>()
+        .unwrap_or(0.1);
+
+    // Create sampler based on
+    // (1) parent => so if parent exists always sample
+    // (2) if no parent, then the trace id ratio
+    Sampler::ParentBased(Box::new(Sampler::TraceIdRatioBased(ratio_to_sample)))
 }
