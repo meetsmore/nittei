@@ -45,7 +45,11 @@ pub fn init_subscriber() {
         if telemetry_layer.is_some() {
             let subscriber = Registry::default()
                 .with(env_filter)
-                .with(tracing_subscriber::fmt::layer().json())
+                .with(
+                    tracing_subscriber::fmt::layer()
+                        .json()
+                        .with_current_span(false),
+                )
                 .with(telemetry_layer.unwrap());
 
             // Set the global subscriber

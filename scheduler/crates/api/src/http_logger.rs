@@ -16,10 +16,56 @@ impl RootSpanBuilder for NitteiTracingRootSpanBuilder {
         } else {
             Level::INFO
         };
-        tracing_actix_web::root_span!(level = level, request)
+        let span = tracing_actix_web::root_span!(level = level, request);
+
+        span
     }
 
     fn on_request_end<B: MessageBody>(span: Span, outcome: &Result<ServiceResponse<B>, Error>) {
+        // Log the outcome of the request
+        if let Ok(response) = outcome {
+            let status_code = response.status().as_u16();
+            let method = response.request().method().to_string();
+            let path = response.request().path().to_string();
+            let response_time = span.metadata().unwrap().name(); // Or use custom timing logic if needed
+
+            // Log with custom fields in JSON format
+            let message = format!("{} {} => {}", method, path, status_code);
+
+            if status_code >= 500 {
+                tracing::error!(
+                    method = method,
+                    path = path,
+                    status_code = status_code,
+                    response_time = response_time,
+                    message,
+                );
+            } else if status_code >= 400 {
+                tracing::warn!(
+                    method = method,
+                    path = path,
+                    status_code = status_code,
+                    response_time = response_time,
+                    message,
+                );
+            } else {
+                tracing::info!(
+                    method = method,
+                    path = path,
+                    status_code = status_code,
+                    response_time = response_time,
+                    message,
+                );
+            };
+        } else if let Err(err) = outcome {
+            // Fallback in case we can't retrieve the request from the span
+            tracing::error!(
+                status_code = 500,
+                error = %err,
+                "HTTP request resulted in an error, but request details are missing"
+            );
+        }
+
         DefaultRootSpanBuilder::on_request_end(span, outcome);
     }
 }
