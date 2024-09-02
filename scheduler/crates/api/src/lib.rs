@@ -107,9 +107,9 @@ impl Application {
         Ok((server, port))
     }
 
-    pub async fn start(self) -> Result<(), std::io::Error> {
+    pub async fn start(self) -> anyhow::Result<()> {
         self.init_default_account().await;
-        self.server.await
+        self.server.await.map_err(|e| anyhow::anyhow!(e))
     }
 
     async fn init_default_account(&self) {

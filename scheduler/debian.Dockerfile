@@ -25,6 +25,9 @@ RUN --mount=type=bind,source=src,target=/app/${APP_NAME}/src \
 
 FROM debian:stable-slim
 
+# Enable backtraces
+ENV RUST_BACKTRACE=1
+
 RUN apt update \
   && apt install -y openssl ca-certificates \
   && apt clean \
