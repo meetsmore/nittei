@@ -1,9 +1,10 @@
 use nettu_scheduler_domain::{BusyCalendar, ID};
 use sqlx::{FromRow, PgPool};
-use tracing::error;
+use tracing::{error, instrument};
 
 use super::{BusyCalendarIdentifier, ExternalBusyCalendarIdentifier, IServiceUserBusyCalendarRepo};
 
+#[derive(Debug)]
 pub struct PostgresServiceUseBusyCalendarRepo {
     pool: PgPool,
 }
@@ -33,6 +34,7 @@ impl From<BusyCalendarRaw> for BusyCalendar {
 
 #[async_trait::async_trait]
 impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
+    #[instrument]
     async fn exists(&self, input: BusyCalendarIdentifier) -> anyhow::Result<bool> {
         let res = sqlx::query!(
             r#"
@@ -58,6 +60,7 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
         Ok(res.rows_affected() == 1)
     }
 
+    #[instrument]
     async fn exists_ext(&self, input: ExternalBusyCalendarIdentifier) -> anyhow::Result<bool> {
         let res = sqlx::query!(
             r#"
@@ -83,6 +86,7 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
         Ok(res.rows_affected() == 1)
     }
 
+    #[instrument]
     async fn insert(&self, input: BusyCalendarIdentifier) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -106,6 +110,7 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn insert_ext(&self, input: ExternalBusyCalendarIdentifier) -> anyhow::Result<()> {
         let provider: String = input.provider.clone().into();
         sqlx::query!(
@@ -131,6 +136,7 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn delete(&self, input: BusyCalendarIdentifier) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -156,6 +162,7 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn delete_ext(&self, input: ExternalBusyCalendarIdentifier) -> anyhow::Result<()> {
         let provider: String = input.provider.clone().into();
         sqlx::query!(
@@ -184,6 +191,7 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn find(&self, service_id: &ID, user_id: &ID) -> anyhow::Result<Vec<BusyCalendar>> {
         let busy_calendars: Vec<BusyCalendarRaw> = sqlx::query_as(
             r#"

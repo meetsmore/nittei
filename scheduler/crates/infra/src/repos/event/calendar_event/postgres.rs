@@ -6,11 +6,12 @@ use sqlx::{
     FromRow,
     PgPool,
 };
-use tracing::error;
+use tracing::{error, instrument};
 
 use super::{IEventRepo, MostRecentCreatedServiceEvents};
 use crate::repos::shared::query_structs::MetadataFindQuery;
 
+#[derive(Debug)]
 pub struct PostgresEventRepo {
     pool: PgPool,
 }
@@ -88,6 +89,7 @@ impl From<EventRaw> for CalendarEvent {
 
 #[async_trait::async_trait]
 impl IEventRepo for PostgresEventRepo {
+    #[instrument]
     async fn insert(&self, e: &CalendarEvent) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -135,6 +137,7 @@ impl IEventRepo for PostgresEventRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn save(&self, e: &CalendarEvent) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -178,6 +181,7 @@ impl IEventRepo for PostgresEventRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn find(&self, event_id: &ID) -> Option<CalendarEvent> {
         let res: Option<EventRaw> = sqlx::query_as!(
             EventRaw,
@@ -206,6 +210,7 @@ impl IEventRepo for PostgresEventRepo {
         res.map(|e| e.into())
     }
 
+    #[instrument]
     async fn find_many(&self, event_ids: &[ID]) -> anyhow::Result<Vec<CalendarEvent>> {
         let ids = event_ids.iter().map(|id| *id.as_ref()).collect::<Vec<_>>();
         let events: Vec<EventRaw> = sqlx::query_as(
@@ -231,6 +236,7 @@ impl IEventRepo for PostgresEventRepo {
         Ok(events.into_iter().map(|e| e.into()).collect())
     }
 
+    #[instrument]
     async fn find_by_calendar(
         &self,
         calendar_id: &ID,
@@ -288,6 +294,7 @@ impl IEventRepo for PostgresEventRepo {
         Ok(events.into_iter().map(|e| e.into()).collect())
     }
 
+    #[instrument]
     async fn find_by_calendars(
         &self,
         calendar_ids: Vec<ID>,
@@ -325,6 +332,7 @@ impl IEventRepo for PostgresEventRepo {
         Ok(events.into_iter().map(|e| e.into()).collect())
     }
 
+    #[instrument]
     async fn find_most_recently_created_service_events(
         &self,
         service_id: &ID,
@@ -362,6 +370,7 @@ impl IEventRepo for PostgresEventRepo {
         events.into_iter().map(|e| e.into()).collect()
     }
 
+    #[instrument]
     async fn find_by_service(
         &self,
         service_id: &ID,
@@ -407,6 +416,7 @@ impl IEventRepo for PostgresEventRepo {
         events.into_iter().map(|e| e.into()).collect()
     }
 
+    #[instrument]
     async fn find_user_service_events(
         &self,
         user_id: &ID,
@@ -452,6 +462,7 @@ impl IEventRepo for PostgresEventRepo {
         events.into_iter().map(|e| e.into()).collect()
     }
 
+    #[instrument]
     async fn delete(&self, event_id: &ID) -> anyhow::Result<()> {
         let res = sqlx::query!(
             r#"
@@ -478,6 +489,7 @@ impl IEventRepo for PostgresEventRepo {
         }
     }
 
+    #[instrument]
     async fn delete_by_service(&self, service_id: &ID) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -498,6 +510,7 @@ impl IEventRepo for PostgresEventRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn find_by_metadata(&self, query: MetadataFindQuery) -> Vec<CalendarEvent> {
         let events: Vec<EventRaw> = sqlx::query_as!(
             EventRaw,

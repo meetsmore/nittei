@@ -1,9 +1,10 @@
 use nettu_scheduler_domain::{SyncedCalendar, ID};
 use sqlx::{types::Uuid, FromRow, PgPool};
-use tracing::error;
+use tracing::{error, instrument};
 
 use super::ICalendarSyncedRepo;
 
+#[derive(Debug)]
 pub struct PostgresCalendarSyncedRepo {
     pool: PgPool,
 }
@@ -35,6 +36,7 @@ impl From<SyncedCalendarRaw> for SyncedCalendar {
 
 #[async_trait::async_trait]
 impl ICalendarSyncedRepo for PostgresCalendarSyncedRepo {
+    #[instrument]
     async fn insert(&self, c: &SyncedCalendar) -> anyhow::Result<()> {
         let provider: String = c.provider.clone().into();
         sqlx::query!(
@@ -65,6 +67,7 @@ impl ICalendarSyncedRepo for PostgresCalendarSyncedRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn delete(&self, c: &SyncedCalendar) -> anyhow::Result<()> {
         let provider: String = c.provider.clone().into();
         let rows = sqlx::query!(
@@ -97,6 +100,7 @@ impl ICalendarSyncedRepo for PostgresCalendarSyncedRepo {
         }
     }
 
+    #[instrument]
     async fn find_by_calendar(&self, calendar_id: &ID) -> anyhow::Result<Vec<SyncedCalendar>> {
         let synced_calendars: Vec<SyncedCalendarRaw> = sqlx::query_as!(
             SyncedCalendarRaw,

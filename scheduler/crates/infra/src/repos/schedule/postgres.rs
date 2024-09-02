@@ -5,11 +5,12 @@ use sqlx::{
     FromRow,
     PgPool,
 };
-use tracing::error;
+use tracing::{error, instrument};
 
 use super::IScheduleRepo;
 use crate::repos::shared::query_structs::MetadataFindQuery;
 
+#[derive(Debug)]
 pub struct PostgresScheduleRepo {
     pool: PgPool,
 }
@@ -45,6 +46,7 @@ impl From<ScheduleRaw> for Schedule {
 
 #[async_trait::async_trait]
 impl IScheduleRepo for PostgresScheduleRepo {
+    #[instrument]
     async fn insert(&self, schedule: &Schedule) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -70,6 +72,7 @@ impl IScheduleRepo for PostgresScheduleRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn save(&self, schedule: &Schedule) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -96,6 +99,7 @@ impl IScheduleRepo for PostgresScheduleRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn find(&self, schedule_id: &ID) -> Option<Schedule> {
         let res: Option<ScheduleRaw> = sqlx::query_as!(
             ScheduleRaw,
@@ -121,6 +125,7 @@ impl IScheduleRepo for PostgresScheduleRepo {
         res.map(|schedule| schedule.into())
     }
 
+    #[instrument]
     async fn find_many(&self, schedule_ids: &[ID]) -> Vec<Schedule> {
         let ids = schedule_ids
             .iter()
@@ -149,6 +154,7 @@ impl IScheduleRepo for PostgresScheduleRepo {
         schedule_raw.into_iter().map(|e| e.into()).collect()
     }
 
+    #[instrument]
     async fn find_by_user(&self, user_id: &ID) -> Vec<Schedule> {
         let schedules: Vec<ScheduleRaw> = sqlx::query_as!(
             ScheduleRaw,
@@ -174,6 +180,7 @@ impl IScheduleRepo for PostgresScheduleRepo {
         schedules.into_iter().map(|s| s.into()).collect()
     }
 
+    #[instrument]
     async fn delete(&self, schedule_id: &ID) -> anyhow::Result<()> {
         match sqlx::query!(
             r#"
@@ -204,6 +211,7 @@ impl IScheduleRepo for PostgresScheduleRepo {
         }
     }
 
+    #[instrument]
     async fn find_by_metadata(&self, query: MetadataFindQuery) -> Vec<Schedule> {
         let schedules: Vec<ScheduleRaw> = sqlx::query_as!(
             ScheduleRaw,

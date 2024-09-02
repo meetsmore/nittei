@@ -1,10 +1,11 @@
 use chrono::{DateTime, Utc};
 use nettu_scheduler_domain::{Reminder, ID};
 use sqlx::{types::Uuid, FromRow, PgPool};
-use tracing::error;
+use tracing::{error, instrument};
 
 use super::IReminderRepo;
 
+#[derive(Debug)]
 pub struct PostgresReminderRepo {
     pool: PgPool,
 }
@@ -45,6 +46,7 @@ impl From<ReminderRaw> for Reminder {
 
 #[async_trait::async_trait]
 impl IReminderRepo for PostgresReminderRepo {
+    #[instrument]
     async fn bulk_insert(&self, reminders: &[Reminder]) -> anyhow::Result<()> {
         for reminder in reminders {
             sqlx::query!(
@@ -72,6 +74,7 @@ impl IReminderRepo for PostgresReminderRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn init_version(&self, event_id: &ID) -> anyhow::Result<i64> {
         let r_version = sqlx::query_as!(
             ReminderVersionRaw,
@@ -97,6 +100,7 @@ impl IReminderRepo for PostgresReminderRepo {
         Ok(r_version.version)
     }
 
+    #[instrument]
     async fn inc_version(&self, event_id: &ID) -> anyhow::Result<i64> {
         let r_version = sqlx::query_as!(
             ReminderVersionRaw,
@@ -126,6 +130,7 @@ impl IReminderRepo for PostgresReminderRepo {
         Ok(r_version.version)
     }
 
+    #[instrument]
     async fn delete_all_before(&self, before: DateTime<Utc>) -> Vec<Reminder> {
         sqlx::query_as!(
             ReminderRaw,

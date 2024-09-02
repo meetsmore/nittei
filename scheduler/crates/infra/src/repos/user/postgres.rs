@@ -5,11 +5,12 @@ use sqlx::{
     FromRow,
     PgPool,
 };
-use tracing::error;
+use tracing::{error, instrument};
 
 use super::IUserRepo;
 use crate::repos::shared::query_structs::MetadataFindQuery;
 
+#[derive(Debug)]
 pub struct PostgresUserRepo {
     pool: PgPool,
 }
@@ -39,6 +40,7 @@ impl From<UserRaw> for User {
 
 #[async_trait::async_trait]
 impl IUserRepo for PostgresUserRepo {
+    #[instrument]
     async fn insert(&self, user: &User) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -62,6 +64,7 @@ impl IUserRepo for PostgresUserRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn save(&self, user: &User) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -86,6 +89,7 @@ impl IUserRepo for PostgresUserRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn delete(&self, user_id: &ID) -> Option<User> {
         let res = sqlx::query_as!(
             UserRaw,
@@ -110,6 +114,7 @@ impl IUserRepo for PostgresUserRepo {
         res.map(|user| user.into())
     }
 
+    #[instrument]
     async fn find(&self, user_id: &ID) -> Option<User> {
         let res = sqlx::query_as!(
             UserRaw,
@@ -133,6 +138,7 @@ impl IUserRepo for PostgresUserRepo {
         res.map(|user| user.into())
     }
 
+    #[instrument]
     async fn find_many(&self, user_ids: &[ID]) -> Vec<User> {
         let user_ids = user_ids.iter().map(|id| *id.as_ref()).collect::<Vec<_>>();
 
@@ -158,6 +164,7 @@ impl IUserRepo for PostgresUserRepo {
         users.into_iter().map(|u| u.into()).collect()
     }
 
+    #[instrument]
     async fn find_by_account_id(&self, user_id: &ID, account_id: &ID) -> Option<User> {
         let res = sqlx::query_as!(
             UserRaw,
@@ -183,6 +190,7 @@ impl IUserRepo for PostgresUserRepo {
         res.map(|user| user.into())
     }
 
+    #[instrument]
     async fn find_by_metadata(&self, query: MetadataFindQuery) -> Vec<User> {
         let users: Vec<UserRaw> = sqlx::query_as!(
             UserRaw,
