@@ -1,5 +1,9 @@
 name: Server test
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 on:
   pull_request:
   push:
