@@ -878,7 +878,10 @@ describe('Requirements', () => {
         expect(res?.status).toBe(200)
         expect(res?.data).toBeDefined()
         expect(res?.data?.events.length).toBe(1)
-        console.log('res?.data?.events[0].event.startTime', res?.data?.events[0].event.startTime)
+        console.log(
+          'res?.data?.events[0].event.startTime',
+          res?.data?.events[0].event.startTime
+        )
         expect(res?.data?.events[0].event.startTime).toEqual(date1.toDate())
       })
 
