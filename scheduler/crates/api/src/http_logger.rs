@@ -16,9 +16,7 @@ impl RootSpanBuilder for NitteiTracingRootSpanBuilder {
         } else {
             Level::INFO
         };
-        let span = tracing_actix_web::root_span!(level = level, request);
-
-        span
+        tracing_actix_web::root_span!(level = level, request)
     }
 
     fn on_request_end<B: MessageBody>(span: Span, outcome: &Result<ServiceResponse<B>, Error>) {
@@ -27,7 +25,6 @@ impl RootSpanBuilder for NitteiTracingRootSpanBuilder {
             let status_code = response.status().as_u16();
             let method = response.request().method().to_string();
             let path = response.request().path().to_string();
-            let response_time = span.metadata().unwrap().name(); // Or use custom timing logic if needed
 
             // Log with custom fields in JSON format
             let message = format!("{} {} => {}", method, path, status_code);
@@ -37,7 +34,6 @@ impl RootSpanBuilder for NitteiTracingRootSpanBuilder {
                     method = method,
                     path = path,
                     status_code = status_code,
-                    response_time = response_time,
                     message,
                 );
             } else if status_code >= 400 {
@@ -45,7 +41,6 @@ impl RootSpanBuilder for NitteiTracingRootSpanBuilder {
                     method = method,
                     path = path,
                     status_code = status_code,
-                    response_time = response_time,
                     message,
                 );
             } else {
@@ -53,7 +48,6 @@ impl RootSpanBuilder for NitteiTracingRootSpanBuilder {
                     method = method,
                     path = path,
                     status_code = status_code,
-                    response_time = response_time,
                     message,
                 );
             };
