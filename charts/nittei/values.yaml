@@ -114,3 +114,5 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+revisionHistoryLimit: 5
