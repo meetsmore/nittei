@@ -152,4 +152,4 @@ jobs:
           push: true
           file: "./scheduler/debian.Dockerfile"
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:tracing_test3
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:tracing_test4
