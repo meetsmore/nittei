@@ -26,6 +26,7 @@ jobs:
     env:
       PORT: 5000
       DATABASE_URL: postgresql://postgres:postgres@localhost/nettuscheduler
+      RUST_BACKTRACE: 1
 
     steps:
       - name: Checkout repository
@@ -88,4 +89,4 @@ jobs:
       - name: Run server tests
         run: |
           cd scheduler
-          cargo nextest run --workspace
+          cargo run test --workspace
