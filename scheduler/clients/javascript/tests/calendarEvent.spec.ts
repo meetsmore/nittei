@@ -14,7 +14,9 @@ describe('CalendarEvent API', () => {
   beforeAll(async () => {
     const data = await setupUserClient()
     client = data.userClient
-    unauthClient = NettuClient({ nettuAccount: data.accountId })
+    unauthClient = await NettuClient({
+      nettuAccount: data.accountId,
+    })
     const calendarRes = await client.calendar.create({
       timezone: 'UTC',
     })

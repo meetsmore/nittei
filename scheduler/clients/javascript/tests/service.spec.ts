@@ -4,7 +4,7 @@ import {
   ScheduleRuleVariant,
   Weekday,
 } from '../lib'
-import { setupAccount, setupUserClient } from './helpers/fixtures'
+import { setupUserClient } from './helpers/fixtures'
 
 describe('Service API', () => {
   let client: INettuClient

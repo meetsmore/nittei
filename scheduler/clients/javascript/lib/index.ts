@@ -1,13 +1,12 @@
 import { NettuAccountClient } from './accountClient'
 import {
-  AccountCreds,
-  EmptyCreds,
-  type ICredentials,
-  UserCreds,
+  createAxiosInstanceBackend,
+  createAxiosInstanceFrontend,
 } from './baseClient'
 import { NettuCalendarClient, NettuCalendarUserClient } from './calendarClient'
 import { NettuEventClient, NettuEventUserClient } from './eventClient'
 import { NettuHealthClient } from './healthClient'
+import { createCreds, PartialCredentials } from './helpers/credentials'
 import { NettuScheduleUserClient, NettuScheduleClient } from './scheduleClient'
 import { NettuServiceUserClient, NettuServiceClient } from './serviceClient'
 import {
@@ -16,12 +15,6 @@ import {
 } from './userClient'
 
 export * from './domain'
-
-type PartialCredentials = {
-  apiKey?: string
-  nettuAccount?: string
-  token?: string
-}
 
 export interface INettuUserClient {
   calendar: NettuCalendarUserClient
@@ -41,51 +34,77 @@ export interface INettuClient {
   user: _NettuUserClient
 }
 
+/**
+ * Base configuration for the client
+ */
 type ClientConfig = {
-  baseUrl: string
+  /**
+   * Base URL for the API
+   */
+  baseUrl?: string
+
+  /**
+   * Keep the connection alive
+   */
+  keepAlive?: boolean
 }
 
-export const config: ClientConfig = {
+const DEFAULT_CONFIG: Required<ClientConfig> = {
   baseUrl: 'http://localhost:5000/api/v1',
+  keepAlive: false,
 }
 
+/**
+ * Create a client for the Nettu API (user client, not admin)
+ * @param config configuration and credentials to be used
+ * @returns user client
+ */
 export const NettuUserClient = (
-  partialCreds?: PartialCredentials
+  config?: PartialCredentials & ClientConfig
 ): INettuUserClient => {
-  const creds = createCreds(partialCreds)
+  const creds = createCreds(config)
+
+  const finalConfig = { ...DEFAULT_CONFIG, ...config }
+
+  // User clients should not keep the connection alive (usually on the frontend)
+  const axiosClient = createAxiosInstanceFrontend(
+    { baseUrl: finalConfig.baseUrl },
+    creds
+  )
 
   return Object.freeze({
-    calendar: new NettuCalendarUserClient(creds),
-    events: new NettuEventUserClient(creds),
-    service: new NettuServiceUserClient(creds),
-    schedule: new NettuScheduleUserClient(creds),
-    user: new NettuUserUserClient(creds),
+    calendar: new NettuCalendarUserClient(axiosClient),
+    events: new NettuEventUserClient(axiosClient),
+    service: new NettuServiceUserClient(axiosClient),
+    schedule: new NettuScheduleUserClient(axiosClient),
+    user: new NettuUserUserClient(axiosClient),
   })
 }
 
-export const NettuClient = (
-  partialCreds?: PartialCredentials
-): INettuClient => {
-  const creds = createCreds(partialCreds)
+/**
+ * Create a client for the Nettu API (admin client)
+ * @param config configuration and credentials to be used
+ * @returns admin client
+ */
+export const NettuClient = async (
+  config?: PartialCredentials & ClientConfig
+): Promise<INettuClient> => {
+  const creds = createCreds(config)
+
+  const finalConfig = { ...DEFAULT_CONFIG, ...config }
+
+  const axiosClient = await createAxiosInstanceBackend(
+    { baseUrl: finalConfig.baseUrl, keepAlive: finalConfig.keepAlive },
+    creds
+  )
 
   return Object.freeze({
-    account: new NettuAccountClient(creds),
-    events: new NettuEventClient(creds),
-    calendar: new NettuCalendarClient(creds),
-    user: new _NettuUserClient(creds),
-    service: new NettuServiceClient(creds),
-    schedule: new NettuScheduleClient(creds),
-    health: new NettuHealthClient(creds),
+    account: new NettuAccountClient(axiosClient),
+    events: new NettuEventClient(axiosClient),
+    calendar: new NettuCalendarClient(axiosClient),
+    user: new _NettuUserClient(axiosClient),
+    service: new NettuServiceClient(axiosClient),
+    schedule: new NettuScheduleClient(axiosClient),
+    health: new NettuHealthClient(axiosClient),
   })
-}
-
-const createCreds = (creds?: PartialCredentials): ICredentials => {
-  if (creds?.apiKey) {
-    return new AccountCreds(creds.apiKey)
-  }
-  if (creds?.nettuAccount) {
-    return new UserCreds(creds?.nettuAccount, creds?.token)
-  }
-  // throw new Error("No api key or nettu account provided to nettu client.");
-  return new EmptyCreds()
 }

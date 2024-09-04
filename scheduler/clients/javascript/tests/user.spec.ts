@@ -13,12 +13,15 @@ describe('User API', () => {
   let accountClient: INettuClient
   let client: INettuUserClient
   let unauthClient: INettuClient
+
   beforeAll(async () => {
     const data = await setupUserClient()
     client = data.userClient
     accountClient = data.accountClient
     userId = data.userId
-    unauthClient = NettuClient({ nettuAccount: data.accountId })
+    unauthClient = await NettuClient({
+      nettuAccount: data.accountId,
+    })
     const calendarRes = await client.calendar.create({ timezone: 'UTC' })
     if (!calendarRes.data) {
       throw new Error('Calendar not created')

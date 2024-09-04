@@ -1,4 +1,5 @@
 import {
+  INettuClient,
   type INettuUserClient,
   NettuClient,
   ScheduleRuleVariant,
@@ -8,10 +9,11 @@ import { setupUserClient } from './helpers/fixtures'
 
 describe('Schedule API', () => {
   let client: INettuUserClient
-  const unauthClient = NettuClient()
+  let unauthClient: INettuClient
   let userId: string
 
   beforeAll(async () => {
+    unauthClient = await NettuClient({})
     const data = await setupUserClient()
     client = data.userClient
     userId = data.userId
