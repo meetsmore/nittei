@@ -68,7 +68,7 @@ export const NettuUserClient = (
 
   // User clients should not keep the connection alive (usually on the frontend)
   const axiosClient = createAxiosInstanceFrontend(
-    { baseUrl: finalConfig.baseUrl, keepAlive: false },
+    { baseUrl: finalConfig.baseUrl },
     creds
   )
 

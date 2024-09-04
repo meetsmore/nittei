@@ -71,18 +71,24 @@ export class APIResponse<T> {
   }
 }
 
+/**
+ * Create an Axios instance for the frontend
+ * 
+ * Compared to the backend, this function is not async
+ * And the frontend cannot keep the connection alive
+ * 
+ * @param args specify base URL for the API
+ * @param credentials credentials for the API
+ * @returns an Axios instance
+ */
 export const createAxiosInstanceFrontend = (
-  {
-    baseUrl,
-    keepAlive,
-  }: {
+  args: {
     baseUrl: string
-    keepAlive: boolean
   },
   credentials: ICredentials
 ): AxiosInstance => {
   const config: AxiosRequestConfig = {
-    baseURL: baseUrl,
+    baseURL: args.baseUrl,
     headers: credentials.createAuthHeaders(),
     validateStatus: () => true, // allow all status codes without throwing error
     paramsSerializer: {
@@ -93,18 +99,23 @@ export const createAxiosInstanceFrontend = (
   return axios.create(config)
 }
 
+/**
+ * Create an Axios instance for the backend
+ * 
+ * On the backend (NodeJS), it is possible to keep the connection alive
+ * @param args specify base URL and if the connection should be kept alive
+ * @param credentials credentials for the API
+ * @returns Promise of an Axios instance
+ */
 export const createAxiosInstanceBackend = async (
-  {
-    baseUrl,
-    keepAlive,
-  }: {
+  args: {
     baseUrl: string
     keepAlive: boolean
   },
   credentials: ICredentials
 ): Promise<AxiosInstance> => {
   const config: AxiosRequestConfig = {
-    baseURL: baseUrl,
+    baseURL: args.baseUrl,
     headers: credentials.createAuthHeaders(),
     validateStatus: () => true, // allow all status codes without throwing error
     paramsSerializer: {
@@ -114,11 +125,13 @@ export const createAxiosInstanceBackend = async (
 
   // If keepAlive is true, and if we are in NodeJS
   // create an agent to keep the connection alive
-  if (keepAlive && typeof module !== 'undefined' && module.exports) {
-    if (baseUrl.startsWith('https')) {
+  if (args.keepAlive && typeof module !== 'undefined' && module.exports) {
+    if (args.baseUrl.startsWith('https')) {
+      // This is a dynamic import to avoid loading the https module in the browser
       const https = await import('https')
       config.httpsAgent = new https.Agent({ keepAlive: true })
     } else {
+      // This is a dynamic import to avoid loading the http module in the browser
       const http = await import('http')
       config.httpAgent = new http.Agent({ keepAlive: true })
     }
