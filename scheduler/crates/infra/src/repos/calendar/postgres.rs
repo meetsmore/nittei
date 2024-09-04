@@ -5,11 +5,12 @@ use sqlx::{
     FromRow,
     PgPool,
 };
-use tracing::error;
+use tracing::{error, instrument};
 
 use super::ICalendarRepo;
 use crate::repos::shared::query_structs::MetadataFindQuery;
 
+#[derive(Debug)]
 pub struct PostgresCalendarRepo {
     pool: PgPool,
 }
@@ -43,6 +44,7 @@ impl From<CalendarRaw> for Calendar {
 
 #[async_trait::async_trait]
 impl ICalendarRepo for PostgresCalendarRepo {
+    #[instrument]
     async fn insert(&self, calendar: &Calendar) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -67,6 +69,7 @@ impl ICalendarRepo for PostgresCalendarRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn save(&self, calendar: &Calendar) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -91,6 +94,7 @@ impl ICalendarRepo for PostgresCalendarRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn find(&self, calendar_id: &ID) -> Option<Calendar> {
         let res: Option<CalendarRaw> = sqlx::query_as!(
             CalendarRaw,
@@ -116,6 +120,7 @@ impl ICalendarRepo for PostgresCalendarRepo {
         res.map(|cal| cal.into())
     }
 
+    #[instrument]
     async fn find_multiple(&self, calendar_ids: Vec<&ID>) -> Vec<Calendar> {
         let calendar_ids: Vec<Uuid> = calendar_ids
             .into_iter()
@@ -145,6 +150,7 @@ impl ICalendarRepo for PostgresCalendarRepo {
         calendars.into_iter().map(|c| c.into()).collect()
     }
 
+    #[instrument]
     async fn find_by_user(&self, user_id: &ID) -> Vec<Calendar> {
         let calendars: Vec<CalendarRaw> = sqlx::query_as!(
             CalendarRaw,
@@ -170,6 +176,7 @@ impl ICalendarRepo for PostgresCalendarRepo {
         calendars.into_iter().map(|c| c.into()).collect()
     }
 
+    #[instrument]
     async fn delete(&self, calendar_id: &ID) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -191,6 +198,7 @@ impl ICalendarRepo for PostgresCalendarRepo {
         })
     }
 
+    #[instrument]
     async fn find_by_metadata(&self, query: MetadataFindQuery) -> Vec<Calendar> {
         let calendars: Vec<CalendarRaw> = sqlx::query_as!(
             CalendarRaw,

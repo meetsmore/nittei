@@ -5,11 +5,12 @@ use sqlx::{
     FromRow,
     PgPool,
 };
-use tracing::error;
+use tracing::{error, instrument};
 
 use super::IServiceRepo;
 use crate::repos::{service_user::ServiceUserRaw, shared::query_structs::MetadataFindQuery};
 
+#[derive(Debug)]
 pub struct PostgresServiceRepo {
     pool: PgPool,
 }
@@ -66,6 +67,7 @@ impl From<ServiceWithUsersRaw> for ServiceWithUsers {
 
 #[async_trait::async_trait]
 impl IServiceRepo for PostgresServiceRepo {
+    #[instrument]
     async fn insert(&self, service: &Service) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -90,6 +92,7 @@ impl IServiceRepo for PostgresServiceRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn save(&self, service: &Service) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -115,6 +118,7 @@ impl IServiceRepo for PostgresServiceRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn find(&self, service_id: &ID) -> Option<Service> {
         let res: Option<ServiceRaw> = sqlx::query_as!(
             ServiceRaw,
@@ -138,6 +142,7 @@ impl IServiceRepo for PostgresServiceRepo {
         res.map(|service| service.into())
     }
 
+    #[instrument]
     async fn find_with_users(&self, service_id: &ID) -> Option<ServiceWithUsers> {
         let res: Option<ServiceWithUsersRaw> = sqlx::query_as(
             r#"
@@ -163,6 +168,7 @@ impl IServiceRepo for PostgresServiceRepo {
         res.map(|service| service.into())
     }
 
+    #[instrument]
     async fn delete(&self, service_id: &ID) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -183,6 +189,7 @@ impl IServiceRepo for PostgresServiceRepo {
         })
     }
 
+    #[instrument]
     async fn find_by_metadata(&self, query: MetadataFindQuery) -> Vec<Service> {
         let services: Vec<ServiceRaw> = sqlx::query_as!(
             ServiceRaw,
