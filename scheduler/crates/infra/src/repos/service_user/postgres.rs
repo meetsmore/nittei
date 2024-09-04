@@ -1,10 +1,11 @@
 use nettu_scheduler_domain::{ServiceResource, TimePlan, ID};
 use serde::Deserialize;
 use sqlx::{types::Uuid, FromRow, PgPool};
-use tracing::error;
+use tracing::{error, instrument};
 
 use super::IServiceUserRepo;
 
+#[derive(Debug)]
 pub struct PostgresServiceUserRepo {
     pool: PgPool,
 }
@@ -51,6 +52,7 @@ impl From<ServiceUserRaw> for ServiceResource {
 
 #[async_trait::async_trait]
 impl IServiceUserRepo for PostgresServiceUserRepo {
+    #[instrument]
     async fn insert(&self, user: &ServiceResource) -> anyhow::Result<()> {
         let (available_calendar_id, available_schedule_id) = match &user.availability {
             TimePlan::Calendar(id) => (Some(id.as_ref()), None),
@@ -85,6 +87,7 @@ impl IServiceUserRepo for PostgresServiceUserRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn save(&self, user: &ServiceResource) -> anyhow::Result<()> {
         let (available_calendar_id, available_schedule_id) = match &user.availability {
             TimePlan::Calendar(id) => (Some(id.as_ref()), None),
@@ -125,6 +128,7 @@ impl IServiceUserRepo for PostgresServiceUserRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn find(&self, service_id: &ID, user_id: &ID) -> Option<ServiceResource> {
         // https://github.com/launchbadge/sqlx/issues/367
         let res: Option<ServiceUserRaw> = sqlx::query_as(
@@ -153,6 +157,7 @@ impl IServiceUserRepo for PostgresServiceUserRepo {
         res.map(|s_user| s_user.into())
     }
 
+    #[instrument]
     async fn find_by_user(&self, user_id: &ID) -> Vec<ServiceResource> {
         // https://github.com/launchbadge/sqlx/issues/367
         let service_users: Vec<ServiceUserRaw> = sqlx::query_as(
@@ -178,6 +183,7 @@ impl IServiceUserRepo for PostgresServiceUserRepo {
         service_users.into_iter().map(|u| u.into()).collect()
     }
 
+    #[instrument]
     async fn delete(&self, service_id: &ID, user_id: &ID) -> anyhow::Result<()> {
         sqlx::query!(
             r#"

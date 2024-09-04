@@ -5,10 +5,11 @@ use sqlx::{
     FromRow,
     PgPool,
 };
-use tracing::error;
+use tracing::{error, instrument};
 
 use super::IAccountRepo;
 
+#[derive(Debug)]
 pub struct PostgresAccountRepo {
     pool: PgPool,
 }
@@ -40,6 +41,7 @@ impl From<AccountRaw> for Account {
 
 #[async_trait::async_trait]
 impl IAccountRepo for PostgresAccountRepo {
+    #[instrument]
     async fn insert(&self, account: &Account) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -63,6 +65,7 @@ impl IAccountRepo for PostgresAccountRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn save(&self, account: &Account) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -89,6 +92,7 @@ impl IAccountRepo for PostgresAccountRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn find(&self, account_id: &ID) -> Option<Account> {
         let res: Option<AccountRaw> = sqlx::query_as!(
             AccountRaw,
@@ -111,6 +115,7 @@ impl IAccountRepo for PostgresAccountRepo {
         res.map(|account| account.into())
     }
 
+    #[instrument]
     async fn find_many(&self, accounts_ids: &[ID]) -> anyhow::Result<Vec<Account>> {
         let ids = accounts_ids
             .iter()
@@ -137,6 +142,7 @@ impl IAccountRepo for PostgresAccountRepo {
         Ok(accounts_raw.into_iter().map(|acc| acc.into()).collect())
     }
 
+    #[instrument]
     async fn delete(&self, account_id: &ID) -> Option<Account> {
         let res: Option<AccountRaw> = sqlx::query_as!(
             AccountRaw,
@@ -160,6 +166,7 @@ impl IAccountRepo for PostgresAccountRepo {
         res.map(|acc| acc.into())
     }
 
+    #[instrument]
     async fn find_by_apikey(&self, api_key: &str) -> Option<Account> {
         let res: Option<AccountRaw> = sqlx::query_as!(
             AccountRaw,
