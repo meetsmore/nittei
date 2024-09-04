@@ -24,13 +24,24 @@ impl Config {
         let create_account_secret_code = match std::env::var("CREATE_ACCOUNT_SECRET_CODE") {
             Ok(code) => code,
             Err(_) => {
-                info!("Did not find CREATE_ACCOUNT_SECRET_CODE environment variable. Going to create one.");
-                let code = create_random_secret(16);
-                info!(
-                    "Secret code for creating accounts was generated and set to: {}",
+                // If we are in debug mode we set a default secret code
+                if cfg!(debug_assertions) {
+                    let code = "create_account_dev_secret".to_string();
+                    info!(
+                        "Running in debug mode, using default UNSECURE secret code for creating accounts: {}", 
+                        code
+                    );
                     code
-                );
-                code
+                } else {
+                    // Otherwise we generate a random secret code
+                    info!("Did not find CREATE_ACCOUNT_SECRET_CODE environment variable. Going to create one.");
+                    let code = create_random_secret(16);
+                    info!(
+                        "Secret code for creating accounts was generated and set to: {}",
+                        code
+                    );
+                    code
+                }
             }
         };
         let default_port = "5000";
