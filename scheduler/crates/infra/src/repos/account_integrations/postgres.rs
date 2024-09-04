@@ -1,9 +1,10 @@
 use nettu_scheduler_domain::{AccountIntegration, IntegrationProvider, ID};
 use sqlx::{types::Uuid, FromRow, PgPool};
-use tracing::error;
+use tracing::{error, instrument};
 
 use super::IAccountIntegrationRepo;
 
+#[derive(Debug)]
 pub struct PostgresAccountIntegrationRepo {
     pool: PgPool,
 }
@@ -37,6 +38,7 @@ impl From<AccountIntegrationRaw> for AccountIntegration {
 
 #[async_trait::async_trait]
 impl IAccountIntegrationRepo for PostgresAccountIntegrationRepo {
+    #[instrument]
     async fn insert(&self, integration: &AccountIntegration) -> anyhow::Result<()> {
         let provider: String = integration.provider.clone().into();
         sqlx::query!(
@@ -62,6 +64,7 @@ impl IAccountIntegrationRepo for PostgresAccountIntegrationRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn find(&self, account_id: &ID) -> anyhow::Result<Vec<AccountIntegration>> {
         let integrations: Vec<AccountIntegrationRaw> = sqlx::query_as!(
             AccountIntegrationRaw,
@@ -83,6 +86,7 @@ impl IAccountIntegrationRepo for PostgresAccountIntegrationRepo {
         Ok(integrations.into_iter().map(|i| i.into()).collect())
     }
 
+    #[instrument]
     async fn delete(&self, account_id: &ID, provider: IntegrationProvider) -> anyhow::Result<()> {
         let provider: String = provider.into();
         match sqlx::query!(
