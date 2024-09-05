@@ -194,12 +194,12 @@ export class NettuUserClient extends NettuBaseClient {
       status: res.status,
       data: {
         events: res.data.events.map(event => {
-        return {
-          event: convertEventDates(event.event),
-          instances: event.instances.map(convertInstanceDates),
-        }
-      }),
-    }
+          return {
+            event: convertEventDates(event.event),
+            instances: event.instances.map(convertInstanceDates),
+          }
+        }),
+      },
     }
   }
 
@@ -232,14 +232,11 @@ export class NettuUserClient extends NettuBaseClient {
   public async freebusyMultipleUsers(
     req: GetMultipleUsersFeebusyReq
   ): Promise<APIResponse<GetUserFeebusyResponse>> {
-    const res = await this.post<GetUserFeebusyResponse>(
-      '/user/freebusy',
-      {
-        userIds: req.userIds,
-        startTime: req.startTime.toISOString(),
-        endTime: req.endTime.toISOString(),
-      }
-    )
+    const res = await this.post<GetUserFeebusyResponse>('/user/freebusy', {
+      userIds: req.userIds,
+      startTime: req.startTime.toISOString(),
+      endTime: req.endTime.toISOString(),
+    })
 
     if (!res.data) {
       return res

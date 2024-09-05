@@ -1,5 +1,9 @@
-import axios, { type AxiosInstance, type AxiosResponse } from 'axios'
-import { config } from '.'
+import axios, {
+  AxiosRequestConfig,
+  type AxiosInstance,
+  type AxiosResponse,
+} from 'axios'
+import { ICredentials } from './helpers/credentials'
 
 /**
  * Base client for the API
@@ -7,32 +11,22 @@ import { config } from '.'
  * It shouldn't be exposed to the end user
  */
 export abstract class NettuBaseClient {
-  private readonly credentials: ICredentials
-  private readonly axiosClient: AxiosInstance
-
-  constructor(credentials: ICredentials) {
-    this.credentials = credentials
-    this.axiosClient = axios.create({
-      headers: this.credentials.createAuthHeaders(),
-      validateStatus: () => true, // allow all status codes without throwing error
-      paramsSerializer: {
-        indexes: null, // Force to stringify arrays like value1,value2 instead of value1[0],value1[1]
-      },
-    })
+  constructor(private readonly axiosClient: AxiosInstance) {
+    this.axiosClient = axiosClient
   }
 
   protected async get<T>(
     path: string,
     params: Record<string, unknown> = {}
   ): Promise<APIResponse<T>> {
-    const res = await this.axiosClient.get(`${config.baseUrl}${path}`, {
+    const res = await this.axiosClient.get(path, {
       params,
     })
     return new APIResponse(res)
   }
 
   protected async delete<T>(path: string): Promise<APIResponse<T>> {
-    const res = await this.axiosClient.delete(`${config.baseUrl}${path}`)
+    const res = await this.axiosClient.delete(path)
     return new APIResponse(res)
   }
 
@@ -43,7 +37,7 @@ export abstract class NettuBaseClient {
     const res = await this.axiosClient({
       method: 'DELETE',
       data,
-      url: `${config.baseUrl}${path}`,
+      url: path,
     })
     return new APIResponse(res)
   }
@@ -52,12 +46,12 @@ export abstract class NettuBaseClient {
     path: string,
     data: unknown
   ): Promise<APIResponse<T>> {
-    const res = await this.axiosClient.post(`${config.baseUrl}${path}`, data)
+    const res = await this.axiosClient.post(path, data)
     return new APIResponse(res)
   }
 
   protected async put<T>(path: string, data: unknown): Promise<APIResponse<T>> {
-    const res = await this.axiosClient.put(`${config.baseUrl}${path}`, data)
+    const res = await this.axiosClient.put(path, data)
     return new APIResponse(res)
   }
 }
@@ -78,56 +72,70 @@ export class APIResponse<T> {
 }
 
 /**
- * Credentials for the API for end users (usually frontend)
+ * Create an Axios instance for the frontend
+ * 
+ * Compared to the backend, this function is not async
+ * And the frontend cannot keep the connection alive
+ * 
+ * @param args specify base URL for the API
+ * @param credentials credentials for the API
+ * @returns an Axios instance
  */
-export class UserCreds implements ICredentials {
-  private readonly nettuAccount: string
-  private readonly token?: string
-
-  constructor(nettuAccount: string, token?: string) {
-    this.nettuAccount = nettuAccount
-    this.token = token
+export const createAxiosInstanceFrontend = (
+  args: {
+    baseUrl: string
+  },
+  credentials: ICredentials
+): AxiosInstance => {
+  const config: AxiosRequestConfig = {
+    baseURL: args.baseUrl,
+    headers: credentials.createAuthHeaders(),
+    validateStatus: () => true, // allow all status codes without throwing error
+    paramsSerializer: {
+      indexes: null, // Force to stringify arrays like value1,value2 instead of value1[0],value1[1]
+    },
   }
 
-  createAuthHeaders() {
-    const creds: Record<string, string> = {
-      'nettu-account': this.nettuAccount,
-    }
-    if (this.token) {
-      creds.authorization = `Bearer ${this.token}`
-    }
-
-    return Object.freeze(creds)
-  }
+  return axios.create(config)
 }
 
 /**
- * Credentials for the API for admins (usually backend)
+ * Create an Axios instance for the backend
+ * 
+ * On the backend (NodeJS), it is possible to keep the connection alive
+ * @param args specify base URL and if the connection should be kept alive
+ * @param credentials credentials for the API
+ * @returns Promise of an Axios instance
  */
-export class AccountCreds implements ICredentials {
-  private readonly apiKey: string
-
-  constructor(apiKey: string) {
-    this.apiKey = apiKey
+export const createAxiosInstanceBackend = async (
+  args: {
+    baseUrl: string
+    keepAlive: boolean
+  },
+  credentials: ICredentials
+): Promise<AxiosInstance> => {
+  const config: AxiosRequestConfig = {
+    baseURL: args.baseUrl,
+    headers: credentials.createAuthHeaders(),
+    validateStatus: () => true, // allow all status codes without throwing error
+    paramsSerializer: {
+      indexes: null, // Force to stringify arrays like value1,value2 instead of value1[0],value1[1]
+    },
   }
 
-  createAuthHeaders() {
-    return Object.freeze({
-      'x-api-key': this.apiKey,
-    })
+  // If keepAlive is true, and if we are in NodeJS
+  // create an agent to keep the connection alive
+  if (args.keepAlive && typeof module !== 'undefined' && module.exports) {
+    if (args.baseUrl.startsWith('https')) {
+      // This is a dynamic import to avoid loading the https module in the browser
+      const https = await import('https')
+      config.httpsAgent = new https.Agent({ keepAlive: true })
+    } else {
+      // This is a dynamic import to avoid loading the http module in the browser
+      const http = await import('http')
+      config.httpAgent = new http.Agent({ keepAlive: true })
+    }
   }
-}
 
-export interface ICredentials {
-  createAuthHeaders(): object
-}
-
-export class EmptyCreds implements ICredentials {
-  createAuthHeaders() {
-    return Object.freeze({})
-  }
-}
-
-export interface ICredentials {
-  createAuthHeaders(): object
+  return axios.create(config)
 }
