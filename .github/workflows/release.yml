@@ -274,7 +274,20 @@ jobs:
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
+      - name: Set version env
+        run: |
+          # v1.0.0 --> 1.0.0
+          VERSION=${GITHUB_REF#refs/*/}
+          echo "VERSION=${VERSION:1}" >> $GITHUB_ENV
+
+      - name: Set Chart to tag version
+        run: |
+          cd scheduler/charts/nettu-scheduler
+          sed -i "s/\$VERSION_REPLACED_IN_CI/$VERSION/g" charts/nittei/Chart.yaml
+          sed -i "s/\$VERSION_REPLACED_IN_CI/$VERSION/g" charts/nittei/values.yaml
+
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.6.0
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          mark_as_latest: ${{ !(github.event && github.event.release && github.event.release.prerelease == true) }}
