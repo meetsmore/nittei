@@ -20,7 +20,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_reservations_repo() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
 
         let account = Account::new();
         ctx.repos
@@ -85,7 +85,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_reservation() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
 
         let account = Account::new();
         ctx.repos

@@ -85,7 +85,7 @@ mod tests {
     }
 
     async fn setup() -> TestContext {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let account = Account::default();
         ctx.repos.accounts.insert(&account).await.unwrap();
         let user = User::new(account.id.clone(), None);
@@ -443,7 +443,7 @@ mod tests {
 
     #[tokio::test]
     async fn find_most_recently_created_service_events() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let account = Account::default();
         ctx.repos.accounts.insert(&account).await.unwrap();
 
@@ -558,7 +558,7 @@ mod tests {
 
     #[tokio::test]
     async fn find_by_service_and_timespan() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let account = Account::default();
         ctx.repos.accounts.insert(&account).await.unwrap();
 

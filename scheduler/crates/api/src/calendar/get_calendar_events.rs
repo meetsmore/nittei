@@ -3,6 +3,7 @@ use chrono::{DateTime, Utc};
 use nettu_scheduler_api_structs::get_calendar_events::{APIResponse, PathParams, QueryParams};
 use nettu_scheduler_domain::{Calendar, EventWithInstances, TimeSpan, ID};
 use nettu_scheduler_infra::NettuContext;
+use tracing::error;
 
 use crate::{
     error::NettuError,
@@ -30,10 +31,10 @@ pub async fn get_calendar_events_admin_controller(
 
     execute(usecase, &ctx)
         .await
+        .map_err(NettuError::from)
         .map(|usecase_res| {
             HttpResponse::Ok().json(APIResponse::new(usecase_res.calendar, usecase_res.events))
         })
-        .map_err(NettuError::from)
 }
 
 pub async fn get_calendar_events_controller(
@@ -53,10 +54,10 @@ pub async fn get_calendar_events_controller(
 
     execute(usecase, &ctx)
         .await
+        .map_err(NettuError::from)
         .map(|usecase_res| {
             HttpResponse::Ok().json(APIResponse::new(usecase_res.calendar, usecase_res.events))
         })
-        .map_err(NettuError::from)
 }
 #[derive(Debug)]
 pub struct GetCalendarEventsUseCase {
@@ -76,6 +77,7 @@ pub struct UseCaseResponse {
 pub enum UseCaseError {
     NotFound(ID),
     InvalidTimespan,
+    IntervalServerError,
 }
 
 impl From<UseCaseError> for NettuError {
@@ -88,6 +90,7 @@ impl From<UseCaseError> for NettuError {
                 "The calendar with id: {}, was not found.",
                 calendar_id
             )),
+            UseCaseError::IntervalServerError => Self::InternalError,
         }
     }
 }
@@ -115,7 +118,10 @@ impl UseCase for GetCalendarEventsUseCase {
                     .events
                     .find_by_calendar(&calendar.id, Some(&timespan))
                     .await
-                    .unwrap()
+                    .map_err(|e| {
+                        error!("{:?}", e);
+                        UseCaseError::IntervalServerError
+                    })?
                     .into_iter()
                     .map(|event| {
                         let instances = event.expand(Some(&timespan), &calendar.settings);

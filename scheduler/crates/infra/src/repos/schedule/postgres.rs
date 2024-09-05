@@ -39,6 +39,8 @@ impl From<ScheduleRaw> for Schedule {
             account_id: e.account_uid.into(),
             rules: serde_json::from_value(e.rules).unwrap_or_default(),
             timezone: e.timezone.parse().unwrap_or(chrono_tz::UTC),
+            // TODO: to fix
+            #[allow(clippy::unwrap_used)]
             metadata: serde_json::from_value(e.metadata).unwrap(),
         }
     }

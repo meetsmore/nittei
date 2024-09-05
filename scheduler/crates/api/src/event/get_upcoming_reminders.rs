@@ -27,6 +27,8 @@ async fn get_accounts_from_reminders(
         .iter()
         .map(|r| r.account_id.to_owned())
         .collect::<Vec<_>>();
+    // TODO: to fix
+    #[allow(clippy::unwrap_used)]
     ctx.repos
         .accounts
         .find_many(&account_ids)
@@ -99,12 +101,16 @@ impl UseCase for GetUpcomingRemindersUseCase {
     /// This will run every minute
     async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
         // Find all occurrences for the next interval and delete them
+        // TODO: to fix
+        #[allow(clippy::unwrap_used)]
         let ts = DateTime::from_timestamp_millis(ctx.sys.get_timestamp_millis()).unwrap()
             + TimeDelta::milliseconds(self.reminders_interval);
 
         // Get all reminders and filter out invalid / expired reminders
         let reminders = ctx.repos.reminders.delete_all_before(ts).await;
 
+        // TODO: to fix
+        #[allow(clippy::unwrap_used)]
         let event_lookup = ctx
             .repos
             .events
@@ -148,7 +154,7 @@ mod tests {
     };
 
     async fn setup_context() -> NettuContext {
-        let ctx = _setup_ctx().await;
+        let ctx = _setup_ctx().await.unwrap();
         ctx.repos
             .reminders
             .delete_all_before(DateTime::<Utc>::MAX_UTC)

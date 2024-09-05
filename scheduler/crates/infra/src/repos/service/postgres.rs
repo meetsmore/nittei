@@ -43,7 +43,11 @@ impl From<ServiceRaw> for Service {
         Self {
             id: e.service_uid.into(),
             account_id: e.account_uid.into(),
+            // TODO: to fix
+            #[allow(clippy::unwrap_used)]
             multi_person: serde_json::from_value(e.multi_person).unwrap(),
+            // TODO: to fix
+            #[allow(clippy::unwrap_used)]
             metadata: serde_json::from_value(e.metadata).unwrap(),
         }
     }
@@ -59,7 +63,11 @@ impl From<ServiceWithUsersRaw> for ServiceWithUsers {
             id: e.service_uid.into(),
             account_id: e.account_uid.into(),
             users: users.into_iter().map(|u| u.into()).collect(),
+            // TODO: to fix
+            #[allow(clippy::unwrap_used)]
             multi_person: serde_json::from_value(e.multi_person).unwrap(),
+            // TODO: to fix
+            #[allow(clippy::unwrap_used)]
             metadata: serde_json::from_value(e.metadata).unwrap(),
         }
     }

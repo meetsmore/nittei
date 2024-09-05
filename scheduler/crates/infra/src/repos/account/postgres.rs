@@ -33,7 +33,11 @@ impl From<AccountRaw> for Account {
         Self {
             id: e.account_uid.into(),
             secret_api_key: e.secret_api_key,
+            // TODO: to fix
+            #[allow(clippy::unwrap_used)]
             public_jwt_key: e.public_jwt_key.map(|key| PEMKey::new(key).unwrap()),
+            // TODO: to fix
+            #[allow(clippy::unwrap_used)]
             settings: serde_json::from_value(e.settings).unwrap(),
         }
     }

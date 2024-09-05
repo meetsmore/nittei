@@ -33,6 +33,8 @@ impl From<UserRaw> for User {
         Self {
             id: e.user_uid.into(),
             account_id: e.account_uid.into(),
+            // TODO: to fix
+            #[allow(clippy::unwrap_used)]
             metadata: serde_json::from_value(e.metadata).unwrap(),
         }
     }

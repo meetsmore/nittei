@@ -199,7 +199,7 @@ mod test {
     }
 
     async fn setup() -> TestContext {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let account = Account::default();
         ctx.repos.accounts.insert(&account).await.unwrap();
         let user = User::new(account.id.clone(), None);

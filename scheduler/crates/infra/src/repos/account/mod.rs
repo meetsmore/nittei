@@ -21,7 +21,7 @@ mod tests {
 
     #[tokio::test]
     async fn create_and_delete() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let account = Account::default();
 
         // Insert
@@ -56,7 +56,7 @@ mod tests {
 
     #[tokio::test]
     async fn update() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let mut account = Account::default();
 
         // Insert

@@ -59,10 +59,14 @@ struct EventRaw {
 impl From<EventRaw> for CalendarEvent {
     fn from(e: EventRaw) -> Self {
         let recurrence: Option<RRuleOptions> = match e.recurrence {
+            // TODO: to fix
+            #[allow(clippy::unwrap_used)]
             Some(json) => serde_json::from_value(json).unwrap(),
             None => None,
         };
         let reminders: Vec<CalendarEventReminder> = match e.reminders {
+            // TODO: to fix
+            #[allow(clippy::unwrap_used)]
             Some(json) => serde_json::from_value(json).unwrap(),
             None => Vec::new(),
         };
@@ -82,6 +86,8 @@ impl From<EventRaw> for CalendarEvent {
             exdates: e.exdates,
             reminders,
             service_id: e.service_uid.map(|id| id.into()),
+            // TODO: to fix
+            #[allow(clippy::unwrap_used)]
             metadata: serde_json::from_value(e.metadata).unwrap(),
         }
     }

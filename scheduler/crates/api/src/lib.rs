@@ -51,7 +51,7 @@ pub struct Application {
 }
 
 impl Application {
-    pub async fn new(context: NettuContext) -> Result<Self, std::io::Error> {
+    pub async fn new(context: NettuContext) -> anyhow::Result<Self> {
         let (server, port) = Application::configure_server(context.clone()).await?;
 
         Application::start_job_schedulers(context.clone());
@@ -88,13 +88,13 @@ impl Application {
         }
     }
 
-    async fn configure_server(context: NettuContext) -> Result<(Server, u16), std::io::Error> {
+    async fn configure_server(context: NettuContext) -> anyhow::Result<(Server, u16)> {
         let port = context.config.port;
         let address = std::env::var("NITTEI_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
         let address_and_port = format!("{}:{}", address, port);
         info!("Starting server on: {}", address_and_port);
         let listener = TcpListener::bind(address_and_port)?;
-        let port = listener.local_addr().unwrap().port();
+        let port = listener.local_addr()?.port();
 
         let server = HttpServer::new(move || {
             let ctx = context.clone();
@@ -114,11 +114,11 @@ impl Application {
     }
 
     pub async fn start(self) -> anyhow::Result<()> {
-        self.init_default_account().await;
+        self.init_default_account().await?;
         self.server.await.map_err(|e| anyhow::anyhow!(e))
     }
 
-    async fn init_default_account(&self) {
+    async fn init_default_account(&self) -> anyhow::Result<()> {
         let secret_api_key = match std::env::var("ACCOUNT_API_KEY") {
             Ok(key) => key,
             Err(_) => Account::generate_secret_api_key(),
@@ -154,12 +154,7 @@ impl Application {
                 };
             }
 
-            self.context
-                .repos
-                .accounts
-                .insert(&account)
-                .await
-                .expect("To insert default account");
+            self.context.repos.accounts.insert(&account).await?;
 
             let account_google_client_id_env = "ACCOUNT_GOOGLE_CLIENT_ID";
             let account_google_client_secret_env = "ACCOUNT_GOOGLE_CLIENT_SECRET";
@@ -189,8 +184,7 @@ impl Application {
                         redirect_uri: google_redirect_uri,
                         provider: IntegrationProvider::Google,
                     })
-                    .await
-                    .expect("To insert google account integration");
+                    .await?;
             }
             let account_outlook_client_id_env = "ACCOUNT_OUTLOOK_CLIENT_ID";
             let account_outlook_client_secret_env = "ACCOUNT_OUTLOOK_CLIENT_SECRET";
@@ -220,9 +214,9 @@ impl Application {
                         redirect_uri: outlook_redirect_uri,
                         provider: IntegrationProvider::Outlook,
                     })
-                    .await
-                    .expect("To insert outlook account integration");
+                    .await?;
             }
-        }
+        };
+        Ok(())
     }
 }

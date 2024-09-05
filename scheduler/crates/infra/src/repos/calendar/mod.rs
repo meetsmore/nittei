@@ -24,7 +24,7 @@ mod tests {
 
     #[tokio::test]
     async fn create_and_delete() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let account = Account::default();
         ctx.repos.accounts.insert(&account).await.unwrap();
         let user = User::new(account.id.clone(), None);
@@ -50,7 +50,7 @@ mod tests {
 
     #[tokio::test]
     async fn update() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let account = Account::default();
         ctx.repos.accounts.insert(&account).await.unwrap();
         let user = User::new(account.id.clone(), None);
@@ -73,7 +73,7 @@ mod tests {
 
     #[tokio::test]
     async fn delete_by_user() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let account = Account::default();
         ctx.repos.accounts.insert(&account).await.unwrap();
         let user = User::new(account.id.clone(), None);

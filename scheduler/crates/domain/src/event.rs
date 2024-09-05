@@ -81,6 +81,8 @@ impl CalendarEvent {
             Some(recurrence) => {
                 let rrule_options =
                     recurrence.get_parsed_options(self.start_time, calendar_settings);
+                // TODO: to fix
+                #[allow(clippy::unwrap_used)]
                 let options = rrule_options.get_rrule().first().unwrap();
                 if (options.get_count().unwrap_or(0) > 0) || options.get_until().is_some() {
                     let expand = self.expand(None, calendar_settings);
@@ -123,6 +125,8 @@ impl CalendarEvent {
             for exdate in &self.exdates {
                 rrule_set = rrule_set.exdate(exdate.with_timezone(&tzid));
             }
+            // TODO: to fix
+            #[allow(clippy::unwrap_used)]
             let rrule = rrule_options.get_rrule().first().unwrap();
             rrule_set = rrule_set.rrule(rrule.clone());
             rrule_set
@@ -139,6 +143,8 @@ impl CalendarEvent {
                 let rrule_options =
                     recurrence.get_parsed_options(self.start_time, calendar_settings);
                 let tzid = rrule_options.get_dt_start().timezone();
+                // TODO: to fix
+                #[allow(clippy::unwrap_used)]
                 let rrule_set = self.get_rrule_set(calendar_settings).unwrap();
 
                 let instances = match timespan {

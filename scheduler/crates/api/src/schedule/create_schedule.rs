@@ -100,11 +100,8 @@ impl UseCase for CreateScheduleUseCase {
             .repos
             .users
             .find_by_account_id(&self.user_id, &self.account_id)
-            .await;
-        if user.is_none() {
-            return Err(UseCaseError::UserNotFound(self.user_id.clone()));
-        }
-        let user = user.unwrap();
+            .await
+            .ok_or_else(|| UseCaseError::UserNotFound(self.user_id.clone()))?;
 
         let mut schedule = Schedule::new(user.id, user.account_id, &self.timezone);
         if let Some(rules) = &self.rules {

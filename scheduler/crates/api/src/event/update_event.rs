@@ -208,6 +208,8 @@ impl UseCase for UpdateEventUseCase {
             // ? should exdates be deleted when rrules are updated
             e.set_recurrence(rrule_opts, &calendar.settings, true)
         } else if start_or_duration_change && e.recurrence.is_some() {
+            // TODO: to fix
+            #[allow(clippy::unwrap_used)]
             e.set_recurrence(e.recurrence.clone().unwrap(), &calendar.settings, true)
         } else {
             e.recurrence = None;
@@ -257,7 +259,7 @@ mod test {
             busy: Some(false),
             ..Default::default()
         };
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let res = usecase.execute(&ctx).await;
         assert!(res.is_err());
     }

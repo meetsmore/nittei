@@ -36,7 +36,11 @@ impl From<CalendarRaw> for Calendar {
             id: e.calendar_uid.into(),
             user_id: e.user_uid.into(),
             account_id: e.account_uid.into(),
+            // TODO: to fix
+            #[allow(clippy::unwrap_used)]
             settings: serde_json::from_value(e.settings).unwrap(),
+            // TODO: to fix
+            #[allow(clippy::unwrap_used)]
             metadata: serde_json::from_value(e.metadata).unwrap(),
         }
     }

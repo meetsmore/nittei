@@ -34,6 +34,7 @@ impl CompatibleInstances {
                 compatible_events.push_back(instance);
                 continue;
             }
+            #[allow(clippy::unwrap_used)]
             if let Some(merged) = EventInstance::merge(&instance, compatible_events.back().unwrap())
             {
                 let len = compatible_events.len();
@@ -95,8 +96,7 @@ impl CompatibleInstances {
     }
 
     pub fn remove_all_after(&mut self, timespan: DateTime<Utc>) {
-        while !self.events.is_empty() {
-            let last = self.events.get_mut(self.events.len() - 1).unwrap();
+        while let Some(last) = self.events.back_mut() {
             if last.end_time <= timespan {
                 break;
             }
@@ -251,7 +251,9 @@ impl EventInstance {
                     conflict = true;
 
                     let mut events = events.inner();
+                    #[allow(clippy::unwrap_used)]
                     let last_event = events.pop_back().unwrap();
+                    #[allow(clippy::unwrap_used)]
                     let first_event = events.pop_front().unwrap();
 
                     let mut events = CompatibleInstances::new(vec![last_event.clone()]);

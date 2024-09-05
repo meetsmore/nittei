@@ -1,3 +1,7 @@
+// Allow clippy lints because this is a test helper
+#![allow(clippy::unwrap_used)]
+#![allow(clippy::expect_used)]
+
 mod helpers;
 
 use chrono::{DateTime, Duration, TimeDelta, Utc, Weekday};

@@ -90,7 +90,7 @@ mod tests {
     #[actix_web::main]
     #[test]
     async fn it_rejects_invalid_webhook_url() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let bad_uris = vec!["1", "", "test.zzcom", "test.com", "google.com"];
         for bad_uri in bad_uris {
             let mut use_case = SetAccountWebhookUseCase {
@@ -114,7 +114,7 @@ mod tests {
     #[actix_web::main]
     #[test]
     async fn it_accepts_valid_webhook_url() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
 
         let valid_uris = vec!["https://google.com", "https://google.com/v1/webhook"];
         for valid_uri in valid_uris {

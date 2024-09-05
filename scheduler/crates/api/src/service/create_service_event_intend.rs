@@ -194,6 +194,8 @@ impl UseCase for CreateServiceEventIntendUseCase {
                                             .map(|e| (e.user_id, e.created))
                                             .collect(),
                                     };
+                                    // TODO: to fix
+                                    #[allow(clippy::expect_used)]
                                     let selected_user_id = query.assign().expect("At least one host can be picked when there are at least one host available");
                                     vec![selected_user_id]
                                 }
@@ -221,6 +223,8 @@ impl UseCase for CreateServiceEventIntendUseCase {
                                         events: service_events,
                                         user_ids: user_ids_at_slot,
                                     };
+                                    // TODO: to fix
+                                    #[allow(clippy::expect_used)]
                                     let selected_user_id = query.assign().expect("At least one host can be picked when there are at least one host available");
                                     vec![selected_user_id]
                                 }

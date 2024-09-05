@@ -47,7 +47,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_service_user_busy_calendars() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
 
         let account = Account::new();
         ctx.repos

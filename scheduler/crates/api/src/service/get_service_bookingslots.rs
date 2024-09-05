@@ -361,7 +361,8 @@ impl GetServiceBookingSlotsUseCase {
         }
 
         if !google_busy_calendar_ids.is_empty() {
-            // TODO: no unwrap
+            // TODO: to fix
+            #[allow(clippy::expect_used)]
             let user = ctx
                 .repos
                 .users
@@ -390,7 +391,8 @@ impl GetServiceBookingSlotsUseCase {
         }
 
         if !outlook_busy_calendar_ids.is_empty() {
-            // TODO: no unwrap
+            // TODO: to fix
+            #[allow(clippy::expect_used)]
             let user = ctx
                 .repos
                 .users
@@ -421,6 +423,8 @@ impl GetServiceBookingSlotsUseCase {
         mut timespan: TimeSpan,
         ctx: &NettuContext,
     ) -> Result<TimeSpan, ()> {
+        // TODO: to fix
+        #[allow(clippy::unwrap_used)]
         let first_available = DateTime::from_timestamp_millis(ctx.sys.get_timestamp_millis())
             .unwrap()
             + TimeDelta::milliseconds(user.closest_booking_time * 60 * 1000);
@@ -428,6 +432,8 @@ impl GetServiceBookingSlotsUseCase {
             timespan = TimeSpan::new(first_available, timespan.end());
         }
         if let Some(furthest_booking_time) = user.furthest_booking_time {
+            // TODO: to fix
+            #[allow(clippy::unwrap_used)]
             let last_available = DateTime::from_timestamp_micros(ctx.sys.get_timestamp_millis())
                 .unwrap()
                 + TimeDelta::milliseconds(furthest_booking_time * 60 * 1000);
@@ -532,7 +538,7 @@ mod test {
     }
 
     async fn setup() -> TestContext {
-        let mut ctx = setup_context().await;
+        let mut ctx = setup_context().await.unwrap();
         ctx.sys = Arc::new(DummySys {});
 
         let account = Account::default();

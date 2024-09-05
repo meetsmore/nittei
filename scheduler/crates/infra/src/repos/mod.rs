@@ -64,15 +64,12 @@ pub struct Repos {
 }
 
 impl Repos {
-    pub async fn create_postgres(
-        connection_string: &str,
-    ) -> Result<Self, Box<dyn std::error::Error>> {
+    pub async fn create_postgres(connection_string: &str) -> anyhow::Result<Self> {
         info!("DB CHECKING CONNECTION ...");
         let pool = PgPoolOptions::new()
             .max_connections(5)
             .connect(connection_string)
-            .await
-            .expect("TO CONNECT TO POSTGRES");
+            .await?;
         info!("DB CHECKING CONNECTION ... [done]");
 
         if std::env::var("NETTU_SKIP_MIGRATION").is_err() {

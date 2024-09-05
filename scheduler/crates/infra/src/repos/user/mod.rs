@@ -25,7 +25,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_metadata_query() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
 
         let account = Account::new();
         ctx.repos
@@ -67,7 +67,7 @@ mod tests {
 
     // #[tokio::test]
     // async fn test_google_integration_revoke() {
-    //     let ctx = setup_context().await;
+    //     let ctx = setup_context().await.unwrap();
     //     let account_id = ID::default();
     //     let mut user = User::new(account_id.clone());
     //     user.integrations = vec![IntegrationProvider::Google(UserGoogleIntegrationData {

@@ -287,9 +287,12 @@ impl OutlookCalendarRestApi {
                     .filter(|e| matches!(e.show_as, OutlookCalendarEventShowAs::Busy))
                     .map(|e| EventInstance {
                         busy: true,
-                        // TODO: handle unwrap
+                        // TODO: to fix
+                        #[allow(clippy::unwrap_used)]
                         start_time: DateTime::from_timestamp_millis(e.start.get_timestamp_millis())
                             .unwrap(),
+                        // TODO: to fix
+                        #[allow(clippy::unwrap_used)]
                         end_time: DateTime::from_timestamp_millis(e.end.get_timestamp_millis())
                             .unwrap(),
                     })

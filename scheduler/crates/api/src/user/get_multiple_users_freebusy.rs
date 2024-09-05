@@ -166,6 +166,8 @@ impl GetMultipleFreeBusyUseCase {
         events
             .into_iter()
             .map(|event| {
+                // TODO: to fix
+                #[allow(clippy::unwrap_used)]
                 let calendar = calendars_lookup
                     .get(&event.calendar_id.to_string())
                     .unwrap();
@@ -187,7 +189,7 @@ mod test {
     #[actix_web::main]
     #[test]
     async fn multiple_freebusy_works() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let account = Account::default();
         ctx.repos.accounts.insert(&account).await.unwrap();
         let user = User::new(account.id.clone(), None);

@@ -23,7 +23,7 @@ mod tests {
 
     #[tokio::test]
     async fn create_and_delete() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let account = Account::default();
         ctx.repos
             .accounts

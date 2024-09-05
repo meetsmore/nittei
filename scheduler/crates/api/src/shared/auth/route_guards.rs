@@ -291,7 +291,7 @@ mod test {
     #[actix_web::main]
     #[test]
     async fn decodes_valid_token_for_existing_user_in_account() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let account = setup_account(&ctx).await;
         let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.unwrap();
@@ -308,7 +308,7 @@ mod test {
     #[actix_web::main]
     #[test]
     async fn decodes_valid_token_and_rejects_if_user_is_in_different_account() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let account = setup_account(&ctx).await;
         let account2 = setup_account(&ctx).await;
         let user = User::new(account2.id.clone(), None); // user belongs to account2
@@ -327,7 +327,7 @@ mod test {
     #[actix_web::main]
     #[test]
     async fn rejects_expired_token() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let account = setup_account(&ctx).await;
         let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.unwrap();
@@ -344,7 +344,7 @@ mod test {
     #[actix_web::main]
     #[test]
     async fn rejects_valid_token_without_account_header() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let account = setup_account(&ctx).await;
         let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.unwrap();
@@ -360,7 +360,7 @@ mod test {
     #[actix_web::main]
     #[test]
     async fn rejects_valid_token_with_invalid_account_header() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let account = setup_account(&ctx).await;
         let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.unwrap();
@@ -377,7 +377,7 @@ mod test {
     #[actix_web::main]
     #[test]
     async fn rejects_garbage_token_with_valid_account_header() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let _account = setup_account(&ctx).await;
         let token = "sajfosajfposajfopaso12";
 
@@ -391,7 +391,7 @@ mod test {
     #[actix_web::main]
     #[test]
     async fn rejects_invalid_authz_header() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let account = setup_account(&ctx).await;
         let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.unwrap();
@@ -407,7 +407,7 @@ mod test {
     #[actix_web::main]
     #[test]
     async fn rejects_req_without_headers() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let _account = setup_account(&ctx).await;
 
         let req = TestRequest::default().to_http_request();

@@ -22,6 +22,8 @@ impl OutlookCalendarEventTime {
     pub fn get_timestamp_millis(&self) -> i64 {
         let timezone = self.time_zone.parse::<Tz>().unwrap_or(UTC);
 
+        // TODO: to fix
+        #[allow(clippy::unwrap_used)]
         DateTime::parse_from_str(
             &self.date_time[..self.date_time.find('.').unwrap()],
             "%FT%T",
