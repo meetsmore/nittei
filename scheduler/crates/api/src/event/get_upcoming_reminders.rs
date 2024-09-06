@@ -1,13 +1,13 @@
 use std::{collections::HashMap, time::Duration};
 
 use actix_web::rt::time::Instant;
-use chrono::{DateTime, TimeDelta};
+use chrono::TimeDelta;
 use nettu_scheduler_api_structs::send_event_reminders::{AccountEventReminder, AccountReminders};
 use nettu_scheduler_domain::{Account, CalendarEvent, Reminder};
 use nettu_scheduler_infra::NettuContext;
 use tracing::error;
 
-use crate::shared::usecase::UseCase;
+use crate::{error::NettuError, shared::usecase::UseCase};
 
 /// Creates EventReminders for a calendar event
 #[derive(Debug)]
@@ -17,34 +17,42 @@ pub struct GetUpcomingRemindersUseCase {
 }
 
 #[derive(Debug)]
-pub enum UseCaseError {}
+pub enum UseCaseError {
+    IntervalServerError,
+}
+
+impl From<UseCaseError> for NettuError {
+    fn from(e: UseCaseError) -> Self {
+        match e {
+            UseCaseError::IntervalServerError => Self::InternalError,
+        }
+    }
+}
 
 async fn get_accounts_from_reminders(
     reminders: &[Reminder],
     ctx: &NettuContext,
-) -> HashMap<String, Account> {
+) -> anyhow::Result<HashMap<String, Account>> {
     let account_ids: Vec<_> = reminders
         .iter()
         .map(|r| r.account_id.to_owned())
         .collect::<Vec<_>>();
-    // TODO: to fix
-    #[allow(clippy::unwrap_used)]
-    ctx.repos
+    Ok(ctx
+        .repos
         .accounts
         .find_many(&account_ids)
-        .await
-        .unwrap()
+        .await?
         .into_iter()
         .map(|a| (a.id.to_string(), a))
-        .collect()
+        .collect())
 }
 
 async fn create_reminders_for_accounts(
     reminders: Vec<Reminder>,
     event_lookup: HashMap<String, CalendarEvent>,
     ctx: &NettuContext,
-) -> Vec<(Account, AccountReminders)> {
-    let account_lookup = get_accounts_from_reminders(&reminders, ctx).await;
+) -> anyhow::Result<Vec<(Account, AccountReminders)>> {
+    let account_lookup = get_accounts_from_reminders(&reminders, ctx).await?;
 
     let mut account_reminders: HashMap<String, (&Account, AccountReminders)> = HashMap::new();
 
@@ -84,10 +92,10 @@ async fn create_reminders_for_accounts(
         };
     }
 
-    account_reminders
+    Ok(account_reminders
         .into_iter()
         .map(|(_, (acc, reminders))| (acc.clone(), reminders))
-        .collect()
+        .collect())
 }
 
 #[async_trait::async_trait(?Send)]
@@ -101,16 +109,11 @@ impl UseCase for GetUpcomingRemindersUseCase {
     /// This will run every minute
     async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
         // Find all occurrences for the next interval and delete them
-        // TODO: to fix
-        #[allow(clippy::unwrap_used)]
-        let ts = DateTime::from_timestamp_millis(ctx.sys.get_timestamp_millis()).unwrap()
-            + TimeDelta::milliseconds(self.reminders_interval);
+        let ts = ctx.sys.get_timestamp() + TimeDelta::milliseconds(self.reminders_interval);
 
         // Get all reminders and filter out invalid / expired reminders
         let reminders = ctx.repos.reminders.delete_all_before(ts).await;
 
-        // TODO: to fix
-        #[allow(clippy::unwrap_used)]
         let event_lookup = ctx
             .repos
             .events
@@ -121,12 +124,20 @@ impl UseCase for GetUpcomingRemindersUseCase {
                     .collect::<Vec<_>>(),
             )
             .await
-            .unwrap()
+            .map_err(|e| {
+                error!("{:?}", e);
+                UseCaseError::IntervalServerError
+            })?
             .into_iter()
             .map(|e| (e.id.to_string(), e))
             .collect::<HashMap<_, _>>();
 
-        let grouped_reminders = create_reminders_for_accounts(reminders, event_lookup, ctx).await;
+        let grouped_reminders = create_reminders_for_accounts(reminders, event_lookup, ctx)
+            .await
+            .map_err(|e| {
+                error!("{:?}", e);
+                UseCaseError::IntervalServerError
+            })?;
 
         let millis_to_send = ts.timestamp_millis() - ctx.sys.get_timestamp_millis();
         let instant = if millis_to_send > 0 {
@@ -143,7 +154,7 @@ impl UseCase for GetUpcomingRemindersUseCase {
 mod tests {
     use std::sync::Arc;
 
-    use chrono::Utc;
+    use chrono::{DateTime, Utc};
     use nettu_scheduler_domain::{Calendar, CalendarEventReminder, User};
     use nettu_scheduler_infra::{setup_context as _setup_ctx, ISys};
 
@@ -168,6 +179,9 @@ mod tests {
         fn get_timestamp_millis(&self) -> i64 {
             1613862000000 // Sun Feb 21 2021 00:00:00 GMT+0100 (Central European Standard Time) {}
         }
+        fn get_timestamp(&self) -> DateTime<Utc> {
+            DateTime::<Utc>::from_timestamp_millis(1613862000).unwrap()
+        }
     }
 
     pub struct StaticTimeSys2;
@@ -175,12 +189,18 @@ mod tests {
         fn get_timestamp_millis(&self) -> i64 {
             1613862000000 + 1000 * 60 * 49 // Sun Feb 21 2021 00:49:00 GMT+0100 (Central European Standard Time) {}
         }
+        fn get_timestamp(&self) -> DateTime<Utc> {
+            DateTime::<Utc>::from_timestamp_millis(1613862000000 + 1000 * 60 * 49).unwrap()
+        }
     }
 
     pub struct StaticTimeSys3;
     impl ISys for StaticTimeSys3 {
         fn get_timestamp_millis(&self) -> i64 {
             1613862000000 + 1000 * 60 * 60 * 24 // Sun Feb 22 2021 00:00:00 GMT+0100 (Central European Standard Time) {}
+        }
+        fn get_timestamp(&self) -> DateTime<Utc> {
+            DateTime::<Utc>::from_timestamp_millis(1613862000000 + 1000 * 60 * 60 * 24).unwrap()
         }
     }
 

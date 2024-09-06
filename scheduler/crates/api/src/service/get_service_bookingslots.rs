@@ -1,5 +1,5 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use chrono::{DateTime, TimeDelta};
+use chrono::TimeDelta;
 use futures::future::join_all;
 use nettu_scheduler_api_structs::get_service_bookingslots::*;
 use nettu_scheduler_domain::{
@@ -32,7 +32,7 @@ use nettu_scheduler_infra::{
     FreeBusyProviderQuery,
     NettuContext,
 };
-use tracing::error;
+use tracing::{error, warn};
 
 use crate::{
     error::NettuError,
@@ -361,14 +361,12 @@ impl GetServiceBookingSlotsUseCase {
         }
 
         if !google_busy_calendar_ids.is_empty() {
-            // TODO: to fix
-            #[allow(clippy::expect_used)]
-            let user = ctx
-                .repos
-                .users
-                .find(&user.user_id)
-                .await
-                .expect("User to be found");
+            let user = if let Some(user) = ctx.repos.users.find(&user.user_id).await {
+                user
+            } else {
+                warn!("User not found: {}", user.user_id);
+                return CompatibleInstances::new(Vec::new());
+            };
             match GoogleCalendarProvider::new(&user, ctx).await {
                 Ok(google_calendar_provider) => {
                     let query = FreeBusyProviderQuery {
@@ -391,14 +389,12 @@ impl GetServiceBookingSlotsUseCase {
         }
 
         if !outlook_busy_calendar_ids.is_empty() {
-            // TODO: to fix
-            #[allow(clippy::expect_used)]
-            let user = ctx
-                .repos
-                .users
-                .find(&user.user_id)
-                .await
-                .expect("User to be found");
+            let user = if let Some(user) = ctx.repos.users.find(&user.user_id).await {
+                user
+            } else {
+                warn!("User not found: {}", user.user_id);
+                return CompatibleInstances::new(Vec::new());
+            };
             if let Ok(provider) = OutlookCalendarProvider::new(&user, ctx).await {
                 let query = FreeBusyProviderQuery {
                     calendar_ids: outlook_busy_calendar_ids,
@@ -423,19 +419,13 @@ impl GetServiceBookingSlotsUseCase {
         mut timespan: TimeSpan,
         ctx: &NettuContext,
     ) -> Result<TimeSpan, ()> {
-        // TODO: to fix
-        #[allow(clippy::unwrap_used)]
-        let first_available = DateTime::from_timestamp_millis(ctx.sys.get_timestamp_millis())
-            .unwrap()
+        let first_available = ctx.sys.get_timestamp()
             + TimeDelta::milliseconds(user.closest_booking_time * 60 * 1000);
         if timespan.start() < first_available {
             timespan = TimeSpan::new(first_available, timespan.end());
         }
         if let Some(furthest_booking_time) = user.furthest_booking_time {
-            // TODO: to fix
-            #[allow(clippy::unwrap_used)]
-            let last_available = DateTime::from_timestamp_micros(ctx.sys.get_timestamp_millis())
-                .unwrap()
+            let last_available = ctx.sys.get_timestamp()
                 + TimeDelta::milliseconds(furthest_booking_time * 60 * 1000);
             if last_available < timespan.end() {
                 if last_available <= timespan.start() {
@@ -534,6 +524,9 @@ mod test {
     impl ISys for DummySys {
         fn get_timestamp_millis(&self) -> i64 {
             0
+        }
+        fn get_timestamp(&self) -> DateTime<Utc> {
+            Utc.timestamp_millis_opt(0).unwrap()
         }
     }
 

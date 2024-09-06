@@ -1,4 +1,4 @@
-use chrono::{DateTime, TimeDelta, Utc};
+use chrono::{TimeDelta, Utc};
 use futures::future;
 use nettu_scheduler_domain::{Calendar, CalendarEvent, EventRemindersExpansionJob, Reminder};
 use nettu_scheduler_infra::NettuContext;
@@ -39,10 +39,7 @@ async fn create_event_reminders(
     version: i64,
     ctx: &NettuContext,
 ) -> Result<(), UseCaseError> {
-    // TODO: to fix
-    #[allow(clippy::unwrap_used)]
-    let timestamp_now_millis =
-        DateTime::from_timestamp_millis(ctx.sys.get_timestamp_millis()).unwrap();
+    let timestamp_now_millis = ctx.sys.get_timestamp();
     let threshold_millis = timestamp_now_millis + TimeDelta::milliseconds(61 * 1000); // Now + 61 seconds
 
     let rrule_set = event.get_rrule_set(&calendar.settings);
@@ -202,11 +199,7 @@ impl<'a> UseCase for SyncEventRemindersUseCase<'a> {
                 let jobs = ctx
                     .repos
                     .event_reminders_generation_jobs
-                    .delete_all_before(
-                        // TODO: to fix
-                        #[allow(clippy::unwrap_used)]
-                        DateTime::from_timestamp_millis(ctx.sys.get_timestamp_millis()).unwrap(),
-                    )
+                    .delete_all_before(ctx.sys.get_timestamp())
                     .await;
 
                 let event_ids = jobs
