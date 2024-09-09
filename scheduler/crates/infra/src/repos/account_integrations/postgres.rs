@@ -1,4 +1,4 @@
-use nettu_scheduler_domain::{AccountIntegration, IntegrationProvider, ID};
+use nittei_domain::{AccountIntegration, IntegrationProvider, ID};
 use sqlx::{types::Uuid, FromRow, PgPool};
 use tracing::{error, instrument};
 

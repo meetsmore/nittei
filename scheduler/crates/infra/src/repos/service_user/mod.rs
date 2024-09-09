@@ -1,6 +1,6 @@
 mod postgres;
 
-use nettu_scheduler_domain::{ServiceResource, ID};
+use nittei_domain::{ServiceResource, ID};
 pub use postgres::{PostgresServiceUserRepo, ServiceUserRaw};
 
 #[async_trait::async_trait]
@@ -14,7 +14,7 @@ pub trait IServiceUserRepo: Send + Sync {
 
 #[cfg(test)]
 mod tests {
-    use nettu_scheduler_domain::{
+    use nittei_domain::{
         Account,
         Calendar,
         Entity,

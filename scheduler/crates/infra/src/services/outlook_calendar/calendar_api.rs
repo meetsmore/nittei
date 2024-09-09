@@ -1,6 +1,6 @@
 use chrono::{DateTime, SecondsFormat, Utc};
 use futures::future::join_all;
-use nettu_scheduler_domain::{
+use nittei_domain::{
     providers::outlook::{
         OutlookCalendar,
         OutlookCalendarEvent,

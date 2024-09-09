@@ -1,5 +1,5 @@
 import dayjs from 'dayjs'
-import type { Calendar, INettuClient, User, CalendarEvent } from '../../lib'
+import type { Calendar, INitteiClient, User, CalendarEvent } from '../../lib'
 import { setupAccount } from '../helpers/fixtures'
 import { v4 } from 'uuid'
 import utc from 'dayjs/plugin/utc'
@@ -11,7 +11,7 @@ dayjs.extend(timezone)
 // This test suite is testing the specifications for our use cases
 
 describe('Requirements', () => {
-  let client: INettuClient | undefined
+  let client: INitteiClient | undefined
   let accountId: string | undefined
 
   beforeAll(async () => {

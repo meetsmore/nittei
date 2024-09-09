@@ -21,8 +21,8 @@ use actix_web::{
     HttpServer,
 };
 use http_logger::NitteiTracingRootSpanBuilder;
-use job_schedulers::{start_reminder_generation_job_scheduler, start_send_reminders_job};
-use nettu_scheduler_domain::{
+use job_schedulers::{start_reminder_generation_job, start_send_reminders_job};
+use nittei_domain::{
     Account,
     AccountIntegration,
     AccountWebhookSettings,
@@ -30,7 +30,7 @@ use nettu_scheduler_domain::{
     PEMKey,
     ID,
 };
-use nettu_scheduler_infra::NettuContext;
+use nittei_infra::NitteiContext;
 use tracing::{info, warn};
 use tracing_actix_web::TracingLogger;
 
@@ -47,14 +47,14 @@ pub fn configure_server_api(cfg: &mut web::ServiceConfig) {
 pub struct Application {
     server: Server,
     port: u16,
-    context: NettuContext,
+    context: NitteiContext,
 }
 
 impl Application {
-    pub async fn new(context: NettuContext) -> anyhow::Result<Self> {
+    pub async fn new(context: NitteiContext) -> anyhow::Result<Self> {
         let (server, port) = Application::configure_server(context.clone()).await?;
 
-        Application::start_job_schedulers(context.clone());
+        Application::start_jobs(context.clone());
 
         Ok(Self {
             server,
@@ -67,7 +67,7 @@ impl Application {
         self.port
     }
 
-    fn start_job_schedulers(context: NettuContext) {
+    fn start_jobs(context: NitteiContext) {
         if let Ok(reminders_job_enabled) = std::env::var("NITTEI_REMINDERS_JOB_ENABLED") {
             // Parse the value of NITTEI_REMINDERS_JOB_ENABLED to a boolean
             // If it fails, log a warning and default to false
@@ -83,12 +83,12 @@ impl Application {
 
             if reminders_job_enabled {
                 start_send_reminders_job(context.clone());
-                start_reminder_generation_job_scheduler(context);
+                start_reminder_generation_job(context);
             }
         }
     }
 
-    async fn configure_server(context: NettuContext) -> anyhow::Result<(Server, u16)> {
+    async fn configure_server(context: NitteiContext) -> anyhow::Result<(Server, u16)> {
         let port = context.config.port;
         let address = std::env::var("NITTEI_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
         let address_and_port = format!("{}:{}", address, port);

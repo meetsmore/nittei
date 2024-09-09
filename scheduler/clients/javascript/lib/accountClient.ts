@@ -1,5 +1,5 @@
 import type { Account } from './domain/account'
-import { NettuBaseClient } from './baseClient'
+import { NitteiBaseClient } from './baseClient'
 
 /**
  * Response when getting an account
@@ -63,7 +63,7 @@ type GoogleIntegration = {
  * Client for the account endpoints
  * This is an admin client
  */
-export class NettuAccountClient extends NettuBaseClient {
+export class NitteiAccountClient extends NitteiBaseClient {
   /**
    * Create an account
    * @param data - data for creating the account

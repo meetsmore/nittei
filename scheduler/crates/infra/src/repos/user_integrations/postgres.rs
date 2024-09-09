@@ -1,4 +1,4 @@
-use nettu_scheduler_domain::{IntegrationProvider, UserIntegration, ID};
+use nittei_domain::{IntegrationProvider, UserIntegration, ID};
 use serde::Deserialize;
 use sqlx::{FromRow, PgPool};
 use tracing::{error, instrument};

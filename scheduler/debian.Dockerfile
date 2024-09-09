@@ -1,5 +1,5 @@
 ARG RUST_VERSION=1.80.1
-ARG APP_NAME=nettu_scheduler
+ARG APP_NAME=nittei
 
 FROM rust:${RUST_VERSION}-slim AS builder
 ARG APP_NAME

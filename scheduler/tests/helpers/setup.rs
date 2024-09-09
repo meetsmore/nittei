@@ -1,18 +1,18 @@
 // Allow clippy lints because this is a test helper
 #![allow(clippy::unwrap_used)]
 #![allow(clippy::expect_used)]
-use nettu_scheduler_api::Application;
-use nettu_scheduler_infra::{setup_context, Config, NettuContext};
-use nettu_scheduler_sdk::NettuSDK;
+use nittei_api::Application;
+use nittei_infra::{setup_context, Config, NitteiContext};
+use nittei_sdk::NitteiSDK;
 
 #[allow(dead_code)]
 pub struct TestApp {
     pub config: Config,
-    pub ctx: NettuContext,
+    pub ctx: NitteiContext,
 }
 
 // Launch the application as a background task
-pub async fn spawn_app() -> (TestApp, NettuSDK, String) {
+pub async fn spawn_app() -> (TestApp, NitteiSDK, String) {
     let mut ctx = setup_context().await.unwrap();
     ctx.config.port = 0; // Random port
 
@@ -38,6 +38,6 @@ pub async fn spawn_app() -> (TestApp, NettuSDK, String) {
         config,
         ctx: context,
     };
-    let sdk = NettuSDK::new(address.clone(), "");
+    let sdk = NitteiSDK::new(address.clone(), "");
     (app, sdk, address)
 }

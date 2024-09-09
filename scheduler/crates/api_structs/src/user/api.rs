@@ -1,4 +1,4 @@
-use nettu_scheduler_domain::{User, ID};
+use nittei_domain::{User, ID};
 use serde::{Deserialize, Serialize};
 
 use crate::dtos::UserDTO;
@@ -24,7 +24,7 @@ pub mod get_me {
 }
 
 pub mod create_user {
-    use nettu_scheduler_domain::Metadata;
+    use nittei_domain::Metadata;
 
     use super::*;
 
@@ -41,7 +41,7 @@ pub mod create_user {
 }
 
 pub mod oauth_integration {
-    use nettu_scheduler_domain::IntegrationProvider;
+    use nittei_domain::IntegrationProvider;
 
     use super::*;
 
@@ -61,7 +61,7 @@ pub mod oauth_integration {
 }
 
 pub mod remove_integration {
-    use nettu_scheduler_domain::IntegrationProvider;
+    use nittei_domain::IntegrationProvider;
 
     use super::*;
 
@@ -92,7 +92,7 @@ pub mod oauth_outlook {
 }
 
 pub mod update_user {
-    use nettu_scheduler_domain::Metadata;
+    use nittei_domain::Metadata;
 
     use super::*;
 

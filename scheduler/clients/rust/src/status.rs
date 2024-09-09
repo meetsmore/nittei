@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use nettu_scheduler_api_structs::*;
+use nittei_api_structs::*;
 use reqwest::StatusCode;
 
 use crate::{APIResponse, BaseClient};

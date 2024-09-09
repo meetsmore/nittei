@@ -1,5 +1,5 @@
 [package]
-name = "nettu_scheduler_infra"
+name = "nittei_infra"
 version = "0.1.0"
 authors = ["Fredrik Meringdal"]
 edition = "2018"
@@ -10,8 +10,8 @@ workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-nettu_scheduler_utils = { path = "../utils" }
-nettu_scheduler_domain = { path = "../domain" }
+nittei_utils = { path = "../utils" }
+nittei_domain = { path = "../domain" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 async-trait = "0.1.42"

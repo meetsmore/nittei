@@ -1,13 +1,13 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use nettu_scheduler_api_structs::get_outlook_calendars::{APIResponse, PathParams, QueryParams};
-use nettu_scheduler_domain::{
+use nittei_api_structs::get_outlook_calendars::{APIResponse, PathParams, QueryParams};
+use nittei_domain::{
     providers::outlook::{OutlookCalendar, OutlookCalendarAccessRole},
     User,
 };
-use nettu_scheduler_infra::{outlook_calendar::OutlookCalendarProvider, NettuContext};
+use nittei_infra::{outlook_calendar::OutlookCalendarProvider, NitteiContext};
 
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{
         auth::{account_can_modify_user, protect_account_route, protect_route},
         usecase::{execute, UseCase},
@@ -18,8 +18,8 @@ pub async fn get_outlook_calendars_admin_controller(
     http_req: HttpRequest,
     path: web::Path<PathParams>,
     query: web::Query<QueryParams>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
     let user = account_can_modify_user(&account, &path.user_id, &ctx).await?;
 
@@ -31,14 +31,14 @@ pub async fn get_outlook_calendars_admin_controller(
     execute(usecase, &ctx)
         .await
         .map(|calendars| HttpResponse::Ok().json(APIResponse::new(calendars)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 pub async fn get_outlook_calendars_controller(
     http_req: HttpRequest,
     query: web::Query<QueryParams>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let (user, _policy) = protect_route(&http_req, &ctx).await?;
 
     let usecase = GetOutlookCalendarsUseCase {
@@ -49,7 +49,7 @@ pub async fn get_outlook_calendars_controller(
     execute(usecase, &ctx)
         .await
         .map(|calendars| HttpResponse::Ok().json(APIResponse::new(calendars)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 #[derive(Debug)]
@@ -64,7 +64,7 @@ enum UseCaseError {
     OutlookQuery,
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::UserNotConnectedToOutlook => {
@@ -83,7 +83,7 @@ impl UseCase for GetOutlookCalendarsUseCase {
 
     const NAME: &'static str = "GetOutlookCalendars";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         let provider = OutlookCalendarProvider::new(&self.user, ctx)
             .await
             .map_err(|_| UseCaseError::UserNotConnectedToOutlook)?;

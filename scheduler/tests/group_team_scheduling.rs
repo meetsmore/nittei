@@ -9,8 +9,8 @@ use helpers::{
     setup::spawn_app,
     utils::{assert_equal_user_lists, format_datetime},
 };
-use nettu_scheduler_domain::{BusyCalendar, ServiceMultiPersonOptions, TimePlan, ID};
-use nettu_scheduler_sdk::{
+use nittei_domain::{BusyCalendar, ServiceMultiPersonOptions, TimePlan, ID};
+use nittei_sdk::{
     AddBusyCalendar,
     AddServiceUserInput,
     Calendar,
@@ -21,12 +21,15 @@ use nettu_scheduler_sdk::{
     CreateServiceInput,
     CreateUserInput,
     GetServiceBookingSlotsInput,
-    NettuSDK,
+    NitteiSDK,
     UpdateServiceInput,
     User,
 };
 
-async fn create_default_service_host(admin_client: &NettuSDK, service_id: &ID) -> (User, Calendar) {
+async fn create_default_service_host(
+    admin_client: &NitteiSDK,
+    service_id: &ID,
+) -> (User, Calendar) {
     let input = CreateUserInput {
         metadata: None,
         user_id: None,
@@ -80,7 +83,7 @@ async fn create_default_service_host(admin_client: &NettuSDK, service_id: &ID) -
     let input = AddBusyCalendar {
         user_id: host.id.clone(),
         service_id: service_id.clone(),
-        calendar: BusyCalendar::Nettu(busy_calendar.id.clone()),
+        calendar: BusyCalendar::Nittei(busy_calendar.id.clone()),
     };
     admin_client
         .service
@@ -100,7 +103,7 @@ async fn test_group_team_scheduling() {
         .await
         .expect("Expected to create account");
 
-    let admin_client = NettuSDK::new(address, res.secret_api_key);
+    let admin_client = NitteiSDK::new(address, res.secret_api_key);
 
     let users_count_list: Vec<usize> = vec![0, 1, 5, 10];
     let max_booking_spots_list = vec![0, 1, 2, 5, 10];
@@ -246,7 +249,7 @@ async fn test_group_team_scheduling_is_collective() {
         .await
         .expect("Expected to create account");
 
-    let admin_client = NettuSDK::new(address, res.secret_api_key);
+    let admin_client = NitteiSDK::new(address, res.secret_api_key);
 
     let max_booking_spots = 5;
     let input = CreateServiceInput {
@@ -360,7 +363,7 @@ async fn test_group_team_scheduling_increase_max_count() {
         .await
         .expect("Expected to create account");
 
-    let admin_client = NettuSDK::new(address, res.secret_api_key);
+    let admin_client = NitteiSDK::new(address, res.secret_api_key);
 
     let test_set = vec![(5, 2), (1, 1), (1, 10), (10, 20)];
     for (max_booking_spots, booking_spots_inc) in test_set {
@@ -428,7 +431,7 @@ async fn test_group_team_scheduling_increase_max_count() {
         let input = AddBusyCalendar {
             user_id: host.id.clone(),
             service_id: service.id.clone(),
-            calendar: BusyCalendar::Nettu(busy_calendar.id.clone()),
+            calendar: BusyCalendar::Nittei(busy_calendar.id.clone()),
         };
         admin_client
             .service
@@ -657,7 +660,7 @@ async fn test_group_team_scheduling_increase_max_count() {
         let input = AddBusyCalendar {
             user_id: host.id.clone(),
             service_id: service.id.clone(),
-            calendar: BusyCalendar::Nettu(busy_calendar.id.clone()),
+            calendar: BusyCalendar::Nittei(busy_calendar.id.clone()),
         };
         admin_client
             .service
@@ -777,7 +780,7 @@ async fn test_group_team_scheduling_decrease_max_count() {
         .await
         .expect("Expected to create account");
 
-    let admin_client = NettuSDK::new(address, res.secret_api_key);
+    let admin_client = NitteiSDK::new(address, res.secret_api_key);
 
     let test_set = vec![(5, 2), (1, 1), (1, 0), (10, 4)];
     for (max_booking_spots, booking_spots_dec) in test_set {
@@ -845,7 +848,7 @@ async fn test_group_team_scheduling_decrease_max_count() {
         let input = AddBusyCalendar {
             user_id: host.id.clone(),
             service_id: service.id.clone(),
-            calendar: BusyCalendar::Nettu(busy_calendar.id.clone()),
+            calendar: BusyCalendar::Nittei(busy_calendar.id.clone()),
         };
         admin_client
             .service
@@ -987,7 +990,7 @@ async fn test_combination_of_services() {
         .await
         .expect("Expected to create account");
 
-    let admin_client = NettuSDK::new(address, res.secret_api_key);
+    let admin_client = NitteiSDK::new(address, res.secret_api_key);
 
     let input = CreateServiceInput {
         metadata: None,
@@ -1067,7 +1070,7 @@ async fn test_combination_of_services() {
         let input = AddBusyCalendar {
             user_id: host.id.clone(),
             service_id,
-            calendar: BusyCalendar::Nettu(busy_calendar.id.clone()),
+            calendar: BusyCalendar::Nittei(busy_calendar.id.clone()),
         };
         admin_client
             .service

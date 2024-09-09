@@ -1,4 +1,4 @@
-use nettu_scheduler_domain::{
+use nittei_domain::{
     BusyCalendar,
     Service,
     ServiceResource,
@@ -146,7 +146,7 @@ pub mod remove_service_event_intend {
 
 pub mod create_service_event_intend {
     use chrono::{DateTime, Utc};
-    use nettu_scheduler_domain::User;
+    use nittei_domain::User;
 
     use super::*;
     use crate::dtos::UserDTO;
@@ -184,7 +184,7 @@ pub mod create_service_event_intend {
 }
 
 pub mod create_service {
-    use nettu_scheduler_domain::{Metadata, ServiceMultiPersonOptions};
+    use nittei_domain::{Metadata, ServiceMultiPersonOptions};
 
     use super::*;
 
@@ -201,7 +201,7 @@ pub mod create_service {
 }
 
 pub mod update_service {
-    use nettu_scheduler_domain::{Metadata, ServiceMultiPersonOptions};
+    use nittei_domain::{Metadata, ServiceMultiPersonOptions};
 
     use super::*;
 
@@ -224,7 +224,7 @@ pub mod update_service {
 
 pub mod get_service_bookingslots {
     use chrono::{DateTime, Utc};
-    use nettu_scheduler_domain::booking_slots::{
+    use nittei_domain::booking_slots::{
         ServiceBookingSlot,
         ServiceBookingSlots,
         ServiceBookingSlotsDate,

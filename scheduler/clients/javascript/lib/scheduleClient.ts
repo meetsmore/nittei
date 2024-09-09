@@ -1,4 +1,4 @@
-import { NettuBaseClient } from './baseClient'
+import { NitteiBaseClient } from './baseClient'
 import { UUID } from './domain'
 import type { Schedule, ScheduleRule } from './domain/schedule'
 
@@ -16,7 +16,7 @@ type ScheduleResponse = {
   schedule: Schedule
 }
 
-export class NettuScheduleClient extends NettuBaseClient {
+export class NitteiScheduleClient extends NitteiBaseClient {
   public async create(userId: UUID, req: CreateScheduleRequest) {
     return await this.post<ScheduleResponse>(`/user/${userId}/schedule`, req)
   }
@@ -37,7 +37,7 @@ export class NettuScheduleClient extends NettuBaseClient {
   }
 }
 
-export class NettuScheduleUserClient extends NettuBaseClient {
+export class NitteiScheduleUserClient extends NitteiBaseClient {
   public async create(req: CreateScheduleRequest) {
     return await this.post<ScheduleResponse>('/schedule', req)
   }

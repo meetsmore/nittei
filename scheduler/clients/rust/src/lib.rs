@@ -26,7 +26,7 @@ pub use calendar::{
 use event::CalendarEventClient;
 pub use event::{CreateEventInput, GetEventsInstancesInput, UpdateEventInput};
 // Domain
-pub use nettu_scheduler_api_structs::dtos::{
+pub use nittei_api_structs::dtos::{
     AccountDTO as Account,
     AccountSettingsDTO as AccountSettings,
     AccountWebhookSettingsDTO as AccountWebhookSettings,
@@ -39,11 +39,11 @@ pub use nettu_scheduler_api_structs::dtos::{
     ServiceWithUsersDTO as Service,
     UserDTO as User,
 };
-pub use nettu_scheduler_api_structs::{
+pub use nittei_api_structs::{
     dtos::*,
     send_event_reminders::AccountRemindersDTO as AccountReminders,
 };
-pub use nettu_scheduler_domain::{
+pub use nittei_domain::{
     providers::{google::*, outlook::*},
     scheduling::RoundRobinAlgorithm,
     BusyCalendar,
@@ -90,12 +90,12 @@ pub use user::{
     UpdateUserInput,
 };
 
-/// Nettu Scheduler Server SDK
+/// nittei Server SDK
 ///
-/// The SDK contains methods for interacting with the Nettu Scheduler server
+/// The SDK contains methods for interacting with the nittei server
 /// API.
 #[derive(Clone)]
-pub struct NettuSDK {
+pub struct NitteiSDK {
     pub account: AccountClient,
     pub calendar: CalendarClient,
     pub event: CalendarEventClient,
@@ -105,7 +105,7 @@ pub struct NettuSDK {
     pub user: UserClient,
 }
 
-impl NettuSDK {
+impl NitteiSDK {
     pub fn new<T: Into<String>>(address: String, api_key: T) -> Self {
         let mut base = BaseClient::new(address);
         base.set_api_key(api_key.into());

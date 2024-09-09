@@ -1,9 +1,9 @@
 use chrono::Utc;
-use nettu_scheduler_domain::{IntegrationProvider, User};
+use nittei_domain::{IntegrationProvider, User};
 use serde::Deserialize;
 use tracing::error;
 
-use crate::{CodeTokenRequest, CodeTokenResponse, NettuContext};
+use crate::{CodeTokenRequest, CodeTokenResponse, NitteiContext};
 
 // https://developers.google.com/identity/protocols/oauth2/web-server#httprest_3
 
@@ -103,7 +103,7 @@ pub async fn exchange_code_token(req: CodeTokenRequest) -> Result<CodeTokenRespo
     Ok(res)
 }
 
-pub async fn get_access_token(user: &User, ctx: &NettuContext) -> Option<String> {
+pub async fn get_access_token(user: &User, ctx: &NitteiContext) -> Option<String> {
     // Check if user has connected to google
     let mut integrations = ctx.repos.user_integrations.find(&user.id).await.ok()?;
     let integration = integrations

@@ -1,4 +1,4 @@
-use nettu_scheduler_domain::Account;
+use nittei_domain::Account;
 use serde::{Deserialize, Serialize};
 
 use crate::dtos::AccountDTO;
@@ -80,7 +80,7 @@ pub mod delete_account_webhook {
 }
 
 pub mod add_account_integration {
-    use nettu_scheduler_domain::IntegrationProvider;
+    use nittei_domain::IntegrationProvider;
 
     use super::*;
 
@@ -97,7 +97,7 @@ pub mod add_account_integration {
 }
 
 pub mod remove_account_integration {
-    use nettu_scheduler_domain::IntegrationProvider;
+    use nittei_domain::IntegrationProvider;
 
     use super::*;
 

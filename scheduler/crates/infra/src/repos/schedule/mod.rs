@@ -1,6 +1,6 @@
 mod postgres;
 
-use nettu_scheduler_domain::{Schedule, ID};
+use nittei_domain::{Schedule, ID};
 pub use postgres::PostgresScheduleRepo;
 
 use crate::MetadataFindQuery;
@@ -19,7 +19,7 @@ pub trait IScheduleRepo: Send + Sync {
 #[cfg(test)]
 mod tests {
     use chrono_tz::US::Pacific;
-    use nettu_scheduler_domain::{Account, Entity, Schedule, User};
+    use nittei_domain::{Account, Entity, Schedule, User};
 
     use crate::setup_context;
 

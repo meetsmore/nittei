@@ -1,10 +1,10 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use nettu_scheduler_api_structs::delete_schedule::*;
-use nettu_scheduler_domain::{Schedule, ID};
-use nettu_scheduler_infra::NettuContext;
+use nittei_api_structs::delete_schedule::*;
+use nittei_domain::{Schedule, ID};
+use nittei_infra::NitteiContext;
 
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{
         auth::{account_can_modify_schedule, protect_account_route, protect_route, Permission},
         usecase::{execute, execute_with_policy, PermissionBoundary, UseCase},
@@ -14,8 +14,8 @@ use crate::{
 pub async fn delete_schedule_admin_controller(
     http_req: HttpRequest,
     path: web::Path<PathParams>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
     let schedule = account_can_modify_schedule(&account, &path.schedule_id, &ctx).await?;
 
@@ -27,14 +27,14 @@ pub async fn delete_schedule_admin_controller(
     execute(usecase, &ctx)
         .await
         .map(|schedule| HttpResponse::Ok().json(APIResponse::new(schedule)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 pub async fn delete_schedule_controller(
     http_req: HttpRequest,
     path: web::Path<PathParams>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let (user, policy) = protect_route(&http_req, &ctx).await?;
 
     let usecase = DeleteScheduleUseCase {
@@ -45,7 +45,7 @@ pub async fn delete_schedule_controller(
     execute_with_policy(usecase, &policy, &ctx)
         .await
         .map(|schedule| HttpResponse::Ok().json(APIResponse::new(schedule)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 #[derive(Debug)]
@@ -54,7 +54,7 @@ pub enum UseCaseError {
     StorageError,
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::StorageError => Self::InternalError,
@@ -80,7 +80,7 @@ impl UseCase for DeleteScheduleUseCase {
 
     const NAME: &'static str = "DeleteSchedule";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         let schedule = ctx
             .repos
             .schedules

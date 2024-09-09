@@ -3,12 +3,12 @@ use std::collections::HashMap;
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::{DateTime, Utc};
 use futures::future::join_all;
-use nettu_scheduler_api_structs::get_user_freebusy::{APIResponse, PathParams, QueryParams};
-use nettu_scheduler_domain::{CompatibleInstances, EventInstance, TimeSpan, ID};
-use nettu_scheduler_infra::NettuContext;
+use nittei_api_structs::get_user_freebusy::{APIResponse, PathParams, QueryParams};
+use nittei_domain::{CompatibleInstances, EventInstance, TimeSpan, ID};
+use nittei_infra::NitteiContext;
 
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{
         auth::protect_public_account_route,
         usecase::{execute, UseCase},
@@ -29,8 +29,8 @@ pub async fn get_freebusy_controller(
     http_req: HttpRequest,
     mut query_params: web::Query<QueryParams>,
     mut params: web::Path<PathParams>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let _account = protect_public_account_route(&http_req, &ctx).await?;
 
     let usecase = GetFreeBusyUseCase {
@@ -48,7 +48,7 @@ pub async fn get_freebusy_controller(
                 user_id: usecase_res.user_id.to_string(),
             })
         })
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 #[derive(Debug)]
@@ -71,7 +71,7 @@ pub enum UseCaseError {
     InvalidTimespan,
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::InternalError => Self::InternalError,
@@ -90,7 +90,7 @@ impl UseCase for GetFreeBusyUseCase {
 
     const NAME: &'static str = "GetUserFreebusy";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         let timespan = TimeSpan::new(self.start_time, self.end_time);
         if timespan.greater_than(ctx.config.event_instances_query_duration_limit) {
             return Err(UseCaseError::InvalidTimespan);
@@ -117,7 +117,7 @@ impl GetFreeBusyUseCase {
     async fn get_event_instances_from_calendars(
         &self,
         timespan: &TimeSpan,
-        ctx: &NettuContext,
+        ctx: &NitteiContext,
     ) -> anyhow::Result<Vec<EventInstance>> {
         let calendar_ids = match &self.calendar_ids {
             Some(ids) if !ids.is_empty() => ids,
@@ -142,7 +142,7 @@ impl GetFreeBusyUseCase {
                 .find_by_calendar(&calendar.id, Some(timespan))
         });
 
-        let events: Vec<Result<Vec<nettu_scheduler_domain::CalendarEvent>, anyhow::Error>> =
+        let events: Vec<Result<Vec<nittei_domain::CalendarEvent>, anyhow::Error>> =
             join_all(all_events_futures).await.into_iter().collect();
 
         let mut all_expanded_events = Vec::new();
@@ -172,8 +172,8 @@ impl GetFreeBusyUseCase {
 
 #[cfg(test)]
 mod test {
-    use nettu_scheduler_domain::{Account, Calendar, CalendarEvent, Entity, RRuleOptions, User};
-    use nettu_scheduler_infra::setup_context;
+    use nittei_domain::{Account, Calendar, CalendarEvent, Entity, RRuleOptions, User};
+    use nittei_infra::setup_context;
 
     use super::*;
 

@@ -5,7 +5,7 @@ use actix_web::{
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum NettuError {
+pub enum NitteiError {
     #[error("Internal server error")]
     InternalError,
     #[error("Invalid data provided: Error message: `{0}`")]
@@ -15,14 +15,14 @@ pub enum NettuError {
     #[error("Unauthorized request. Error message: `{0}`")]
     Unauthorized(String),
     #[error(
-        "Unidentifiable client. Must include the `nettu-account` header. Error message: `{0}`"
+        "Unidentifiable client. Must include the `nittei-account` header. Error message: `{0}`"
     )]
     UnidentifiableClient(String),
     #[error("404 Not found. Error message: `{0}`")]
     NotFound(String),
 }
 
-impl actix_web::error::ResponseError for NettuError {
+impl actix_web::error::ResponseError for NitteiError {
     fn status_code(&self) -> StatusCode {
         match *self {
             Self::InternalError => StatusCode::INTERNAL_SERVER_ERROR,

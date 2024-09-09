@@ -1,6 +1,6 @@
 ## Booking
 
-`Nettu scheduler` provides a `Service` type that makes it really easy to build a booking application. The `Service` type represents a bookable service that your app provides.
+`Nittei` provides a `Service` type that makes it really easy to build a booking application. The `Service` type represents a bookable service that your app provides.
 
 It works by adding `User`s to the `Service` that are going to be bookable. Each `User`
 on the `Service` can have a bunch of different settings for when they can be booked (availability schedule, the closest booking time, buffers etc.).
@@ -9,13 +9,12 @@ a booking is made you can represent it as a `CalendarEvent` with the booked `Use
 as the owner of the `CalendarEvent` and the `User` will no longer be bookable
 during that timeperiod.
 
-An important point is to not store the booking resource itself in `Nettu scheduler`, but in your own application as your application is the one that contains all the information about the participants and metadata of the booking. It is recommended that `Nettu scheduler` is just going to be used for calculating bookingslots, and not to try to fit your booking data model into the `CalendarEvent` resource type (unless it is a really simple one). 
-
+An important point is to not store the booking resource itself in `Nittei`, but in your own application as your application is the one that contains all the information about the participants and metadata of the booking. It is recommended that `Nittei` is just going to be used for calculating bookingslots, and not to try to fit your booking data model into the `CalendarEvent` resource type (unless it is a really simple one).
 
 ```js
-import { NettuClient, BusyCalendarProvider } from "@nettu/scheduler-sdk";
+import { nitteiClient, BusyCalendarProvider } from "@meetmsore/nittei-client";
 
-const client = NettuClient({ apiKey: "YOUR_API_KEY" });
+const client = nitteiClient({ apiKey: "YOUR_API_KEY" });
 
 // Create a Service
 const serviceRes = await client.service.create();
@@ -37,14 +36,14 @@ const calendarRes = await client.calendar.create(user.id, {
 const { calendar } = calendarRes.data!;
 
 // Register the User on the Service with the specified Schedule as availability and
-// also a buffer time after every service event 
+// also a buffer time after every service event
 await client.service.addUser(service.id, {
     userId: user.id,
     availability: {
         variant: "Schedule",
         id: schedule.id
     },
-    // Make User unbookable for 10 minutes after a booking 
+    // Make User unbookable for 10 minutes after a booking
     buffer: 10
 });
 
@@ -54,7 +53,7 @@ await client.service.addBusyCalendar({
     userId: user.id,
     calendar: {
         id: calendar.id,
-        provider: BusyCalendarProvider.Nettu
+        provider: BusyCalendarProvider.Nittei
     }
 });
 
@@ -93,7 +92,7 @@ const bookingSlotsRes2 = await client.service.getBookingslots(service.id, {
 });
 const bookingSlotsAfter = bookingSlotsRes2.data!.dates[0].slots;
 
-// See that user is no longer available during the booked event + buffer time 
+// See that user is no longer available during the booked event + buffer time
 console.log({
     before: bookingSlotsBefore.length,
     after: bookingSlotsAfter.length

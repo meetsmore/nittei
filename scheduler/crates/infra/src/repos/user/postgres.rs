@@ -1,6 +1,6 @@
 use std::convert::{TryFrom, TryInto};
 
-use nettu_scheduler_domain::{User, ID};
+use nittei_domain::{User, ID};
 use serde_json::Value;
 use sqlx::{
     types::{Json, Uuid},

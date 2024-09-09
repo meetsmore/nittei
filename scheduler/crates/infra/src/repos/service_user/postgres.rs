@@ -1,4 +1,4 @@
-use nettu_scheduler_domain::{ServiceResource, TimePlan, ID};
+use nittei_domain::{ServiceResource, TimePlan, ID};
 use serde::Deserialize;
 use sqlx::{types::Uuid, FromRow, PgPool};
 use tracing::{error, instrument};

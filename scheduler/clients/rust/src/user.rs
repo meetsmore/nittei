@@ -6,8 +6,8 @@ pub use multiple_freebusy::{
     APIResponse as MultipleFreeBusyAPIResponse,
     RequestBody as MultipleFreeBusyRequestBody,
 };
-use nettu_scheduler_api_structs::*;
-use nettu_scheduler_domain::{IntegrationProvider, Metadata};
+use nittei_api_structs::*;
+use nittei_domain::{IntegrationProvider, Metadata};
 use reqwest::StatusCode;
 
 use crate::{shared::MetadataFindInput, APIResponse, BaseClient, ID};

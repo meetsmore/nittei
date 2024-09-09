@@ -2,8 +2,8 @@ use std::time::Duration;
 
 use actix_web::rt::time::{interval, sleep_until, Instant};
 use awc::Client;
-use nettu_scheduler_api_structs::send_event_reminders::AccountRemindersDTO;
-use nettu_scheduler_infra::NettuContext;
+use nittei_api_structs::send_event_reminders::AccountRemindersDTO;
+use nittei_infra::NitteiContext;
 use tracing::{error, info};
 
 use crate::{
@@ -23,7 +23,7 @@ pub fn get_start_delay(now_ts: usize, secs_before_min: usize) -> usize {
     }
 }
 
-pub fn start_reminder_generation_job_scheduler(ctx: NettuContext) {
+pub fn start_reminder_generation_job(ctx: NitteiContext) {
     actix_web::rt::spawn(async move {
         let mut interval = interval(Duration::from_secs(30 * 60));
         loop {
@@ -37,7 +37,7 @@ pub fn start_reminder_generation_job_scheduler(ctx: NettuContext) {
     });
 }
 
-pub fn start_send_reminders_job(ctx: NettuContext) {
+pub fn start_send_reminders_job(ctx: NitteiContext) {
     actix_web::rt::spawn(async move {
         let now = ctx.sys.get_timestamp_millis();
         let secs_to_next_run = get_start_delay(now as usize, 0);
@@ -53,7 +53,7 @@ pub fn start_send_reminders_job(ctx: NettuContext) {
     });
 }
 
-async fn send_reminders(context: NettuContext) {
+async fn send_reminders(context: NitteiContext) {
     let client = Client::new();
 
     let usecase = GetUpcomingRemindersUseCase {
@@ -78,7 +78,7 @@ async fn send_reminders(context: NettuContext) {
             Some(webhook) => {
                 if let Err(e) = client
                     .post(webhook.url)
-                    .insert_header(("nettu-scheduler-webhook-key", webhook.key))
+                    .insert_header(("nittei-scheduler-webhook-key", webhook.key))
                     .send_json(&AccountRemindersDTO::new(reminders))
                     .await
                 {

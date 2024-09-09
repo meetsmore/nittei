@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use nettu_scheduler_domain::EventRemindersExpansionJob;
+use nittei_domain::EventRemindersExpansionJob;
 use sqlx::{types::Uuid, FromRow, PgPool};
 use tracing::{error, instrument};
 

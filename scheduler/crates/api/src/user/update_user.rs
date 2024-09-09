@@ -1,10 +1,10 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use nettu_scheduler_api_structs::update_user::*;
-use nettu_scheduler_domain::{Metadata, User, ID};
-use nettu_scheduler_infra::NettuContext;
+use nittei_api_structs::update_user::*;
+use nittei_domain::{Metadata, User, ID};
+use nittei_infra::NitteiContext;
 
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{
         auth::protect_account_route,
         usecase::{execute, UseCase},
@@ -15,8 +15,8 @@ pub async fn update_user_controller(
     http_req: HttpRequest,
     body: web::Json<RequestBody>,
     mut path: web::Path<PathParams>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
 
     let usecase = UpdateUserUseCase {
@@ -28,7 +28,7 @@ pub async fn update_user_controller(
     execute(usecase, &ctx)
         .await
         .map(|usecase_res| HttpResponse::Ok().json(APIResponse::new(usecase_res.user)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 #[derive(Debug)]
@@ -49,7 +49,7 @@ pub enum UseCaseError {
     UserNotFound(ID),
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::StorageError => Self::InternalError,
@@ -67,7 +67,7 @@ impl UseCase for UpdateUserUseCase {
 
     const NAME: &'static str = "UpdateUser";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         let mut user = match ctx
             .repos
             .users

@@ -1,7 +1,7 @@
 mod postgres;
 
 use chrono::{DateTime, Utc};
-use nettu_scheduler_domain::{Reminder, ID};
+use nittei_domain::{Reminder, ID};
 pub use postgres::PostgresReminderRepo;
 
 #[async_trait::async_trait]
@@ -15,7 +15,7 @@ pub trait IReminderRepo: Send + Sync {
 #[cfg(test)]
 mod tests {
     use chrono::DateTime;
-    use nettu_scheduler_domain::{Account, Calendar, CalendarEvent, Reminder, User};
+    use nittei_domain::{Account, Calendar, CalendarEvent, Reminder, User};
 
     use crate::setup_context;
 

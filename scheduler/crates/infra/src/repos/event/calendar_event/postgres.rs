@@ -1,7 +1,7 @@
 use std::convert::{TryFrom, TryInto};
 
 use chrono::{DateTime, Utc};
-use nettu_scheduler_domain::{CalendarEvent, CalendarEventReminder, RRuleOptions, ID};
+use nittei_domain::{CalendarEvent, CalendarEventReminder, RRuleOptions, ID};
 use serde_json::Value;
 use sqlx::{
     types::{Json, Uuid},
@@ -241,7 +241,7 @@ impl IEventRepo for PostgresEventRepo {
     async fn find_by_calendar(
         &self,
         calendar_id: &ID,
-        timespan: Option<&nettu_scheduler_domain::TimeSpan>,
+        timespan: Option<&nittei_domain::TimeSpan>,
     ) -> anyhow::Result<Vec<CalendarEvent>> {
         if let Some(timespan) = timespan {
             sqlx::query_as!(
@@ -301,7 +301,7 @@ impl IEventRepo for PostgresEventRepo {
     async fn find_by_calendars(
         &self,
         calendar_ids: Vec<ID>,
-        timespan: &nettu_scheduler_domain::TimeSpan,
+        timespan: &nittei_domain::TimeSpan,
     ) -> anyhow::Result<Vec<CalendarEvent>> {
         let calendar_ids: Vec<Uuid> = calendar_ids
             .into_iter()

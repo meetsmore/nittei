@@ -7,9 +7,9 @@ export type PartialCredentials = {
    */
   apiKey?: string
   /**
-   * Nettu account id (admin)
+   * nittei account id (admin)
    */
-  nettuAccount?: string
+  nitteiAccount?: string
   /**
    * Token (user)
    */
@@ -25,10 +25,10 @@ export const createCreds = (creds?: PartialCredentials): ICredentials => {
   if (creds?.apiKey) {
     return new AccountCreds(creds.apiKey)
   }
-  if (creds?.nettuAccount) {
-    return new UserCreds(creds?.nettuAccount, creds?.token)
+  if (creds?.nitteiAccount) {
+    return new UserCreds(creds?.nitteiAccount, creds?.token)
   }
-  // throw new Error("No api key or nettu account provided to nettu client.");
+  // throw new Error("No api key or nittei account provided to nittei client.");
   return new EmptyCreds()
 }
 
@@ -36,17 +36,17 @@ export const createCreds = (creds?: PartialCredentials): ICredentials => {
  * Credentials for the API for end users (usually frontend)
  */
 export class UserCreds implements ICredentials {
-  private readonly nettuAccount: string
+  private readonly nitteiAccount: string
   private readonly token?: string
 
-  constructor(nettuAccount: string, token?: string) {
-    this.nettuAccount = nettuAccount
+  constructor(nitteiAccount: string, token?: string) {
+    this.nitteiAccount = nitteiAccount
     this.token = token
   }
 
   createAuthHeaders() {
     const creds: Record<string, string> = {
-      'nettu-account': this.nettuAccount,
+      'nittei-account': this.nitteiAccount,
     }
     if (this.token) {
       creds.authorization = `Bearer ${this.token}`

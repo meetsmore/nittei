@@ -1,15 +1,15 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use nettu_scheduler_api_structs::get_calendars_by_meta::*;
-use nettu_scheduler_domain::Metadata;
-use nettu_scheduler_infra::{MetadataFindQuery, NettuContext};
+use nittei_api_structs::get_calendars_by_meta::*;
+use nittei_domain::Metadata;
+use nittei_infra::{MetadataFindQuery, NitteiContext};
 
-use crate::{error::NettuError, shared::auth::protect_account_route};
+use crate::{error::NitteiError, shared::auth::protect_account_route};
 
 pub async fn get_calendars_by_meta_controller(
     http_req: HttpRequest,
     query_params: web::Query<QueryParams>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
 
     let query = MetadataFindQuery {
@@ -23,6 +23,6 @@ pub async fn get_calendars_by_meta_controller(
         .calendars
         .find_by_metadata(query)
         .await
-        .map_err(|_| NettuError::InternalError)?;
+        .map_err(|_| NitteiError::InternalError)?;
     Ok(HttpResponse::Ok().json(APIResponse::new(calendars)))
 }

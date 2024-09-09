@@ -1,9 +1,9 @@
-use crate::NettuContext;
+use crate::NitteiContext;
 pub mod auth_provider;
 mod calendar_api;
 
 use calendar_api::OutlookCalendarRestApi;
-use nettu_scheduler_domain::{
+use nittei_domain::{
     providers::outlook::{OutlookCalendarAccessRole, OutlookCalendarEvent},
     CalendarEvent,
     CompatibleInstances,
@@ -20,7 +20,7 @@ pub struct OutlookCalendarProvider {
 }
 
 impl OutlookCalendarProvider {
-    pub async fn new(user: &User, ctx: &NettuContext) -> Result<Self, ()> {
+    pub async fn new(user: &User, ctx: &NitteiContext) -> Result<Self, ()> {
         let access_token = match auth_provider::get_access_token(user, ctx).await {
             Some(token) => token,
             None => return Err(()),

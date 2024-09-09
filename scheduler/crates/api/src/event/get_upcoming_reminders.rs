@@ -2,12 +2,12 @@ use std::{collections::HashMap, time::Duration};
 
 use actix_web::rt::time::Instant;
 use chrono::TimeDelta;
-use nettu_scheduler_api_structs::send_event_reminders::{AccountEventReminder, AccountReminders};
-use nettu_scheduler_domain::{Account, CalendarEvent, Reminder};
-use nettu_scheduler_infra::NettuContext;
+use nittei_api_structs::send_event_reminders::{AccountEventReminder, AccountReminders};
+use nittei_domain::{Account, CalendarEvent, Reminder};
+use nittei_infra::NitteiContext;
 use tracing::error;
 
-use crate::{error::NettuError, shared::usecase::UseCase};
+use crate::{error::NitteiError, shared::usecase::UseCase};
 
 /// Creates EventReminders for a calendar event
 #[derive(Debug)]
@@ -21,7 +21,7 @@ pub enum UseCaseError {
     IntervalServerError,
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::IntervalServerError => Self::InternalError,
@@ -31,7 +31,7 @@ impl From<UseCaseError> for NettuError {
 
 async fn get_accounts_from_reminders(
     reminders: &[Reminder],
-    ctx: &NettuContext,
+    ctx: &NitteiContext,
 ) -> anyhow::Result<HashMap<String, Account>> {
     let account_ids: Vec<_> = reminders
         .iter()
@@ -50,7 +50,7 @@ async fn get_accounts_from_reminders(
 async fn create_reminders_for_accounts(
     reminders: Vec<Reminder>,
     event_lookup: HashMap<String, CalendarEvent>,
-    ctx: &NettuContext,
+    ctx: &NitteiContext,
 ) -> anyhow::Result<Vec<(Account, AccountReminders)>> {
     let account_lookup = get_accounts_from_reminders(&reminders, ctx).await?;
 
@@ -107,7 +107,7 @@ impl UseCase for GetUpcomingRemindersUseCase {
     const NAME: &'static str = "GetUpcomingReminders";
 
     /// This will run every minute
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         // Find all occurrences for the next interval and delete them
         let ts = ctx.sys.get_timestamp() + TimeDelta::milliseconds(self.reminders_interval);
 
@@ -160,8 +160,8 @@ mod tests {
     use std::sync::Arc;
 
     use chrono::{DateTime, Utc};
-    use nettu_scheduler_domain::{Calendar, CalendarEventReminder, User};
-    use nettu_scheduler_infra::{setup_context as _setup_ctx, ISys};
+    use nittei_domain::{Calendar, CalendarEventReminder, User};
+    use nittei_infra::{setup_context as _setup_ctx, ISys};
 
     use super::{super::create_event::CreateEventUseCase, *};
     use crate::{
@@ -169,7 +169,7 @@ mod tests {
         shared::usecase::execute,
     };
 
-    async fn setup_context() -> NettuContext {
+    async fn setup_context() -> NitteiContext {
         let ctx = _setup_ctx().await.unwrap();
         ctx.repos
             .reminders
@@ -210,7 +210,7 @@ mod tests {
         }
     }
 
-    async fn insert_common_data(ctx: &NettuContext) -> (User, Calendar) {
+    async fn insert_common_data(ctx: &NitteiContext) -> (User, Calendar) {
         let account = Account::default();
         ctx.repos.accounts.insert(&account).await.unwrap();
 

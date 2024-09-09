@@ -1,4 +1,4 @@
-use nettu_scheduler_domain::{
+use nittei_domain::{
     CalendarEvent,
     CalendarEventReminder,
     EventInstance,
@@ -25,7 +25,7 @@ impl CalendarEventResponse {
 
 pub mod create_event {
     use chrono::{DateTime, Utc};
-    use nettu_scheduler_domain::Metadata;
+    use nittei_domain::Metadata;
 
     use super::*;
 
@@ -113,7 +113,7 @@ pub mod get_event {
 
 pub mod get_events_by_calendars {
     use chrono::{DateTime, Utc};
-    use nettu_scheduler_domain::EventWithInstances;
+    use nittei_domain::EventWithInstances;
 
     use super::*;
     use crate::helpers::deserialize_uuids_list::deserialize_stringified_uuids_list;
@@ -170,7 +170,7 @@ pub mod get_events_by_meta {
 
 pub mod update_event {
     use chrono::{DateTime, Utc};
-    use nettu_scheduler_domain::Metadata;
+    use nittei_domain::Metadata;
 
     use super::*;
 

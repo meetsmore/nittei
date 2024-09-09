@@ -3,7 +3,7 @@ import type {
   CalendarEventInstance,
   CalendarEventWithInstances,
 } from './domain/calendarEvent'
-import { APIResponse, NettuBaseClient } from './baseClient'
+import { APIResponse, NitteiBaseClient } from './baseClient'
 import type { Metadata } from './domain/metadata'
 import type { User } from './domain/user'
 import type { IntegrationProvider, UUID } from '.'
@@ -134,7 +134,7 @@ type GetEventsOfMultipleCalendarsResponse = {
  * Client for the user endpoints
  * This is an admin client (usually backend)
  */
-export class NettuUserClient extends NettuBaseClient {
+export class NitteiUserClient extends NitteiBaseClient {
   /**
    * Create a user
    * @param data - data for creating the user
@@ -269,7 +269,7 @@ export class NettuUserClient extends NettuBaseClient {
  * Client for the user endpoints
  * This is an end user client (usually frontend)
  */
-export class NettuUserUserClient extends NettuBaseClient {
+export class NitteiUserUserClient extends NitteiBaseClient {
   public me() {
     return this.get<UserResponse>('/me')
   }

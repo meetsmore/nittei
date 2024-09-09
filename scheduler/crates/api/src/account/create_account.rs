@@ -1,22 +1,22 @@
 use actix_web::{web, HttpResponse};
-use nettu_scheduler_api_structs::create_account::{APIResponse, RequestBody};
-use nettu_scheduler_domain::Account;
-use nettu_scheduler_infra::NettuContext;
+use nittei_api_structs::create_account::{APIResponse, RequestBody};
+use nittei_domain::Account;
+use nittei_infra::NitteiContext;
 
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::usecase::{execute, UseCase},
 };
 
 pub async fn create_account_controller(
-    ctx: web::Data<NettuContext>,
+    ctx: web::Data<NitteiContext>,
     body: web::Json<RequestBody>,
-) -> Result<HttpResponse, NettuError> {
+) -> Result<HttpResponse, NitteiError> {
     let usecase = CreateAccountUseCase { code: body.0.code };
     execute(usecase, &ctx)
         .await
         .map(|account| HttpResponse::Created().json(APIResponse::new(account)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 #[derive(Debug)]
@@ -30,7 +30,7 @@ enum UseCaseError {
     InvalidCreateAccountCode,
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::InvalidCreateAccountCode => {
@@ -49,7 +49,7 @@ impl UseCase for CreateAccountUseCase {
 
     const NAME: &'static str = "CreateAccount";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         if self.code != ctx.config.create_account_secret_code {
             return Err(UseCaseError::InvalidCreateAccountCode);
         }

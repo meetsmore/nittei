@@ -1,7 +1,7 @@
 // use actix_web::{web, HttpResponse};
 // use serde::Deserialize;
 
-// use crate::{error::NettuError, user::create_user::CreateUserUseCase};
+// use crate::{error::nitteiError, user::create_user::CreateUserUseCase};
 
 // use super::usecase::UseCase;
 
@@ -15,32 +15,32 @@
 // //         path: Self::PathParams,
 // //         body: Self::Body,
 // //         query: Self::QueryParams,
-// //     ) -> Result<U, NettuError>;
+// //     ) -> Result<U, nitteiError>;
 
-// //     fn handle_error(e: U::Error) -> NettuError;
+// //     fn handle_error(e: U::Error) -> nitteiError;
 // //     fn handle_ok(res: U::Response) -> HttpResponse;
 
 // //     async fn execute_controller(
 // //         path: web::Path<Self::PathParams>,
 // //         body: web::Json<Self::Body>,
 // //         query: web::Query<Self::QueryParams>,
-// //     ) -> Result<HttpResponse, NettuError> {
-// //         // Err(NettuError::Conflict("dfasf".into()))
+// //     ) -> Result<HttpResponse, nitteiError> {
+// //         // Err(nitteiError::Conflict("dfasf".into()))
 // //         Ok(HttpResponse::Ok().finish())
 // //     }
 // // }
 
 // #[async_trait::async_trait(?Send)]
 // pub trait APIController: UseCase {
-//     fn handle_error(e: Self::Error) -> NettuError;
+//     fn handle_error(e: Self::Error) -> nitteiError;
 //     fn handle_ok(res: Self::Response) -> HttpResponse;
 
 //     async fn execute_controller<P, B, Q>(
 //         path: web::Path<P>,
 //         body: web::Json<B>,
 //         query: web::Query<Q>,
-//     ) -> Result<HttpResponse, NettuError> {
-//         // Err(NettuError::Conflict("dfasf".into()))
+//     ) -> Result<HttpResponse, nitteiError> {
+//         // Err(nitteiError::Conflict("dfasf".into()))
 //         Ok(HttpResponse::Ok().finish())
 //     }
 // }
@@ -54,7 +54,7 @@
 // //     type Body = Params;
 // //     type QueryParams = Params;
 
-// //     fn handle_error(e: <CreateUserUseCase as UseCase>::Error) -> NettuError {
+// //     fn handle_error(e: <CreateUserUseCase as UseCase>::Error) -> nitteiError {
 // //         todo!()
 // //     }
 
@@ -66,8 +66,8 @@
 // //         path: Self::PathParams,
 // //         body: Self::Body,
 // //         query: Self::QueryParams,
-// //     ) -> Result<CreateUserUseCase, NettuError> {
-// //         Err(NettuError::Conflict("".into()))
+// //     ) -> Result<CreateUserUseCase, nitteiError> {
+// //         Err(nitteiError::Conflict("".into()))
 // //     }
 // // }
 

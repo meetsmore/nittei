@@ -1,37 +1,37 @@
-import { NettuAccountClient } from './accountClient'
+import { NitteiAccountClient } from './accountClient'
 import {
   createAxiosInstanceBackend,
   createAxiosInstanceFrontend,
 } from './baseClient'
-import { NettuCalendarClient, NettuCalendarUserClient } from './calendarClient'
-import { NettuEventClient, NettuEventUserClient } from './eventClient'
-import { NettuHealthClient } from './healthClient'
+import { NitteiCalendarClient, NitteiCalendarUserClient } from './calendarClient'
+import { NitteiEventClient, NitteiEventUserClient } from './eventClient'
+import { NitteiHealthClient } from './healthClient'
 import { createCreds, PartialCredentials } from './helpers/credentials'
-import { NettuScheduleUserClient, NettuScheduleClient } from './scheduleClient'
-import { NettuServiceUserClient, NettuServiceClient } from './serviceClient'
+import { NitteiScheduleUserClient, NitteiScheduleClient } from './scheduleClient'
+import { NitteiServiceUserClient, NitteiServiceClient } from './serviceClient'
 import {
-  NettuUserClient as _NettuUserClient,
-  NettuUserUserClient,
+  NitteiUserClient as _NitteiUserClient,
+  NitteiUserUserClient,
 } from './userClient'
 
 export * from './domain'
 
-export interface INettuUserClient {
-  calendar: NettuCalendarUserClient
-  events: NettuEventUserClient
-  service: NettuServiceUserClient
-  schedule: NettuScheduleUserClient
-  user: NettuUserUserClient
+export interface INitteiUserClient {
+  calendar: NitteiCalendarUserClient
+  events: NitteiEventUserClient
+  service: NitteiServiceUserClient
+  schedule: NitteiScheduleUserClient
+  user: NitteiUserUserClient
 }
 
-export interface INettuClient {
-  account: NettuAccountClient
-  calendar: NettuCalendarClient
-  events: NettuEventClient
-  health: NettuHealthClient
-  service: NettuServiceClient
-  schedule: NettuScheduleClient
-  user: _NettuUserClient
+export interface INitteiClient {
+  account: NitteiAccountClient
+  calendar: NitteiCalendarClient
+  events: NitteiEventClient
+  health: NitteiHealthClient
+  service: NitteiServiceClient
+  schedule: NitteiScheduleClient
+  user: _NitteiUserClient
 }
 
 /**
@@ -55,13 +55,13 @@ const DEFAULT_CONFIG: Required<ClientConfig> = {
 }
 
 /**
- * Create a client for the Nettu API (user client, not admin)
+ * Create a client for the nittei API (user client, not admin)
  * @param config configuration and credentials to be used
  * @returns user client
  */
-export const NettuUserClient = (
+export const NitteiUserClient = (
   config?: PartialCredentials & ClientConfig
-): INettuUserClient => {
+): INitteiUserClient => {
   const creds = createCreds(config)
 
   const finalConfig = { ...DEFAULT_CONFIG, ...config }
@@ -73,22 +73,22 @@ export const NettuUserClient = (
   )
 
   return Object.freeze({
-    calendar: new NettuCalendarUserClient(axiosClient),
-    events: new NettuEventUserClient(axiosClient),
-    service: new NettuServiceUserClient(axiosClient),
-    schedule: new NettuScheduleUserClient(axiosClient),
-    user: new NettuUserUserClient(axiosClient),
+    calendar: new NitteiCalendarUserClient(axiosClient),
+    events: new NitteiEventUserClient(axiosClient),
+    service: new NitteiServiceUserClient(axiosClient),
+    schedule: new NitteiScheduleUserClient(axiosClient),
+    user: new NitteiUserUserClient(axiosClient),
   })
 }
 
 /**
- * Create a client for the Nettu API (admin client)
+ * Create a client for the nittei API (admin client)
  * @param config configuration and credentials to be used
  * @returns admin client
  */
-export const NettuClient = async (
+export const NitteiClient = async (
   config?: PartialCredentials & ClientConfig
-): Promise<INettuClient> => {
+): Promise<INitteiClient> => {
   const creds = createCreds(config)
 
   const finalConfig = { ...DEFAULT_CONFIG, ...config }
@@ -99,12 +99,12 @@ export const NettuClient = async (
   )
 
   return Object.freeze({
-    account: new NettuAccountClient(axiosClient),
-    events: new NettuEventClient(axiosClient),
-    calendar: new NettuCalendarClient(axiosClient),
-    user: new _NettuUserClient(axiosClient),
-    service: new NettuServiceClient(axiosClient),
-    schedule: new NettuScheduleClient(axiosClient),
-    health: new NettuHealthClient(axiosClient),
+    account: new NitteiAccountClient(axiosClient),
+    events: new NitteiEventClient(axiosClient),
+    calendar: new NitteiCalendarClient(axiosClient),
+    user: new _NitteiUserClient(axiosClient),
+    service: new NitteiServiceClient(axiosClient),
+    schedule: new NitteiScheduleClient(axiosClient),
+    health: new NitteiHealthClient(axiosClient),
   })
 }

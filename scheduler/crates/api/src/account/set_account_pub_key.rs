@@ -1,10 +1,10 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use nettu_scheduler_api_structs::set_account_pub_key::{APIResponse, RequestBody};
-use nettu_scheduler_domain::{Account, PEMKey};
-use nettu_scheduler_infra::NettuContext;
+use nittei_api_structs::set_account_pub_key::{APIResponse, RequestBody};
+use nittei_domain::{Account, PEMKey};
+use nittei_infra::NitteiContext;
 
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{
         auth::protect_account_route,
         usecase::{execute, UseCase},
@@ -13,9 +13,9 @@ use crate::{
 
 pub async fn set_account_pub_key_controller(
     http_req: HttpRequest,
-    ctx: web::Data<NettuContext>,
+    ctx: web::Data<NitteiContext>,
     body: web::Json<RequestBody>,
-) -> Result<HttpResponse, NettuError> {
+) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
 
     let usecase = SetAccountPubKeyUseCase {
@@ -26,7 +26,7 @@ pub async fn set_account_pub_key_controller(
     execute(usecase, &ctx)
         .await
         .map(|account| HttpResponse::Ok().json(APIResponse::new(account)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 #[derive(Debug)]
@@ -41,7 +41,7 @@ enum UseCaseError {
     StorageError,
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::InvalidPemKey => {
@@ -60,7 +60,7 @@ impl UseCase for SetAccountPubKeyUseCase {
 
     const NAME: &'static str = "SetAccountPublicKey";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         let key = if let Some(key) = &self.public_jwt_key {
             match PEMKey::new(key.clone()) {
                 Ok(key) => Some(key),

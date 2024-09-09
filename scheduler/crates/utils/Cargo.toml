@@ -1,6 +1,6 @@
 [package]
-name = "nettu_scheduler_utils"
-description = "Nettu scheduler utils"
+name = "nittei_utils"
+description = "nittei utils"
 license = "MIT"
 version = "0.1.0"
 authors = ["Fredrik Meringdal"]
