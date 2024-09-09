@@ -31,7 +31,7 @@ dev: _setup_db
 
 # Prepare offline SQLx
 prepare_sqlx:
-	cargo sqlx prepare --workspace
+	cd crates/infra && cargo sqlx prepare
 
 # Run the tests on a temporary DB container
 test test_name="":
