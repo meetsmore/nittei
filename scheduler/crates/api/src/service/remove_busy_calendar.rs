@@ -75,6 +75,7 @@ impl UseCase for RemoveBusyCalendarUseCase {
             .users
             .find_by_account_id(&self.user_id, &self.account.id)
             .await
+            .map_err(|_| UseCaseError::StorageError)?
             .ok_or(UseCaseError::UserNotFound)?;
 
         // Check if busy calendar exists

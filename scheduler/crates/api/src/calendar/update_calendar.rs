@@ -98,7 +98,13 @@ impl UseCase for UpdateCalendarUseCase {
     const NAME: &'static str = "UpdateCalendar";
 
     async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
-        let mut calendar = match ctx.repos.calendars.find(&self.calendar_id).await {
+        let calendar = ctx
+            .repos
+            .calendars
+            .find(&self.calendar_id)
+            .await
+            .map_err(|_| UseCaseError::StorageError)?;
+        let mut calendar = match calendar {
             Some(cal) if cal.user_id == self.user.id => cal,
             _ => return Err(UseCaseError::CalendarNotFound),
         };
@@ -161,7 +167,13 @@ mod test {
         assert!(res.is_ok());
 
         // Check that calendar settings have been updated
-        let calendar = ctx.repos.calendars.find(&calendar.id).await.unwrap();
+        let calendar = ctx
+            .repos
+            .calendars
+            .find(&calendar.id)
+            .await
+            .unwrap()
+            .unwrap();
         assert_eq!(calendar.settings.week_start, new_wkst);
     }
 }

@@ -128,7 +128,7 @@ impl Application {
             .repos
             .accounts
             .find_by_apikey(&secret_api_key)
-            .await
+            .await?
             .is_none()
         {
             let mut account = Account::default();

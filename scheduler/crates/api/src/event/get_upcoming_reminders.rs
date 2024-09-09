@@ -112,7 +112,12 @@ impl UseCase for GetUpcomingRemindersUseCase {
         let ts = ctx.sys.get_timestamp() + TimeDelta::milliseconds(self.reminders_interval);
 
         // Get all reminders and filter out invalid / expired reminders
-        let reminders = ctx.repos.reminders.delete_all_before(ts).await;
+        let reminders = ctx
+            .repos
+            .reminders
+            .delete_all_before(ts)
+            .await
+            .map_err(|_| UseCaseError::IntervalServerError)?;
 
         let event_lookup = ctx
             .repos
@@ -331,7 +336,8 @@ mod tests {
             .repos
             .reminders
             .delete_all_before(initial_start_time)
-            .await;
+            .await
+            .unwrap();
         ctx.repos
             .reminders
             .bulk_insert(&old_reminders)
@@ -340,7 +346,7 @@ mod tests {
 
         let start_ts_diff = TimeDelta::milliseconds(15 * 60 * 1000); // 15 minutes
         let new_start = calendar_event.start_time + start_ts_diff; // Postponed 15 minutes
-        let user = ctx.repos.users.find(&user.id).await.unwrap();
+        let user = ctx.repos.users.find(&user.id).await.unwrap().unwrap();
         let update_event_usecase = UpdateEventUseCase {
             event_id: calendar_event.id,
             user,
@@ -353,7 +359,12 @@ mod tests {
             ..Default::default()
         };
         execute(update_event_usecase, &ctx).await.unwrap();
-        let new_reminders = ctx.repos.reminders.delete_all_before(new_start).await;
+        let new_reminders = ctx
+            .repos
+            .reminders
+            .delete_all_before(new_start)
+            .await
+            .unwrap();
         assert_eq!(new_reminders.len(), old_reminders.len());
         assert_eq!(new_reminders.len(), 1);
         assert_eq!(
@@ -393,7 +404,12 @@ mod tests {
         };
 
         let calendar_event = execute(usecase, &ctx).await.unwrap();
-        let old_reminders = ctx.repos.reminders.delete_all_before(remind_at).await;
+        let old_reminders = ctx
+            .repos
+            .reminders
+            .delete_all_before(remind_at)
+            .await
+            .unwrap();
         ctx.repos
             .reminders
             .bulk_insert(&old_reminders)
@@ -413,7 +429,12 @@ mod tests {
             ..Default::default()
         };
         execute(update_event_usecase, &ctx).await.unwrap();
-        let new_reminders = ctx.repos.reminders.delete_all_before(remind_at).await;
+        let new_reminders = ctx
+            .repos
+            .reminders
+            .delete_all_before(remind_at)
+            .await
+            .unwrap();
         let acc_reminders = new_reminders
             .into_iter()
             .filter(|r| r.event_id == calendar_event.id)
@@ -448,7 +469,12 @@ mod tests {
         };
 
         let calendar_event = execute(usecase, &ctx).await.unwrap();
-        let old_reminders = ctx.repos.reminders.delete_all_before(remind_at).await;
+        let old_reminders = ctx
+            .repos
+            .reminders
+            .delete_all_before(remind_at)
+            .await
+            .unwrap();
 
         ctx.repos
             .reminders
@@ -466,7 +492,12 @@ mod tests {
             event_id: calendar_event.id,
         };
         execute(update_event_usecase, &ctx).await.unwrap();
-        let new_reminders = ctx.repos.reminders.delete_all_before(remind_at).await;
+        let new_reminders = ctx
+            .repos
+            .reminders
+            .delete_all_before(remind_at)
+            .await
+            .unwrap();
         assert!(new_reminders.is_empty());
     }
 }

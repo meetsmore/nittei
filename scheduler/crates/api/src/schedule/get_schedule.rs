@@ -53,12 +53,14 @@ struct GetScheduleUseCase {
 
 #[derive(Debug)]
 enum UseCaseError {
+    InternalError,
     NotFound(ID),
 }
 
 impl From<UseCaseError> for NettuError {
     fn from(e: UseCaseError) -> Self {
         match e {
+            UseCaseError::InternalError => Self::InternalError,
             UseCaseError::NotFound(schedule_id) => Self::NotFound(format!(
                 "The schedule with id: {}, was not found.",
                 schedule_id
@@ -76,7 +78,12 @@ impl UseCase for GetScheduleUseCase {
     const NAME: &'static str = "GetSchedule";
 
     async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
-        let schedule = ctx.repos.schedules.find(&self.schedule_id).await;
+        let schedule = ctx
+            .repos
+            .schedules
+            .find(&self.schedule_id)
+            .await
+            .map_err(|_| UseCaseError::InternalError)?;
         match schedule {
             Some(schedule) => Ok(schedule),
             _ => Err(UseCaseError::NotFound(self.schedule_id.clone())),

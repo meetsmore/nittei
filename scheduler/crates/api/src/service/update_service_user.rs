@@ -89,8 +89,9 @@ impl UseCase for UpdateServiceUserUseCase {
 
     async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
         let _service = match ctx.repos.services.find(&self.service_id).await {
-            Some(service) if service.account_id == self.account.id => service,
-            _ => return Err(UseCaseError::ServiceNotFound),
+            Ok(Some(service)) if service.account_id == self.account.id => service,
+            Ok(_) => return Err(UseCaseError::ServiceNotFound),
+            Err(_) => return Err(UseCaseError::StorageError),
         };
 
         let mut user_resource = match ctx
@@ -99,8 +100,9 @@ impl UseCase for UpdateServiceUserUseCase {
             .find(&self.service_id, &self.user_id)
             .await
         {
-            Some(res) => res,
-            _ => return Err(UseCaseError::UserNotFound),
+            Ok(Some(res)) => res,
+            Ok(None) => return Err(UseCaseError::UserNotFound),
+            Err(_) => return Err(UseCaseError::StorageError),
         };
 
         update_resource_values(

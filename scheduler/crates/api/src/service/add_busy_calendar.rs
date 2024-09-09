@@ -92,6 +92,7 @@ impl UseCase for AddBusyCalendarUseCase {
             .users
             .find_by_account_id(&self.user_id, &self.account.id)
             .await
+            .map_err(|_| UseCaseError::StorageError)?
             .ok_or(UseCaseError::UserNotFound)?;
 
         // Check if busy calendar already exists
@@ -186,8 +187,9 @@ impl UseCase for AddBusyCalendarUseCase {
                 }
             }
             BusyCalendar::Nettu(n_cal_id) => match ctx.repos.calendars.find(n_cal_id).await {
-                Some(cal) if cal.user_id == user.id => (),
-                _ => return Err(UseCaseError::CalendarNotFound),
+                Ok(Some(cal)) if cal.user_id == user.id => (),
+                Ok(_) => return Err(UseCaseError::CalendarNotFound),
+                Err(_) => return Err(UseCaseError::StorageError),
             },
         }
 

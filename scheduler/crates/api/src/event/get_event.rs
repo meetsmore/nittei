@@ -56,12 +56,14 @@ pub struct GetEventUseCase {
 
 #[derive(Debug)]
 pub enum UseCaseError {
+    InternalError,
     NotFound(ID),
 }
 
 impl From<UseCaseError> for NettuError {
     fn from(e: UseCaseError) -> Self {
         match e {
+            UseCaseError::InternalError => Self::InternalError,
             UseCaseError::NotFound(event_id) => Self::NotFound(format!(
                 "The calendar event with id: {}, was not found.",
                 event_id
@@ -79,7 +81,12 @@ impl UseCase for GetEventUseCase {
     const NAME: &'static str = "GetEvent";
 
     async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
-        let e = ctx.repos.events.find(&self.event_id).await;
+        let e = ctx
+            .repos
+            .events
+            .find(&self.event_id)
+            .await
+            .map_err(|_| UseCaseError::InternalError)?;
         match e {
             Some(event) if event.user_id == self.user_id => Ok(event),
             _ => Err(UseCaseError::NotFound(self.event_id.clone())),

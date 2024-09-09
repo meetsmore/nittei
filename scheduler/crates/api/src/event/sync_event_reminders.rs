@@ -191,6 +191,7 @@ impl<'a> UseCase for SyncEventRemindersUseCase<'a> {
                     .calendars
                     .find(&calendar_event.calendar_id)
                     .await
+                    .map_err(|_| UseCaseError::StorageError)?
                     .ok_or(UseCaseError::CalendarNotFound)?;
 
                 create_event_reminders(calendar_event, &calendar, version, ctx).await
@@ -200,7 +201,8 @@ impl<'a> UseCase for SyncEventRemindersUseCase<'a> {
                     .repos
                     .event_reminders_generation_jobs
                     .delete_all_before(ctx.sys.get_timestamp())
-                    .await;
+                    .await
+                    .map_err(|_| UseCaseError::StorageError)?;
 
                 let event_ids = jobs
                     .iter()
@@ -228,8 +230,15 @@ impl<'a> UseCase for SyncEventRemindersUseCase<'a> {
 
 async fn generate_event_reminders_job(event: CalendarEvent, ctx: &NettuContext) {
     let calendar = match ctx.repos.calendars.find(&event.calendar_id).await {
-        Some(cal) => cal,
-        None => return,
+        Ok(Some(cal)) => cal,
+        Ok(None) => return,
+        Err(e) => {
+            error!(
+                "Unable to find calendar {} for event {}. Err: {:?}",
+                event.calendar_id, event.id, e
+            );
+            return;
+        }
     };
     let version = match ctx.repos.reminders.inc_version(&event.id).await {
         Ok(v) => v,

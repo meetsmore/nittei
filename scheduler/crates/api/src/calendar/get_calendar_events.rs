@@ -104,7 +104,12 @@ impl UseCase for GetCalendarEventsUseCase {
     const NAME: &'static str = "GetCalendarEvents";
 
     async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
-        let calendar = ctx.repos.calendars.find(&self.calendar_id).await;
+        let calendar = ctx
+            .repos
+            .calendars
+            .find(&self.calendar_id)
+            .await
+            .map_err(|_| UseCaseError::IntervalServerError)?;
 
         let timespan = TimeSpan::new(self.start_time, self.end_time);
         if timespan.greater_than(ctx.config.event_instances_query_duration_limit) {

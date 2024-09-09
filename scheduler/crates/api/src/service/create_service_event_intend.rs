@@ -187,7 +187,8 @@ impl UseCase for CreateServiceEventIntendUseCase {
                                             &service.id,
                                             &user_ids_at_slot,
                                         )
-                                        .await;
+                                        .await
+                                        .map_err(|_| UseCaseError::StorageError)?;
 
                                     let query = RoundRobinAvailabilityAssignment {
                                         members: events
@@ -219,7 +220,8 @@ impl UseCase for CreateServiceEventIntendUseCase {
                                             now,
                                             timestamp_in_two_months,
                                         )
-                                        .await;
+                                        .await
+                                        .map_err(|_| UseCaseError::StorageError)?;
 
                                     let query = RoundRobinEqualDistributionAssignment {
                                         events: service_events,
@@ -283,7 +285,12 @@ impl UseCase for CreateServiceEventIntendUseCase {
             }
         };
 
-        let selected_hosts = ctx.repos.users.find_many(&selected_host_user_ids).await;
+        let selected_hosts = ctx
+            .repos
+            .users
+            .find_many(&selected_host_user_ids)
+            .await
+            .map_err(|_| UseCaseError::StorageError)?;
 
         Ok(UseCaseRes {
             selected_hosts,

@@ -148,12 +148,16 @@ impl UseCase for UpdateEventUseCase {
         } = self;
 
         let mut e = match ctx.repos.events.find(event_id).await {
-            Some(event) if event.user_id == user.id => event,
-            _ => {
+            Ok(Some(event)) if event.user_id == user.id => event,
+            Ok(_) => {
                 return Err(UseCaseError::NotFound(
                     "Calendar Event".into(),
                     event_id.clone(),
                 ))
+            }
+            Err(e) => {
+                tracing::error!("Failed to get one event {:?}", e);
+                return Err(UseCaseError::StorageError);
             }
         };
 
@@ -176,12 +180,16 @@ impl UseCase for UpdateEventUseCase {
         }
 
         let calendar = match ctx.repos.calendars.find(&e.calendar_id).await {
-            Some(cal) => cal,
-            _ => {
+            Ok(Some(cal)) => cal,
+            Ok(None) => {
                 return Err(UseCaseError::NotFound(
                     "Calendar".into(),
                     e.calendar_id.clone(),
                 ))
+            }
+            Err(e) => {
+                tracing::error!("Failed to get one calendar {:?}", e);
+                return Err(UseCaseError::StorageError);
             }
         };
 

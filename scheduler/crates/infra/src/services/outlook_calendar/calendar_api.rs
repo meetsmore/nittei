@@ -117,7 +117,7 @@ impl OutlookCalendarRestApi {
     ) -> anyhow::Result<T> {
         match self
             .client
-            .put(&format!("{}/{}", API_BASE_URL, path))
+            .put(format!("{}/{}", API_BASE_URL, path))
             .header("authorization", format!("Bearer {}", self.access_token))
             .json(body)
             .send()
@@ -147,7 +147,7 @@ impl OutlookCalendarRestApi {
     ) -> anyhow::Result<T> {
         match self
             .client
-            .post(&format!("{}/{}", API_BASE_URL, path))
+            .post(format!("{}/{}", API_BASE_URL, path))
             .header("authorization", format!("Bearer {}", self.access_token))
             .json(body)
             .send()
@@ -173,7 +173,7 @@ impl OutlookCalendarRestApi {
     async fn delete<T: for<'de> Deserialize<'de>>(&self, path: String) -> anyhow::Result<T> {
         match self
             .client
-            .delete(&format!("{}/{}", API_BASE_URL, path))
+            .delete(format!("{}/{}", API_BASE_URL, path))
             .header("authorization", format!("Bearer {}", self.access_token))
             .send()
             .await
@@ -198,7 +198,7 @@ impl OutlookCalendarRestApi {
     async fn get<T: for<'de> Deserialize<'de>>(&self, path: String) -> anyhow::Result<T> {
         match self
             .client
-            .get(&format!("{}/{}", API_BASE_URL, path))
+            .get(format!("{}/{}", API_BASE_URL, path))
             .header("authorization", format!("Bearer {}", self.access_token))
             .send()
             .await

@@ -37,13 +37,13 @@ pub async fn auth_user_req(
     req: &HttpRequest,
     account: &Account,
     ctx: &NettuContext,
-) -> Option<(User, Policy)> {
+) -> anyhow::Result<Option<(User, Policy)>> {
     let token = req.headers().get("authorization");
-    match token {
+    let token = match token {
         Some(token) => {
             let token = match token.to_str() {
                 Ok(token) => parse_authtoken_header(token),
-                Err(_) => return None,
+                Err(_) => return Ok(None),
             };
             match decode_token(account, &token) {
                 // In addition to checking that the request comes with a valid jwt we also
@@ -54,6 +54,7 @@ pub async fn auth_user_req(
                     .users
                     .find_by_account_id(&claims.nettu_scheduler_user_id, &account.id)
                     .await
+                    .map_err(|_| NettuError::InternalError)?
                     .map(|user| (user, claims.scheduler_policy.unwrap_or_default())),
                 Err(e) => {
                     warn!("Decode token error: {:?}", e);
@@ -62,14 +63,18 @@ pub async fn auth_user_req(
             }
         }
         None => None,
-    }
+    };
+    Ok(token)
 }
 
 /// Finds out which `Account` the client is associated with.
-pub async fn get_client_account(req: &HttpRequest, ctx: &NettuContext) -> Option<Account> {
+pub async fn get_client_account(
+    req: &HttpRequest,
+    ctx: &NettuContext,
+) -> anyhow::Result<Option<Account>> {
     match get_nettu_account_header(req) {
         Some(Ok(account_id)) => ctx.repos.accounts.find(&account_id).await,
-        _ => None,
+        _ => Ok(None),
     }
 }
 
@@ -110,15 +115,17 @@ pub async fn protect_route(
     req: &HttpRequest,
     ctx: &NettuContext,
 ) -> Result<(User, Policy), NettuError> {
-    let account = match get_client_account(req, ctx).await {
-        Some(account) => account,
-        None => {
-            return Err(NettuError::Unauthorized(
-                "Unable to find the account the client belongs to".into(),
-            ))
-        }
-    };
-    let res = auth_user_req(req, &account, ctx).await;
+    let account = get_client_account(req, ctx)
+        .await
+        .map_err(|_| NettuError::InternalError)?
+        .ok_or_else(|| {
+            NettuError::UnidentifiableClient(
+                "Could not find out which account the client belongs to".into(),
+            )
+        })?;
+    let res = auth_user_req(req, &account, ctx)
+        .await
+        .map_err(|_| NettuError::InternalError)?;
 
     match res {
         Some(user_and_policy) => Ok(user_and_policy),
@@ -149,14 +156,14 @@ pub async fn protect_account_route(
         }
     };
 
-    let account = ctx.repos.accounts.find_by_apikey(api_key).await;
-
-    match account {
-        Some(acc) => Ok(acc),
-        None => Err(NettuError::Unauthorized(
-            "Invalid api-key provided in x-api-key header".to_string(),
-        )),
-    }
+    ctx.repos
+        .accounts
+        .find_by_apikey(api_key)
+        .await
+        .map_err(|_| NettuError::InternalError)?
+        .ok_or_else(|| {
+            NettuError::Unauthorized("Invalid api-key provided in x-api-key header".to_string())
+        })
 }
 
 /// Only checks which account the request is connected to.
@@ -170,12 +177,16 @@ pub async fn protect_public_account_route(
         Some(res) => {
             let account_id = res?;
 
-            match ctx.repos.accounts.find(&account_id).await {
-                Some(acc) => Ok(acc),
-                None => Err(NettuError::UnidentifiableClient(
-                    "Could not find out which account the client belongs to".into(),
-                )),
-            }
+            ctx.repos
+                .accounts
+                .find(&account_id)
+                .await
+                .map_err(|_| NettuError::InternalError)?
+                .ok_or_else(|| {
+                    NettuError::UnidentifiableClient(
+                        "Could not find out which account the client belongs to".into(),
+                    )
+                })
         }
         // No nettu-account header, then check if this is an admin client
         None => protect_account_route(http_req, ctx).await,
@@ -190,11 +201,12 @@ pub async fn account_can_modify_user(
     ctx: &NettuContext,
 ) -> Result<User, NettuError> {
     match ctx.repos.users.find(user_id).await {
-        Some(user) if user.account_id == account.id => Ok(user),
-        _ => Err(NettuError::NotFound(format!(
+        Ok(Some(user)) if user.account_id == account.id => Ok(user),
+        Ok(_) => Err(NettuError::NotFound(format!(
             "User with id: {} was not found",
             user_id
         ))),
+        Err(_) => Err(NettuError::InternalError),
     }
 }
 
@@ -206,11 +218,12 @@ pub async fn account_can_modify_calendar(
     ctx: &NettuContext,
 ) -> Result<Calendar, NettuError> {
     match ctx.repos.calendars.find(calendar_id).await {
-        Some(cal) if cal.account_id == account.id => Ok(cal),
-        _ => Err(NettuError::NotFound(format!(
+        Ok(Some(cal)) if cal.account_id == account.id => Ok(cal),
+        Ok(_) => Err(NettuError::NotFound(format!(
             "Calendar with id: {} was not found",
             calendar_id
         ))),
+        Err(_) => Err(NettuError::InternalError),
     }
 }
 
@@ -222,11 +235,12 @@ pub async fn account_can_modify_event(
     ctx: &NettuContext,
 ) -> Result<CalendarEvent, NettuError> {
     match ctx.repos.events.find(event_id).await {
-        Some(event) if event.account_id == account.id => Ok(event),
-        _ => Err(NettuError::NotFound(format!(
+        Ok(Some(event)) if event.account_id == account.id => Ok(event),
+        Ok(_) => Err(NettuError::NotFound(format!(
             "Calendar event with id: {} was not found",
             event_id
         ))),
+        Err(_) => Err(NettuError::InternalError),
     }
 }
 
@@ -238,11 +252,12 @@ pub async fn account_can_modify_schedule(
     ctx: &NettuContext,
 ) -> Result<Schedule, NettuError> {
     match ctx.repos.schedules.find(schedule_id).await {
-        Some(schedule) if schedule.account_id == account.id => Ok(schedule),
-        _ => Err(NettuError::NotFound(format!(
+        Ok(Some(schedule)) if schedule.account_id == account.id => Ok(schedule),
+        Ok(_) => Err(NettuError::NotFound(format!(
             "Schedule with id: {} was not found",
             schedule_id
         ))),
+        Err(_) => Err(NettuError::InternalError),
     }
 }
 

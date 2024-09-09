@@ -74,8 +74,9 @@ impl UseCase for UpdateUserUseCase {
             .find_by_account_id(&self.user_id, &self.account_id)
             .await
         {
-            Some(user) => user,
-            None => return Err(UseCaseError::UserNotFound(self.user_id.clone())),
+            Ok(Some(user)) => user,
+            Ok(None) => return Err(UseCaseError::UserNotFound(self.user_id.clone())),
+            Err(_) => return Err(UseCaseError::StorageError),
         };
 
         if let Some(metadata) = &self.metadata {

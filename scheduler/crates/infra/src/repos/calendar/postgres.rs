@@ -1,3 +1,5 @@
+use std::convert::{TryFrom, TryInto};
+
 use nettu_scheduler_domain::{Calendar, ID};
 use serde_json::Value;
 use sqlx::{
@@ -30,19 +32,17 @@ struct CalendarRaw {
     metadata: Value,
 }
 
-impl From<CalendarRaw> for Calendar {
-    fn from(e: CalendarRaw) -> Self {
-        Self {
+impl TryFrom<CalendarRaw> for Calendar {
+    type Error = anyhow::Error;
+
+    fn try_from(e: CalendarRaw) -> anyhow::Result<Self> {
+        Ok(Self {
             id: e.calendar_uid.into(),
             user_id: e.user_uid.into(),
             account_id: e.account_uid.into(),
-            // TODO: to fix
-            #[allow(clippy::unwrap_used)]
-            settings: serde_json::from_value(e.settings).unwrap(),
-            // TODO: to fix
-            #[allow(clippy::unwrap_used)]
-            metadata: serde_json::from_value(e.metadata).unwrap(),
-        }
+            settings: serde_json::from_value(e.settings)?,
+            metadata: serde_json::from_value(e.metadata)?,
+        })
     }
 }
 
@@ -88,19 +88,18 @@ impl ICalendarRepo for PostgresCalendarRepo {
         )
         .execute(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Unable to save calendar: {:?}. DB returned error: {:?}",
                 calendar, e
             );
-            e
         })?;
         Ok(())
     }
 
     #[instrument]
-    async fn find(&self, calendar_id: &ID) -> Option<Calendar> {
-        let res: Option<CalendarRaw> = sqlx::query_as!(
+    async fn find(&self, calendar_id: &ID) -> anyhow::Result<Option<Calendar>> {
+        sqlx::query_as!(
             CalendarRaw,
             r#"
             SELECT c.*, u.account_uid FROM calendars AS c
@@ -112,25 +111,23 @@ impl ICalendarRepo for PostgresCalendarRepo {
         )
         .fetch_optional(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Find calendar with id: {:?} failed. DB returned error: {:?}",
                 calendar_id, e
             );
-            e
-        })
-        .ok()?;
-
-        res.map(|cal| cal.into())
+        })?
+        .map(|cal| cal.try_into())
+        .transpose()
     }
 
     #[instrument]
-    async fn find_multiple(&self, calendar_ids: Vec<&ID>) -> Vec<Calendar> {
+    async fn find_multiple(&self, calendar_ids: Vec<&ID>) -> anyhow::Result<Vec<Calendar>> {
         let calendar_ids: Vec<Uuid> = calendar_ids
             .into_iter()
             .map(|id| id.clone().into())
             .collect();
-        let calendars: Vec<CalendarRaw> = sqlx::query_as!(
+        sqlx::query_as!(
             CalendarRaw,
             r#"
             SELECT c.*, u.account_uid FROM calendars AS c
@@ -142,21 +139,20 @@ impl ICalendarRepo for PostgresCalendarRepo {
         )
         .fetch_all(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Find calendars with ids: {:?} failed. DB returned error: {:?}",
                 calendar_ids, e
             );
-            e
-        })
-        .unwrap_or_default();
-
-        calendars.into_iter().map(|c| c.into()).collect()
+        })?
+        .into_iter()
+        .map(|c| c.try_into())
+        .collect()
     }
 
     #[instrument]
-    async fn find_by_user(&self, user_id: &ID) -> Vec<Calendar> {
-        let calendars: Vec<CalendarRaw> = sqlx::query_as!(
+    async fn find_by_user(&self, user_id: &ID) -> anyhow::Result<Vec<Calendar>> {
+        sqlx::query_as!(
             CalendarRaw,
             r#"
             SELECT c.*, u.account_uid FROM calendars AS c
@@ -168,16 +164,15 @@ impl ICalendarRepo for PostgresCalendarRepo {
         )
         .fetch_all(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Find calendar by user id: {:?} failed. DB returned error: {:?}",
                 user_id, e
             );
-            e
-        })
-        .unwrap_or_default();
-
-        calendars.into_iter().map(|c| c.into()).collect()
+        })?
+        .into_iter()
+        .map(|c| c.try_into())
+        .collect()
     }
 
     #[instrument]
@@ -192,19 +187,18 @@ impl ICalendarRepo for PostgresCalendarRepo {
         .execute(&self.pool)
         .await
         .map(|_| ())
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Delete calendar with id: {:?} failed. DB returned error: {:?}",
                 calendar_id, e
             );
-
-            anyhow::Error::new(e)
-        })
+        })?;
+        Ok(())
     }
 
     #[instrument]
-    async fn find_by_metadata(&self, query: MetadataFindQuery) -> Vec<Calendar> {
-        let calendars: Vec<CalendarRaw> = sqlx::query_as!(
+    async fn find_by_metadata(&self, query: MetadataFindQuery) -> anyhow::Result<Vec<Calendar>> {
+        sqlx::query_as!(
             CalendarRaw,
             r#"
             SELECT c.*, u.account_uid FROM calendars AS c
@@ -221,15 +215,14 @@ impl ICalendarRepo for PostgresCalendarRepo {
         )
         .fetch_all(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Find calendars by metadata: {:?} failed. DB returned error: {:?}",
                 query, e
             );
-            e
-        })
-        .unwrap_or_default();
-
-        calendars.into_iter().map(|c| c.into()).collect()
+        })?
+        .into_iter()
+        .map(|c| c.try_into())
+        .collect()
     }
 }

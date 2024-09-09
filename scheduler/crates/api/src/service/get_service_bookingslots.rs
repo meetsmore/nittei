@@ -80,6 +80,7 @@ pub(crate) struct GetServiceBookingSlotsUseCase {
 impl From<UseCaseError> for NettuError {
     fn from(e: UseCaseError) -> Self {
         match e {
+            UseCaseError::InternalError => Self::InternalError,
             UseCaseError::InvalidDate(msg) => {
                 Self::BadClientData(format!(
                     "Invalid datetime: {}. Should be YYYY-MM-DD, e.g. January 1. 2020 => 2020-1-1",
@@ -107,6 +108,7 @@ pub(crate) struct UseCaseRes {
 
 #[derive(Debug)]
 pub(crate) enum UseCaseError {
+    InternalError,
     ServiceNotFound,
     InvalidInterval,
     InvalidTimespan,
@@ -146,8 +148,9 @@ impl UseCase for GetServiceBookingSlotsUseCase {
         let booking_timespan = validate_bookingslots_query(&query)?;
 
         let service = match ctx.repos.services.find_with_users(&self.service_id).await {
-            Some(s) => s,
-            None => return Err(UseCaseError::ServiceNotFound),
+            Ok(Some(s)) => s,
+            Ok(None) => return Err(UseCaseError::ServiceNotFound),
+            Err(_) => return Err(UseCaseError::InternalError),
         };
 
         if ServiceMultiPersonOptions::Group(0) == service.multi_person {
@@ -182,10 +185,20 @@ impl UseCase for GetServiceBookingSlotsUseCase {
             }
         }
 
-        let users_free_events = join_all(usecase_futures).await;
+        let users_free_events: Vec<Result<UserFreeEvents, anyhow::Error>> =
+            join_all(usecase_futures).await.into_iter().collect();
+
+        // Handle errors in fetching events
+        let mut all_users_free_events = Vec::new();
+        for users_free_event in users_free_events {
+            match users_free_event {
+                Ok(events) => all_users_free_events.push(events),
+                Err(_) => return Err(UseCaseError::InternalError),
+            }
+        }
 
         let mut booking_slots = get_service_bookingslots(
-            users_free_events,
+            all_users_free_events,
             &BookingSlotsOptions {
                 interval: self.interval,
                 duration: self.duration,
@@ -218,14 +231,14 @@ impl GetServiceBookingSlotsUseCase {
         user_calendars: &[Calendar],
         timespan: &TimeSpan,
         ctx: &NettuContext,
-    ) -> CompatibleInstances {
+    ) -> anyhow::Result<CompatibleInstances> {
         let empty = CompatibleInstances::new(Vec::new());
         match &user.availability {
             TimePlan::Calendar(id) => {
                 let calendar = match user_calendars.iter().find(|cal| cal.id == *id) {
                     Some(cal) => cal,
                     None => {
-                        return empty;
+                        return Ok(empty);
                     }
                 };
                 let all_calendar_events = ctx
@@ -240,13 +253,16 @@ impl GetServiceBookingSlotsUseCase {
                     .flat_map(|e| e.expand(Some(timespan), &calendar.settings))
                     .collect::<Vec<_>>();
 
-                get_free_busy(all_event_instances).free
+                Ok(get_free_busy(all_event_instances).free)
             }
             TimePlan::Schedule(id) => match ctx.repos.schedules.find(id).await {
-                Some(schedule) if schedule.user_id == user.user_id => schedule.freebusy(timespan),
-                _ => empty,
+                Ok(Some(schedule)) if schedule.user_id == user.user_id => {
+                    Ok(schedule.freebusy(timespan))
+                }
+                Ok(_) => Ok(empty),
+                Err(_) => anyhow::bail!("Unable to fetch user schedule"),
             },
-            TimePlan::Empty => empty,
+            TimePlan::Empty => Ok(empty),
         }
     }
 
@@ -256,7 +272,7 @@ impl GetServiceBookingSlotsUseCase {
         user_nettu_calendars: &[Calendar],
         timespan: &TimeSpan,
         ctx: &NettuContext,
-    ) -> CompatibleInstances {
+    ) -> anyhow::Result<CompatibleInstances> {
         let busy_calendars = match ctx
             .repos
             .service_user_busy_calendars
@@ -264,7 +280,7 @@ impl GetServiceBookingSlotsUseCase {
             .await
         {
             Ok(val) => val,
-            Err(_) => return CompatibleInstances::new(Vec::new()),
+            Err(_) => return Ok(CompatibleInstances::new(Vec::new())),
         };
 
         let nettu_busy_calendar_ids = busy_calendars
@@ -295,13 +311,13 @@ impl GetServiceBookingSlotsUseCase {
 
         let mut busy_events: Vec<EventInstance> = Vec::new();
 
-        let all_service_resources = ctx.repos.service_users.find_by_user(&user.user_id).await;
+        let all_service_resources = ctx.repos.service_users.find_by_user(&user.user_id).await?;
 
         let mut busy_service_events = ctx
             .repos
             .events
             .find_user_service_events(&user.user_id, false, timespan.start(), timespan.end())
-            .await
+            .await?
             .into_iter()
             // Assuming all events of this type dont have a recurrence rule
             .filter(|e| match &e.service_id {
@@ -361,11 +377,11 @@ impl GetServiceBookingSlotsUseCase {
         }
 
         if !google_busy_calendar_ids.is_empty() {
-            let user = if let Some(user) = ctx.repos.users.find(&user.user_id).await {
+            let user = if let Some(user) = ctx.repos.users.find(&user.user_id).await? {
                 user
             } else {
                 warn!("User not found: {}", user.user_id);
-                return CompatibleInstances::new(Vec::new());
+                return Ok(CompatibleInstances::new(Vec::new()));
             };
             match GoogleCalendarProvider::new(&user, ctx).await {
                 Ok(google_calendar_provider) => {
@@ -389,11 +405,11 @@ impl GetServiceBookingSlotsUseCase {
         }
 
         if !outlook_busy_calendar_ids.is_empty() {
-            let user = if let Some(user) = ctx.repos.users.find(&user.user_id).await {
+            let user = if let Some(user) = ctx.repos.users.find(&user.user_id).await? {
                 user
             } else {
                 warn!("User not found: {}", user.user_id);
-                return CompatibleInstances::new(Vec::new());
+                return Ok(CompatibleInstances::new(Vec::new()));
             };
             if let Ok(provider) = OutlookCalendarProvider::new(&user, ctx).await {
                 let query = FreeBusyProviderQuery {
@@ -409,7 +425,7 @@ impl GetServiceBookingSlotsUseCase {
         }
 
         // This should be optimized later
-        CompatibleInstances::new(busy_events)
+        Ok(CompatibleInstances::new(busy_events))
     }
 
     /// Ensure that calendar timespan fits within user settings for when
@@ -448,7 +464,7 @@ impl GetServiceBookingSlotsUseCase {
         service_resource: &ServiceResource,
         mut timespan: TimeSpan,
         ctx: &NettuContext,
-    ) -> UserFreeEvents {
+    ) -> anyhow::Result<UserFreeEvents> {
         let empty = UserFreeEvents {
             free_events: CompatibleInstances::new(Vec::new()),
             user_id: service_resource.user_id.clone(),
@@ -456,14 +472,14 @@ impl GetServiceBookingSlotsUseCase {
 
         match Self::parse_calendar_timespan(service_resource, timespan, ctx) {
             Ok(parsed_timespan) => timespan = parsed_timespan,
-            Err(_) => return empty,
+            Err(_) => return Ok(empty),
         }
 
         let user_calendars = ctx
             .repos
             .calendars
             .find_by_user(&service_resource.user_id)
-            .await;
+            .await?;
         // let busy_calendars = user_calendars
         //     .iter()
         //     .filter(|cal| {
@@ -480,18 +496,18 @@ impl GetServiceBookingSlotsUseCase {
 
         let mut free_events = self
             .get_user_availability(service_resource, &user_calendars, &timespan, ctx)
-            .await;
+            .await?;
 
         let busy_events = self
             .get_user_busy(service_resource, &user_calendars, &timespan, ctx)
-            .await;
+            .await?;
 
         free_events.remove_instances(&busy_events, 0);
 
-        UserFreeEvents {
+        Ok(UserFreeEvents {
             free_events,
             user_id: service_resource.user_id.clone(),
-        }
+        })
     }
 }
 

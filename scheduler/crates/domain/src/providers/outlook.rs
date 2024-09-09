@@ -22,19 +22,21 @@ impl OutlookCalendarEventTime {
     pub fn get_timestamp_millis(&self) -> i64 {
         let timezone = self.time_zone.parse::<Tz>().unwrap_or(UTC);
 
-        // TODO: to fix
-        #[allow(clippy::unwrap_used)]
-        DateTime::parse_from_str(
-            &self.date_time[..self.date_time.find('.').unwrap()],
-            "%FT%T",
-        )
-        .map_err(|err| {
-            error!("Outlook parse error : {:?}", err);
-            err
-        })
-        .unwrap_or(DateTime::UNIX_EPOCH.fixed_offset())
-        .with_timezone(&timezone)
-        .timestamp_millis()
+        let index = self.date_time.find('.');
+
+        let date_time = if let Some(index) = index {
+            DateTime::parse_from_str(&self.date_time[..index], "%FT%T")
+        } else {
+            DateTime::parse_from_str(&self.date_time, "%FT%T")
+        };
+
+        date_time
+            .inspect_err(|err| {
+                error!("Outlook parse error : {:?}", err);
+            })
+            .unwrap_or(DateTime::UNIX_EPOCH.fixed_offset())
+            .with_timezone(&timezone)
+            .timestamp_millis()
     }
 }
 

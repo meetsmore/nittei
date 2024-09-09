@@ -7,10 +7,10 @@ pub use postgres::PostgresAccountRepo;
 pub trait IAccountRepo: Send + Sync {
     async fn insert(&self, account: &Account) -> anyhow::Result<()>;
     async fn save(&self, account: &Account) -> anyhow::Result<()>;
-    async fn find(&self, account_id: &ID) -> Option<Account>;
+    async fn find(&self, account_id: &ID) -> anyhow::Result<Option<Account>>;
     async fn find_many(&self, account_ids: &[ID]) -> anyhow::Result<Vec<Account>>;
-    async fn delete(&self, account_id: &ID) -> Option<Account>;
-    async fn find_by_apikey(&self, api_key: &str) -> Option<Account>;
+    async fn delete(&self, account_id: &ID) -> anyhow::Result<Option<Account>>;
+    async fn find_by_apikey(&self, api_key: &str) -> anyhow::Result<Option<Account>>;
 }
 
 #[cfg(test)]
@@ -28,7 +28,7 @@ mod tests {
         assert!(ctx.repos.accounts.insert(&account).await.is_ok());
 
         // Different find methods
-        let res = ctx.repos.accounts.find(&account.id).await.unwrap();
+        let res = ctx.repos.accounts.find(&account.id).await.unwrap().unwrap();
         assert!(res.eq(&account));
         let res = ctx
             .repos
@@ -42,16 +42,25 @@ mod tests {
             .accounts
             .find_by_apikey(&account.secret_api_key)
             .await
+            .unwrap()
             .unwrap();
         assert!(res.eq(&account));
 
         // Delete
         let res = ctx.repos.accounts.delete(&account.id).await;
+        assert!(res.is_ok());
+        let res = res.unwrap();
         assert!(res.is_some());
         assert!(res.unwrap().eq(&account));
 
         // Find
-        assert!(ctx.repos.accounts.find(&account.id).await.is_none());
+        assert!(ctx
+            .repos
+            .accounts
+            .find(&account.id)
+            .await
+            .unwrap()
+            .is_none());
     }
 
     #[tokio::test]
@@ -77,6 +86,7 @@ mod tests {
             .accounts
             .find(&account.id)
             .await
+            .unwrap()
             .unwrap()
             .eq(&account));
     }

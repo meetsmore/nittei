@@ -9,11 +9,15 @@ use super::shared::query_structs::MetadataFindQuery;
 pub trait IUserRepo: Send + Sync {
     async fn insert(&self, user: &User) -> anyhow::Result<()>;
     async fn save(&self, user: &User) -> anyhow::Result<()>;
-    async fn delete(&self, user_id: &ID) -> Option<User>;
-    async fn find(&self, user_id: &ID) -> Option<User>;
-    async fn find_many(&self, user_ids: &[ID]) -> Vec<User>;
-    async fn find_by_account_id(&self, user_id: &ID, account_id: &ID) -> Option<User>;
-    async fn find_by_metadata(&self, query: MetadataFindQuery) -> Vec<User>;
+    async fn delete(&self, user_id: &ID) -> anyhow::Result<Option<User>>;
+    async fn find(&self, user_id: &ID) -> anyhow::Result<Option<User>>;
+    async fn find_many(&self, user_ids: &[ID]) -> anyhow::Result<Vec<User>>;
+    async fn find_by_account_id(
+        &self,
+        user_id: &ID,
+        account_id: &ID,
+    ) -> anyhow::Result<Option<User>>;
+    async fn find_by_metadata(&self, query: MetadataFindQuery) -> anyhow::Result<Vec<User>>;
 }
 
 #[cfg(test)]
@@ -48,6 +52,7 @@ mod tests {
             .users
             .find_by_metadata(query.clone())
             .await
+            .unwrap()
             .is_empty());
 
         // Now add metadata
@@ -56,13 +61,24 @@ mod tests {
         user.metadata = metadata;
         ctx.repos.users.save(&user).await.expect("To save user");
 
-        let res = ctx.repos.users.find_by_metadata(query.clone()).await;
+        let res = ctx
+            .repos
+            .users
+            .find_by_metadata(query.clone())
+            .await
+            .unwrap();
         assert_eq!(res.len(), 1);
         assert_eq!(res[0].id, user.id);
 
         // Different account id should give no results
         query.account_id = ID::default();
-        assert!(ctx.repos.users.find_by_metadata(query).await.is_empty());
+        assert!(ctx
+            .repos
+            .users
+            .find_by_metadata(query)
+            .await
+            .unwrap()
+            .is_empty());
     }
 
     // #[tokio::test]

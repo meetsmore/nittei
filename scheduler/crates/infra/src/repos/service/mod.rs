@@ -9,10 +9,10 @@ use super::shared::query_structs::MetadataFindQuery;
 pub trait IServiceRepo: Send + Sync {
     async fn insert(&self, service: &Service) -> anyhow::Result<()>;
     async fn save(&self, service: &Service) -> anyhow::Result<()>;
-    async fn find(&self, service_id: &ID) -> Option<Service>;
-    async fn find_with_users(&self, service_id: &ID) -> Option<ServiceWithUsers>;
+    async fn find(&self, service_id: &ID) -> anyhow::Result<Option<Service>>;
+    async fn find_with_users(&self, service_id: &ID) -> anyhow::Result<Option<ServiceWithUsers>>;
     async fn delete(&self, service_id: &ID) -> anyhow::Result<()>;
-    async fn find_by_metadata(&self, query: MetadataFindQuery) -> Vec<Service>;
+    async fn find_by_metadata(&self, query: MetadataFindQuery) -> anyhow::Result<Vec<Service>>;
 }
 
 #[cfg(test)]
@@ -41,6 +41,7 @@ mod tests {
             .services
             .find(&service.id)
             .await
+            .unwrap()
             .expect("To get service");
 
         let user = User::new(account.id.clone(), None);
@@ -64,6 +65,7 @@ mod tests {
             .services
             .find_with_users(&service.id)
             .await
+            .unwrap()
             .expect("To get service");
         assert_eq!(
             *service.metadata.inner.get("foo").unwrap(),
@@ -82,6 +84,7 @@ mod tests {
             .services
             .find_with_users(&service.id)
             .await
+            .unwrap()
             .expect("To get service");
         assert!(service.users.is_empty());
 
@@ -91,6 +94,12 @@ mod tests {
             .await
             .expect("To delete service");
 
-        assert!(ctx.repos.services.find(&service.id).await.is_none());
+        assert!(ctx
+            .repos
+            .services
+            .find(&service.id)
+            .await
+            .unwrap()
+            .is_none());
     }
 }

@@ -101,8 +101,11 @@ impl UseCase for UpdateScheduleUseCase {
 
     async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
         let mut schedule = match ctx.repos.schedules.find(&self.schedule_id).await {
-            Some(cal) if cal.user_id == self.user_id => cal,
-            _ => return Err(UseCaseError::ScheduleNotFound(self.schedule_id.clone())),
+            Ok(Some(cal)) if cal.user_id == self.user_id => cal,
+            Ok(_) => return Err(UseCaseError::ScheduleNotFound(self.schedule_id.clone())),
+            Err(_) => {
+                return Err(UseCaseError::StorageError);
+            }
         };
 
         if let Some(tz) = self.timezone {

@@ -42,6 +42,7 @@ struct UseCaseRes {}
 
 #[derive(Debug)]
 enum UseCaseError {
+    InternalError,
     ServiceNotFound,
     UserNotFound,
 }
@@ -49,6 +50,7 @@ enum UseCaseError {
 impl From<UseCaseError> for NettuError {
     fn from(e: UseCaseError) -> Self {
         match e {
+            UseCaseError::InternalError => Self::InternalError,
             UseCaseError::ServiceNotFound => {
                 Self::NotFound("The requested service was not found".to_string())
             }
@@ -69,8 +71,9 @@ impl UseCase for RemoveUserFromServiceUseCase {
 
     async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
         let service = match ctx.repos.services.find(&self.service_id).await {
-            Some(service) if service.account_id == self.account.id => service,
-            _ => return Err(UseCaseError::ServiceNotFound),
+            Ok(Some(service)) if service.account_id == self.account.id => service,
+            Ok(_) => return Err(UseCaseError::ServiceNotFound),
+            Err(_) => return Err(UseCaseError::InternalError),
         };
 
         ctx.repos
