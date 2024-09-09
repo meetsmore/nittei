@@ -16,13 +16,7 @@ pub trait IEventRemindersGenerationJobsRepo: Send + Sync {
 #[cfg(test)]
 mod tests {
     use chrono::DateTime;
-    use nittei_domain::{
-        Account,
-        Calendar,
-        CalendarEvent,
-        EventRemindersExpansionJob,
-        User,
-    };
+    use nittei_domain::{Account, Calendar, CalendarEvent, EventRemindersExpansionJob, User};
     use tracing::error;
 
     use crate::setup_context;

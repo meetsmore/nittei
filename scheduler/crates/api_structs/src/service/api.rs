@@ -1,12 +1,4 @@
-use nittei_domain::{
-    BusyCalendar,
-    Service,
-    ServiceResource,
-    ServiceWithUsers,
-    TimePlan,
-    Tz,
-    ID,
-};
+use nittei_domain::{BusyCalendar, Service, ServiceResource, ServiceWithUsers, TimePlan, Tz, ID};
 use serde::{Deserialize, Serialize};
 
 use crate::dtos::{ServiceDTO, ServiceResourceDTO, ServiceWithUsersDTO};

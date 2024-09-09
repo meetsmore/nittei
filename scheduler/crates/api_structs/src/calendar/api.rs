@@ -181,10 +181,7 @@ pub mod get_calendars_by_meta {
 }
 
 pub mod get_google_calendars {
-    use nittei_domain::providers::google::{
-        GoogleCalendarAccessRole,
-        GoogleCalendarListEntry,
-    };
+    use nittei_domain::providers::google::{GoogleCalendarAccessRole, GoogleCalendarListEntry};
 
     use super::*;
 
