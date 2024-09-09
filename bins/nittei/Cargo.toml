@@ -1,26 +1,16 @@
 [package]
 name = "nittei"
 version = "0.1.0"
-authors = ["Fredrik Meringdal"]
+authors = ["Fredrik Meringdal", "Meetsmore"]
 edition = "2018"
 default-run = "nittei"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[workspace]
-members = [
-    "crates/api",
-    "crates/api_structs",
-    "crates/domain",
-    "crates/infra",
-    "crates/utils",
-    "clients/rust",
-]
-
 [dependencies]
-nittei_api = { path = "./crates/api" }
-nittei_domain = { path = "./crates/domain" }
-nittei_infra = { path = "./crates/infra" }
+nittei_api = { path = "../../crates/api" }
+nittei_domain = { path = "../../crates/domain" }
+nittei_infra = { path = "../../crates/infra" }
 
 anyhow = "1.0"
 
@@ -53,19 +43,4 @@ chrono = "0.4.19"
 chrono-tz = "0.8.1"
 
 [dev-dependencies]
-nittei_sdk = { path = "./clients/rust" }
-
-[workspace.lints.rust]
-unsafe_code = "forbid"
-
-[lints.clippy]
-print_stdout = "deny"
-print_err = "deny"
-unwrap_used = "deny"
-expect_used = "deny"
-
-[workspace.lints.clippy]
-print_stdout = "deny"
-print_err = "deny"
-unwrap_used = "deny"
-expect_used = "deny"
+nittei_sdk = { path = "../../clients/rust" }

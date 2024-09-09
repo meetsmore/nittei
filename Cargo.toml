@@ -1,0 +1,20 @@
+
+[workspace]
+members = [
+    "bins/nittei",
+    "crates/api",
+    "crates/api_structs",
+    "crates/domain",
+    "crates/infra",
+    "crates/utils",
+    "clients/rust",
+]
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+print_stdout = "deny"
+print_err = "deny"
+unwrap_used = "deny"
+expect_used = "deny"
