@@ -20,7 +20,10 @@ impl IStatusRepo for PostgresStatusRepo {
     async fn check_connection(&self) -> anyhow::Result<()> {
         sqlx::query("SELECT 1 AS health")
             .execute(&self.pool)
-            .await?;
+            .await
+            .inspect_err(|e| {
+                tracing::error!("Failed to check connection: {:?}", e);
+            })?;
 
         Ok(())
     }
