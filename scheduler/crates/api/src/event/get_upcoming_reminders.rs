@@ -174,7 +174,8 @@ mod tests {
         ctx.repos
             .reminders
             .delete_all_before(DateTime::<Utc>::MAX_UTC)
-            .await;
+            .await
+            .unwrap();
 
         ctx
     }
@@ -185,7 +186,7 @@ mod tests {
             1613862000000 // Sun Feb 21 2021 00:00:00 GMT+0100 (Central European Standard Time) {}
         }
         fn get_timestamp(&self) -> DateTime<Utc> {
-            DateTime::<Utc>::from_timestamp_millis(1613862000).unwrap()
+            DateTime::from_timestamp_millis(1613862000000).unwrap()
         }
     }
 
@@ -195,7 +196,7 @@ mod tests {
             1613862000000 + 1000 * 60 * 49 // Sun Feb 21 2021 00:49:00 GMT+0100 (Central European Standard Time) {}
         }
         fn get_timestamp(&self) -> DateTime<Utc> {
-            DateTime::<Utc>::from_timestamp_millis(1613862000000 + 1000 * 60 * 49).unwrap()
+            DateTime::from_timestamp_millis(1613862000000 + 1000 * 60 * 49).unwrap()
         }
     }
 
@@ -205,7 +206,7 @@ mod tests {
             1613862000000 + 1000 * 60 * 60 * 24 // Sun Feb 22 2021 00:00:00 GMT+0100 (Central European Standard Time) {}
         }
         fn get_timestamp(&self) -> DateTime<Utc> {
-            DateTime::<Utc>::from_timestamp_millis(1613862000000 + 1000 * 60 * 60 * 24).unwrap()
+            DateTime::from_timestamp_millis(1613862000000 + 1000 * 60 * 60 * 24).unwrap()
         }
     }
 
@@ -233,7 +234,7 @@ mod tests {
         let usecase = CreateEventUseCase {
             user: user.clone(),
             calendar_id: calendar.id.clone(),
-            start_time: DateTime::from_timestamp_millis(ctx.sys.get_timestamp_millis()).unwrap(),
+            start_time: ctx.sys.get_timestamp(),
             duration: 1000 * 60 * 60 * 2,
             recurrence: Some(Default::default()),
             reminders: vec![
@@ -255,8 +256,7 @@ mod tests {
         let usecase = CreateEventUseCase {
             calendar_id: calendar.id.clone(),
             user,
-            start_time: DateTime::from_timestamp_millis(sys3.get_timestamp_millis()).unwrap()
-                + TimeDelta::milliseconds(1000 * 60 * 5),
+            start_time: sys3.get_timestamp() + TimeDelta::milliseconds(1000 * 60 * 5),
             duration: 1000 * 60 * 60 * 2,
             reminders: vec![CalendarEventReminder {
                 delta: -10,
@@ -312,9 +312,8 @@ mod tests {
         let mut ctx = setup_context().await;
         ctx.sys = Arc::new(StaticTimeSys1 {});
 
-        let now = ctx.sys.get_timestamp_millis();
-        let initial_start_time =
-            DateTime::from_timestamp_millis(now).unwrap() + TimeDelta::milliseconds(30 * 60 * 1000);
+        let now = ctx.sys.get_timestamp();
+        let initial_start_time = now + TimeDelta::milliseconds(30 * 60 * 1000);
         let delta = -10;
 
         let (user, calendar) = insert_common_data(&ctx).await;
@@ -385,7 +384,7 @@ mod tests {
         let mut ctx = setup_context().await;
         ctx.sys = Arc::new(StaticTimeSys1 {});
 
-        let now = DateTime::from_timestamp_millis(ctx.sys.get_timestamp_millis()).unwrap();
+        let now = ctx.sys.get_timestamp();
         let delta = 120;
         let remind_at = now + TimeDelta::milliseconds(120 * 60 * 1000);
 
@@ -450,7 +449,7 @@ mod tests {
         let mut ctx = setup_context().await;
         ctx.sys = Arc::new(StaticTimeSys1 {});
 
-        let now = DateTime::from_timestamp_millis(ctx.sys.get_timestamp_millis()).unwrap();
+        let now = ctx.sys.get_timestamp();
 
         let (user, calendar) = insert_common_data(&ctx).await;
         let delta = 120;
