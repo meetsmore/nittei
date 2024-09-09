@@ -13,13 +13,7 @@ pub trait IUserIntegrationRepo: Send + Sync {
 
 #[cfg(test)]
 mod tests {
-    use nittei_domain::{
-        Account,
-        AccountIntegration,
-        IntegrationProvider,
-        User,
-        UserIntegration,
-    };
+    use nittei_domain::{Account, AccountIntegration, IntegrationProvider, User, UserIntegration};
 
     use crate::setup_context;
 

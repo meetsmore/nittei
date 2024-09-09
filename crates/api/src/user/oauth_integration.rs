@@ -2,7 +2,7 @@ use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::Utc;
 use nittei_api_structs::oauth_integration::*;
 use nittei_domain::{IntegrationProvider, User, UserIntegration};
-use nittei_infra::{NitteiContext, CodeTokenRequest, ProviderOAuth};
+use nittei_infra::{CodeTokenRequest, NitteiContext, ProviderOAuth};
 
 use crate::{
     error::NitteiError,

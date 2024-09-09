@@ -14,15 +14,7 @@ pub trait IServiceUserRepo: Send + Sync {
 
 #[cfg(test)]
 mod tests {
-    use nittei_domain::{
-        Account,
-        Calendar,
-        Entity,
-        Service,
-        ServiceResource,
-        TimePlan,
-        User,
-    };
+    use nittei_domain::{Account, Calendar, Entity, Service, ServiceResource, TimePlan, User};
 
     use crate::setup_context;
 

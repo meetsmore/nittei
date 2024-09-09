@@ -2,14 +2,7 @@ use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::{DateTime, Utc};
 use event::subscribers::SyncRemindersOnEventUpdated;
 use nittei_api_structs::update_event::*;
-use nittei_domain::{
-    CalendarEvent,
-    CalendarEventReminder,
-    Metadata,
-    RRuleOptions,
-    User,
-    ID,
-};
+use nittei_domain::{CalendarEvent, CalendarEventReminder, Metadata, RRuleOptions, User, ID};
 use nittei_infra::NitteiContext;
 
 use crate::{

@@ -1,14 +1,7 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::{DateTime, TimeDelta, Utc};
 use nittei_api_structs::create_event::*;
-use nittei_domain::{
-    CalendarEvent,
-    CalendarEventReminder,
-    Metadata,
-    RRuleOptions,
-    User,
-    ID,
-};
+use nittei_domain::{CalendarEvent, CalendarEventReminder, Metadata, RRuleOptions, User, ID};
 use nittei_infra::NitteiContext;
 
 use super::subscribers::CreateRemindersOnEventCreated;

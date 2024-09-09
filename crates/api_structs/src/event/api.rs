@@ -1,10 +1,4 @@
-use nittei_domain::{
-    CalendarEvent,
-    CalendarEventReminder,
-    EventInstance,
-    RRuleOptions,
-    ID,
-};
+use nittei_domain::{CalendarEvent, CalendarEventReminder, EventInstance, RRuleOptions, ID};
 use serde::{Deserialize, Serialize};
 
 use crate::dtos::CalendarEventDTO;
