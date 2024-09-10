@@ -4,7 +4,7 @@ use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::{DateTime, Utc};
 use futures::{future::join_all, stream, StreamExt};
 use nittei_api_structs::multiple_freebusy::{APIResponse, RequestBody};
-use nittei_domain::{Calendar, CalendarEvent, CompatibleInstances, EventInstance, TimeSpan, ID};
+use nittei_domain::{Calendar, CalendarEvent, EventInstance, TimeSpan, ID};
 use nittei_infra::NitteiContext;
 
 use crate::{
@@ -156,7 +156,7 @@ impl GetMultipleFreeBusyUseCase {
                 match event_result {
                     Ok((user_id, events)) => {
                         let expanded_events =
-                            self.expand_events(events, timespan, &calendars_lookup);
+                            self.expand_events(events, timespan, &calendars_lookup)?;
                         events_per_user.insert(user_id, expanded_events);
                     }
                     Err(e) => return Err(e),
@@ -172,20 +172,27 @@ impl GetMultipleFreeBusyUseCase {
         events: Vec<CalendarEvent>,
         timespan: &TimeSpan,
         calendars_lookup: &HashMap<String, &Calendar>,
-    ) -> VecDeque<EventInstance> {
-        events
-            .into_iter()
-            .map(|event| {
-                // TODO: to fix
-                #[allow(clippy::unwrap_used)]
-                let calendar = calendars_lookup
-                    .get(&event.calendar_id.to_string())
-                    .unwrap();
-                event.expand(Some(timespan), &calendar.settings)
-            })
-            .filter(|instances| !instances.is_empty())
-            .flat_map(|instances| CompatibleInstances::new(instances).inner())
-            .collect()
+    ) -> Result<VecDeque<EventInstance>, UseCaseError> {
+        let mut instances = VecDeque::new();
+        for event in &events {
+            let calendar = calendars_lookup
+                .get(&event.calendar_id.to_string())
+                .ok_or(UseCaseError::InternalError)?;
+
+            let expanded_events = event.expand(Some(timespan), &calendar.settings);
+
+            instances.extend(expanded_events);
+        }
+        Ok(instances)
+        // events
+        //     .into_iter()
+        //     .map(|event| {
+        //         let calendar = calendars_lookup.get(&event.calendar_id.to_string())?;
+        //         event.expand(Some(timespan), &calendar.settings)
+        //     })
+        //     .filter(|instances| !instances.is_empty())
+        //     .flat_map(|instances| CompatibleInstances::new(instances).inner())
+        //     .collect()?
     }
 }
 

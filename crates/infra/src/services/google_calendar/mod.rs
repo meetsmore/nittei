@@ -2,6 +2,7 @@
 pub mod auth_provider;
 mod calendar_api;
 
+use anyhow::anyhow;
 use calendar_api::{
     FreeBusyCalendar,
     FreeBusyRequest,
@@ -19,7 +20,6 @@ use nittei_domain::{
     EventInstance,
     User,
 };
-use tracing::error;
 
 use super::FreeBusyProviderQuery;
 use crate::NitteiContext;
@@ -42,7 +42,10 @@ impl GoogleCalendarProvider {
         })
     }
 
-    pub async fn freebusy(&self, query: FreeBusyProviderQuery) -> CompatibleInstances {
+    pub async fn freebusy(
+        &self,
+        query: FreeBusyProviderQuery,
+    ) -> anyhow::Result<CompatibleInstances> {
         let body = FreeBusyRequest {
             time_min: GoogleDateTime::from_timestamp_millis(query.start.timestamp_millis()),
             time_max: GoogleDateTime::from_timestamp_millis(query.end.timestamp_millis()),
@@ -58,15 +61,9 @@ impl GoogleCalendarProvider {
             for (_, calendar_busy) in res.calendars {
                 for instance in calendar_busy.busy {
                     let instance = EventInstance {
-                        // TODO: to fix
-                        #[allow(clippy::unwrap_used)]
-                        start_time: DateTime::parse_from_rfc3339(&instance.start.to_string())
-                            .unwrap()
+                        start_time: DateTime::parse_from_rfc3339(&instance.start.to_string())?
                             .with_timezone(&Utc),
-                        // TODO: to fix
-                        #[allow(clippy::unwrap_used)]
-                        end_time: DateTime::parse_from_rfc3339(&instance.end.to_string())
-                            .unwrap()
+                        end_time: DateTime::parse_from_rfc3339(&instance.end.to_string())?
                             .with_timezone(&Utc),
                         busy: true,
                     };
@@ -74,9 +71,9 @@ impl GoogleCalendarProvider {
                 }
             }
         } else {
-            error!("Unable to get freebusy info from google calendar");
+            return Err(anyhow!("Unable to get freebusy info from google calendar"));
         }
-        CompatibleInstances::new(instances)
+        Ok(CompatibleInstances::new(instances))
     }
 
     pub async fn create_event(

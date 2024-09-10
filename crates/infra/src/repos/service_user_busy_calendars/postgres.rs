@@ -1,3 +1,5 @@
+use std::convert::{TryFrom, TryInto};
+
 use nittei_domain::{BusyCalendar, ID};
 use sqlx::{FromRow, PgPool};
 use tracing::{error, instrument};
@@ -21,16 +23,15 @@ struct BusyCalendarRaw {
     calendar_id: String,
 }
 
-impl From<BusyCalendarRaw> for BusyCalendar {
-    fn from(e: BusyCalendarRaw) -> Self {
-        match &e.provider[..] {
+impl TryFrom<BusyCalendarRaw> for BusyCalendar {
+    type Error = anyhow::Error;
+    fn try_from(e: BusyCalendarRaw) -> anyhow::Result<Self> {
+        Ok(match &e.provider[..] {
             "google" => BusyCalendar::Google(e.calendar_id),
             "outlook" => BusyCalendar::Outlook(e.calendar_id),
-            // TODO: to fix
-            #[allow(clippy::unwrap_used)]
-            "nittei" => BusyCalendar::Nittei(e.calendar_id.parse().unwrap()),
+            "nittei" => BusyCalendar::Nittei(e.calendar_id.parse()?),
             _ => unreachable!("Invalid provider"),
-        }
+        })
     }
 }
 
@@ -51,12 +52,11 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
         )
         .execute(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Unable to check if nittei busy calendar: {:?} exists. DB returned error: {:?}",
                 input, e
             );
-            e
         })?;
 
         Ok(res.rows_affected() == 1)
@@ -77,12 +77,11 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
         )
         .execute(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Unable to check if external busy calendar: {:?} exists. DB returned error: {:?}",
                 input, e
             );
-            e
         })?;
 
         Ok(res.rows_affected() == 1)
@@ -101,12 +100,11 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
         )
         .execute(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Unable to insert nittei busy calendar: {:?}. DB returned error: {:?}",
                 input, e
             );
-            e
         })?;
 
         Ok(())
@@ -127,12 +125,11 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
             )
             .execute(&self.pool)
             .await
-            .map_err(|e| {
+            .inspect_err(|e| {
                 error!(
                     "Unable to insert external busy calendar: {:?}. DB returned error: {:?}",
                     input, e
                 );
-                e
             })?;
 
         Ok(())
@@ -153,12 +150,11 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
         )
         .execute(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Delete nittei busy calendar: {:?} failed. DB returned error: {:?}",
                 input, e
             );
-            e
         })?;
 
         Ok(())
@@ -182,12 +178,11 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
         )
         .execute(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Delete external busy calendar: {:?} failed. DB returned error: {:?}",
                 input, e
             );
-            e
         })?;
 
         Ok(())
@@ -210,14 +205,13 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
         .bind(user_id.as_ref())
         .fetch_all(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Find busy calendars for service user in service_id: {} and user_id: {} failed. DB returned error: {:?}",
                 service_id, user_id, e
             );
-            e
         })?;
 
-        Ok(busy_calendars.into_iter().map(|bc| bc.into()).collect())
+        busy_calendars.into_iter().map(|bc| bc.try_into()).collect()
     }
 }
