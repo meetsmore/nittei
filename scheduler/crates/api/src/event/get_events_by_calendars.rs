@@ -52,6 +52,7 @@ pub struct UseCaseResponse {
 
 #[derive(Debug)]
 pub enum UseCaseError {
+    InternalError,
     NotFound(String, String),
     InvalidTimespan,
 }
@@ -59,6 +60,7 @@ pub enum UseCaseError {
 impl From<UseCaseError> for NettuError {
     fn from(e: UseCaseError) -> Self {
         match e {
+            UseCaseError::InternalError => Self::InternalError,
             UseCaseError::InvalidTimespan => {
                 Self::BadClientData("The provided start_ts and end_ts is invalid".into())
             }
@@ -83,7 +85,8 @@ impl UseCase for GetEventsByCalendarsUseCase {
             .repos
             .calendars
             .find_multiple(self.calendar_ids.iter().collect::<Vec<_>>())
-            .await;
+            .await
+            .map_err(|_| UseCaseError::InternalError)?;
 
         // Check that all calendars exist and belong to the same account
         if calendars.is_empty()

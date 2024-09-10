@@ -26,7 +26,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_calendar_synced_repo() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
 
         let account = Account::new();
         ctx.repos

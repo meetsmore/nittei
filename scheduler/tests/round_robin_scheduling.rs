@@ -1,3 +1,7 @@
+// Allow clippy lints because this is a test helper
+#![allow(clippy::unwrap_used)]
+#![allow(clippy::expect_used)]
+
 mod helpers;
 
 use chrono::{DateTime, Duration, TimeDelta, Utc, Weekday};
@@ -472,6 +476,7 @@ async fn test_round_robin_availability_scheduling() {
                 .events
                 .find(&event_id)
                 .await
+                .unwrap()
                 .expect("To find event");
             service_event.created = *last_assigned_service_event;
             app.ctx

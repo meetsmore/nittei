@@ -63,12 +63,11 @@ impl IReminderRepo for PostgresReminderRepo {
             )
             .execute(&self.pool)
             .await
-            .map_err(|e| {
+            .inspect_err(|e| {
                 error!(
                     "Unable to insert calendar event reminder: {:?}. DB returned error: {:?}",
                     reminder, e
                 );
-                e
             })?;
         }
         Ok(())
@@ -89,12 +88,11 @@ impl IReminderRepo for PostgresReminderRepo {
         )
         .fetch_one(&self.pool)
         .await
-        .map_err(|err| {
+        .inspect_err(|err| {
             error!(
                 "Unable to insert calendar event reminder version for event id: {}. DB returned error: {:?}",
                 event_id, err
             );
-            err
         })?;
 
         Ok(r_version.version)
@@ -119,20 +117,19 @@ impl IReminderRepo for PostgresReminderRepo {
         )
         .fetch_one(&self.pool)
         .await
-        .map_err(|err| {
+        .inspect_err(|err| {
             error!(
                 "Unable to increment calendar event reminder version for event id: {}. DB returned error: {:?}",
                 event_id, err
             );
-            err
         })?;
 
         Ok(r_version.version)
     }
 
     #[instrument]
-    async fn delete_all_before(&self, before: DateTime<Utc>) -> Vec<Reminder> {
-        sqlx::query_as!(
+    async fn delete_all_before(&self, before: DateTime<Utc>) -> anyhow::Result<Vec<Reminder>> {
+        Ok(sqlx::query_as!(
             ReminderRaw,
             r#"
             DELETE FROM reminders AS r
@@ -143,16 +140,14 @@ impl IReminderRepo for PostgresReminderRepo {
         )
         .fetch_all(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Unable to delete calendar event reminders before timestamp: {}. DB returned error: {:?}",
                 before, e
             );
-            e
-        })
-        .unwrap_or_default()
+        })?
         .into_iter()
         .map(|reminder| reminder.into())
-        .collect()
+        .collect())
     }
 }

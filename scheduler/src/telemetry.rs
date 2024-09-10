@@ -11,7 +11,7 @@ use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
 /// Register a subscriber as global default to process span data.
 ///
 /// It should only be called once!
-pub fn init_subscriber() {
+pub fn init_subscriber() -> anyhow::Result<()> {
     // Filter the spans that are shown based on the RUST_LOG env var or the default value ("info")
     let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
 
@@ -35,14 +35,14 @@ pub fn init_subscriber() {
         global::set_text_map_propagator(TraceContextPropagator::new());
 
         // Get the tracer - if no endpoint is provided, tracing will be disabled
-        let tracer = get_tracer(service_name, service_version, service_env);
+        let tracer = get_tracer(service_name, service_version, service_env)?;
 
         // Create a telemetry layer if a tracer is available
         let telemetry_layer =
             tracer.map(|tracer| tracing_opentelemetry::layer().with_tracer(tracer));
 
         // Combine layers into a single subscriber
-        if telemetry_layer.is_some() {
+        if let Some(telemetry_layer) = telemetry_layer {
             let subscriber = Registry::default()
                 .with(env_filter)
                 .with(
@@ -50,11 +50,10 @@ pub fn init_subscriber() {
                         .json()
                         .with_current_span(false),
                 )
-                .with(telemetry_layer.unwrap());
+                .with(telemetry_layer);
 
             // Set the global subscriber
-            tracing::subscriber::set_global_default(subscriber)
-                .expect("Unable to set global subscriber");
+            tracing::subscriber::set_global_default(subscriber)?;
         } else {
             // If no tracer is available, do not include telemetry layer
             let subscriber = Registry::default().with(env_filter).with(
@@ -64,16 +63,15 @@ pub fn init_subscriber() {
             );
 
             // Set the global subscriber
-            tracing::subscriber::set_global_default(subscriber)
-                .expect("Unable to set global subscriber");
+            tracing::subscriber::set_global_default(subscriber)?
         }
 
         // Set a global error handler to log the tracing internal errors to the console
         set_error_handler(|e| {
             warn!("Error when exporting traces: {}", e);
-        })
-        .expect("Failed to set global error handler");
+        })?;
     }
+    Ok(())
 }
 
 /// Get the tracer
@@ -81,27 +79,27 @@ fn get_tracer(
     service_name: String,
     service_version: String,
     service_env: String,
-) -> Option<Tracer> {
+) -> anyhow::Result<Option<Tracer>> {
     let otlp_endpoint = std::env::var("OTLP_TRACING_ENDPOINT");
     let datadog_endpoint = std::env::var("DATADOG_TRACING_ENDPOINT");
 
     if let Ok(datadog_endpoint) = datadog_endpoint {
-        Some(get_tracer_datadog(
+        Ok(Some(get_tracer_datadog(
             datadog_endpoint,
             service_name,
             service_version,
             service_env,
-        ))
+        )?))
     } else if let Ok(otlp_endpoint) = otlp_endpoint {
-        Some(get_tracer_otlp(
+        Ok(Some(get_tracer_otlp(
             otlp_endpoint,
             service_name,
             service_version,
             service_env,
-        ))
+        )?))
     } else {
         warn!("No tracing endpoints provided (DATADOG_TRACING_ENDPOINT or OTLP_TRACING_ENDPOINT), tracing will be disabled");
-        None
+        Ok(None)
     }
 }
 
@@ -112,7 +110,7 @@ fn get_tracer_datadog(
     service_name: String,
     service_version: String,
     service_env: String,
-) -> Tracer {
+) -> anyhow::Result<Tracer> {
     new_pipeline()
         .with_service_name(service_name)
         .with_version(service_version)
@@ -125,7 +123,7 @@ fn get_tracer_datadog(
                 .with_id_generator(RandomIdGenerator::default()),
         )
         .install_batch(opentelemetry_sdk::runtime::Tokio)
-        .unwrap()
+        .map_err(|e| e.into())
 }
 
 /// Get the tracer based on the OTLP endpoint
@@ -135,7 +133,7 @@ fn get_tracer_otlp(
     service_name: String,
     service_version: String,
     service_env: String,
-) -> Tracer {
+) -> anyhow::Result<Tracer> {
     let otlp_exporter = opentelemetry_otlp::new_exporter()
         .http()
         .with_protocol(opentelemetry_otlp::Protocol::HttpJson)
@@ -155,7 +153,7 @@ fn get_tracer_otlp(
         )
         .with_exporter(otlp_exporter)
         .install_batch(opentelemetry_sdk::runtime::Tokio)
-        .unwrap()
+        .map_err(|e| e.into())
 }
 
 /// Get the sampler to be used

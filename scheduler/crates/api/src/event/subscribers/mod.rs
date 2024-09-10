@@ -71,10 +71,15 @@ impl Subscriber<CreateEventUseCase> for CreateSyncedEventsOnEventCreated {
         if synced_google_calendars.is_empty() && synced_outlook_calendars.is_empty() {
             return;
         }
-        let user = match ctx.repos.users.find(&e.user_id).await {
-            Some(u) => u,
-            None => {
+        let user = ctx.repos.users.find(&e.user_id).await;
+        let user = match user {
+            Ok(Some(u)) => u,
+            Ok(None) => {
                 error!("Unable to find user when creating sync events");
+                return;
+            }
+            Err(e) => {
+                error!("Unable to find user when creating sync events {:?}", e);
                 return;
             }
         };
@@ -179,9 +184,13 @@ impl Subscriber<UpdateEventUseCase> for UpdateSyncedEventsOnEventUpdated {
             return;
         }
         let user = match ctx.repos.users.find(&e.user_id).await {
-            Some(u) => u,
-            None => {
+            Ok(Some(u)) => u,
+            Ok(None) => {
                 error!("Unable to find user when updating sync events");
+                return;
+            }
+            Err(e) => {
+                error!("Unable to find user when updating sync events {:?}", e);
                 return;
             }
         };

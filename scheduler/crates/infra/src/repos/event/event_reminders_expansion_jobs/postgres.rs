@@ -50,20 +50,22 @@ impl IEventRemindersGenerationJobsRepo for PostgresEventReminderGenerationJobsRe
             )
             .execute(&self.pool)
             .await
-            .map_err(|e| {
+            .inspect_err(|e| {
                 error!(
                     "Unable to insert calendar event reminder expansion job: {:?}. DB returned error: {:?}",
                     job, e
                 );
-                e
             })?;
         }
         Ok(())
     }
 
     #[instrument]
-    async fn delete_all_before(&self, before: DateTime<Utc>) -> Vec<EventRemindersExpansionJob> {
-        sqlx::query_as!(
+    async fn delete_all_before(
+        &self,
+        before: DateTime<Utc>,
+    ) -> anyhow::Result<Vec<EventRemindersExpansionJob>> {
+        Ok(sqlx::query_as!(
             JobRaw,
             r#"
             DELETE FROM calendar_event_reminder_generation_jobs AS j
@@ -74,16 +76,14 @@ impl IEventRemindersGenerationJobsRepo for PostgresEventReminderGenerationJobsRe
         )
         .fetch_all(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Unable to delete calendar event reminder expansion job before timestamp: {}. DB returned error: {:?}",
                 before, e
             );
-            e
-        })
-        .unwrap_or_default()
+        })?
         .into_iter()
         .map(|job| job.into())
-        .collect()
+        .collect())
     }
 }

@@ -1,3 +1,5 @@
+use std::convert::{TryFrom, TryInto};
+
 use chrono::{DateTime, Utc};
 use nettu_scheduler_domain::{CalendarEvent, CalendarEventReminder, RRuleOptions, ID};
 use serde_json::Value;
@@ -56,18 +58,20 @@ struct EventRaw {
     metadata: Value,
 }
 
-impl From<EventRaw> for CalendarEvent {
-    fn from(e: EventRaw) -> Self {
+impl TryFrom<EventRaw> for CalendarEvent {
+    type Error = anyhow::Error;
+
+    fn try_from(e: EventRaw) -> anyhow::Result<Self> {
         let recurrence: Option<RRuleOptions> = match e.recurrence {
-            Some(json) => serde_json::from_value(json).unwrap(),
+            Some(json) => serde_json::from_value(json)?,
             None => None,
         };
         let reminders: Vec<CalendarEventReminder> = match e.reminders {
-            Some(json) => serde_json::from_value(json).unwrap(),
+            Some(json) => serde_json::from_value(json)?,
             None => Vec::new(),
         };
 
-        Self {
+        Ok(Self {
             id: e.event_uid.into(),
             user_id: e.user_uid.into(),
             account_id: e.account_uid.into(),
@@ -82,8 +86,8 @@ impl From<EventRaw> for CalendarEvent {
             exdates: e.exdates,
             reminders,
             service_id: e.service_uid.map(|id| id.into()),
-            metadata: serde_json::from_value(e.metadata).unwrap(),
-        }
+            metadata: serde_json::from_value(e.metadata)?,
+        })
     }
 }
 
@@ -126,12 +130,11 @@ impl IEventRepo for PostgresEventRepo {
         )
         .execute(&self.pool)
         .await
-        .map_err(|err| {
+        .inspect_err(|err| {
             error!(
                 "Unable to insert calendar_event: {:?}. DB returned error: {:?}",
                 e, err
             );
-            err
         })?;
 
         Ok(())
@@ -170,20 +173,19 @@ impl IEventRepo for PostgresEventRepo {
         )
         .execute(&self.pool)
         .await
-        .map_err(|err| {
+        .inspect_err(|err| {
             error!(
                 "Unable to save calendar_event: {:?}. DB returned error: {:?}",
                 e, err
             );
-            err
         })?;
 
         Ok(())
     }
 
     #[instrument]
-    async fn find(&self, event_id: &ID) -> Option<CalendarEvent> {
-        let res: Option<EventRaw> = sqlx::query_as!(
+    async fn find(&self, event_id: &ID) -> anyhow::Result<Option<CalendarEvent>> {
+        sqlx::query_as!(
             EventRaw,
             r#"
             SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
@@ -197,23 +199,21 @@ impl IEventRepo for PostgresEventRepo {
         )
         .fetch_optional(&self.pool)
         .await
-        .map_err(|err| {
+        .inspect_err(|err| {
             error!(
                 "Find calendar event with id: {:?} failed. DB returned error: {:?}",
                 event_id, err
             );
-
-            err
-        })
-        .ok()?;
-
-        res.map(|e| e.into())
+        })?
+        .map(|e| e.try_into())
+        .transpose()
     }
 
     #[instrument]
     async fn find_many(&self, event_ids: &[ID]) -> anyhow::Result<Vec<CalendarEvent>> {
         let ids = event_ids.iter().map(|id| *id.as_ref()).collect::<Vec<_>>();
-        let events: Vec<EventRaw> = sqlx::query_as(
+        sqlx::query_as!(
+            EventRaw,
             r#"
             SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
             INNER JOIN calendars AS c
@@ -222,18 +222,19 @@ impl IEventRepo for PostgresEventRepo {
                 ON u.user_uid = c.user_uid
             WHERE e.event_uid = ANY($1)
             "#,
+            &ids
         )
-        .bind(&ids)
         .fetch_all(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Find calendar events with ids: {:?} failed. DB returned error: {:?}",
                 event_ids, e
             );
-            e
-        })?;
-        Ok(events.into_iter().map(|e| e.into()).collect())
+        })?
+        .into_iter()
+        .map(|e| e.try_into())
+        .collect()
     }
 
     #[instrument]
@@ -242,8 +243,8 @@ impl IEventRepo for PostgresEventRepo {
         calendar_id: &ID,
         timespan: Option<&nettu_scheduler_domain::TimeSpan>,
     ) -> anyhow::Result<Vec<CalendarEvent>> {
-        let events: Vec<EventRaw> = match timespan {
-            Some(timespan) => sqlx::query_as!(
+        if let Some(timespan) = timespan {
+            sqlx::query_as!(
                 EventRaw,
                 r#"
                     SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
@@ -260,15 +261,17 @@ impl IEventRepo for PostgresEventRepo {
             )
             .fetch_all(&self.pool)
             .await
-            .map_err(|e| {
+            .inspect_err(|e| {
                 error!(
                     "Find calendar events for calendar id: {:?} failed. DB returned error: {:?}",
                     calendar_id, e
                 );
-                e
-            })
-            .unwrap_or_default(),
-            None => sqlx::query_as!(
+            })?
+            .into_iter()
+            .map(|e| e.try_into())
+            .collect()
+        } else {
+            sqlx::query_as!(
                 EventRaw,
                 r#"
                     SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
@@ -282,16 +285,16 @@ impl IEventRepo for PostgresEventRepo {
             )
             .fetch_all(&self.pool)
             .await
-            .map_err(|e| {
+            .inspect_err(|e| {
                 error!(
                     "Find calendar events for calendar id: {:?} failed. DB returned error: {:?}",
                     calendar_id, e
                 );
-                e
-            })
-            .unwrap_or_default(),
-        };
-        Ok(events.into_iter().map(|e| e.into()).collect())
+            })?
+            .into_iter()
+            .map(|e| e.try_into())
+            .collect()
+        }
     }
 
     #[instrument]
@@ -304,7 +307,7 @@ impl IEventRepo for PostgresEventRepo {
             .into_iter()
             .map(|id| id.clone().into())
             .collect();
-        let events: Vec<EventRaw> = sqlx::query_as!(
+        sqlx::query_as!(
             EventRaw,
             r#"
                     SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
@@ -321,15 +324,15 @@ impl IEventRepo for PostgresEventRepo {
         )
         .fetch_all(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Find calendar events for calendar ids: {:?} failed. DB returned error: {:?}",
                 calendar_ids, e
             );
-            e
-        })
-        .unwrap_or_default();
-        Ok(events.into_iter().map(|e| e.into()).collect())
+        })?
+        .into_iter()
+        .map(|e| e.try_into())
+        .collect()
     }
 
     #[instrument]
@@ -337,10 +340,11 @@ impl IEventRepo for PostgresEventRepo {
         &self,
         service_id: &ID,
         user_ids: &[ID],
-    ) -> Vec<MostRecentCreatedServiceEvents> {
+    ) -> anyhow::Result<Vec<MostRecentCreatedServiceEvents>> {
         let user_ids = user_ids.iter().map(|id| *id.as_ref()).collect::<Vec<_>>();
         // https://github.com/launchbadge/sqlx/issues/367
-        let events: Vec<MostRecentCreatedServiceEventsRaw> = match sqlx::query_as(
+        let most_recent_created_service_events = sqlx::query_as!(
+            MostRecentCreatedServiceEventsRaw,
             r#"
             SELECT users.user_uid, events.created FROM users LEFT JOIN (
                 SELECT DISTINCT ON (user_uid) user_uid, e.created
@@ -352,22 +356,22 @@ impl IEventRepo for PostgresEventRepo {
             ) AS events ON events.user_uid = users.user_uid
             WHERE users.user_uid = ANY($2)
             "#,
+            service_id.as_ref(),
+            &user_ids
         )
-        .bind(service_id.as_ref())
-        .bind(&user_ids)
         .fetch_all(&self.pool)
         .await
-        {
-            Ok(events) => events,
-            Err(e) => {
+        .inspect_err(|e| {
                 error!(
                     "Find most recently created service events for service id: {} failed. DB returned error: {:?}",
                     service_id, e
                 );
-                return Vec::new();
-            }
-        };
-        events.into_iter().map(|e| e.into()).collect()
+            })?;
+
+        Ok(most_recent_created_service_events
+            .into_iter()
+            .map(|e| e.into())
+            .collect())
     }
 
     #[instrument]
@@ -377,9 +381,9 @@ impl IEventRepo for PostgresEventRepo {
         user_ids: &[ID],
         min_time: DateTime<Utc>,
         max_time: DateTime<Utc>,
-    ) -> Vec<CalendarEvent> {
+    ) -> anyhow::Result<Vec<CalendarEvent>> {
         let user_ids = user_ids.iter().map(|id| *id.as_ref()).collect::<Vec<_>>();
-        let events: Vec<EventRaw> = match sqlx::query_as!(
+        sqlx::query_as!(
             EventRaw,
             r#"
             SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
@@ -398,9 +402,7 @@ impl IEventRepo for PostgresEventRepo {
         )
         .fetch_all(&self.pool)
         .await
-        {
-            Ok(events) => events,
-            Err(e) => {
+        .inspect_err(|e| {
                 error!(
                     "Find calendar events for service id: {}, user_ids: {:?}, min_time: {}, max_time: {} failed. DB returned error: {:?}",
                     service_id,
@@ -408,12 +410,8 @@ impl IEventRepo for PostgresEventRepo {
                     min_time,
                     max_time,
                      e
-                );
-
-                return Vec::new();
-            }
-        };
-        events.into_iter().map(|e| e.into()).collect()
+                )})?
+        .into_iter().map(|e| e.try_into()).collect()
     }
 
     #[instrument]
@@ -423,8 +421,8 @@ impl IEventRepo for PostgresEventRepo {
         busy: bool,
         min_time: DateTime<Utc>,
         max_time: DateTime<Utc>,
-    ) -> Vec<CalendarEvent> {
-        let events: Vec<EventRaw> = match sqlx::query_as!(
+    ) -> anyhow::Result<Vec<CalendarEvent>> {
+        sqlx::query_as!(
             EventRaw,
             r#"
             SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
@@ -444,9 +442,7 @@ impl IEventRepo for PostgresEventRepo {
         )
         .fetch_all(&self.pool)
         .await
-        {
-            Ok(events) => events,
-            Err(e) => {
+        .inspect_err(|e| {
                 error!(
                     "Find service calendar events for user_id: {}, busy: {}, min_time: {}, max_time: {} failed. DB returned error: {:?}",
                     user_id,
@@ -455,16 +451,12 @@ impl IEventRepo for PostgresEventRepo {
                     max_time,
                      e
                 );
-
-                return Vec::new();
-            }
-        };
-        events.into_iter().map(|e| e.into()).collect()
+            })?.into_iter().map(|e| e.try_into()).collect()
     }
 
     #[instrument]
     async fn delete(&self, event_id: &ID) -> anyhow::Result<()> {
-        let res = sqlx::query!(
+        sqlx::query!(
             r#"
             DELETE FROM calendar_events AS c
             WHERE c.event_uid = $1
@@ -474,19 +466,14 @@ impl IEventRepo for PostgresEventRepo {
         )
         .fetch_optional(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Delete calendar event with id: {:?} failed. DB returned error: {:?}",
                 event_id, e
             );
-            e
-        })?;
-
-        if res.is_some() {
-            Ok(())
-        } else {
-            Err(anyhow::Error::msg("Unable to delete calendar event"))
-        }
+        })?
+        .ok_or_else(|| anyhow::Error::msg("Unable to delete calendar event"))
+        .map(|_| ())
     }
 
     #[instrument]
@@ -500,19 +487,21 @@ impl IEventRepo for PostgresEventRepo {
         )
         .execute(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Delete calendar event by service id: {:?} failed. DB returned error: {:?}",
                 service_id, e
             );
-            e
         })?;
         Ok(())
     }
 
     #[instrument]
-    async fn find_by_metadata(&self, query: MetadataFindQuery) -> Vec<CalendarEvent> {
-        let events: Vec<EventRaw> = sqlx::query_as!(
+    async fn find_by_metadata(
+        &self,
+        query: MetadataFindQuery,
+    ) -> anyhow::Result<Vec<CalendarEvent>> {
+        sqlx::query_as!(
             EventRaw,
             r#"
             SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
@@ -531,15 +520,14 @@ impl IEventRepo for PostgresEventRepo {
         )
         .fetch_all(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Find calendar events by metadata: {:?} failed. DB returned error: {:?}",
                 query, e
             );
-            e
-        })
-        .unwrap_or_default();
-
-        events.into_iter().map(|e| e.into()).collect()
+        })?
+        .into_iter()
+        .map(|e| e.try_into())
+        .collect()
     }
 }

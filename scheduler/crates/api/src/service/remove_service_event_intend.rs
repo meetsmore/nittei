@@ -70,8 +70,9 @@ impl UseCase for RemoveServiceEventIntendUseCase {
 
     async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
         match ctx.repos.services.find(&self.service_id).await {
-            Some(s) if s.account_id == self.account.id => (),
-            _ => return Err(UseCaseError::ServiceNotFound),
+            Ok(Some(s)) if s.account_id == self.account.id => (),
+            Ok(_) => return Err(UseCaseError::ServiceNotFound),
+            Err(_) => return Err(UseCaseError::StorageError),
         };
         ctx.repos
             .reservations

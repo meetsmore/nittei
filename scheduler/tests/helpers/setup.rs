@@ -1,3 +1,6 @@
+// Allow clippy lints because this is a test helper
+#![allow(clippy::unwrap_used)]
+#![allow(clippy::expect_used)]
 use nettu_scheduler_api::Application;
 use nettu_scheduler_infra::{setup_context, Config, NettuContext};
 use nettu_scheduler_sdk::NettuSDK;
@@ -10,7 +13,7 @@ pub struct TestApp {
 
 // Launch the application as a background task
 pub async fn spawn_app() -> (TestApp, NettuSDK, String) {
-    let mut ctx = setup_context().await;
+    let mut ctx = setup_context().await.unwrap();
     ctx.config.port = 0; // Random port
 
     let config = ctx.config.clone();

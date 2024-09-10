@@ -18,7 +18,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_account_integrations() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
 
         let account = Account::new();
         ctx.repos

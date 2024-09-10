@@ -67,12 +67,14 @@ pub struct GetFreeBusyResponse {
 
 #[derive(Debug)]
 pub enum UseCaseError {
+    InternalError,
     InvalidTimespan,
 }
 
 impl From<UseCaseError> for NettuError {
     fn from(e: UseCaseError) -> Self {
         match e {
+            UseCaseError::InternalError => Self::InternalError,
             UseCaseError::InvalidTimespan => {
                 Self::BadClientData("The provided start_ts and end_ts is invalid".into())
             }
@@ -97,6 +99,7 @@ impl UseCase for GetFreeBusyUseCase {
         let busy_event_instances = self
             .get_event_instances_from_calendars(&timespan, ctx)
             .await
+            .map_err(|_| UseCaseError::InternalError)?
             .into_iter()
             .filter(|e| e.busy)
             .collect::<Vec<_>>();
@@ -115,14 +118,14 @@ impl GetFreeBusyUseCase {
         &self,
         timespan: &TimeSpan,
         ctx: &NettuContext,
-    ) -> Vec<EventInstance> {
+    ) -> anyhow::Result<Vec<EventInstance>> {
         let calendar_ids = match &self.calendar_ids {
             Some(ids) if !ids.is_empty() => ids,
-            _ => return Vec::new(),
+            _ => return Ok(Vec::new()),
         };
 
         // can probably make query to event repo instead
-        let mut calendars = ctx.repos.calendars.find_by_user(&self.user_id).await;
+        let mut calendars = ctx.repos.calendars.find_by_user(&self.user_id).await?;
 
         if !calendar_ids.is_empty() {
             calendars.retain(|cal| calendar_ids.contains(&cal.id));
@@ -139,24 +142,31 @@ impl GetFreeBusyUseCase {
                 .find_by_calendar(&calendar.id, Some(timespan))
         });
 
-        join_all(all_events_futures)
-            .await
-            .into_iter()
-            .map(|events_res| events_res.unwrap_or_default())
-            .flat_map(|events| {
-                events
-                    .into_iter()
-                    .map(|event| {
+        let events: Vec<Result<Vec<nettu_scheduler_domain::CalendarEvent>, anyhow::Error>> =
+            join_all(all_events_futures).await.into_iter().collect();
+
+        let mut all_expanded_events = Vec::new();
+        for events in events {
+            match events {
+                Ok(events) => {
+                    for event in events {
                         let calendar = calendars_lookup
                             .get(&event.calendar_id.to_string())
-                            .unwrap();
-                        event.expand(Some(timespan), &calendar.settings)
-                    })
-                    // It is possible that there are no instances in the expanded event, should remove them
-                    .filter(|instances| !instances.is_empty())
-            })
-            .flatten()
-            .collect::<Vec<_>>()
+                            .ok_or_else(|| {
+                                anyhow::anyhow!("Calendar with id: {} not found", event.calendar_id)
+                            })?;
+                        let expanded_events = event.expand(Some(timespan), &calendar.settings);
+
+                        all_expanded_events.extend(expanded_events);
+                    }
+                }
+                Err(e) => {
+                    return Err(e);
+                }
+            }
+        }
+
+        Ok(all_expanded_events)
     }
 }
 
@@ -188,7 +198,7 @@ mod test {
     #[actix_web::main]
     #[test]
     async fn freebusy_works() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let account = Account::default();
         ctx.repos.accounts.insert(&account).await.unwrap();
         let user = User::new(account.id.clone(), None);

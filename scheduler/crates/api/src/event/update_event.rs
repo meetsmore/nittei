@@ -148,12 +148,16 @@ impl UseCase for UpdateEventUseCase {
         } = self;
 
         let mut e = match ctx.repos.events.find(event_id).await {
-            Some(event) if event.user_id == user.id => event,
-            _ => {
+            Ok(Some(event)) if event.user_id == user.id => event,
+            Ok(_) => {
                 return Err(UseCaseError::NotFound(
                     "Calendar Event".into(),
                     event_id.clone(),
                 ))
+            }
+            Err(e) => {
+                tracing::error!("Failed to get one event {:?}", e);
+                return Err(UseCaseError::StorageError);
             }
         };
 
@@ -176,12 +180,16 @@ impl UseCase for UpdateEventUseCase {
         }
 
         let calendar = match ctx.repos.calendars.find(&e.calendar_id).await {
-            Some(cal) => cal,
-            _ => {
+            Ok(Some(cal)) => cal,
+            Ok(None) => {
                 return Err(UseCaseError::NotFound(
                     "Calendar".into(),
                     e.calendar_id.clone(),
                 ))
+            }
+            Err(e) => {
+                tracing::error!("Failed to get one calendar {:?}", e);
+                return Err(UseCaseError::StorageError);
             }
         };
 
@@ -208,6 +216,8 @@ impl UseCase for UpdateEventUseCase {
             // ? should exdates be deleted when rrules are updated
             e.set_recurrence(rrule_opts, &calendar.settings, true)
         } else if start_or_duration_change && e.recurrence.is_some() {
+            // This unwrap is safe as we have checked that recurrence "is_some"
+            #[allow(clippy::unwrap_used)]
             e.set_recurrence(e.recurrence.clone().unwrap(), &calendar.settings, true)
         } else {
             e.recurrence = None;
@@ -257,7 +267,7 @@ mod test {
             busy: Some(false),
             ..Default::default()
         };
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let res = usecase.execute(&ctx).await;
         assert!(res.is_err());
     }

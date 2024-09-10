@@ -56,11 +56,13 @@ struct GetCalendarUseCase {
 
 #[derive(Debug)]
 enum UseCaseError {
+    InternalError,
     NotFound(ID),
 }
 impl From<UseCaseError> for NettuError {
     fn from(e: UseCaseError) -> Self {
         match e {
+            UseCaseError::InternalError => Self::InternalError,
             UseCaseError::NotFound(calendar_id) => Self::NotFound(format!(
                 "The calendar with id: {}, was not found.",
                 calendar_id
@@ -78,7 +80,12 @@ impl UseCase for GetCalendarUseCase {
     const NAME: &'static str = "GetCalendar";
 
     async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
-        let cal = ctx.repos.calendars.find(&self.calendar_id).await;
+        let cal = ctx
+            .repos
+            .calendars
+            .find(&self.calendar_id)
+            .await
+            .map_err(|_| UseCaseError::InternalError)?;
         match cal {
             Some(cal) if cal.user_id == self.user_id => Ok(cal),
             _ => Err(UseCaseError::NotFound(self.calendar_id.clone())),

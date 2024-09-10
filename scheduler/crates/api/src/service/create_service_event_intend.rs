@@ -14,6 +14,7 @@ use nettu_scheduler_domain::{
     ID,
 };
 use nettu_scheduler_infra::NettuContext;
+use tracing::warn;
 
 use super::get_service_bookingslots;
 use crate::{
@@ -186,7 +187,8 @@ impl UseCase for CreateServiceEventIntendUseCase {
                                             &service.id,
                                             &user_ids_at_slot,
                                         )
-                                        .await;
+                                        .await
+                                        .map_err(|_| UseCaseError::StorageError)?;
 
                                     let query = RoundRobinAvailabilityAssignment {
                                         members: events
@@ -194,7 +196,10 @@ impl UseCase for CreateServiceEventIntendUseCase {
                                             .map(|e| (e.user_id, e.created))
                                             .collect(),
                                     };
-                                    let selected_user_id = query.assign().expect("At least one host can be picked when there are at least one host available");
+                                    let selected_user_id = query.assign().ok_or_else(|| {
+                                        warn!("At least one host can be picked when there are at least one host available");
+                                        UseCaseError::UserNotAvailable
+                                    })?;
                                     vec![selected_user_id]
                                 }
                             }
@@ -215,13 +220,17 @@ impl UseCase for CreateServiceEventIntendUseCase {
                                             now,
                                             timestamp_in_two_months,
                                         )
-                                        .await;
+                                        .await
+                                        .map_err(|_| UseCaseError::StorageError)?;
 
                                     let query = RoundRobinEqualDistributionAssignment {
                                         events: service_events,
                                         user_ids: user_ids_at_slot,
                                     };
-                                    let selected_user_id = query.assign().expect("At least one host can be picked when there are at least one host available");
+                                    let selected_user_id = query.assign().ok_or_else(|| {
+                                        warn!("At least one host can be picked when there are at least one host available");
+                                        UseCaseError::UserNotAvailable
+                                    })?;
                                     vec![selected_user_id]
                                 }
                             }
@@ -276,7 +285,12 @@ impl UseCase for CreateServiceEventIntendUseCase {
             }
         };
 
-        let selected_hosts = ctx.repos.users.find_many(&selected_host_user_ids).await;
+        let selected_hosts = ctx
+            .repos
+            .users
+            .find_many(&selected_host_user_ids)
+            .await
+            .map_err(|_| UseCaseError::StorageError)?;
 
         Ok(UseCaseRes {
             selected_hosts,

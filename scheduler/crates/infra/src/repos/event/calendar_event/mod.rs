@@ -16,7 +16,7 @@ pub struct MostRecentCreatedServiceEvents {
 pub trait IEventRepo: Send + Sync {
     async fn insert(&self, e: &CalendarEvent) -> anyhow::Result<()>;
     async fn save(&self, e: &CalendarEvent) -> anyhow::Result<()>;
-    async fn find(&self, event_id: &ID) -> Option<CalendarEvent>;
+    async fn find(&self, event_id: &ID) -> anyhow::Result<Option<CalendarEvent>>;
     async fn find_many(&self, event_ids: &[ID]) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn find_by_calendar(
         &self,
@@ -32,24 +32,27 @@ pub trait IEventRepo: Send + Sync {
         &self,
         service_id: &ID,
         user_ids: &[ID],
-    ) -> Vec<MostRecentCreatedServiceEvents>;
+    ) -> anyhow::Result<Vec<MostRecentCreatedServiceEvents>>;
     async fn find_by_service(
         &self,
         service_id: &ID,
         user_ids: &[ID],
         min_time: DateTime<Utc>,
         max_time: DateTime<Utc>,
-    ) -> Vec<CalendarEvent>;
+    ) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn find_user_service_events(
         &self,
         user_id: &ID,
         busy: bool,
         min_time: DateTime<Utc>,
         max_time: DateTime<Utc>,
-    ) -> Vec<CalendarEvent>;
+    ) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn delete(&self, event_id: &ID) -> anyhow::Result<()>;
     async fn delete_by_service(&self, service_id: &ID) -> anyhow::Result<()>;
-    async fn find_by_metadata(&self, query: MetadataFindQuery) -> Vec<CalendarEvent>;
+    async fn find_by_metadata(
+        &self,
+        query: MetadataFindQuery,
+    ) -> anyhow::Result<Vec<CalendarEvent>>;
 }
 
 #[cfg(test)]
@@ -85,7 +88,7 @@ mod tests {
     }
 
     async fn setup() -> TestContext {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let account = Account::default();
         ctx.repos.accounts.insert(&account).await.unwrap();
         let user = User::new(account.id.clone(), None);
@@ -115,7 +118,7 @@ mod tests {
         assert!(ctx.repos.events.insert(&event).await.is_ok());
 
         // Different find methods
-        let get_event_res = ctx.repos.events.find(&event.id).await.unwrap();
+        let get_event_res = ctx.repos.events.find(&event.id).await.unwrap().unwrap();
         assert!(get_event_res.eq(&event));
         let get_event_res = ctx
             .repos
@@ -130,7 +133,7 @@ mod tests {
         assert!(delete_res.is_ok());
 
         // Find
-        assert!(ctx.repos.events.find(&event.id).await.is_none());
+        assert!(ctx.repos.events.find(&event.id).await.unwrap().is_none());
     }
 
     #[tokio::test]
@@ -157,6 +160,7 @@ mod tests {
             .events
             .find(&event.id)
             .await
+            .unwrap()
             .expect("To be event")
             .eq(&event));
     }
@@ -175,10 +179,10 @@ mod tests {
         assert!(ctx.repos.events.insert(&event).await.is_ok());
 
         // Delete
-        assert!(ctx.repos.users.delete(&user.id).await.is_some());
+        assert!(ctx.repos.users.delete(&user.id).await.unwrap().is_some());
 
         // Find after delete
-        assert!(ctx.repos.events.find(&event.id).await.is_none());
+        assert!(ctx.repos.events.find(&event.id).await.unwrap().is_none());
     }
 
     #[tokio::test]
@@ -198,7 +202,7 @@ mod tests {
         assert!(ctx.repos.calendars.delete(&calendar.id).await.is_ok());
 
         // Find after delete
-        assert!(ctx.repos.events.find(&event.id).await.is_none());
+        assert!(ctx.repos.events.find(&event.id).await.unwrap().is_none());
     }
 
     async fn generate_event_with_time(
@@ -443,7 +447,7 @@ mod tests {
 
     #[tokio::test]
     async fn find_most_recently_created_service_events() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let account = Account::default();
         ctx.repos.accounts.insert(&account).await.unwrap();
 
@@ -531,7 +535,8 @@ mod tests {
                 &service.id,
                 &[user1.id.clone(), user2.id.clone(), user3.id.clone()],
             )
-            .await;
+            .await
+            .unwrap();
         assert_eq!(recent_service_events.len(), 3);
         let user1_recent_service_events = recent_service_events
             .iter()
@@ -558,7 +563,7 @@ mod tests {
 
     #[tokio::test]
     async fn find_by_service_and_timespan() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let account = Account::default();
         ctx.repos.accounts.insert(&account).await.unwrap();
 
@@ -735,7 +740,8 @@ mod tests {
                 DateTime::from_timestamp_millis(start_ts).unwrap(),
                 DateTime::from_timestamp_millis(end_ts).unwrap(),
             )
-            .await;
+            .await
+            .unwrap();
 
         assert_eq!(
             events_in_service_and_timespan.len(),
@@ -756,7 +762,8 @@ mod tests {
                 DateTime::from_timestamp_millis(start_ts).unwrap(),
                 DateTime::from_timestamp_millis(end_ts).unwrap(),
             )
-            .await;
+            .await
+            .unwrap();
         assert_eq!(events_in_service_with_no_users.len(), 0);
     }
 
@@ -808,7 +815,8 @@ mod tests {
                 DateTime::from_timestamp_millis(start_ts).unwrap(),
                 DateTime::from_timestamp_millis(end_ts).unwrap(),
             )
-            .await;
+            .await
+            .unwrap();
 
         assert_eq!(res.len(), 1);
         assert_eq!(res[0].id, service_event.id);

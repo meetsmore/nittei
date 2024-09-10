@@ -54,12 +54,11 @@ impl IAccountIntegrationRepo for PostgresAccountIntegrationRepo {
         )
         .execute(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Unable to insert account integration: {:?}. DB returned error: {:?}",
                 integration, e
             );
-            e
         })?;
         Ok(())
     }
@@ -76,12 +75,11 @@ impl IAccountIntegrationRepo for PostgresAccountIntegrationRepo {
         )
         .fetch_all(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Unable to query account integrations for account: {:?}. DB returned error: {:?}",
                 account_id, e
             );
-            e
         })?;
         Ok(integrations.into_iter().map(|i| i.into()).collect())
     }

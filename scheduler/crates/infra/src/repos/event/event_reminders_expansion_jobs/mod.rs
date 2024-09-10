@@ -7,7 +7,10 @@ pub use postgres::PostgresEventReminderGenerationJobsRepo;
 #[async_trait::async_trait]
 pub trait IEventRemindersGenerationJobsRepo: Send + Sync {
     async fn bulk_insert(&self, jobs: &[EventRemindersExpansionJob]) -> anyhow::Result<()>;
-    async fn delete_all_before(&self, before: DateTime<Utc>) -> Vec<EventRemindersExpansionJob>;
+    async fn delete_all_before(
+        &self,
+        before: DateTime<Utc>,
+    ) -> anyhow::Result<Vec<EventRemindersExpansionJob>>;
 }
 
 #[cfg(test)]
@@ -26,7 +29,7 @@ mod tests {
 
     #[tokio::test]
     async fn crud() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let account = Account::default();
         ctx.repos.accounts.insert(&account).await.unwrap();
         let user = User::new(account.id.clone(), None);
@@ -110,7 +113,8 @@ mod tests {
             .repos
             .event_reminders_generation_jobs
             .delete_all_before(jobs[1].timestamp)
-            .await;
+            .await
+            .unwrap();
         assert_eq!(delete_res.len(), 2);
         assert_eq!(delete_res[0], jobs[0]);
         assert_eq!(delete_res[1], jobs[1]);

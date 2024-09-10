@@ -49,6 +49,8 @@ impl Schedule {
     pub fn set_rules(&mut self, rules: &[ScheduleRule]) {
         let now = Utc::now();
         let min_date = now - Duration::days(2);
+
+        #[allow(clippy::unwrap_used)]
         let max_date = (now + Duration::days(365 * 5))
             .with_month(1)
             .unwrap()
@@ -240,6 +242,8 @@ impl ScheduleRule {
             self.intervals.splice(10.., Vec::new());
         }
         // earliest start first
+        // TODO: to fix
+        #[allow(clippy::unwrap_used)]
         self.intervals
             .sort_by(|i1, i2| i1.start.partial_cmp(&i2.start).unwrap());
 
@@ -269,6 +273,8 @@ impl ScheduleRule {
 
         let mut remove_intervals = remove_intervals.keys().copied().collect::<Vec<_>>();
         // largest index first
+        // TODO: to fix
+        #[allow(clippy::unwrap_used)]
         remove_intervals.sort_by(|i1, i2| i2.partial_cmp(i1).unwrap());
         for index in remove_intervals {
             self.intervals.remove(index);

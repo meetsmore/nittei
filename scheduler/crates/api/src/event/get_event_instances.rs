@@ -65,6 +65,7 @@ pub struct GetEventInstancesUseCase {
 
 #[derive(Debug)]
 pub enum UseCaseError {
+    InternalError,
     NotFound(String, ID),
     InvalidTimespan,
 }
@@ -72,6 +73,7 @@ pub enum UseCaseError {
 impl From<UseCaseError> for NettuError {
     fn from(e: UseCaseError) -> Self {
         match e {
+            UseCaseError::InternalError => Self::InternalError,
             UseCaseError::InvalidTimespan => {
                 Self::BadClientData("The provided start_ts and end_ts is invalid".into())
             }
@@ -98,13 +100,21 @@ impl UseCase for GetEventInstancesUseCase {
     const NAME: &'static str = "GetEventInstances";
 
     async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
-        let e = ctx.repos.events.find(&self.event_id).await;
+        let e = ctx
+            .repos
+            .events
+            .find(&self.event_id)
+            .await
+            .map_err(|_| UseCaseError::InternalError)?;
         match e {
             Some(event) if self.user_id == event.user_id => {
                 let calendar = match ctx.repos.calendars.find(&event.calendar_id).await {
-                    Some(cal) => cal,
-                    None => {
+                    Ok(Some(cal)) => cal,
+                    Ok(None) => {
                         return Err(UseCaseError::NotFound("Calendar".into(), event.calendar_id))
+                    }
+                    Err(_) => {
+                        return Err(UseCaseError::InternalError);
                     }
                 };
 

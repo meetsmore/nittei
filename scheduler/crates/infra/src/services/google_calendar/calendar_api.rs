@@ -182,7 +182,7 @@ impl GoogleCalendarRestApi {
     ) -> anyhow::Result<T> {
         match self
             .client
-            .put(&format!("{}/{}", GOOGLE_API_BASE_URL, path))
+            .put(format!("{}/{}", GOOGLE_API_BASE_URL, path))
             .header("authorization", format!("Bearer {}", self.access_token))
             .json(body)
             .send()
@@ -212,7 +212,7 @@ impl GoogleCalendarRestApi {
     ) -> anyhow::Result<T> {
         match self
             .client
-            .post(&format!("{}/{}", GOOGLE_API_BASE_URL, path))
+            .post(format!("{}/{}", GOOGLE_API_BASE_URL, path))
             .header("authorization", format!("Bearer {}", self.access_token))
             .json(body)
             .send()
@@ -238,7 +238,7 @@ impl GoogleCalendarRestApi {
     async fn get<T: for<'de> Deserialize<'de>>(&self, path: String) -> anyhow::Result<T> {
         match self
             .client
-            .get(&format!("{}/{}", GOOGLE_API_BASE_URL, path))
+            .get(format!("{}/{}", GOOGLE_API_BASE_URL, path))
             .header("authorization", format!("Bearer {}", self.access_token))
             .send()
             .await
@@ -263,7 +263,7 @@ impl GoogleCalendarRestApi {
     async fn delete<T: for<'de> Deserialize<'de>>(&self, path: String) -> anyhow::Result<T> {
         match self
             .client
-            .delete(&format!("{}/{}", GOOGLE_API_BASE_URL, path))
+            .delete(format!("{}/{}", GOOGLE_API_BASE_URL, path))
             .header("authorization", format!("Bearer {}", self.access_token))
             .send()
             .await

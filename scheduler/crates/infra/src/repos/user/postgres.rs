@@ -1,3 +1,5 @@
+use std::convert::{TryFrom, TryInto};
+
 use nettu_scheduler_domain::{User, ID};
 use serde_json::Value;
 use sqlx::{
@@ -28,13 +30,14 @@ struct UserRaw {
     metadata: Value,
 }
 
-impl From<UserRaw> for User {
-    fn from(e: UserRaw) -> Self {
-        Self {
+impl TryFrom<UserRaw> for User {
+    type Error = anyhow::Error;
+    fn try_from(e: UserRaw) -> anyhow::Result<Self> {
+        Ok(Self {
             id: e.user_uid.into(),
             account_id: e.account_uid.into(),
-            metadata: serde_json::from_value(e.metadata).unwrap(),
-        }
+            metadata: serde_json::from_value(e.metadata)?,
+        })
     }
 }
 
@@ -53,12 +56,11 @@ impl IUserRepo for PostgresUserRepo {
         )
         .execute(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Unable to insert user: {:?}. DB returned error: {:?}",
                 user, e
             );
-            e
         })?;
 
         Ok(())
@@ -79,18 +81,17 @@ impl IUserRepo for PostgresUserRepo {
         )
         .execute(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Unable to save user: {:?}. DB returned error: {:?}",
                 user, e
             );
-            e
         })?;
         Ok(())
     }
 
     #[instrument]
-    async fn delete(&self, user_id: &ID) -> Option<User> {
+    async fn delete(&self, user_id: &ID) -> anyhow::Result<Option<User>> {
         let res = sqlx::query_as!(
             UserRaw,
             r#"
@@ -102,20 +103,18 @@ impl IUserRepo for PostgresUserRepo {
         )
         .fetch_optional(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Delete user with id: {} failed. DB returned error: {:?}",
                 user_id, e
             );
-            e
-        })
-        .ok()?;
+        })?;
 
-        res.map(|user| user.into())
+        res.map(|user| user.try_into()).transpose()
     }
 
     #[instrument]
-    async fn find(&self, user_id: &ID) -> Option<User> {
+    async fn find(&self, user_id: &ID) -> anyhow::Result<Option<User>> {
         let res = sqlx::query_as!(
             UserRaw,
             r#"
@@ -126,20 +125,18 @@ impl IUserRepo for PostgresUserRepo {
         )
         .fetch_optional(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Find user with user_id: {} failed. DB returned error: {:?}",
                 user_id, e
             );
-            e
-        })
-        .ok()?;
+        })?;
 
-        res.map(|user| user.into())
+        res.map(|user| user.try_into()).transpose()
     }
 
     #[instrument]
-    async fn find_many(&self, user_ids: &[ID]) -> Vec<User> {
+    async fn find_many(&self, user_ids: &[ID]) -> anyhow::Result<Vec<User>> {
         let user_ids = user_ids.iter().map(|id| *id.as_ref()).collect::<Vec<_>>();
 
         let users: Vec<UserRaw> = sqlx::query_as!(
@@ -152,20 +149,22 @@ impl IUserRepo for PostgresUserRepo {
         )
         .fetch_all(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Find users with user_ids: {:?} failed. DB returned error: {:?}",
                 user_ids, e
             );
-            e
-        })
-        .unwrap_or_default();
+        })?;
 
-        users.into_iter().map(|u| u.into()).collect()
+        users.into_iter().map(|u| u.try_into()).collect()
     }
 
     #[instrument]
-    async fn find_by_account_id(&self, user_id: &ID, account_id: &ID) -> Option<User> {
+    async fn find_by_account_id(
+        &self,
+        user_id: &ID,
+        account_id: &ID,
+    ) -> anyhow::Result<Option<User>> {
         let res = sqlx::query_as!(
             UserRaw,
             r#"
@@ -178,20 +177,18 @@ impl IUserRepo for PostgresUserRepo {
         )
         .fetch_optional(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Find user with user_id: {} failed. DB returned error: {:?}",
                 user_id, e
             );
-            e
-        })
-        .ok()?;
+        })?;
 
-        res.map(|user| user.into())
+        res.map(|user| user.try_into()).transpose()
     }
 
     #[instrument]
-    async fn find_by_metadata(&self, query: MetadataFindQuery) -> Vec<User> {
+    async fn find_by_metadata(&self, query: MetadataFindQuery) -> anyhow::Result<Vec<User>> {
         let users: Vec<UserRaw> = sqlx::query_as!(
             UserRaw,
             r#"
@@ -207,15 +204,13 @@ impl IUserRepo for PostgresUserRepo {
         )
         .fetch_all(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Find users by metadata: {:?} failed. DB returned error: {:?}",
                 query, e
             );
-            e
-        })
-        .unwrap_or_default();
+        })?;
 
-        users.into_iter().map(|u| u.into()).collect()
+        users.into_iter().map(|u| u.try_into()).collect()
     }
 }

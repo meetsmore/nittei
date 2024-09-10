@@ -58,9 +58,13 @@ impl GoogleCalendarProvider {
             for (_, calendar_busy) in res.calendars {
                 for instance in calendar_busy.busy {
                     let instance = EventInstance {
+                        // TODO: to fix
+                        #[allow(clippy::unwrap_used)]
                         start_time: DateTime::parse_from_rfc3339(&instance.start.to_string())
                             .unwrap()
                             .with_timezone(&Utc),
+                        // TODO: to fix
+                        #[allow(clippy::unwrap_used)]
                         end_time: DateTime::parse_from_rfc3339(&instance.end.to_string())
                             .unwrap()
                             .with_timezone(&Utc),

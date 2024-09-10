@@ -68,13 +68,13 @@ struct CreateScheduleUseCase {
 #[derive(Debug)]
 enum UseCaseError {
     UserNotFound(ID),
-    Storage,
+    StorageError,
 }
 
 impl From<UseCaseError> for NettuError {
     fn from(e: UseCaseError) -> Self {
         match e {
-            UseCaseError::Storage => Self::InternalError,
+            UseCaseError::StorageError => Self::InternalError,
             UseCaseError::UserNotFound(user_id) => {
                 Self::NotFound(format!("The user with id: {}, was not found.", user_id))
             }
@@ -100,11 +100,9 @@ impl UseCase for CreateScheduleUseCase {
             .repos
             .users
             .find_by_account_id(&self.user_id, &self.account_id)
-            .await;
-        if user.is_none() {
-            return Err(UseCaseError::UserNotFound(self.user_id.clone()));
-        }
-        let user = user.unwrap();
+            .await
+            .map_err(|_| UseCaseError::StorageError)?
+            .ok_or_else(|| UseCaseError::UserNotFound(self.user_id.clone()))?;
 
         let mut schedule = Schedule::new(user.id, user.account_id, &self.timezone);
         if let Some(rules) = &self.rules {
@@ -117,7 +115,7 @@ impl UseCase for CreateScheduleUseCase {
         let res = ctx.repos.schedules.insert(&schedule).await;
         match res {
             Ok(_) => Ok(UseCaseRes { schedule }),
-            Err(_) => Err(UseCaseError::Storage),
+            Err(_) => Err(UseCaseError::StorageError),
         }
     }
 }

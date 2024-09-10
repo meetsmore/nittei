@@ -94,7 +94,13 @@ impl UseCase for DeleteEventUseCase {
 
     // TODO: use only one db call
     async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
-        let e = match ctx.repos.events.find(&self.event_id).await {
+        let event = ctx
+            .repos
+            .events
+            .find(&self.event_id)
+            .await
+            .map_err(|_| UseCaseError::StorageError)?;
+        let e = match event {
             Some(e) if e.user_id == self.user.id => e,
             _ => return Err(UseCaseError::NotFound(self.event_id.clone())),
         };
@@ -140,10 +146,15 @@ impl DeleteEventUseCase {
             return;
         }
 
-        let user = match ctx.repos.users.find(&e.user_id).await {
-            Some(u) => u,
-            None => {
+        let user = ctx.repos.users.find(&e.user_id).await;
+        let user = match user {
+            Ok(Some(u)) => u,
+            Ok(None) => {
                 error!("Unable to find user when deleting sync events");
+                return;
+            }
+            Err(e) => {
+                error!("Unable to find user when deleting sync events {:?}", e);
                 return;
             }
         };

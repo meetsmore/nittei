@@ -53,6 +53,7 @@ impl Config {
                     "The given PORT: {} is not valid, falling back to the default port: {}.",
                     port, default_port
                 );
+                #[allow(clippy::unwrap_used)]
                 default_port.parse::<usize>().unwrap()
             }
         };

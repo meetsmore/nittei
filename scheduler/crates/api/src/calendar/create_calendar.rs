@@ -68,6 +68,7 @@ struct CreateCalendarUseCase {
 
 #[derive(Debug)]
 enum UseCaseError {
+    InternalError,
     UserNotFound,
     StorageError,
 }
@@ -75,6 +76,7 @@ enum UseCaseError {
 impl From<UseCaseError> for NettuError {
     fn from(e: UseCaseError) -> Self {
         match e {
+            UseCaseError::InternalError => Self::InternalError,
             UseCaseError::StorageError => Self::InternalError,
             UseCaseError::UserNotFound => {
                 Self::NotFound("The requested user was not found.".to_string())
@@ -92,7 +94,14 @@ impl UseCase for CreateCalendarUseCase {
     const NAME: &'static str = "CreateCalendar";
 
     async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
-        let user = match ctx.repos.users.find(&self.user_id).await {
+        let user = ctx
+            .repos
+            .users
+            .find(&self.user_id)
+            .await
+            .map_err(|_| UseCaseError::InternalError)?;
+
+        let user = match user {
             Some(user) if user.account_id == self.account_id => user,
             _ => return Err(UseCaseError::UserNotFound),
         };

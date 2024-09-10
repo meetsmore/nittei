@@ -26,6 +26,8 @@ impl From<BusyCalendarRaw> for BusyCalendar {
         match &e.provider[..] {
             "google" => BusyCalendar::Google(e.calendar_id),
             "outlook" => BusyCalendar::Outlook(e.calendar_id),
+            // TODO: to fix
+            #[allow(clippy::unwrap_used)]
             "nettu" => BusyCalendar::Nettu(e.calendar_id.parse().unwrap()),
             _ => unreachable!("Invalid provider"),
         }

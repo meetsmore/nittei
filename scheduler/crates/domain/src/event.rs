@@ -81,13 +81,17 @@ impl CalendarEvent {
             Some(recurrence) => {
                 let rrule_options =
                     recurrence.get_parsed_options(self.start_time, calendar_settings);
-                let options = rrule_options.get_rrule().first().unwrap();
-                if (options.get_count().unwrap_or(0) > 0) || options.get_until().is_some() {
-                    let expand = self.expand(None, calendar_settings);
-                    self.end_time = expand
-                        .last()
-                        .map(|l| l.end_time)
-                        .unwrap_or(DateTime::<Utc>::MIN_UTC);
+                let options = rrule_options.get_rrule().first();
+                if let Some(options) = options {
+                    if (options.get_count().unwrap_or(0) > 0) || options.get_until().is_some() {
+                        let expand = self.expand(None, calendar_settings);
+                        self.end_time = expand
+                            .last()
+                            .map(|l| l.end_time)
+                            .unwrap_or(DateTime::<Utc>::MIN_UTC);
+                    } else {
+                        self.end_time = DateTime::<Utc>::MAX_UTC;
+                    }
                 } else {
                     self.end_time = DateTime::<Utc>::MAX_UTC;
                 }
@@ -116,17 +120,19 @@ impl CalendarEvent {
     }
 
     pub fn get_rrule_set(&self, calendar_settings: &CalendarSettings) -> Option<RRuleSet> {
-        self.recurrence.clone().map(|recurrence| {
+        if let Some(recurrence) = self.recurrence.clone() {
             let rrule_options = recurrence.get_parsed_options(self.start_time, calendar_settings);
             let tzid = rrule_options.get_dt_start().timezone();
             let mut rrule_set = RRuleSet::new(*rrule_options.get_dt_start());
             for exdate in &self.exdates {
                 rrule_set = rrule_set.exdate(exdate.with_timezone(&tzid));
             }
-            let rrule = rrule_options.get_rrule().first().unwrap();
+            let rrule = rrule_options.get_rrule().first()?;
             rrule_set = rrule_set.rrule(rrule.clone());
-            rrule_set
-        })
+            Some(rrule_set)
+        } else {
+            None
+        }
     }
 
     pub fn expand(
@@ -139,6 +145,8 @@ impl CalendarEvent {
                 let rrule_options =
                     recurrence.get_parsed_options(self.start_time, calendar_settings);
                 let tzid = rrule_options.get_dt_start().timezone();
+                // TODO: to fix
+                #[allow(clippy::unwrap_used)]
                 let rrule_set = self.get_rrule_set(calendar_settings).unwrap();
 
                 let instances = match timespan {

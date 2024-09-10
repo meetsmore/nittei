@@ -53,12 +53,14 @@ pub struct GetMultipleFreeBusyResponse(pub HashMap<ID, VecDeque<EventInstance>>)
 
 #[derive(Debug)]
 pub enum UseCaseError {
+    InternalError,
     InvalidTimespan,
 }
 
 impl From<UseCaseError> for NettuError {
     fn from(e: UseCaseError) -> Self {
         match e {
+            UseCaseError::InternalError => Self::InternalError,
             UseCaseError::InvalidTimespan => {
                 Self::BadClientData("The provided start_ts and end_ts is invalid".into())
             }
@@ -85,7 +87,10 @@ impl UseCase for GetMultipleFreeBusyUseCase {
         //     return Err(UseCaseError::InvalidTimespan);
         // }
 
-        let calendars = self.get_calendars_from_user_ids(ctx).await;
+        let calendars = self
+            .get_calendars_from_user_ids(ctx)
+            .await
+            .map_err(|_| UseCaseError::InternalError)?;
 
         let busy_event_instances = self
             .get_event_instances_from_calendars(&timespan, ctx, calendars)
@@ -96,16 +101,28 @@ impl UseCase for GetMultipleFreeBusyUseCase {
 }
 
 impl GetMultipleFreeBusyUseCase {
-    async fn get_calendars_from_user_ids(&self, ctx: &NettuContext) -> Vec<Calendar> {
-        join_all(
+    async fn get_calendars_from_user_ids(
+        &self,
+        ctx: &NettuContext,
+    ) -> anyhow::Result<Vec<Calendar>> {
+        let calendars: Vec<anyhow::Result<Vec<Calendar>>> = join_all(
             self.user_ids
                 .iter()
                 .map(|user_id| ctx.repos.calendars.find_by_user(user_id)),
         )
         .await
         .into_iter()
-        .flatten()
-        .collect()
+        .collect();
+
+        let mut all_calendars = Vec::new();
+        for res in calendars {
+            match res {
+                Ok(cals) => all_calendars.extend(cals),
+                Err(_) => return Err(anyhow::anyhow!("Internal error")),
+            }
+        }
+
+        Ok(all_calendars)
     }
 
     async fn get_event_instances_from_calendars(
@@ -166,6 +183,8 @@ impl GetMultipleFreeBusyUseCase {
         events
             .into_iter()
             .map(|event| {
+                // TODO: to fix
+                #[allow(clippy::unwrap_used)]
                 let calendar = calendars_lookup
                     .get(&event.calendar_id.to_string())
                     .unwrap();
@@ -187,7 +206,7 @@ mod test {
     #[actix_web::main]
     #[test]
     async fn multiple_freebusy_works() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let account = Account::default();
         ctx.repos.accounts.insert(&account).await.unwrap();
         let user = User::new(account.id.clone(), None);

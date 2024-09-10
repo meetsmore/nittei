@@ -66,13 +66,15 @@ impl UseCase for DeleteUserUseCase {
 
     async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
         let user = match ctx.repos.users.find(&self.user_id).await {
-            Some(u) if u.account_id == self.account.id => {
+            Ok(Some(u)) if u.account_id == self.account.id => {
                 match ctx.repos.users.delete(&self.user_id).await {
-                    Some(u) => u,
-                    None => return Err(UseCaseError::StorageError),
+                    Ok(Some(u)) => u,
+                    Ok(None) => return Err(UseCaseError::StorageError),
+                    Err(_) => return Err(UseCaseError::StorageError),
                 }
             }
-            _ => return Err(UseCaseError::UserNotFound(self.user_id.clone())),
+            Ok(_) => return Err(UseCaseError::UserNotFound(self.user_id.clone())),
+            Err(_) => return Err(UseCaseError::StorageError),
         };
 
         Ok(UseCaseRes { user })

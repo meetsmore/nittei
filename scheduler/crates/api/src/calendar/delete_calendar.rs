@@ -50,6 +50,7 @@ pub async fn delete_calendar_controller(
 
 #[derive(Debug)]
 pub enum UseCaseError {
+    InternalError,
     NotFound(ID),
     UnableToDelete,
 }
@@ -57,6 +58,7 @@ pub enum UseCaseError {
 impl From<UseCaseError> for NettuError {
     fn from(e: UseCaseError) -> Self {
         match e {
+            UseCaseError::InternalError => Self::InternalError,
             UseCaseError::NotFound(calendar_id) => Self::NotFound(format!(
                 "The calendar with id: {}, was not found.",
                 calendar_id
@@ -81,7 +83,12 @@ impl UseCase for DeleteCalendarUseCase {
     const NAME: &'static str = "DeleteCalendar";
 
     async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
-        let calendar = ctx.repos.calendars.find(&self.calendar_id).await;
+        let calendar = ctx
+            .repos
+            .calendars
+            .find(&self.calendar_id)
+            .await
+            .map_err(|_| UseCaseError::InternalError)?;
         match calendar {
             Some(calendar) if calendar.user_id == self.user_id => ctx
                 .repos

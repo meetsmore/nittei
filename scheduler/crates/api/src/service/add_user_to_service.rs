@@ -55,6 +55,7 @@ struct UseCaseRes {
 
 #[derive(Debug)]
 enum UseCaseError {
+    InternalError,
     ServiceNotFound,
     UserNotFound,
     UserAlreadyInService,
@@ -64,6 +65,7 @@ enum UseCaseError {
 impl From<UseCaseError> for NettuError {
     fn from(e: UseCaseError) -> Self {
         match e {
+            UseCaseError::InternalError => Self::InternalError,
             UseCaseError::ServiceNotFound => Self::NotFound("The requested service was not found".into()),
             UseCaseError::UserNotFound => Self::NotFound("The specified user was not found".into()),
             UseCaseError::UserAlreadyInService => Self::Conflict("The specified user is already registered on the service, can not add the user more than once.".into()),
@@ -86,14 +88,16 @@ impl UseCase for AddUserToServiceUseCase {
             .users
             .find_by_account_id(&self.user_id, &self.account.id)
             .await
+            .map_err(|_| UseCaseError::InternalError)?
             .is_none()
         {
             return Err(UseCaseError::UserNotFound);
         }
 
         let service = match ctx.repos.services.find(&self.service_id).await {
-            Some(service) if service.account_id == self.account.id => service,
-            _ => return Err(UseCaseError::ServiceNotFound),
+            Ok(Some(service)) if service.account_id == self.account.id => service,
+            Ok(_) => return Err(UseCaseError::ServiceNotFound),
+            Err(_) => return Err(UseCaseError::InternalError),
         };
 
         let mut user_resource =
@@ -135,6 +139,7 @@ pub struct ServiceResourceUpdate {
 
 #[derive(Debug)]
 pub enum UpdateServiceResourceError {
+    InternalError,
     InvalidBuffer,
     CalendarNotOwnedByUser(String),
     ScheduleNotOwnedByUser(String),
@@ -144,6 +149,7 @@ pub enum UpdateServiceResourceError {
 impl UpdateServiceResourceError {
     pub fn to_nettu_error(&self) -> NettuError {
         match self {
+            Self::InternalError => NettuError::InternalError,
             Self::InvalidBuffer => {
                 NettuError::BadClientData("The provided buffer was invalid, it should be between 0 and 12 hours specified in minutes.".into())
             }
@@ -170,20 +176,26 @@ pub async fn update_resource_values(
         match availability {
             TimePlan::Calendar(id) => {
                 match ctx.repos.calendars.find(id).await {
-                    Some(cal) if cal.user_id == user_resource.user_id => {}
-                    _ => {
+                    Ok(Some(cal)) if cal.user_id == user_resource.user_id => {}
+                    Ok(_) => {
                         return Err(UpdateServiceResourceError::CalendarNotOwnedByUser(
                             id.to_string(),
                         ));
                     }
+                    Err(_) => {
+                        return Err(UpdateServiceResourceError::InternalError);
+                    }
                 };
             }
             TimePlan::Schedule(id) => match ctx.repos.schedules.find(id).await {
-                Some(schedule) if schedule.user_id == user_resource.user_id => {}
-                _ => {
+                Ok(Some(schedule)) if schedule.user_id == user_resource.user_id => {}
+                Ok(_) => {
                     return Err(UpdateServiceResourceError::ScheduleNotOwnedByUser(
                         id.to_string(),
                     ))
+                }
+                Err(_) => {
+                    return Err(UpdateServiceResourceError::InternalError);
                 }
             },
             _ => (),

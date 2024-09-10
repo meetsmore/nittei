@@ -66,7 +66,12 @@ impl UseCase for DeleteServiceUseCase {
     const NAME: &'static str = "DeleteService";
 
     async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
-        let res = ctx.repos.services.find(&self.service_id).await;
+        let res = ctx
+            .repos
+            .services
+            .find(&self.service_id)
+            .await
+            .map_err(|_| UseCaseError::StorageError)?;
         match res {
             Some(service) if service.account_id == self.account.id => {
                 ctx.repos

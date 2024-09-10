@@ -76,12 +76,11 @@ impl IServiceUserRepo for PostgresServiceUserRepo {
         )
         .execute(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Unable to insert service user: {:?}. DB returned error: {:?}",
                 user, e
             );
-            e
         })?;
 
         Ok(())
@@ -117,19 +116,18 @@ impl IServiceUserRepo for PostgresServiceUserRepo {
         )
         .execute(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Unable to save service user: {:?}. DB returned error: {:?}",
                 user, e
             );
-            e
         })?;
 
         Ok(())
     }
 
     #[instrument]
-    async fn find(&self, service_id: &ID, user_id: &ID) -> Option<ServiceResource> {
+    async fn find(&self, service_id: &ID, user_id: &ID) -> anyhow::Result<Option<ServiceResource>> {
         // https://github.com/launchbadge/sqlx/issues/367
         let res: Option<ServiceUserRaw> = sqlx::query_as(
             r#"
@@ -144,21 +142,19 @@ impl IServiceUserRepo for PostgresServiceUserRepo {
         .bind(user_id.as_ref())
         .fetch_optional(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Find service user for service id: {:?} and user id: {:?} failed. DB returned error: {:?}",
                 service_id,  user_id, e
             );
 
-            e
-        })
-        .ok()?;
+        })?;
 
-        res.map(|s_user| s_user.into())
+        Ok(res.map(|s_user| s_user.into()))
     }
 
     #[instrument]
-    async fn find_by_user(&self, user_id: &ID) -> Vec<ServiceResource> {
+    async fn find_by_user(&self, user_id: &ID) -> anyhow::Result<Vec<ServiceResource>> {
         // https://github.com/launchbadge/sqlx/issues/367
         let service_users: Vec<ServiceUserRaw> = sqlx::query_as(
             r#"
@@ -172,15 +168,14 @@ impl IServiceUserRepo for PostgresServiceUserRepo {
         .bind(user_id.as_ref())
         .fetch_all(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Find services by user id: {:?} failed. DB returned error: {:?}",
                 user_id, e
             );
-            e
-        })
-        .unwrap_or_default();
-        service_users.into_iter().map(|u| u.into()).collect()
+        })?;
+
+        Ok(service_users.into_iter().map(|u| u.into()).collect())
     }
 
     #[instrument]
@@ -195,7 +190,13 @@ impl IServiceUserRepo for PostgresServiceUserRepo {
             user_id.as_ref()
         )
         .execute(&self.pool)
-        .await?;
+        .await
+        .inspect_err(|e| {
+            error!(
+                "Delete service_user_busy_calendars for service id: {:?} and user id: {:?} failed. DB returned error: {:?}",
+                service_id, user_id, e
+            );
+        })?;
 
         sqlx::query!(
             r#"
@@ -208,12 +209,11 @@ impl IServiceUserRepo for PostgresServiceUserRepo {
         )
         .execute(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Delete service user for service id: {:?} and user id: {:?} failed. DB returned error: {:?}",
                 service_id, user_id, e
             );
-            e
         })?;
         Ok(())
     }

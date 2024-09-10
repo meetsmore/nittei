@@ -41,12 +41,14 @@ struct UseCaseRes {
 
 #[derive(Debug)]
 enum UseCaseError {
+    InternalError,
     UserNotFound(ID),
 }
 
 impl From<UseCaseError> for NettuError {
     fn from(e: UseCaseError) -> Self {
         match e {
+            UseCaseError::InternalError => Self::InternalError,
             UseCaseError::UserNotFound(id) => {
                 Self::NotFound(format!("A user with id: {}, was not found.", id))
             }
@@ -64,8 +66,9 @@ impl UseCase for GetUserUseCase {
 
     async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
         let user = match ctx.repos.users.find(&self.user_id).await {
-            Some(u) if u.account_id == self.account.id => u,
-            _ => return Err(UseCaseError::UserNotFound(self.user_id.clone())),
+            Ok(Some(u)) if u.account_id == self.account.id => u,
+            Ok(_) => return Err(UseCaseError::UserNotFound(self.user_id.clone())),
+            Err(_) => return Err(UseCaseError::InternalError),
         };
 
         Ok(UseCaseRes { user })

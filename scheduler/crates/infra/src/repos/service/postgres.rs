@@ -1,3 +1,5 @@
+use std::convert::{TryFrom, TryInto};
+
 use nettu_scheduler_domain::{Service, ServiceWithUsers, ID};
 use serde_json::Value;
 use sqlx::{
@@ -38,30 +40,32 @@ struct ServiceWithUsersRaw {
     metadata: Value,
 }
 
-impl From<ServiceRaw> for Service {
-    fn from(e: ServiceRaw) -> Self {
-        Self {
+impl TryFrom<ServiceRaw> for Service {
+    type Error = anyhow::Error;
+    fn try_from(e: ServiceRaw) -> anyhow::Result<Self> {
+        Ok(Self {
             id: e.service_uid.into(),
             account_id: e.account_uid.into(),
-            multi_person: serde_json::from_value(e.multi_person).unwrap(),
-            metadata: serde_json::from_value(e.metadata).unwrap(),
-        }
+            multi_person: serde_json::from_value(e.multi_person)?,
+            metadata: serde_json::from_value(e.metadata)?,
+        })
     }
 }
 
-impl From<ServiceWithUsersRaw> for ServiceWithUsers {
-    fn from(e: ServiceWithUsersRaw) -> Self {
+impl TryFrom<ServiceWithUsersRaw> for ServiceWithUsers {
+    type Error = anyhow::Error;
+    fn try_from(e: ServiceWithUsersRaw) -> anyhow::Result<Self> {
         let users: Vec<ServiceUserRaw> = match e.users {
             Some(json) => serde_json::from_value(json).unwrap_or_default(),
             None => Vec::new(),
         };
-        Self {
+        Ok(Self {
             id: e.service_uid.into(),
             account_id: e.account_uid.into(),
             users: users.into_iter().map(|u| u.into()).collect(),
-            multi_person: serde_json::from_value(e.multi_person).unwrap(),
-            metadata: serde_json::from_value(e.metadata).unwrap(),
-        }
+            multi_person: serde_json::from_value(e.multi_person)?,
+            metadata: serde_json::from_value(e.metadata)?,
+        })
     }
 }
 
@@ -81,12 +85,11 @@ impl IServiceRepo for PostgresServiceRepo {
         )
         .execute(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Unable to insert service: {:?}. DB returned error: {:?}",
                 service, e
             );
-            e
         })?;
 
         Ok(())
@@ -107,20 +110,19 @@ impl IServiceRepo for PostgresServiceRepo {
         )
         .execute(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Unable to save service: {:?}. DB returned error: {:?}",
                 service, e
             );
-            e
         })?;
 
         Ok(())
     }
 
     #[instrument]
-    async fn find(&self, service_id: &ID) -> Option<Service> {
-        let res: Option<ServiceRaw> = sqlx::query_as!(
+    async fn find(&self, service_id: &ID) -> anyhow::Result<Option<Service>> {
+        sqlx::query_as!(
             ServiceRaw,
             r#"
             SELECT * FROM services AS s
@@ -130,21 +132,20 @@ impl IServiceRepo for PostgresServiceRepo {
         )
         .fetch_optional(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Find service with id: {:?} failed. DB returned error: {:?}",
                 service_id, e
             );
-            e
-        })
-        .ok()?;
-
-        res.map(|service| service.into())
+        })?
+        .map(|service| service.try_into())
+        .transpose()
     }
 
     #[instrument]
-    async fn find_with_users(&self, service_id: &ID) -> Option<ServiceWithUsers> {
-        let res: Option<ServiceWithUsersRaw> = sqlx::query_as(
+    async fn find_with_users(&self, service_id: &ID) -> anyhow::Result<Option<ServiceWithUsers>> {
+        sqlx::query_as!(
+            ServiceWithUsersRaw,
             r#"
             SELECT s.*, jsonb_agg((su.*)) AS users FROM services AS s
             LEFT JOIN service_users AS su
@@ -152,20 +153,18 @@ impl IServiceRepo for PostgresServiceRepo {
             WHERE s.service_uid = $1
             GROUP BY s.service_uid
             "#,
+            service_id.as_ref()
         )
-        .bind(service_id.as_ref())
         .fetch_optional(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Find service with id: {:?} failed. DB returned error: {:?}",
                 service_id, e
             );
-            e
-        })
-        .ok()?;
-
-        res.map(|service| service.into())
+        })?
+        .map(|service| service.try_into())
+        .transpose()
     }
 
     #[instrument]
@@ -179,19 +178,19 @@ impl IServiceRepo for PostgresServiceRepo {
         )
         .execute(&self.pool)
         .await
-        .map(|_| ())
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Delete service with id: {:?} failed. DB returned error: {:?}",
                 service_id, e
             );
-            anyhow::Error::new(e)
         })
+        .map_err(Into::into)
+        .map(|_| ())
     }
 
     #[instrument]
-    async fn find_by_metadata(&self, query: MetadataFindQuery) -> Vec<Service> {
-        let services: Vec<ServiceRaw> = sqlx::query_as!(
+    async fn find_by_metadata(&self, query: MetadataFindQuery) -> anyhow::Result<Vec<Service>> {
+        sqlx::query_as!(
             ServiceRaw,
             r#"
             SELECT * FROM services AS s
@@ -206,15 +205,14 @@ impl IServiceRepo for PostgresServiceRepo {
         )
         .fetch_all(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Find services by metadata: {:?} failed. DB returned error: {:?}",
                 query, e
             );
-            e
-        })
-        .unwrap_or_default();
-
-        services.into_iter().map(|s| s.into()).collect()
+        })?
+        .into_iter()
+        .map(|s| s.try_into())
+        .collect()
     }
 }

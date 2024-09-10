@@ -14,8 +14,11 @@ pub fn is_valid_date(datestr: &str) -> anyhow::Result<(i32, u32, u32)> {
         return Err(anyhow::Error::msg(datestr));
     }
 
+    #[allow(clippy::unwrap_used)]
     let year = year.unwrap();
+    #[allow(clippy::unwrap_used)]
     let month = month.unwrap();
+    #[allow(clippy::unwrap_used)]
     let day = day.unwrap();
     if !(1970..=2100).contains(&year) || !(1..=12).contains(&month) {
         return Err(anyhow::Error::msg(datestr));
