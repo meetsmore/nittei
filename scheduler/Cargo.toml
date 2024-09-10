@@ -24,8 +24,6 @@ nittei_infra = { path = "./crates/infra" }
 
 anyhow = "1.0"
 
-anyhow = "1.0"
-
 actix-web = "4.8"
 
 tokio = { version = "1", features = ["full"] }
