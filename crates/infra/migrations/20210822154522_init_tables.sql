@@ -7,10 +7,6 @@ CREATE DOMAIN ext_calendar_provider AS TEXT NOT NULL CHECK (VALUE in ('google', 
 
 COMMENT ON DOMAIN ext_calendar_provider IS 'external calendar provider names that are supported by nittei';
 
-CREATE DOMAIN event_status AS TEXT NOT NULL CHECK (VALUE in ('confirmed', 'tentative', 'cancelled'));
-
-COMMENT ON DOMAIN event_status IS 'possible status on the events that are supported by nittei';
-
 CREATE DOMAIN entity_version AS BIGINT DEFAULT 1 NOT NULL CHECK (VALUE > 0);
 
 COMMENT ON DOMAIN entity_version IS 'standard column for entity version';
@@ -94,7 +90,7 @@ CREATE TABLE IF NOT EXISTS calendar_events (
     description text,
     location text,
     all_day boolean NOT NULL,
-    status event_status NOT NULL,
+    status text NOT NULL,
     start_time TIMESTAMPTZ NOT NULL,
     duration BIGINT NOT NULL,
     end_time TIMESTAMPTZ NOT NULL,
