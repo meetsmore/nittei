@@ -184,15 +184,6 @@ impl GetMultipleFreeBusyUseCase {
             instances.extend(expanded_events);
         }
         Ok(instances)
-        // events
-        //     .into_iter()
-        //     .map(|event| {
-        //         let calendar = calendars_lookup.get(&event.calendar_id.to_string())?;
-        //         event.expand(Some(timespan), &calendar.settings)
-        //     })
-        //     .filter(|instances| !instances.is_empty())
-        //     .flat_map(|instances| CompatibleInstances::new(instances).inner())
-        //     .collect()?
     }
 }
 
