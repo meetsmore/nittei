@@ -11,8 +11,7 @@ RUN apt update \
   && apt clean \
   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN --mount=type=bind,source=src,target=/app/${APP_NAME}/src \
-  --mount=type=bind,source=.sqlx,target=/app/${APP_NAME}/.sqlx \
+RUN --mount=type=bind,source=bins,target=/app/${APP_NAME}/bins \
   --mount=type=bind,source=crates,target=/app/${APP_NAME}/crates \
   --mount=type=bind,source=clients,target=/app/${APP_NAME}/clients \
   --mount=type=bind,source=Cargo.toml,target=Cargo.toml \

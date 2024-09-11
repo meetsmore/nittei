@@ -30,13 +30,11 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            scheduler/target/
+            target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Generate code coverage
         run: |
-          cd scheduler
-
           # https://github.com/xd009642/tarpaulin/issues/756
           cargo install cargo-tarpaulin --version 0.18.0-alpha3 || true
 

@@ -304,9 +304,10 @@ async fn test_crud_account() {
     assert_eq!(account.account.settings.webhook.unwrap().url, webhook_url);
 
     // Setting pub jwt key
-    let key =
-        String::from_utf8(std::fs::read("./crates/api/config/test_public_rsa_key.crt").unwrap())
-            .unwrap();
+    let key = String::from_utf8(
+        std::fs::read("../../crates/api/config/test_public_rsa_key.crt").unwrap(),
+    )
+    .unwrap();
     admin_client
         .account
         .set_account_pub_key(Some(key.clone()))

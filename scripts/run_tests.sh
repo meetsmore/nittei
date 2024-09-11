@@ -1,6 +1,6 @@
 #! /bin/bash
 
-# Script to run all the (Rust) tests of the scheduler project
+# Script to run all the (Rust) tests
 # It launches a temporary PostgreSQL container, runs the migrations, runs the tests and then stops and removes the container
 
 # Function to clean up the containers
@@ -45,7 +45,7 @@ RANDOM_NAME="pg_test_$(date +%s)"
 
 LABEL="nittei_testing=true"
 
-cd scheduler && cargo build --workspace
+cargo build --workspace
 
 # Launch the resource reaper (like testcontainers)
 docker run -d --name ryuk --rm -v /var/run/docker.sock:/var/run/docker.sock -e RYUK_VERBOSE=true -e RYUK_PORT=8080 -p 8080:8080 testcontainers/ryuk:0.8.1 >/dev/null 2>&1
@@ -63,10 +63,10 @@ TIMEOUT=60
 NC_PID=$!
 
 # Launch a PG container
-docker run --rm -d -l ${LABEL} --name $RANDOM_NAME -p $PORT:5432 -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=scheduler postgres:13 >/dev/null 2>&1
+docker run --rm -d -l ${LABEL} --name $RANDOM_NAME -p $PORT:5432 -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=nittei postgres:13 >/dev/null 2>&1
 
 # Set the DATABASE_URL environment variable
-export DATABASE_URL="postgres://postgres:postgres@localhost:${PORT}/scheduler"
+export DATABASE_URL="postgres://postgres:postgres@localhost:${PORT}/nittei"
 
 # Wait for PostgreSQL to be ready
 RETRIES=5

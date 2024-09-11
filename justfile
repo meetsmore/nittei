@@ -18,20 +18,20 @@ setup: _setup_db _setup_client_node
 
 # Setup database + execute migrations
 _setup_db:
-	docker compose -f scheduler/integrations/docker-compose.yml up -d
-	cd scheduler/crates/infra && sqlx migrate run
+	docker compose -f integrations/docker-compose.yml up -d
+	cd crates/infra && sqlx migrate run
 
 # Setup Javascript client - run `pnpm install`
 _setup_client_node:
-	cd scheduler/clients/javascript && pnpm install
+	cd clients/javascript && pnpm install
 
 # Dev
 dev: _setup_db
-	cd scheduler && cargo watch -- cargo run
+	cargo watch -- cargo run
 
 # Prepare offline SQLx
 prepare_sqlx:
-	cd scheduler && cargo sqlx prepare --workspace
+	cd crates/infra && cargo sqlx prepare
 
 # Run the tests on a temporary DB container
 test test_name="":
@@ -39,14 +39,14 @@ test test_name="":
 
 # Lint
 lint: _setup_db
-	cd scheduler && cargo fmt
-	cd scheduler && cargo clippy --verbose
+	cargo fmt
+	cargo clippy --verbose
 
 # Check unused dependencies
 check-unused: _setup_db
-	cd scheduler && cargo udeps --all-targets
+	cargo udeps --all-targets
 
 # Check for outdated dependencies
 check-update: _setup_db
-	cd scheduler && cargo outdated -wR
-	cd scheduler && cargo update --dry-run
+	cargo outdated -wR
+	cargo update --dry-run

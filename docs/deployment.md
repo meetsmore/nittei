@@ -5,11 +5,10 @@ Use the docker image: `ghcr/meetsmore/nittei`.
 Or build from source:
 
 ```bash
-cd scheduler
 cargo run --release
 ```
 
-Then set up a postgres db with the init script specified [here](../scheduler/crates/infra/migrations/dbinit.sql).
+Then set up a postgres db with the init script specified [here](../crates/infra/migrations/dbinit.sql).
 Lastly provide the following environment variables to the `nittei` server:
 
 ```bash
