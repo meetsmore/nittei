@@ -1,7 +1,7 @@
 use chrono::{TimeDelta, Utc};
 use futures::future;
-use nettu_scheduler_domain::{Calendar, CalendarEvent, EventRemindersExpansionJob, Reminder};
-use nettu_scheduler_infra::NettuContext;
+use nittei_domain::{Calendar, CalendarEvent, EventRemindersExpansionJob, Reminder};
+use nittei_infra::NitteiContext;
 use tracing::error;
 
 use crate::shared::usecase::UseCase;
@@ -37,7 +37,7 @@ async fn create_event_reminders(
     event: &CalendarEvent,
     calendar: &Calendar,
     version: i64,
-    ctx: &NettuContext,
+    ctx: &NitteiContext,
 ) -> Result<(), UseCaseError> {
     let timestamp_now_millis = ctx.sys.get_timestamp();
     let threshold_millis = timestamp_now_millis + TimeDelta::milliseconds(61 * 1000); // Now + 61 seconds
@@ -154,7 +154,7 @@ impl<'a> UseCase for SyncEventRemindersUseCase<'a> {
 
     const NAME: &'static str = "SyncEventReminders";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         match &self.request {
             SyncEventRemindersTrigger::EventModified(calendar_event, op) => {
                 let version = match op {
@@ -228,7 +228,7 @@ impl<'a> UseCase for SyncEventRemindersUseCase<'a> {
     }
 }
 
-async fn generate_event_reminders_job(event: CalendarEvent, ctx: &NettuContext) {
+async fn generate_event_reminders_job(event: CalendarEvent, ctx: &NitteiContext) {
     let calendar = match ctx.repos.calendars.find(&event.calendar_id).await {
         Ok(Some(cal)) => cal,
         Ok(None) => return,

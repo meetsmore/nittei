@@ -1,6 +1,6 @@
 mod postgres;
 
-use nettu_scheduler_domain::{Service, ServiceWithUsers, ID};
+use nittei_domain::{Service, ServiceWithUsers, ID};
 pub use postgres::PostgresServiceRepo;
 
 use super::shared::query_structs::MetadataFindQuery;
@@ -17,7 +17,7 @@ pub trait IServiceRepo: Send + Sync {
 
 #[cfg(test)]
 mod tests {
-    use nettu_scheduler_domain::{Account, Metadata, Service, ServiceResource, TimePlan, User};
+    use nittei_domain::{Account, Metadata, Service, ServiceResource, TimePlan, User};
 
     use crate::setup_context;
 

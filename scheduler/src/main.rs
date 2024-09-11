@@ -1,7 +1,7 @@
 mod telemetry;
 
-use nettu_scheduler_api::Application;
-use nettu_scheduler_infra::setup_context;
+use nittei_api::Application;
+use nittei_infra::setup_context;
 use telemetry::init_subscriber;
 
 #[tokio::main]

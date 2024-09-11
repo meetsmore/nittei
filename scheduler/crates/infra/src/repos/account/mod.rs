@@ -1,6 +1,6 @@
 mod postgres;
 
-use nettu_scheduler_domain::{Account, ID};
+use nittei_domain::{Account, ID};
 pub use postgres::PostgresAccountRepo;
 
 #[async_trait::async_trait]
@@ -15,7 +15,7 @@ pub trait IAccountRepo: Send + Sync {
 
 #[cfg(test)]
 mod tests {
-    use nettu_scheduler_domain::{Account, Entity, PEMKey};
+    use nittei_domain::{Account, Entity, PEMKey};
 
     use crate::setup_context;
 

@@ -1,10 +1,10 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use nettu_scheduler_api_structs::get_schedule::*;
-use nettu_scheduler_domain::{Schedule, ID};
-use nettu_scheduler_infra::NettuContext;
+use nittei_api_structs::get_schedule::*;
+use nittei_domain::{Schedule, ID};
+use nittei_infra::NitteiContext;
 
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{
         auth::{account_can_modify_schedule, protect_account_route, protect_route},
         usecase::{execute, UseCase},
@@ -14,8 +14,8 @@ use crate::{
 pub async fn get_schedule_admin_controller(
     http_req: HttpRequest,
     path: web::Path<PathParams>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
     let schedule = account_can_modify_schedule(&account, &path.schedule_id, &ctx).await?;
 
@@ -26,14 +26,14 @@ pub async fn get_schedule_admin_controller(
     execute(usecase, &ctx)
         .await
         .map(|schedule| HttpResponse::Ok().json(APIResponse::new(schedule)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 pub async fn get_schedule_controller(
     http_req: HttpRequest,
     req: web::Path<PathParams>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let (_user, _policy) = protect_route(&http_req, &ctx).await?;
 
     let usecase = GetScheduleUseCase {
@@ -43,7 +43,7 @@ pub async fn get_schedule_controller(
     execute(usecase, &ctx)
         .await
         .map(|schedule| HttpResponse::Ok().json(APIResponse::new(schedule)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 #[derive(Debug)]
@@ -57,7 +57,7 @@ enum UseCaseError {
     NotFound(ID),
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::InternalError => Self::InternalError,
@@ -77,7 +77,7 @@ impl UseCase for GetScheduleUseCase {
 
     const NAME: &'static str = "GetSchedule";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         let schedule = ctx
             .repos
             .schedules

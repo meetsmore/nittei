@@ -1,4 +1,4 @@
-use nettu_scheduler_domain::{BusyCalendar, ID};
+use nittei_domain::{BusyCalendar, ID};
 use sqlx::{FromRow, PgPool};
 use tracing::{error, instrument};
 
@@ -28,7 +28,7 @@ impl From<BusyCalendarRaw> for BusyCalendar {
             "outlook" => BusyCalendar::Outlook(e.calendar_id),
             // TODO: to fix
             #[allow(clippy::unwrap_used)]
-            "nettu" => BusyCalendar::Nettu(e.calendar_id.parse().unwrap()),
+            "nittei" => BusyCalendar::Nittei(e.calendar_id.parse().unwrap()),
             _ => unreachable!("Invalid provider"),
         }
     }
@@ -53,7 +53,7 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
         .await
         .map_err(|e| {
             error!(
-                "Unable to check if nettu busy calendar: {:?} exists. DB returned error: {:?}",
+                "Unable to check if nittei busy calendar: {:?} exists. DB returned error: {:?}",
                 input, e
             );
             e
@@ -103,7 +103,7 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
         .await
         .map_err(|e| {
             error!(
-                "Unable to insert nettu busy calendar: {:?}. DB returned error: {:?}",
+                "Unable to insert nittei busy calendar: {:?}. DB returned error: {:?}",
                 input, e
             );
             e
@@ -155,7 +155,7 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
         .await
         .map_err(|e| {
             error!(
-                "Delete nettu busy calendar: {:?} failed. DB returned error: {:?}",
+                "Delete nittei busy calendar: {:?} failed. DB returned error: {:?}",
                 input, e
             );
             e
@@ -201,7 +201,7 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
             FROM service_user_external_busy_calendars AS ext_c
             WHERE ext_c.service_uid = $1 AND ext_c.user_uid = $2
             UNION ALL
-            SELECT 'nettu' as provider, bc.calendar_uid::text as calendar_id
+            SELECT 'nittei' as provider, bc.calendar_uid::text as calendar_id
             FROM service_user_busy_calendars AS bc
             WHERE bc.service_uid = $1 AND bc.user_uid = $2
             "#,

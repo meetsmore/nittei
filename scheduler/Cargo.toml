@@ -1,9 +1,9 @@
 [package]
-name = "nettu_scheduler"
+name = "nittei"
 version = "0.1.0"
 authors = ["Fredrik Meringdal"]
 edition = "2018"
-default-run = "nettu_scheduler"
+default-run = "nittei"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -18,9 +18,9 @@ members = [
 ]
 
 [dependencies]
-nettu_scheduler_api = { path = "./crates/api" }
-nettu_scheduler_domain = { path = "./crates/domain" }
-nettu_scheduler_infra = { path = "./crates/infra" }
+nittei_api = { path = "./crates/api" }
+nittei_domain = { path = "./crates/domain" }
+nittei_infra = { path = "./crates/infra" }
 
 anyhow = "1.0"
 
@@ -53,7 +53,7 @@ chrono = "0.4.19"
 chrono-tz = "0.8.1"
 
 [dev-dependencies]
-nettu_scheduler_sdk = { path = "./clients/rust" }
+nittei_sdk = { path = "./clients/rust" }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

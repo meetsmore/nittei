@@ -1,4 +1,4 @@
-use nettu_scheduler_domain::{SyncedCalendar, ID};
+use nittei_domain::{SyncedCalendar, ID};
 use sqlx::{types::Uuid, FromRow, PgPool};
 use tracing::{error, instrument};
 

@@ -24,11 +24,11 @@ jobs:
         image: postgres:13
         env:
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: nettuscheduler
+          POSTGRES_DB: nittei
         ports:
           - 5432:5432
     env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost/nettuscheduler
+      DATABASE_URL: postgresql://postgres:postgres@localhost/nittei
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -85,11 +85,11 @@ jobs:
   #       image: postgres:13
   #       env:
   #         POSTGRES_PASSWORD: postgres
-  #         POSTGRES_DB: nettuscheduler
+  #         POSTGRES_DB: nittei
   #       ports:
   #         - 5432:5432
   #   env:
-  #     DATABASE_URL: postgresql://postgres:postgres@localhost/nettuscheduler
+  #     DATABASE_URL: postgresql://postgres:postgres@localhost/nittei
   #   steps:
   #     - name: Checkout
   #       uses: actions/checkout@v2

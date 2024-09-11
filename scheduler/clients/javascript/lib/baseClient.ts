@@ -10,7 +10,7 @@ import { ICredentials } from './helpers/credentials'
  * This client is used to centralize configuration needed for calling the API
  * It shouldn't be exposed to the end user
  */
-export abstract class NettuBaseClient {
+export abstract class NitteiBaseClient {
   constructor(private readonly axiosClient: AxiosInstance) {
     this.axiosClient = axiosClient
   }

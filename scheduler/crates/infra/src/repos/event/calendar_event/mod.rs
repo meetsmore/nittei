@@ -1,7 +1,7 @@
 mod postgres;
 
 use chrono::{DateTime, Utc};
-use nettu_scheduler_domain::{CalendarEvent, TimeSpan, ID};
+use nittei_domain::{CalendarEvent, TimeSpan, ID};
 pub use postgres::PostgresEventRepo;
 
 use crate::repos::shared::query_structs::MetadataFindQuery;
@@ -58,18 +58,9 @@ pub trait IEventRepo: Send + Sync {
 #[cfg(test)]
 mod tests {
     use chrono::{DateTime, Utc};
-    use nettu_scheduler_domain::{
-        Account,
-        Calendar,
-        CalendarEvent,
-        Entity,
-        Service,
-        TimeSpan,
-        User,
-        ID,
-    };
+    use nittei_domain::{Account, Calendar, CalendarEvent, Entity, Service, TimeSpan, User, ID};
 
-    use crate::{setup_context, NettuContext};
+    use crate::{setup_context, NitteiContext};
 
     fn generate_default_event(account_id: &ID, calendar_id: &ID, user_id: &ID) -> CalendarEvent {
         CalendarEvent {
@@ -81,7 +72,7 @@ mod tests {
     }
 
     struct TestContext {
-        ctx: NettuContext,
+        ctx: NitteiContext,
         account: Account,
         calendar: Calendar,
         user: User,
@@ -212,7 +203,7 @@ mod tests {
         service_id: Option<&ID>,
         start_time: DateTime<Utc>,
         end_time: DateTime<Utc>,
-        ctx: &NettuContext,
+        ctx: &NitteiContext,
     ) -> CalendarEvent {
         let mut event = generate_default_event(account_id, calendar_id, user_id);
         event.calendar_id = calendar_id.clone();
@@ -233,7 +224,7 @@ mod tests {
         user_id: &ID,
         service_id: &ID,
         created: i64,
-        ctx: &NettuContext,
+        ctx: &NitteiContext,
     ) -> CalendarEvent {
         let mut event = generate_default_event(account_id, calendar_id, user_id);
         event.calendar_id = calendar_id.clone();

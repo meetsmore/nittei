@@ -1,19 +1,19 @@
 import {
-  INettuClient,
-  type INettuUserClient,
-  NettuClient,
+  INitteiClient,
+  type INitteiUserClient,
+  NitteiClient,
   ScheduleRuleVariant,
   Weekday,
 } from '../lib'
 import { setupUserClient } from './helpers/fixtures'
 
 describe('Schedule API', () => {
-  let client: INettuUserClient
-  let unauthClient: INettuClient
+  let client: INitteiUserClient
+  let unauthClient: INitteiClient
   let userId: string
 
   beforeAll(async () => {
-    unauthClient = await NettuClient({})
+    unauthClient = await NitteiClient({})
     const data = await setupUserClient()
     client = data.userClient
     userId = data.userId

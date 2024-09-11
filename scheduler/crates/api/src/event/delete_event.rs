@@ -1,15 +1,15 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use nettu_scheduler_api_structs::delete_event::*;
-use nettu_scheduler_domain::{CalendarEvent, IntegrationProvider, User, ID};
-use nettu_scheduler_infra::{
+use nittei_api_structs::delete_event::*;
+use nittei_domain::{CalendarEvent, IntegrationProvider, User, ID};
+use nittei_infra::{
     google_calendar::GoogleCalendarProvider,
     outlook_calendar::OutlookCalendarProvider,
-    NettuContext,
+    NitteiContext,
 };
 use tracing::error;
 
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{
         auth::{
             account_can_modify_event,
@@ -25,8 +25,8 @@ use crate::{
 pub async fn delete_event_admin_controller(
     http_req: HttpRequest,
     path_params: web::Path<PathParams>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
     let e = account_can_modify_event(&account, &path_params.event_id, &ctx).await?;
     let user = account_can_modify_user(&account, &e.user_id, &ctx).await?;
@@ -39,14 +39,14 @@ pub async fn delete_event_admin_controller(
     execute(usecase, &ctx)
         .await
         .map(|event| HttpResponse::Ok().json(APIResponse::new(event)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 pub async fn delete_event_controller(
     http_req: HttpRequest,
     path_params: web::Path<PathParams>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let (user, policy) = protect_route(&http_req, &ctx).await?;
 
     let usecase = DeleteEventUseCase {
@@ -57,7 +57,7 @@ pub async fn delete_event_controller(
     execute_with_policy(usecase, &policy, &ctx)
         .await
         .map(|event| HttpResponse::Ok().json(APIResponse::new(event)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 #[derive(Debug)]
@@ -72,7 +72,7 @@ pub enum UseCaseError {
     StorageError,
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::StorageError => Self::InternalError,
@@ -93,7 +93,7 @@ impl UseCase for DeleteEventUseCase {
     const NAME: &'static str = "DeleteEvent";
 
     // TODO: use only one db call
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         let event = ctx
             .repos
             .events
@@ -124,7 +124,7 @@ impl PermissionBoundary for DeleteEventUseCase {
 }
 
 impl DeleteEventUseCase {
-    pub async fn delete_synced_events(&self, e: &CalendarEvent, ctx: &NettuContext) {
+    pub async fn delete_synced_events(&self, e: &CalendarEvent, ctx: &NitteiContext) {
         let synced_events = match ctx.repos.event_synced.find_by_event(&e.id).await {
             Ok(synced_events) => synced_events,
             Err(e) => {

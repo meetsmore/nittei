@@ -1,6 +1,6 @@
 mod postgres;
 
-use nettu_scheduler_domain::{BusyCalendar, IntegrationProvider, ID};
+use nittei_domain::{BusyCalendar, IntegrationProvider, ID};
 pub use postgres::PostgresServiceUseBusyCalendarRepo;
 
 #[derive(Debug, Clone)]
@@ -31,7 +31,7 @@ pub trait IServiceUserBusyCalendarRepo: Send + Sync {
 
 #[cfg(test)]
 mod tests {
-    use nettu_scheduler_domain::{
+    use nittei_domain::{
         Account,
         AccountIntegration,
         Calendar,
@@ -97,7 +97,7 @@ mod tests {
         let calendar = Calendar::new(&user.id, &account.id);
         assert!(ctx.repos.calendars.insert(&calendar).await.is_ok());
 
-        // Insert nettu busy calendar
+        // Insert nittei busy calendar
         let busy = BusyCalendarIdentifier {
             calendar_id: calendar.id.clone(),
             service_id: service.id.clone(),
@@ -138,7 +138,7 @@ mod tests {
             .await
             .expect("To check if busy calendar exists"));
 
-        // Insert nettu busy calendar that does not exist
+        // Insert nittei busy calendar that does not exist
         let bad_busy = BusyCalendarIdentifier {
             calendar_id: Default::default(),
             service_id: service.id.clone(),

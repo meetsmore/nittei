@@ -14,7 +14,7 @@ pub use system::ISys;
 use system::RealSys;
 
 #[derive(Clone)]
-pub struct NettuContext {
+pub struct NitteiContext {
     pub repos: Repos,
     pub config: Config,
     pub sys: Arc<dyn ISys>,
@@ -24,7 +24,7 @@ struct ContextParams {
     pub postgres_connection_string: String,
 }
 
-impl NettuContext {
+impl NitteiContext {
     async fn create(params: ContextParams) -> anyhow::Result<Self> {
         let repos = Repos::create_postgres(&params.postgres_connection_string).await?;
         Ok(Self {
@@ -36,8 +36,8 @@ impl NettuContext {
 }
 
 /// Will setup the infrastructure context given the environment
-pub async fn setup_context() -> anyhow::Result<NettuContext> {
-    NettuContext::create(ContextParams {
+pub async fn setup_context() -> anyhow::Result<NitteiContext> {
+    NitteiContext::create(ContextParams {
         postgres_connection_string: get_psql_connection_string()?,
     })
     .await

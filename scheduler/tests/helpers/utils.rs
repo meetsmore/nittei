@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use nettu_scheduler_sdk::User;
+use nittei_sdk::User;
 
 #[allow(dead_code)]
 pub fn format_datetime(dt: &DateTime<Utc>) -> String {

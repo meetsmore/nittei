@@ -1,4 +1,4 @@
-import { type APIResponse, NettuBaseClient } from './baseClient'
+import { type APIResponse, NitteiBaseClient } from './baseClient'
 import { UUID } from './domain'
 import type {
   CalendarEvent,
@@ -81,7 +81,7 @@ type EventReponse = {
  * Client for the events' endpoints
  * This is an admin client (usually backend)
  */
-export class NettuEventClient extends NettuBaseClient {
+export class NitteiEventClient extends NitteiBaseClient {
   public async update(
     eventId: UUID,
     data: UpdateCalendarEventReq
@@ -198,7 +198,7 @@ export class NettuEventClient extends NettuBaseClient {
  * Client for the event endpoints
  * This is an end user client (usually frontend)
  */
-export class NettuEventUserClient extends NettuBaseClient {
+export class NitteiEventUserClient extends NitteiBaseClient {
   public async update(
     eventId: UUID,
     data: UpdateCalendarEventReq

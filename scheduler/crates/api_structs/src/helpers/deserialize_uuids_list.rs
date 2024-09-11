@@ -1,6 +1,6 @@
 use std::fmt;
 
-use nettu_scheduler_domain::ID;
+use nittei_domain::ID;
 use serde::de;
 use uuid::Uuid;
 
@@ -51,7 +51,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use nettu_scheduler_domain::ID;
+    use nittei_domain::ID;
     use serde::Deserialize;
     use serde_urlencoded;
 

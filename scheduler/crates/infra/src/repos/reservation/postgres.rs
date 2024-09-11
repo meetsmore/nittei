@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use nettu_scheduler_domain::ID;
+use nittei_domain::ID;
 use sqlx::{types::Uuid, FromRow, PgPool};
 use tracing::{error, instrument};
 

@@ -174,5 +174,5 @@ pub struct ServiceWithUsers {
 pub enum BusyCalendar {
     Google(String),
     Outlook(String),
-    Nettu(ID),
+    Nittei(ID),
 }

@@ -1,4 +1,4 @@
-use nettu_scheduler_utils::create_random_secret;
+use nittei_utils::create_random_secret;
 use serde::{Deserialize, Serialize};
 
 use crate::{

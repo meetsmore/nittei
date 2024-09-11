@@ -1591,17 +1591,17 @@ dependencies = [
 ]
 
 [[package]]
-name = "nettu_scheduler"
+name = "nittei"
 version = "0.1.0"
 dependencies = [
  "actix-web",
  "anyhow",
  "chrono",
  "chrono-tz",
- "nettu_scheduler_api",
- "nettu_scheduler_domain",
- "nettu_scheduler_infra",
- "nettu_scheduler_sdk",
+ "nittei_api",
+ "nittei_domain",
+ "nittei_infra",
+ "nittei_sdk",
  "openssl-probe",
  "opentelemetry",
  "opentelemetry-datadog",
@@ -1614,7 +1614,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "nettu_scheduler_api"
+name = "nittei_api"
 version = "0.1.0"
 dependencies = [
  "actix-cors",
@@ -1626,9 +1626,9 @@ dependencies = [
  "chrono-tz",
  "futures",
  "jsonwebtoken",
- "nettu_scheduler_api_structs",
- "nettu_scheduler_domain",
- "nettu_scheduler_infra",
+ "nittei_api_structs",
+ "nittei_domain",
+ "nittei_infra",
  "rrule",
  "serde",
  "serial_test",
@@ -1639,19 +1639,19 @@ dependencies = [
 ]
 
 [[package]]
-name = "nettu_scheduler_api_structs"
+name = "nittei_api_structs"
 version = "0.3.1"
 dependencies = [
  "chrono",
  "chrono-tz",
- "nettu_scheduler_domain",
+ "nittei_domain",
  "serde",
  "serde_urlencoded",
  "uuid",
 ]
 
 [[package]]
-name = "nettu_scheduler_domain"
+name = "nittei_domain"
 version = "0.2.1"
 dependencies = [
  "anyhow",
@@ -1659,7 +1659,7 @@ dependencies = [
  "chrono-tz",
  "itertools 0.10.1",
  "jsonwebtoken",
- "nettu_scheduler_utils",
+ "nittei_utils",
  "rand",
  "rrule",
  "serde",
@@ -1670,7 +1670,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "nettu_scheduler_infra"
+name = "nittei_infra"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -1678,8 +1678,8 @@ dependencies = [
  "chrono",
  "chrono-tz",
  "futures",
- "nettu_scheduler_domain",
- "nettu_scheduler_utils",
+ "nittei_domain",
+ "nittei_utils",
  "reqwest 0.12.4",
  "serde",
  "serde_json",
@@ -1690,19 +1690,19 @@ dependencies = [
 ]
 
 [[package]]
-name = "nettu_scheduler_sdk"
+name = "nittei_sdk"
 version = "0.4.1"
 dependencies = [
  "chrono",
  "chrono-tz",
- "nettu_scheduler_api_structs",
- "nettu_scheduler_domain",
+ "nittei_api_structs",
+ "nittei_domain",
  "reqwest 0.12.4",
  "serde",
 ]
 
 [[package]]
-name = "nettu_scheduler_utils"
+name = "nittei_utils"
 version = "0.1.0"
 dependencies = [
  "rand",

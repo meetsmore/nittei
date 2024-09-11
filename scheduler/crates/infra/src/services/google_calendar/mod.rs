@@ -12,7 +12,7 @@ use calendar_api::{
     ListCalendarsResponse,
 };
 use chrono::{DateTime, Utc};
-use nettu_scheduler_domain::{
+use nittei_domain::{
     providers::google::GoogleCalendarAccessRole,
     CalendarEvent,
     CompatibleInstances,
@@ -22,7 +22,7 @@ use nettu_scheduler_domain::{
 use tracing::error;
 
 use super::FreeBusyProviderQuery;
-use crate::NettuContext;
+use crate::NitteiContext;
 
 // https://developers.google.com/calendar/v3/reference/events
 // `https://accounts.google.com/o/oauth2/v2/auth?access_type=offline&include_granted_scopes=true&prompt=consent&client_id=${CLIENT_ID}&redirect_uri=${redirect_uri}&response_type=code&scope=https://www.googleapis.com/auth/calendar&state=${state}`;
@@ -32,7 +32,7 @@ pub struct GoogleCalendarProvider {
 }
 
 impl GoogleCalendarProvider {
-    pub async fn new(user: &User, ctx: &NettuContext) -> Result<Self, ()> {
+    pub async fn new(user: &User, ctx: &NitteiContext) -> Result<Self, ()> {
         let access_token = match auth_provider::get_access_token(user, ctx).await {
             Some(token) => token,
             None => return Err(()),

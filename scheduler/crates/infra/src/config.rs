@@ -1,4 +1,4 @@
-use nettu_scheduler_utils::create_random_secret;
+use nittei_utils::create_random_secret;
 use tracing::{info, warn};
 
 #[derive(Debug, Clone)]

@@ -1,11 +1,11 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::{DateTime, Utc};
-use nettu_scheduler_api_structs::remove_service_event_intend::*;
-use nettu_scheduler_domain::{Account, ID};
-use nettu_scheduler_infra::NettuContext;
+use nittei_api_structs::remove_service_event_intend::*;
+use nittei_domain::{Account, ID};
+use nittei_infra::NitteiContext;
 
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{
         auth::protect_account_route,
         usecase::{execute, UseCase},
@@ -16,8 +16,8 @@ pub async fn remove_service_event_intend_controller(
     http_req: HttpRequest,
     query_params: web::Query<QueryParams>,
     mut path_params: web::Path<PathParams>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
 
     let query = query_params.0;
@@ -30,7 +30,7 @@ pub async fn remove_service_event_intend_controller(
     execute(usecase, &ctx)
         .await
         .map(|_| HttpResponse::Ok().json(APIResponse::default()))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 #[derive(Debug)]
@@ -49,7 +49,7 @@ enum UseCaseError {
     StorageError,
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::ServiceNotFound => {
@@ -68,7 +68,7 @@ impl UseCase for RemoveServiceEventIntendUseCase {
 
     const NAME: &'static str = "RemoveServiceEventIntend";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         match ctx.repos.services.find(&self.service_id).await {
             Ok(Some(s)) if s.account_id == self.account.id => (),
             Ok(_) => return Err(UseCaseError::ServiceNotFound),

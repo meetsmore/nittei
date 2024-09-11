@@ -1,4 +1,4 @@
-use nettu_scheduler_infra::run_migration;
+use nittei_infra::run_migration;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

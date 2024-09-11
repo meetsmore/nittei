@@ -1,10 +1,10 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use nettu_scheduler_api_structs::remove_integration::*;
-use nettu_scheduler_domain::{IntegrationProvider, User};
-use nettu_scheduler_infra::NettuContext;
+use nittei_api_structs::remove_integration::*;
+use nittei_domain::{IntegrationProvider, User};
+use nittei_infra::NitteiContext;
 
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{
         auth::{account_can_modify_user, protect_account_route, protect_route},
         usecase::{execute, UseCase},
@@ -14,8 +14,8 @@ use crate::{
 pub async fn remove_integration_admin_controller(
     http_req: HttpRequest,
     mut path: web::Path<PathParams>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
     let user = account_can_modify_user(&account, &path.user_id, &ctx).await?;
 
@@ -27,14 +27,14 @@ pub async fn remove_integration_admin_controller(
     execute(usecase, &ctx)
         .await
         .map(|res| HttpResponse::Ok().json(APIResponse::new(res.user)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 pub async fn remove_integration_controller(
     http_req: HttpRequest,
     mut path: web::Path<PathParams>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let (user, _) = protect_route(&http_req, &ctx).await?;
 
     let usecase = OAuthIntegrationUseCase {
@@ -45,7 +45,7 @@ pub async fn remove_integration_controller(
     execute(usecase, &ctx)
         .await
         .map(|res| HttpResponse::Ok().json(APIResponse::new(res.user)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 #[derive(Debug)]
@@ -65,7 +65,7 @@ pub enum UseCaseError {
     IntegrationNotFound,
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::StorageError => Self::InternalError,
@@ -83,7 +83,7 @@ impl UseCase for OAuthIntegrationUseCase {
 
     const NAME: &'static str = "RemoveIntegration";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         let user_integrations = ctx
             .repos
             .user_integrations

@@ -1,6 +1,6 @@
 mod postgres;
 
-use nettu_scheduler_domain::{SyncedCalendarEvent, ID};
+use nittei_domain::{SyncedCalendarEvent, ID};
 pub use postgres::PostgresEventSyncedRepo;
 
 #[async_trait::async_trait]
@@ -11,7 +11,7 @@ pub trait IEventSyncedRepo: Send + Sync {
 
 #[cfg(test)]
 mod tests {
-    use nettu_scheduler_domain::{
+    use nittei_domain::{
         Account,
         AccountIntegration,
         Calendar,

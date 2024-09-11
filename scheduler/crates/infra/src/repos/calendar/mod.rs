@@ -1,6 +1,6 @@
 mod postgres;
 
-use nettu_scheduler_domain::{Calendar, ID};
+use nittei_domain::{Calendar, ID};
 pub use postgres::PostgresCalendarRepo;
 
 use super::shared::query_structs::MetadataFindQuery;
@@ -18,7 +18,7 @@ pub trait ICalendarRepo: Send + Sync {
 
 #[cfg(test)]
 mod tests {
-    use nettu_scheduler_domain::{Account, Calendar, Entity, User};
+    use nittei_domain::{Account, Calendar, Entity, User};
 
     use crate::setup_context;
 

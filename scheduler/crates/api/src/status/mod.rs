@@ -1,8 +1,8 @@
 use actix_web::{web, HttpResponse};
-use nettu_scheduler_api_structs::get_service_health::*;
-use nettu_scheduler_infra::NettuContext;
+use nittei_api_structs::get_service_health::*;
+use nittei_infra::NitteiContext;
 
-async fn status(ctx: web::Data<NettuContext>) -> HttpResponse {
+async fn status(ctx: web::Data<NitteiContext>) -> HttpResponse {
     match ctx.repos.status.check_connection().await {
         Ok(_) => HttpResponse::Ok().json(APIResponse {
             message: "Ok!\r\n".into(),

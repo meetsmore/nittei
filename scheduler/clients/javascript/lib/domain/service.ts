@@ -54,12 +54,12 @@ export interface UserServiceResource {
 
 /**
  * Enum for the different provider for busy calendars
- * Nettu is the internal provider
+ * Nittei is the internal provider
  */
 export enum BusyCalendarProvider {
   Google = 'Google',
   Outlook = 'Outlook',
-  Nettu = 'Nettu', // TODO: Rename this
+  Nittei = 'Nittei',
 }
 
 /**

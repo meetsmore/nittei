@@ -1,7 +1,7 @@
 {
   "name": "@meetsmore/nittei-client",
   "version": "0.0.1",
-  "description": "The Nettu Scheduler Javascript library provides convenient access to the Nettu Scheduler API from server-side JavaScript applications or web applications",
+  "description": "The Nittei Javascript library provides convenient access to the Nittei API from server-side JavaScript applications or web applications",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc --p ./tsconfig.release.json",
@@ -18,7 +18,8 @@
     "registry": "https://npm.pkg.github.com"
   },
   "contributors": [
-    "Fredrik Meringdal <fredrik@nettu.no>"
+    "Fredrik Meringdal <fredrik@nettu.no>",
+    "Meetsmore"
   ],
   "files": [
     "dist/"

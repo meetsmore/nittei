@@ -1,4 +1,4 @@
-use nettu_scheduler_domain::{Schedule, Tz, ID};
+use nittei_domain::{Schedule, Tz, ID};
 use serde::{Deserialize, Serialize};
 
 use crate::dtos::ScheduleDTO;
@@ -18,7 +18,7 @@ impl ScheduleResponse {
 }
 
 pub mod create_schedule {
-    use nettu_scheduler_domain::{Metadata, ScheduleRule};
+    use nittei_domain::{Metadata, ScheduleRule};
 
     use super::*;
 
@@ -61,7 +61,7 @@ pub mod get_schedule {
 }
 
 pub mod update_schedule {
-    use nettu_scheduler_domain::{Metadata, ScheduleRule};
+    use nittei_domain::{Metadata, ScheduleRule};
 
     use super::*;
 

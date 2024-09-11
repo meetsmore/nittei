@@ -1,12 +1,12 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::Weekday;
 use chrono_tz::Tz;
-use nettu_scheduler_api_structs::update_calendar::{APIResponse, PathParams, RequestBody};
-use nettu_scheduler_domain::{Calendar, Metadata, User, ID};
-use nettu_scheduler_infra::NettuContext;
+use nittei_api_structs::update_calendar::{APIResponse, PathParams, RequestBody};
+use nittei_domain::{Calendar, Metadata, User, ID};
+use nittei_infra::NitteiContext;
 
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{
         auth::{
             account_can_modify_calendar,
@@ -21,10 +21,10 @@ use crate::{
 
 pub async fn update_calendar_admin_controller(
     http_req: HttpRequest,
-    ctx: web::Data<NettuContext>,
+    ctx: web::Data<NitteiContext>,
     path: web::Path<PathParams>,
     body: web::Json<RequestBody>,
-) -> Result<HttpResponse, NettuError> {
+) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
     let cal = account_can_modify_calendar(&account, &path.calendar_id, &ctx).await?;
     let user = account_can_modify_user(&account, &cal.user_id, &ctx).await?;
@@ -40,15 +40,15 @@ pub async fn update_calendar_admin_controller(
     execute(usecase, &ctx)
         .await
         .map(|calendar| HttpResponse::Ok().json(APIResponse::new(calendar)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 pub async fn update_calendar_controller(
     http_req: HttpRequest,
-    ctx: web::Data<NettuContext>,
+    ctx: web::Data<NitteiContext>,
     mut path: web::Path<PathParams>,
     body: web::Json<RequestBody>,
-) -> Result<HttpResponse, NettuError> {
+) -> Result<HttpResponse, NitteiError> {
     let (user, policy) = protect_route(&http_req, &ctx).await?;
 
     let usecase = UpdateCalendarUseCase {
@@ -62,7 +62,7 @@ pub async fn update_calendar_controller(
     execute_with_policy(usecase, &policy, &ctx)
         .await
         .map(|calendar| HttpResponse::Ok().json(APIResponse::new(calendar)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 #[derive(Debug)]
@@ -80,7 +80,7 @@ enum UseCaseError {
     StorageError,
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::StorageError => Self::InternalError,
@@ -97,7 +97,7 @@ impl UseCase for UpdateCalendarUseCase {
 
     const NAME: &'static str = "UpdateCalendar";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         let calendar = ctx
             .repos
             .calendars
@@ -138,8 +138,8 @@ impl PermissionBoundary for UpdateCalendarUseCase {
 
 #[cfg(test)]
 mod test {
-    use nettu_scheduler_domain::{Account, Calendar, User};
-    use nettu_scheduler_infra::setup_context;
+    use nittei_domain::{Account, Calendar, User};
+    use nittei_infra::setup_context;
 
     use super::*;
 

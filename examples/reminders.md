@@ -1,13 +1,13 @@
 ## Reminders
 
 Your server can receive reminders before calendar events in the form of webhooks.
-This means that `nettu scheduler` will not notify your users through other means like email,
+This means that `Nittei` will not notify your users through other means like email,
 phone etc. That is supposed to be done by your server (if needed) which owns the complete user resources.
 
 ```js
-import { NettuClient, Frequenzy } from "@nettu/scheduler-sdk";
+import { nitteiClient, Frequenzy } from "@meetsmore/nittei-client";
 
-const client = NettuClient({ apiKey: "YOUR_API_KEY" });
+const client = nitteiClient({ apiKey: "YOUR_API_KEY" });
 
 // Set webhook url
 const accountRes = await client.account.setWebhook("https://test.com/some_path");
@@ -44,7 +44,7 @@ await client.events.create(user.id, {
     }
 });
 
-// Your endpoint that Nettu Scheduler service will call
+// Your endpoint that nittei service will call
 //  req.body = {
 //      reminders: {
 //          event: CalendarEvent,
@@ -52,7 +52,7 @@ await client.events.create(user.id, {
 //      }[]
 //  }
 const webhookReceiverController = (req) => {
-    if(req.headers["nettu-scheduler-webhook-key"] !== key) return;
+    if(req.headers["nittei-scheduler-webhook-key"] !== key) return;
     // Handle reminder by sending email to participants or whatever your app needs to do
 
 }

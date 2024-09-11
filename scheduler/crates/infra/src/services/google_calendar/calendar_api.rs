@@ -1,7 +1,7 @@
 use std::{collections::HashMap, fmt};
 
 use chrono::{TimeZone, Utc};
-use nettu_scheduler_domain::{providers::google::*, CalendarEvent};
+use nittei_domain::{providers::google::*, CalendarEvent};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use tracing::error;

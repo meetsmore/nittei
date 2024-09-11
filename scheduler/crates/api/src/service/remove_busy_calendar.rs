@@ -1,10 +1,10 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use nettu_scheduler_api_structs::remove_busy_calendar::*;
-use nettu_scheduler_domain::{Account, BusyCalendar, IntegrationProvider, ID};
-use nettu_scheduler_infra::{BusyCalendarIdentifier, ExternalBusyCalendarIdentifier, NettuContext};
+use nittei_api_structs::remove_busy_calendar::*;
+use nittei_domain::{Account, BusyCalendar, IntegrationProvider, ID};
+use nittei_infra::{BusyCalendarIdentifier, ExternalBusyCalendarIdentifier, NitteiContext};
 
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{
         auth::protect_account_route,
         usecase::{execute, UseCase},
@@ -15,8 +15,8 @@ pub async fn remove_busy_calendar_controller(
     http_req: HttpRequest,
     mut path: web::Path<PathParams>,
     body: web::Json<RequestBody>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
 
     let body = body.0;
@@ -31,7 +31,7 @@ pub async fn remove_busy_calendar_controller(
     execute(usecase, &ctx)
         .await
         .map(|_| HttpResponse::Ok().json(APIResponse::from("Busy calendar added to service user")))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 #[derive(Debug)]
@@ -49,7 +49,7 @@ enum UseCaseError {
     BusyCalendarNotFound,
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::StorageError => Self::InternalError,
@@ -69,7 +69,7 @@ impl UseCase for RemoveBusyCalendarUseCase {
 
     const NAME: &'static str = "RemoveBusyCalendar";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         let user = ctx
             .repos
             .users
@@ -114,7 +114,7 @@ impl UseCase for RemoveBusyCalendarUseCase {
                     return Err(UseCaseError::BusyCalendarNotFound);
                 }
             }
-            BusyCalendar::Nettu(n_cal_id) => {
+            BusyCalendar::Nittei(n_cal_id) => {
                 let identifier = BusyCalendarIdentifier {
                     calendar_id: n_cal_id.clone(),
                     service_id: self.service_id.clone(),
@@ -160,7 +160,7 @@ impl UseCase for RemoveBusyCalendarUseCase {
                     .await
                     .map_err(|_| UseCaseError::StorageError)
             }
-            BusyCalendar::Nettu(n_cal_id) => {
+            BusyCalendar::Nittei(n_cal_id) => {
                 let identifier = BusyCalendarIdentifier {
                     calendar_id: n_cal_id.clone(),
                     service_id: self.service_id.clone(),

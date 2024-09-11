@@ -1,8 +1,8 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::{DateTime, Duration, TimeDelta, Utc};
 use get_service_bookingslots::GetServiceBookingSlotsUseCase;
-use nettu_scheduler_api_structs::create_service_event_intend::*;
-use nettu_scheduler_domain::{
+use nittei_api_structs::create_service_event_intend::*;
+use nittei_domain::{
     format_date,
     scheduling::{
         RoundRobinAlgorithm,
@@ -13,12 +13,12 @@ use nettu_scheduler_domain::{
     User,
     ID,
 };
-use nettu_scheduler_infra::NettuContext;
+use nittei_infra::NitteiContext;
 use tracing::warn;
 
 use super::get_service_bookingslots;
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{
         auth::protect_account_route,
         usecase::{execute, UseCase},
@@ -29,8 +29,8 @@ pub async fn create_service_event_intend_controller(
     http_req: HttpRequest,
     body: web::Json<RequestBody>,
     mut path: web::Path<PathParams>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     protect_account_route(&http_req, &ctx).await?;
 
     let body = body.0;
@@ -50,7 +50,7 @@ pub async fn create_service_event_intend_controller(
                 res.create_event_for_hosts,
             ))
         })
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 #[derive(Debug)]
@@ -75,7 +75,7 @@ enum UseCaseError {
     BookingSlotsQuery(get_service_bookingslots::UseCaseError),
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::UserNotAvailable => {
@@ -95,7 +95,7 @@ impl UseCase for CreateServiceEventIntendUseCase {
 
     const NAME: &'static str = "CreateServiceEventIntend";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         let start = self.timestamp;
         let start_date = format_date(&start);
         let day_after = start + Duration::days(1);

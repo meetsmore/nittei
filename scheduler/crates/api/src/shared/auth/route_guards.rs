@@ -1,12 +1,12 @@
 use actix_web::HttpRequest;
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
-use nettu_scheduler_domain::{Account, Calendar, CalendarEvent, Schedule, User, ID};
-use nettu_scheduler_infra::NettuContext;
+use nittei_domain::{Account, Calendar, CalendarEvent, Schedule, User, ID};
+use nittei_infra::NitteiContext;
 use serde::{Deserialize, Serialize};
 use tracing::log::warn;
 
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{auth::Policy, Guard},
 };
 
@@ -20,7 +20,7 @@ struct Claims {
     /// Issued at (as UTC timestamp)
     iat: usize,
     /// Subject (whom token refers tok)
-    nettu_scheduler_user_id: ID,
+    nittei_user_id: ID,
     /// The `Policy` that describes what `UseCase`s this `User` can perform
     scheduler_policy: Option<Policy>,
 }
@@ -36,7 +36,7 @@ fn parse_authtoken_header(token_header_value: &str) -> String {
 pub async fn auth_user_req(
     req: &HttpRequest,
     account: &Account,
-    ctx: &NettuContext,
+    ctx: &NitteiContext,
 ) -> anyhow::Result<Option<(User, Policy)>> {
     let token = req.headers().get("authorization");
     let token = match token {
@@ -52,9 +52,9 @@ pub async fn auth_user_req(
                 Ok(claims) => ctx
                     .repos
                     .users
-                    .find_by_account_id(&claims.nettu_scheduler_user_id, &account.id)
+                    .find_by_account_id(&claims.nittei_user_id, &account.id)
                     .await
-                    .map_err(|_| NettuError::InternalError)?
+                    .map_err(|_| NitteiError::InternalError)?
                     .map(|user| (user, claims.scheduler_policy.unwrap_or_default())),
                 Err(e) => {
                     warn!("Decode token error: {:?}", e);
@@ -70,18 +70,18 @@ pub async fn auth_user_req(
 /// Finds out which `Account` the client is associated with.
 pub async fn get_client_account(
     req: &HttpRequest,
-    ctx: &NettuContext,
+    ctx: &NitteiContext,
 ) -> anyhow::Result<Option<Account>> {
-    match get_nettu_account_header(req) {
+    match get_nittei_account_header(req) {
         Some(Ok(account_id)) => ctx.repos.accounts.find(&account_id).await,
         _ => Ok(None),
     }
 }
 
-pub fn get_nettu_account_header(req: &HttpRequest) -> Option<Result<ID, NettuError>> {
-    if let Some(account_id) = req.headers().get("nettu-account") {
-        let err = NettuError::UnidentifiableClient(format!(
-            "Malformed nettu account header provided: {:?}",
+pub fn get_nittei_account_header(req: &HttpRequest) -> Option<Result<ID, NitteiError>> {
+    if let Some(account_id) = req.headers().get("nittei-account") {
+        let err = NitteiError::UnidentifiableClient(format!(
+            "Malformed nittei account header provided: {:?}",
             account_id
         ));
 
@@ -113,23 +113,23 @@ fn decode_token(account: &Account, token: &str) -> anyhow::Result<Claims> {
 /// Protects routes that can be accessed by authenticated `User`s.
 pub async fn protect_route(
     req: &HttpRequest,
-    ctx: &NettuContext,
-) -> Result<(User, Policy), NettuError> {
+    ctx: &NitteiContext,
+) -> Result<(User, Policy), NitteiError> {
     let account = get_client_account(req, ctx)
         .await
-        .map_err(|_| NettuError::InternalError)?
+        .map_err(|_| NitteiError::InternalError)?
         .ok_or_else(|| {
-            NettuError::UnidentifiableClient(
+            NitteiError::UnidentifiableClient(
                 "Could not find out which account the client belongs to".into(),
             )
         })?;
     let res = auth_user_req(req, &account, ctx)
         .await
-        .map_err(|_| NettuError::InternalError)?;
+        .map_err(|_| NitteiError::InternalError)?;
 
     match res {
         Some(user_and_policy) => Ok(user_and_policy),
-        None => Err(NettuError::Unauthorized(
+        None => Err(NitteiError::Unauthorized(
             "Unable to find user from the given credentials".into(),
         )),
     }
@@ -138,19 +138,19 @@ pub async fn protect_route(
 /// Protects an `Account` admin route, like updating `AccountSettings`
 pub async fn protect_account_route(
     req: &HttpRequest,
-    ctx: &NettuContext,
-) -> Result<Account, NettuError> {
+    ctx: &NitteiContext,
+) -> Result<Account, NitteiError> {
     let api_key = match req.headers().get("x-api-key") {
         Some(api_key) => match api_key.to_str() {
             Ok(api_key) => api_key,
             Err(_) => {
-                return Err(NettuError::Unauthorized(
+                return Err(NitteiError::Unauthorized(
                     "Malformed api key provided".to_string(),
                 ))
             }
         },
         None => {
-            return Err(NettuError::Unauthorized(
+            return Err(NitteiError::Unauthorized(
                 "Unable to find api-key in x-api-key header".to_string(),
             ))
         }
@@ -160,20 +160,20 @@ pub async fn protect_account_route(
         .accounts
         .find_by_apikey(api_key)
         .await
-        .map_err(|_| NettuError::InternalError)?
+        .map_err(|_| NitteiError::InternalError)?
         .ok_or_else(|| {
-            NettuError::Unauthorized("Invalid api-key provided in x-api-key header".to_string())
+            NitteiError::Unauthorized("Invalid api-key provided in x-api-key header".to_string())
         })
 }
 
 /// Only checks which account the request is connected to.
 /// If it cannot decide from the request which account the
-/// client belongs to it will return `NettuError`
+/// client belongs to it will return `nitteiError`
 pub async fn protect_public_account_route(
     http_req: &HttpRequest,
-    ctx: &NettuContext,
-) -> Result<Account, NettuError> {
-    match get_nettu_account_header(http_req) {
+    ctx: &NitteiContext,
+) -> Result<Account, NitteiError> {
+    match get_nittei_account_header(http_req) {
         Some(res) => {
             let account_id = res?;
 
@@ -181,14 +181,14 @@ pub async fn protect_public_account_route(
                 .accounts
                 .find(&account_id)
                 .await
-                .map_err(|_| NettuError::InternalError)?
+                .map_err(|_| NitteiError::InternalError)?
                 .ok_or_else(|| {
-                    NettuError::UnidentifiableClient(
+                    NitteiError::UnidentifiableClient(
                         "Could not find out which account the client belongs to".into(),
                     )
                 })
         }
-        // No nettu-account header, then check if this is an admin client
+        // No nittei-account header, then check if this is an admin client
         None => protect_account_route(http_req, ctx).await,
     }
 }
@@ -198,15 +198,15 @@ pub async fn protect_public_account_route(
 pub async fn account_can_modify_user(
     account: &Account,
     user_id: &ID,
-    ctx: &NettuContext,
-) -> Result<User, NettuError> {
+    ctx: &NitteiContext,
+) -> Result<User, NitteiError> {
     match ctx.repos.users.find(user_id).await {
         Ok(Some(user)) if user.account_id == account.id => Ok(user),
-        Ok(_) => Err(NettuError::NotFound(format!(
+        Ok(_) => Err(NitteiError::NotFound(format!(
             "User with id: {} was not found",
             user_id
         ))),
-        Err(_) => Err(NettuError::InternalError),
+        Err(_) => Err(NitteiError::InternalError),
     }
 }
 
@@ -215,15 +215,15 @@ pub async fn account_can_modify_user(
 pub async fn account_can_modify_calendar(
     account: &Account,
     calendar_id: &ID,
-    ctx: &NettuContext,
-) -> Result<Calendar, NettuError> {
+    ctx: &NitteiContext,
+) -> Result<Calendar, NitteiError> {
     match ctx.repos.calendars.find(calendar_id).await {
         Ok(Some(cal)) if cal.account_id == account.id => Ok(cal),
-        Ok(_) => Err(NettuError::NotFound(format!(
+        Ok(_) => Err(NitteiError::NotFound(format!(
             "Calendar with id: {} was not found",
             calendar_id
         ))),
-        Err(_) => Err(NettuError::InternalError),
+        Err(_) => Err(NitteiError::InternalError),
     }
 }
 
@@ -232,15 +232,15 @@ pub async fn account_can_modify_calendar(
 pub async fn account_can_modify_event(
     account: &Account,
     event_id: &ID,
-    ctx: &NettuContext,
-) -> Result<CalendarEvent, NettuError> {
+    ctx: &NitteiContext,
+) -> Result<CalendarEvent, NitteiError> {
     match ctx.repos.events.find(event_id).await {
         Ok(Some(event)) if event.account_id == account.id => Ok(event),
-        Ok(_) => Err(NettuError::NotFound(format!(
+        Ok(_) => Err(NitteiError::NotFound(format!(
             "Calendar event with id: {} was not found",
             event_id
         ))),
-        Err(_) => Err(NettuError::InternalError),
+        Err(_) => Err(NitteiError::InternalError),
     }
 }
 
@@ -249,15 +249,15 @@ pub async fn account_can_modify_event(
 pub async fn account_can_modify_schedule(
     account: &Account,
     schedule_id: &ID,
-    ctx: &NettuContext,
-) -> Result<Schedule, NettuError> {
+    ctx: &NitteiContext,
+) -> Result<Schedule, NitteiError> {
     match ctx.repos.schedules.find(schedule_id).await {
         Ok(Some(schedule)) if schedule.account_id == account.id => Ok(schedule),
-        Ok(_) => Err(NettuError::NotFound(format!(
+        Ok(_) => Err(NitteiError::NotFound(format!(
             "Schedule with id: {} was not found",
             schedule_id
         ))),
-        Err(_) => Err(NettuError::InternalError),
+        Err(_) => Err(NitteiError::InternalError),
     }
 }
 
@@ -265,12 +265,12 @@ pub async fn account_can_modify_schedule(
 mod test {
     use actix_web::test::TestRequest;
     use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
-    use nettu_scheduler_domain::PEMKey;
-    use nettu_scheduler_infra::setup_context;
+    use nittei_domain::PEMKey;
+    use nittei_infra::setup_context;
 
     use super::*;
 
-    async fn setup_account(ctx: &NettuContext) -> Account {
+    async fn setup_account(ctx: &NitteiContext) -> Account {
         let account = get_account();
         ctx.repos.accounts.insert(&account).await.unwrap();
         account
@@ -286,7 +286,7 @@ mod test {
         let claims = Claims {
             exp,
             iat: 19,
-            nettu_scheduler_user_id: user_id,
+            nittei_user_id: user_id,
             scheduler_policy: None,
         };
         let enc_key = EncodingKey::from_rsa_pem(&priv_key).unwrap();
@@ -313,7 +313,7 @@ mod test {
         let token = get_token(false, user.id.clone());
 
         let req = TestRequest::default()
-            .insert_header(("nettu-account", account.id.to_string()))
+            .insert_header(("nittei-account", account.id.to_string()))
             .insert_header(("Authorization", format!("Bearer {}", token)))
             .to_http_request();
         let res = protect_route(&req, &ctx).await;
@@ -332,7 +332,7 @@ mod test {
         let token = get_token(false, user.id.clone());
 
         let req = TestRequest::default()
-            .insert_header(("nettu-account", account.id.to_string()))
+            .insert_header(("nittei-account", account.id.to_string()))
             .insert_header(("Authorization", format!("Bearer {}", token)))
             .to_http_request();
         let res = protect_route(&req, &ctx).await;
@@ -349,7 +349,7 @@ mod test {
         let token = get_token(true, user.id.clone());
 
         let req = TestRequest::default()
-            .insert_header(("nettu-account", account.id.to_string()))
+            .insert_header(("nittei-account", account.id.to_string()))
             .insert_header(("Authorization", format!("Bearer {}", token)))
             .to_http_request();
         let res = protect_route(&req, &ctx).await;
@@ -382,7 +382,7 @@ mod test {
         let token = get_token(true, user.id.clone());
 
         let req = TestRequest::default()
-            .insert_header(("nettu-account", account.id.to_string() + "s"))
+            .insert_header(("nittei-account", account.id.to_string() + "s"))
             .insert_header(("Authorization", format!("Bearer {}", token)))
             .to_http_request();
         let res = protect_route(&req, &ctx).await;
@@ -412,7 +412,7 @@ mod test {
         ctx.repos.users.insert(&user).await.unwrap();
 
         let req = TestRequest::default()
-            .insert_header(("nettu-account", account.id.to_string()))
+            .insert_header(("nittei-account", account.id.to_string()))
             .insert_header(("Authorization", "Bea"))
             .to_http_request();
         let res = protect_route(&req, &ctx).await;

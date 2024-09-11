@@ -74,7 +74,7 @@ impl Repos {
             .await?;
         info!("DB CHECKING CONNECTION ... [done]");
 
-        if std::env::var("NETTU_SKIP_MIGRATION").is_err() {
+        if std::env::var("nittei_SKIP_MIGRATION").is_err() {
             info!("DB EXECUTING MIGRATION ...");
             sqlx::migrate!().run(&pool).await?;
             info!("DB EXECUTING MIGRATION ... [done]");

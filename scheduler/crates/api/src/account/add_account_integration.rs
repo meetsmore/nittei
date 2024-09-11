@@ -1,10 +1,10 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use nettu_scheduler_api_structs::add_account_integration::{APIResponse, RequestBody};
-use nettu_scheduler_domain::{Account, AccountIntegration, IntegrationProvider};
-use nettu_scheduler_infra::NettuContext;
+use nittei_api_structs::add_account_integration::{APIResponse, RequestBody};
+use nittei_domain::{Account, AccountIntegration, IntegrationProvider};
+use nittei_infra::NitteiContext;
 
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{
         auth::protect_account_route,
         usecase::{execute, UseCase},
@@ -14,8 +14,8 @@ use crate::{
 pub async fn add_account_integration_controller(
     http_req: HttpRequest,
     body: web::Json<RequestBody>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
 
     let body = body.0;
@@ -30,7 +30,7 @@ pub async fn add_account_integration_controller(
     execute(usecase, &ctx)
         .await
         .map(|_| HttpResponse::Ok().json(APIResponse::from("Integration enabled for account")))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 #[derive(Debug, Clone)]
@@ -60,7 +60,7 @@ pub enum UseCaseError {
     IntegrationAlreadyExists,
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::StorageError => Self::InternalError,
@@ -85,7 +85,7 @@ impl UseCase for AddAccountIntegrationUseCase {
 
     const NAME: &'static str = "AddAccountIntegration";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         // TODO: check if it is possible to validate client id or client secret
 
         let acc_integrations = ctx
