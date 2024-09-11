@@ -145,9 +145,10 @@ impl CalendarEvent {
                 let rrule_options =
                     recurrence.get_parsed_options(self.start_time, calendar_settings);
                 let tzid = rrule_options.get_dt_start().timezone();
-                // TODO: to fix
-                #[allow(clippy::unwrap_used)]
-                let rrule_set = self.get_rrule_set(calendar_settings).unwrap();
+                let rrule_set = match self.get_rrule_set(calendar_settings) {
+                    Some(rrule_set) => rrule_set,
+                    None => return Vec::new(),
+                };
 
                 let instances = match timespan {
                     Some(timespan) => {
@@ -308,7 +309,7 @@ mod test {
             ..Default::default()
         });
         valid_rrules.push(RRuleOptions {
-            byweekday: Some(vec![WeekDay::new(Weekday::Tue)]),
+            byweekday: Some(vec![WeekDay::new(Weekday::Tue).unwrap()]),
             ..Default::default()
         });
         valid_rrules.push(RRuleOptions {

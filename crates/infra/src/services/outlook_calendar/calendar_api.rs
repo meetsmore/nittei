@@ -262,7 +262,7 @@ impl OutlookCalendarRestApi {
             })
     }
 
-    pub async fn freebusy(&self, body: &FreeBusyRequest) -> Result<CompatibleInstances, ()> {
+    pub async fn freebusy(&self, body: &FreeBusyRequest) -> anyhow::Result<CompatibleInstances> {
         let cal_futures = body
             .calendars
             .iter()
@@ -270,8 +270,6 @@ impl OutlookCalendarRestApi {
                 self.get::<CalendarViewResponse>(format!(
                     "me/calendars/{}/calendarView?startDateTime={}&endDateTime={}",
                     calendar_id,
-                    // format!("{}", Utc.timestamp_millis(body.time_min).format("%+")),
-                    // format!("{}", Utc.timestamp_millis(body.time_max).format("%+"))
                     body.time_min.to_rfc3339_opts(SecondsFormat::Secs, true),
                     body.time_max.to_rfc3339_opts(SecondsFormat::Secs, true),
                 ))
@@ -280,25 +278,32 @@ impl OutlookCalendarRestApi {
         let calendar_views = join_all(cal_futures)
             .await
             .into_iter()
-            .filter_map(|res| res.ok())
+            // Keep the error in the stream, propagate it instead of discarding with `filter_map`
+            .map(|res| res.map_err(anyhow::Error::from))
+            // Collect the result and propagate the first encountered error
+            .collect::<Result<Vec<_>, _>>()?
+            .into_iter()
             .flat_map(|view| {
                 view.value
                     .into_iter()
                     .filter(|e| matches!(e.show_as, OutlookCalendarEventShowAs::Busy))
-                    .map(|e| EventInstance {
-                        busy: true,
-                        // TODO: to fix
-                        #[allow(clippy::unwrap_used)]
-                        start_time: DateTime::from_timestamp_millis(e.start.get_timestamp_millis())
-                            .unwrap(),
-                        // TODO: to fix
-                        #[allow(clippy::unwrap_used)]
-                        end_time: DateTime::from_timestamp_millis(e.end.get_timestamp_millis())
-                            .unwrap(),
+                    .map(|e| {
+                        // Handle the error from date conversion and propagate it
+                        Ok(EventInstance {
+                            busy: true,
+                            start_time: DateTime::from_timestamp_millis(
+                                e.start.get_timestamp_millis(),
+                            )
+                            .ok_or_else(|| anyhow::Error::msg("Bad date"))?,
+                            end_time: DateTime::from_timestamp_millis(e.end.get_timestamp_millis())
+                                .ok_or_else(|| anyhow::Error::msg("Bad date"))?,
+                        })
                     })
-                    .collect::<Vec<_>>()
+                    // Flatten the `Result` and propagate any errors
+                    .collect::<Vec<Result<EventInstance, anyhow::Error>>>()
+                    .into_iter()
             })
-            .collect::<Vec<_>>();
+            .collect::<Result<Vec<_>, _>>()?;
         Ok(CompatibleInstances::new(calendar_views))
     }
 }

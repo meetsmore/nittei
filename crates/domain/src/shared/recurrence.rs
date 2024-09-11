@@ -226,10 +226,8 @@ impl WeekDay {
         self.weekday
     }
 
-    pub fn new(weekday: Weekday) -> Self {
-        // TODO: to fix
-        #[allow(clippy::unwrap_used)]
-        Self::create(weekday, None).unwrap()
+    pub fn new(weekday: Weekday) -> Option<Self> {
+        Self::create(weekday, None)
     }
 
     pub fn new_nth(weekday: Weekday, n: isize) -> Option<Self> {
@@ -270,7 +268,7 @@ impl FromStr for WeekDay {
             0..=2 => Err(e),
             3 => {
                 let wday = Weekday::from_str(day).map_err(|_| Malformed(day.to_string()))?;
-                Ok(WeekDay::new(wday))
+                Ok(WeekDay::new(wday).ok_or_else(|| Malformed(day.to_string()))?)
             }
             _ => {
                 let wday = Weekday::from_str(&day[day.len() - 3..])
@@ -329,11 +327,11 @@ mod test {
     fn parses_valid_weekday_str_correctly() {
         assert_eq!(
             "mon".parse::<WeekDay>().unwrap(),
-            WeekDay::new(Weekday::Mon)
+            WeekDay::new(Weekday::Mon).unwrap()
         );
         assert_eq!(
             "sun".parse::<WeekDay>().unwrap(),
-            WeekDay::new(Weekday::Sun)
+            WeekDay::new(Weekday::Sun).unwrap()
         );
         assert_eq!(
             "1mon".parse::<WeekDay>().unwrap(),
@@ -383,9 +381,9 @@ mod test {
 
     #[test]
     fn serializes_weekday() {
-        assert_eq!(WeekDay::new(Weekday::Mon).to_string(), "Mon");
-        assert_eq!(WeekDay::new(Weekday::Tue).to_string(), "Tue");
-        assert_eq!(WeekDay::new(Weekday::Sun).to_string(), "Sun");
+        assert_eq!(WeekDay::new(Weekday::Mon).unwrap().to_string(), "Mon");
+        assert_eq!(WeekDay::new(Weekday::Tue).unwrap().to_string(), "Tue");
+        assert_eq!(WeekDay::new(Weekday::Sun).unwrap().to_string(), "Sun");
         assert_eq!(
             WeekDay::new_nth(Weekday::Sun, 1).unwrap().to_string(),
             "1Sun"

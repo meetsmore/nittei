@@ -390,7 +390,7 @@ impl GetServiceBookingSlotsUseCase {
                         end: timespan.end(),
                         start: timespan.start(),
                     };
-                    let google_busy = google_calendar_provider.freebusy(query).await;
+                    let google_busy = google_calendar_provider.freebusy(query).await?;
                     for google_busy_event in google_busy.inner() {
                         busy_events.push(google_busy_event);
                     }
