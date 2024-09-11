@@ -1,5 +1,5 @@
 CREATE
-OR REPLACE FUNCTION manage_updated_at(_tbl regclass) RETURNS VOID AS $ $ BEGIN EXECUTE format(
+OR REPLACE FUNCTION manage_updated_at(_tbl regclass) RETURNS VOID AS $$ BEGIN EXECUTE format(
     'CREATE TRIGGER set_updated_at BEFORE UPDATE ON %s
                     FOR EACH ROW EXECUTE PROCEDURE set_updated_at()',
     _tbl
@@ -7,10 +7,10 @@ OR REPLACE FUNCTION manage_updated_at(_tbl regclass) RETURNS VOID AS $ $ BEGIN E
 
 END;
 
-$ $ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 CREATE
-OR REPLACE FUNCTION set_updated_at() RETURNS trigger AS $ $ BEGIN IF (
+OR REPLACE FUNCTION set_updated_at() RETURNS trigger AS $$ BEGIN IF (
     NEW IS DISTINCT
     FROM
         OLD
@@ -25,6 +25,6 @@ RETURN NEW;
 
 END;
 
-$ $ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
