@@ -2,7 +2,7 @@
 name = "nittei_infra"
 version = "0.1.0"
 authors = ["Fredrik Meringdal"]
-edition = "2018"
+edition = "2021"
 
 [lints]
 workspace = true
@@ -10,8 +10,8 @@ workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-nittei_utils = { path = "../utils" }
-nittei_domain = { path = "../domain" }
+nittei_utils = { workspace = true }
+nittei_domain = { workspace = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 async-trait = "0.1.42"

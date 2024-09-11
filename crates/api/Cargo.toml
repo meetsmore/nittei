@@ -2,7 +2,7 @@
 name = "nittei_api"
 version = "0.1.0"
 authors = ["Fredrik Meringdal"]
-edition = "2018"
+edition = "2021"
 
 [lints]
 workspace = true
@@ -10,9 +10,9 @@ workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-nittei_api_structs = { path = "../api_structs" }
-nittei_domain = { path = "../domain" }
-nittei_infra = { path = "../infra" }
+nittei_api_structs = { workspace = true }
+nittei_domain = { workspace = true }
+nittei_infra = { workspace = true }
 serde = { version = "1.0", features = ["derive"] }
 futures = "0.3"
 actix-web = "4.8"

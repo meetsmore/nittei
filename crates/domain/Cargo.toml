@@ -4,7 +4,7 @@ version = "0.2.1"
 description = "nittei domain"
 license = "MIT"
 authors = ["Fredrik Meringdal"]
-edition = "2018"
+edition = "2021"
 
 [lints]
 workspace = true
@@ -12,7 +12,7 @@ workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-nittei_utils = { path = "../utils", version = "0.1.0" }
+nittei_utils = { workspace = true }
 serde = { version = "1.0", features = ["derive"] }
 rrule = "0.12.0"
 chrono = { version = "0.4.19", features = ["serde"] }

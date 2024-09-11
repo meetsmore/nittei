@@ -2,15 +2,15 @@
 name = "nittei"
 version = "0.1.0"
 authors = ["Fredrik Meringdal", "Meetsmore"]
-edition = "2018"
+edition = "2021"
 default-run = "nittei"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-nittei_api = { path = "../../crates/api" }
-nittei_domain = { path = "../../crates/domain" }
-nittei_infra = { path = "../../crates/infra" }
+nittei_api = { workspace = true }
+nittei_domain = { workspace = true }
+nittei_infra = { workspace = true }
 
 anyhow = "1.0"
 
@@ -43,4 +43,4 @@ chrono = "0.4.19"
 chrono-tz = "0.8.1"
 
 [dev-dependencies]
-nittei_sdk = { path = "../../clients/rust" }
+nittei_sdk = { workspace = true }
