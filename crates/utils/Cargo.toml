@@ -4,7 +4,7 @@ description = "nittei utils"
 license = "MIT"
 version = "0.1.0"
 authors = ["Fredrik Meringdal"]
-edition = "2018"
+edition = "2021"
 
 [lints]
 workspace = true
