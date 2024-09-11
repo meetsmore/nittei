@@ -1,19 +1,12 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::{DateTime, TimeDelta, Utc};
-use nettu_scheduler_api_structs::create_event::*;
-use nettu_scheduler_domain::{
-    CalendarEvent,
-    CalendarEventReminder,
-    Metadata,
-    RRuleOptions,
-    User,
-    ID,
-};
-use nettu_scheduler_infra::NettuContext;
+use nittei_api_structs::create_event::*;
+use nittei_domain::{CalendarEvent, CalendarEventReminder, Metadata, RRuleOptions, User, ID};
+use nittei_infra::NitteiContext;
 
 use super::subscribers::CreateRemindersOnEventCreated;
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     event::subscribers::CreateSyncedEventsOnEventCreated,
     shared::{
         auth::{account_can_modify_user, protect_account_route, protect_route, Permission},
@@ -25,8 +18,8 @@ pub async fn create_event_admin_controller(
     http_req: HttpRequest,
     path_params: web::Path<PathParams>,
     body: web::Json<RequestBody>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
     let user = account_can_modify_user(&account, &path_params.user_id, &ctx).await?;
 
@@ -46,14 +39,14 @@ pub async fn create_event_admin_controller(
     execute(usecase, &ctx)
         .await
         .map(|event| HttpResponse::Created().json(APIResponse::new(event)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 pub async fn create_event_controller(
     http_req: HttpRequest,
     body: web::Json<RequestBody>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let (user, policy) = protect_route(&http_req, &ctx).await?;
 
     let body = body.0;
@@ -72,7 +65,7 @@ pub async fn create_event_controller(
     execute_with_policy(usecase, &policy, &ctx)
         .await
         .map(|event| HttpResponse::Created().json(APIResponse::new(event)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 #[derive(Debug, Default)]
@@ -96,7 +89,7 @@ pub enum UseCaseError {
     StorageError,
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::NotFound(calendar_id) => Self::NotFound(format!(
@@ -128,8 +121,14 @@ impl UseCase for CreateEventUseCase {
 
     const NAME: &'static str = "CreateEvent";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
-        let calendar = match ctx.repos.calendars.find(&self.calendar_id).await {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
+        let calendar = ctx
+            .repos
+            .calendars
+            .find(&self.calendar_id)
+            .await
+            .map_err(|_| UseCaseError::StorageError)?;
+        let calendar = match calendar {
             Some(calendar) if calendar.user_id == self.user.id => calendar,
             _ => return Err(UseCaseError::NotFound(self.calendar_id.clone())),
         };
@@ -187,19 +186,19 @@ impl PermissionBoundary for CreateEventUseCase {
 #[cfg(test)]
 mod test {
     use chrono::{prelude::*, Utc};
-    use nettu_scheduler_domain::{Account, Calendar, User};
-    use nettu_scheduler_infra::setup_context;
+    use nittei_domain::{Account, Calendar, User};
+    use nittei_infra::setup_context;
 
     use super::*;
 
     struct TestContext {
-        ctx: NettuContext,
+        ctx: NitteiContext,
         calendar: Calendar,
         user: User,
     }
 
     async fn setup() -> TestContext {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let account = Account::default();
         ctx.repos.accounts.insert(&account).await.unwrap();
         let user = User::new(account.id.clone(), None);

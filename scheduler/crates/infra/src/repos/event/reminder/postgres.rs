@@ -1,10 +1,11 @@
 use chrono::{DateTime, Utc};
-use nettu_scheduler_domain::{Reminder, ID};
+use nittei_domain::{Reminder, ID};
 use sqlx::{types::Uuid, FromRow, PgPool};
-use tracing::error;
+use tracing::{error, instrument};
 
 use super::IReminderRepo;
 
+#[derive(Debug)]
 pub struct PostgresReminderRepo {
     pool: PgPool,
 }
@@ -45,6 +46,7 @@ impl From<ReminderRaw> for Reminder {
 
 #[async_trait::async_trait]
 impl IReminderRepo for PostgresReminderRepo {
+    #[instrument]
     async fn bulk_insert(&self, reminders: &[Reminder]) -> anyhow::Result<()> {
         for reminder in reminders {
             sqlx::query!(
@@ -61,17 +63,17 @@ impl IReminderRepo for PostgresReminderRepo {
             )
             .execute(&self.pool)
             .await
-            .map_err(|e| {
+            .inspect_err(|e| {
                 error!(
                     "Unable to insert calendar event reminder: {:?}. DB returned error: {:?}",
                     reminder, e
                 );
-                e
             })?;
         }
         Ok(())
     }
 
+    #[instrument]
     async fn init_version(&self, event_id: &ID) -> anyhow::Result<i64> {
         let r_version = sqlx::query_as!(
             ReminderVersionRaw,
@@ -86,17 +88,17 @@ impl IReminderRepo for PostgresReminderRepo {
         )
         .fetch_one(&self.pool)
         .await
-        .map_err(|err| {
+        .inspect_err(|err| {
             error!(
                 "Unable to insert calendar event reminder version for event id: {}. DB returned error: {:?}",
                 event_id, err
             );
-            err
         })?;
 
         Ok(r_version.version)
     }
 
+    #[instrument]
     async fn inc_version(&self, event_id: &ID) -> anyhow::Result<i64> {
         let r_version = sqlx::query_as!(
             ReminderVersionRaw,
@@ -115,19 +117,19 @@ impl IReminderRepo for PostgresReminderRepo {
         )
         .fetch_one(&self.pool)
         .await
-        .map_err(|err| {
+        .inspect_err(|err| {
             error!(
                 "Unable to increment calendar event reminder version for event id: {}. DB returned error: {:?}",
                 event_id, err
             );
-            err
         })?;
 
         Ok(r_version.version)
     }
 
-    async fn delete_all_before(&self, before: DateTime<Utc>) -> Vec<Reminder> {
-        sqlx::query_as!(
+    #[instrument]
+    async fn delete_all_before(&self, before: DateTime<Utc>) -> anyhow::Result<Vec<Reminder>> {
+        Ok(sqlx::query_as!(
             ReminderRaw,
             r#"
             DELETE FROM reminders AS r
@@ -138,16 +140,14 @@ impl IReminderRepo for PostgresReminderRepo {
         )
         .fetch_all(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Unable to delete calendar event reminders before timestamp: {}. DB returned error: {:?}",
                 before, e
             );
-            e
-        })
-        .unwrap_or_default()
+        })?
         .into_iter()
         .map(|reminder| reminder.into())
-        .collect()
+        .collect())
     }
 }

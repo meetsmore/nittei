@@ -1,10 +1,11 @@
-export DATABASE_URL := "postgresql://postgres:postgres@localhost:45432/nettuscheduler"
+export DATABASE_URL := "postgresql://postgres:postgres@localhost:45432/nittei"
 export RUST_BACKTRACE := "1"
 
 # Install minimal tools
 install_tools: 
 	cargo install sqlx-cli
 	cargo install cargo-pretty-test
+	cargo install cargo-watch
 
 # Install all tools
 install_all_tools: install_tools
@@ -26,7 +27,7 @@ _setup_client_node:
 
 # Dev
 dev: _setup_db
-	cd scheduler && cargo run
+	cd scheduler && cargo watch -- cargo run
 
 # Prepare offline SQLx
 prepare_sqlx:

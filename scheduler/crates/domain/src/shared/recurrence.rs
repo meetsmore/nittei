@@ -155,6 +155,8 @@ impl RRuleOptions {
             rule = rule.until(until.with_timezone(&rrule::Tz::Tz(chrono_tz::UTC)));
         }
 
+        // TODO: to fix
+        #[allow(clippy::unwrap_used)]
         rule.build(dtstart.with_timezone(&rrule::Tz::Tz(chrono_tz::UTC)))
             .unwrap()
 
@@ -225,6 +227,8 @@ impl WeekDay {
     }
 
     pub fn new(weekday: Weekday) -> Self {
+        // TODO: to fix
+        #[allow(clippy::unwrap_used)]
         Self::create(weekday, None).unwrap()
     }
 

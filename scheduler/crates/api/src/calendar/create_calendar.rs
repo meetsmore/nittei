@@ -1,12 +1,12 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::Weekday;
 use chrono_tz::Tz;
-use nettu_scheduler_api_structs::create_calendar::{APIResponse, PathParams, RequestBody};
-use nettu_scheduler_domain::{Calendar, CalendarSettings, Metadata, ID};
-use nettu_scheduler_infra::NettuContext;
+use nittei_api_structs::create_calendar::{APIResponse, PathParams, RequestBody};
+use nittei_domain::{Calendar, CalendarSettings, Metadata, ID};
+use nittei_infra::NitteiContext;
 
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{
         auth::{account_can_modify_user, protect_account_route, protect_route, Permission},
         usecase::{execute, execute_with_policy, PermissionBoundary, UseCase},
@@ -17,8 +17,8 @@ pub async fn create_calendar_admin_controller(
     http_req: HttpRequest,
     path_params: web::Path<PathParams>,
     body: web::Json<RequestBody>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
     let user = account_can_modify_user(&account, &path_params.user_id, &ctx).await?;
 
@@ -33,14 +33,14 @@ pub async fn create_calendar_admin_controller(
     execute(usecase, &ctx)
         .await
         .map(|calendar| HttpResponse::Created().json(APIResponse::new(calendar)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 pub async fn create_calendar_controller(
     http_req: HttpRequest,
     body: web::Json<RequestBody>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let (user, policy) = protect_route(&http_req, &ctx).await?;
 
     let usecase = CreateCalendarUseCase {
@@ -54,7 +54,7 @@ pub async fn create_calendar_controller(
     execute_with_policy(usecase, &policy, &ctx)
         .await
         .map(|calendar| HttpResponse::Created().json(APIResponse::new(calendar)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 #[derive(Debug)]
@@ -68,13 +68,15 @@ struct CreateCalendarUseCase {
 
 #[derive(Debug)]
 enum UseCaseError {
+    InternalError,
     UserNotFound,
     StorageError,
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
+            UseCaseError::InternalError => Self::InternalError,
             UseCaseError::StorageError => Self::InternalError,
             UseCaseError::UserNotFound => {
                 Self::NotFound("The requested user was not found.".to_string())
@@ -91,8 +93,15 @@ impl UseCase for CreateCalendarUseCase {
 
     const NAME: &'static str = "CreateCalendar";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
-        let user = match ctx.repos.users.find(&self.user_id).await {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
+        let user = ctx
+            .repos
+            .users
+            .find(&self.user_id)
+            .await
+            .map_err(|_| UseCaseError::InternalError)?;
+
+        let user = match user {
             Some(user) if user.account_id == self.account_id => user,
             _ => return Err(UseCaseError::UserNotFound),
         };

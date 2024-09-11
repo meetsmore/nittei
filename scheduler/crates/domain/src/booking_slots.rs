@@ -82,6 +82,7 @@ impl ServiceBookingSlotsDate {
                 break;
             } else {
                 // Delete slot
+                #[allow(clippy::unwrap_used)]
                 date_slots.push(slots.pop_front().unwrap());
             }
         }
@@ -219,6 +220,7 @@ pub fn validate_bookingslots_query(
             0,
         )
         .unwrap();
+    #[allow(clippy::unwrap_used)]
     let start_time = start_date
         .with_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap())
         .unwrap()
@@ -233,6 +235,7 @@ pub fn validate_bookingslots_query(
             0,
         )
         .unwrap();
+    #[allow(clippy::unwrap_used)]
     let end_time = end_date
         .with_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap())
         .unwrap()

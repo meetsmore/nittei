@@ -1,11 +1,11 @@
 use std::fmt::Debug;
 
 use futures::future::join_all;
-use nettu_scheduler_infra::NettuContext;
+use nittei_infra::NitteiContext;
 use tracing::{info, warn};
 
 use super::auth::{Permission, Policy};
-use crate::error::NettuError;
+use crate::error::NitteiError;
 
 /// Subscriber is a side effect to a `UseCase`
 ///
@@ -13,7 +13,7 @@ use crate::error::NettuError;
 /// of the `UseCase` if the execution was a success.
 #[async_trait::async_trait(?Send)]
 pub trait Subscriber<U: UseCase> {
-    async fn notify(&self, e: &U::Response, ctx: &NettuContext);
+    async fn notify(&self, e: &U::Response, ctx: &NitteiContext);
 }
 
 #[async_trait::async_trait(?Send)]
@@ -24,7 +24,7 @@ pub trait UseCase: Debug {
     /// UseCase name identifier
     const NAME: &'static str;
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error>;
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error>;
 
     fn subscribers() -> Vec<Box<dyn Subscriber<Self>>> {
         Default::default()
@@ -43,14 +43,14 @@ pub enum UseCaseErrorContainer<T: Debug> {
     UseCase(T),
 }
 
-impl<T> From<UseCaseErrorContainer<T>> for NettuError
+impl<T> From<UseCaseErrorContainer<T>> for NitteiError
 where
-    NettuError: From<T>,
+    NitteiError: From<T>,
     T: Debug,
 {
     fn from(e: UseCaseErrorContainer<T>) -> Self {
         match e {
-            UseCaseErrorContainer::Unauthorized(e) => NettuError::Unauthorized(e),
+            UseCaseErrorContainer::Unauthorized(e) => NitteiError::Unauthorized(e),
             UseCaseErrorContainer::UseCase(e) => e.into(),
         }
     }
@@ -60,7 +60,7 @@ where
 pub async fn execute_with_policy<U>(
     usecase: U,
     policy: &Policy,
-    ctx: &NettuContext,
+    ctx: &NitteiContext,
 ) -> Result<U::Response, UseCaseErrorContainer<U::Error>>
 where
     U: PermissionBoundary,
@@ -82,7 +82,7 @@ where
 }
 
 #[tracing::instrument(name = "UseCase executed by Account", skip(usecase, ctx), fields(usecase = %U::NAME))]
-pub async fn execute<U>(usecase: U, ctx: &NettuContext) -> Result<U::Response, U::Error>
+pub async fn execute<U>(usecase: U, ctx: &NitteiContext) -> Result<U::Response, U::Error>
 where
     U: UseCase,
     U::Error: Debug,
@@ -90,7 +90,7 @@ where
     _execute(usecase, ctx).await
 }
 
-async fn _execute<U>(mut usecase: U, ctx: &NettuContext) -> Result<U::Response, U::Error>
+async fn _execute<U>(mut usecase: U, ctx: &NitteiContext) -> Result<U::Response, U::Error>
 where
     U: UseCase,
     U::Error: Debug,

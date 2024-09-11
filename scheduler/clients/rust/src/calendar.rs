@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use chrono::{DateTime, Utc};
-use nettu_scheduler_api_structs::*;
-use nettu_scheduler_domain::{
+use nittei_api_structs::*;
+use nittei_domain::{
     providers::{google::GoogleCalendarAccessRole, outlook::OutlookCalendarAccessRole},
     IntegrationProvider,
     Metadata,

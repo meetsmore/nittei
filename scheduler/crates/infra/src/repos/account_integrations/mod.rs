@@ -1,6 +1,6 @@
 mod postgres;
 
-use nettu_scheduler_domain::{AccountIntegration, IntegrationProvider, ID};
+use nittei_domain::{AccountIntegration, IntegrationProvider, ID};
 pub use postgres::PostgresAccountIntegrationRepo;
 
 #[async_trait::async_trait]
@@ -12,13 +12,13 @@ pub trait IAccountIntegrationRepo: Send + Sync {
 
 #[cfg(test)]
 mod tests {
-    use nettu_scheduler_domain::{Account, AccountIntegration, IntegrationProvider};
+    use nittei_domain::{Account, AccountIntegration, IntegrationProvider};
 
     use crate::setup_context;
 
     #[tokio::test]
     async fn test_account_integrations() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
 
         let account = Account::new();
         ctx.repos

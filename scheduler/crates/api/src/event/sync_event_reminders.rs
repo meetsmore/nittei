@@ -1,7 +1,7 @@
-use chrono::{DateTime, TimeDelta, Utc};
+use chrono::{TimeDelta, Utc};
 use futures::future;
-use nettu_scheduler_domain::{Calendar, CalendarEvent, EventRemindersExpansionJob, Reminder};
-use nettu_scheduler_infra::NettuContext;
+use nittei_domain::{Calendar, CalendarEvent, EventRemindersExpansionJob, Reminder};
+use nittei_infra::NitteiContext;
 use tracing::error;
 
 use crate::shared::usecase::UseCase;
@@ -37,10 +37,9 @@ async fn create_event_reminders(
     event: &CalendarEvent,
     calendar: &Calendar,
     version: i64,
-    ctx: &NettuContext,
+    ctx: &NitteiContext,
 ) -> Result<(), UseCaseError> {
-    let timestamp_now_millis =
-        DateTime::from_timestamp_millis(ctx.sys.get_timestamp_millis()).unwrap();
+    let timestamp_now_millis = ctx.sys.get_timestamp();
     let threshold_millis = timestamp_now_millis + TimeDelta::milliseconds(61 * 1000); // Now + 61 seconds
 
     let rrule_set = event.get_rrule_set(&calendar.settings);
@@ -155,7 +154,7 @@ impl<'a> UseCase for SyncEventRemindersUseCase<'a> {
 
     const NAME: &'static str = "SyncEventReminders";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         match &self.request {
             SyncEventRemindersTrigger::EventModified(calendar_event, op) => {
                 let version = match op {
@@ -192,6 +191,7 @@ impl<'a> UseCase for SyncEventRemindersUseCase<'a> {
                     .calendars
                     .find(&calendar_event.calendar_id)
                     .await
+                    .map_err(|_| UseCaseError::StorageError)?
                     .ok_or(UseCaseError::CalendarNotFound)?;
 
                 create_event_reminders(calendar_event, &calendar, version, ctx).await
@@ -200,10 +200,9 @@ impl<'a> UseCase for SyncEventRemindersUseCase<'a> {
                 let jobs = ctx
                     .repos
                     .event_reminders_generation_jobs
-                    .delete_all_before(
-                        DateTime::from_timestamp_millis(ctx.sys.get_timestamp_millis()).unwrap(),
-                    )
-                    .await;
+                    .delete_all_before(ctx.sys.get_timestamp())
+                    .await
+                    .map_err(|_| UseCaseError::StorageError)?;
 
                 let event_ids = jobs
                     .iter()
@@ -229,10 +228,17 @@ impl<'a> UseCase for SyncEventRemindersUseCase<'a> {
     }
 }
 
-async fn generate_event_reminders_job(event: CalendarEvent, ctx: &NettuContext) {
+async fn generate_event_reminders_job(event: CalendarEvent, ctx: &NitteiContext) {
     let calendar = match ctx.repos.calendars.find(&event.calendar_id).await {
-        Some(cal) => cal,
-        None => return,
+        Ok(Some(cal)) => cal,
+        Ok(None) => return,
+        Err(e) => {
+            error!(
+                "Unable to find calendar {} for event {}. Err: {:?}",
+                event.calendar_id, event.id, e
+            );
+            return;
+        }
     };
     let version = match ctx.repos.reminders.inc_version(&event.id).await {
         Ok(v) => v,

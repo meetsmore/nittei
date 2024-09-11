@@ -1,5 +1,5 @@
 import type { BusyCalendar, Service, TimePlan } from './domain/service'
-import { NettuBaseClient } from './baseClient'
+import { NitteiBaseClient } from './baseClient'
 import type { Metadata } from './domain/metadata'
 import { UUID } from './domain'
 
@@ -199,7 +199,7 @@ type AddBusyCalendar = {
   userId: UUID
   /**
    * Calendar to add to the user
-   * It can be an internal calendar (Nettu) or an external calendar (Google, Outlook)
+   * It can be an internal calendar (nittei) or an external calendar (Google, Outlook)
    */
   calendar: BusyCalendar
 }
@@ -222,7 +222,7 @@ type RemoveBusyCalendar = {
   calendar: BusyCalendar
 }
 
-export class NettuServiceClient extends NettuBaseClient {
+export class NitteiServiceClient extends NitteiBaseClient {
   public create(data?: CreateServiceRequest) {
     return this.post<ServiceResponse>('/service', data ?? {})
   }
@@ -290,7 +290,7 @@ export class NettuServiceClient extends NettuBaseClient {
   }
 }
 
-export class NettuServiceUserClient extends NettuBaseClient {
+export class NitteiServiceUserClient extends NitteiBaseClient {
   public getBookingslots(serviceId: UUID, req: GetServiceBookingslotsReq) {
     return this.get<GetServiceBookingslotsResponse>(
       `/service/${serviceId}/booking`,

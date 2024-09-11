@@ -9,9 +9,9 @@
 
 ## Overview
 
-`Nittei` is a self-hosted calendar and scheduler server built upon [Nettu scheduler](https://github.com/fmeringdal/nettu-scheduler).
+`Nittei` is a self-hosted calendar and scheduler server built upon [nittei](https://github.com/fmeringdal/nittei-scheduler).
 
-<!-- It aims to provide the building blocks for building calendar / booking apps with ease. It has a simple REST API and also a [JavaScript SDK](https://www.npmjs.com/package/@nettu/sdk-scheduler) and [Rust SDK](https://crates.io/crates/nettu_scheduler_sdk). -->
+<!-- It aims to provide the building blocks for building calendar / booking apps with ease. It has a simple REST API and also a [JavaScript SDK](https://www.npmjs.com/package/@nittei/sdk-scheduler) and [Rust SDK](https://crates.io/crates/nittei_sdk). -->
 
 It supports authentication through api keys for server - server communication and JSON Web Tokens for browser - server communication.
 
@@ -21,7 +21,7 @@ It supports authentication through api keys for server - server communication an
 - **Calendar Events**: Supports recurrence rules, flexible querying and reminders.
 - **Calendars**: For grouping `Calendar Event`s.
 - **Freebusy**: Find out when `User`s are free and when they are busy.
-- **Integrations**: Connect your Nettu, Google and Outlook calendars
+- **Integrations**: Connect your nittei, Google and Outlook calendars
 - **Multi-tenancy**: All resources are grouped by `Account`s.
 - **Metadata queries**: Add key-value metadata to your resources and then query on that metadata
 - **Webhooks**: Notifying your server about `Calendar Event` reminders.
@@ -79,7 +79,7 @@ There are a few environment variables that can be used to control the server.
 - `DATABASE_URL` allows to specify the database the server should use
 - `PORT` allows to specify the port to be used by the server
 - `ACCOUNT_API_KEY` is going to create an `Account` (if it does not already exist) during
-server startup with the given key. `Account`s act as tenants in the server, and it is possible to create multiple `Account`s by using the `CREATE_ACCOUNT_SECRET_CODE` which you can provide as an environment variable.
+  server startup with the given key. `Account`s act as tenants in the server, and it is possible to create multiple `Account`s by using the `CREATE_ACCOUNT_SECRET_CODE` which you can provide as an environment variable.
 
 Quick example of how to create and query a user
 
@@ -128,4 +128,4 @@ Contributions are welcome and are greatly appreciated!
 
 ## Special thanks
 
-- [fmeringdal](https://github.com/fmeringdal/nettu-scheduler) for the initial project. This repository is a fork adapted to our needs.
+- [fmeringdal](https://github.com/fmeringdal/nittei-scheduler) for the initial project. This repository is a fork adapted to our needs.

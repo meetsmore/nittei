@@ -1,8 +1,8 @@
 import {
-  type INettuClient,
-  NettuClient,
+  type INitteiClient,
+  NitteiClient,
   Frequenzy,
-  type INettuUserClient,
+  type INitteiUserClient,
 } from '../lib'
 import { setupUserClient } from './helpers/fixtures'
 import { v4 } from 'uuid'
@@ -10,15 +10,18 @@ import { v4 } from 'uuid'
 describe('User API', () => {
   let userId: string
   let calendarId: string
-  let accountClient: INettuClient
-  let client: INettuUserClient
-  let unauthClient: INettuClient
+  let accountClient: INitteiClient
+  let client: INitteiUserClient
+  let unauthClient: INitteiClient
+
   beforeAll(async () => {
     const data = await setupUserClient()
     client = data.userClient
     accountClient = data.accountClient
     userId = data.userId
-    unauthClient = NettuClient({ nettuAccount: data.accountId })
+    unauthClient = await NitteiClient({
+      nitteiAccount: data.accountId,
+    })
     const calendarRes = await client.calendar.create({ timezone: 'UTC' })
     if (!calendarRes.data) {
       throw new Error('Calendar not created')

@@ -1,19 +1,21 @@
-import { NettuClient, NettuUserClient } from '../../lib'
+import { NitteiClient, NitteiUserClient } from '../../lib'
 import { readPrivateKey, readPublicKey } from './utils'
 import * as jwt from 'jsonwebtoken'
 
 export const CREATE_ACCOUNT_CODE =
-  process.env.CREATE_ACCOUNT_SECRET_CODE || 'opqI5r3e7v1z2h3P'
+  process.env.CREATE_ACCOUNT_SECRET_CODE || 'create_account_dev_secret'
 
 export const setupAccount = async () => {
-  const client = NettuClient()
+  const client = await NitteiClient()
   const account = await client.account.create({ code: CREATE_ACCOUNT_CODE })
   const accountId = account.data?.account.id
   if (!accountId) {
     throw new Error('Account not created')
   }
   return {
-    client: NettuClient({ apiKey: account.data?.secretApiKey }),
+    client: await NitteiClient({
+      apiKey: account.data?.secretApiKey,
+    }),
     accountId: account.data?.account.id,
   }
 }
@@ -49,7 +51,7 @@ export const setupUserClientForAccount = (
 ) => {
   const token = jwt.sign(
     {
-      nettuSchedulerUserId: userId,
+      nitteiUserId: userId,
       schedulerPolicy: {
         allow: ['*'],
       },
@@ -62,7 +64,10 @@ export const setupUserClientForAccount = (
   )
   return {
     token,
-    client: NettuUserClient({ token, nettuAccount: accountId }),
+    client: NitteiUserClient({
+      token,
+      nitteiAccount: accountId,
+    }),
   }
 }
 

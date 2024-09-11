@@ -1,11 +1,11 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono_tz::Tz;
-use nettu_scheduler_api_structs::update_schedule::*;
-use nettu_scheduler_domain::{Metadata, Schedule, ScheduleRule, ID};
-use nettu_scheduler_infra::NettuContext;
+use nittei_api_structs::update_schedule::*;
+use nittei_domain::{Metadata, Schedule, ScheduleRule, ID};
+use nittei_infra::NitteiContext;
 
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{
         auth::{account_can_modify_schedule, protect_account_route, protect_route, Permission},
         usecase::{execute, execute_with_policy, PermissionBoundary, UseCase},
@@ -16,8 +16,8 @@ pub async fn update_schedule_admin_controller(
     http_req: HttpRequest,
     path: web::Path<PathParams>,
     body: web::Json<RequestBody>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
     let schedule = account_can_modify_schedule(&account, &path.schedule_id, &ctx).await?;
 
@@ -33,15 +33,15 @@ pub async fn update_schedule_admin_controller(
     execute(usecase, &ctx)
         .await
         .map(|res| HttpResponse::Ok().json(APIResponse::new(res.schedule)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 pub async fn update_schedule_controller(
     http_req: HttpRequest,
-    ctx: web::Data<NettuContext>,
+    ctx: web::Data<NitteiContext>,
     mut path: web::Path<PathParams>,
     body: web::Json<RequestBody>,
-) -> Result<HttpResponse, NettuError> {
+) -> Result<HttpResponse, NitteiError> {
     let (user, policy) = protect_route(&http_req, &ctx).await?;
 
     let body = body.0;
@@ -56,7 +56,7 @@ pub async fn update_schedule_controller(
     execute_with_policy(usecase, &policy, &ctx)
         .await
         .map(|res| HttpResponse::Ok().json(APIResponse::new(res.schedule)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 #[derive(Debug)]
@@ -74,7 +74,7 @@ enum UseCaseError {
     StorageError,
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::ScheduleNotFound(schedule_id) => Self::NotFound(format!(
@@ -99,10 +99,13 @@ impl UseCase for UpdateScheduleUseCase {
 
     const NAME: &'static str = "UpdateSchedule";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         let mut schedule = match ctx.repos.schedules.find(&self.schedule_id).await {
-            Some(cal) if cal.user_id == self.user_id => cal,
-            _ => return Err(UseCaseError::ScheduleNotFound(self.schedule_id.clone())),
+            Ok(Some(cal)) if cal.user_id == self.user_id => cal,
+            Ok(_) => return Err(UseCaseError::ScheduleNotFound(self.schedule_id.clone())),
+            Err(_) => {
+                return Err(UseCaseError::StorageError);
+            }
         };
 
         if let Some(tz) = self.timezone {

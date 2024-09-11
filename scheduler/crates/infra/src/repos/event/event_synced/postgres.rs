@@ -1,9 +1,10 @@
-use nettu_scheduler_domain::{SyncedCalendarEvent, ID};
+use nittei_domain::{SyncedCalendarEvent, ID};
 use sqlx::{types::Uuid, FromRow, PgPool};
-use tracing::error;
+use tracing::{error, instrument};
 
 use super::IEventSyncedRepo;
 
+#[derive(Debug)]
 pub struct PostgresEventSyncedRepo {
     pool: PgPool,
 }
@@ -39,6 +40,7 @@ impl From<SyncedEventRaw> for SyncedCalendarEvent {
 
 #[async_trait::async_trait]
 impl IEventSyncedRepo for PostgresEventSyncedRepo {
+    #[instrument]
     async fn insert(&self, e: &SyncedCalendarEvent) -> anyhow::Result<()> {
         let provider: String = e.provider.clone().into();
         sqlx::query!(
@@ -71,6 +73,7 @@ impl IEventSyncedRepo for PostgresEventSyncedRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn find_by_event(&self, event_id: &ID) -> anyhow::Result<Vec<SyncedCalendarEvent>> {
         let synced_events: Vec<SyncedEventRaw> = sqlx::query_as!(
             SyncedEventRaw,

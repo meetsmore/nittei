@@ -1,15 +1,18 @@
-use nettu_scheduler_domain::{Schedule, ID};
+use std::convert::{TryFrom, TryInto};
+
+use nittei_domain::{Schedule, ID};
 use serde_json::Value;
 use sqlx::{
     types::{Json, Uuid},
     FromRow,
     PgPool,
 };
-use tracing::error;
+use tracing::{error, instrument};
 
 use super::IScheduleRepo;
 use crate::repos::shared::query_structs::MetadataFindQuery;
 
+#[derive(Debug)]
 pub struct PostgresScheduleRepo {
     pool: PgPool,
 }
@@ -30,21 +33,23 @@ struct ScheduleRaw {
     metadata: Value,
 }
 
-impl From<ScheduleRaw> for Schedule {
-    fn from(e: ScheduleRaw) -> Self {
-        Self {
+impl TryFrom<ScheduleRaw> for Schedule {
+    type Error = anyhow::Error;
+    fn try_from(e: ScheduleRaw) -> anyhow::Result<Self> {
+        Ok(Self {
             id: e.schedule_uid.into(),
             user_id: e.user_uid.into(),
             account_id: e.account_uid.into(),
             rules: serde_json::from_value(e.rules).unwrap_or_default(),
             timezone: e.timezone.parse().unwrap_or(chrono_tz::UTC),
-            metadata: serde_json::from_value(e.metadata).unwrap(),
-        }
+            metadata: serde_json::from_value(e.metadata)?,
+        })
     }
 }
 
 #[async_trait::async_trait]
 impl IScheduleRepo for PostgresScheduleRepo {
+    #[instrument]
     async fn insert(&self, schedule: &Schedule) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -59,17 +64,17 @@ impl IScheduleRepo for PostgresScheduleRepo {
         )
         .execute(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Unable to insert schedule: {:?}. DB returned error: {:?}",
                 schedule, e
             );
-            e
         })?;
 
         Ok(())
     }
 
+    #[instrument]
     async fn save(&self, schedule: &Schedule) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -86,18 +91,18 @@ impl IScheduleRepo for PostgresScheduleRepo {
         )
         .execute(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Unable to save schedule: {:?}. DB returned error: {:?}",
                 schedule, e
             );
-            e
         })?;
         Ok(())
     }
 
-    async fn find(&self, schedule_id: &ID) -> Option<Schedule> {
-        let res: Option<ScheduleRaw> = sqlx::query_as!(
+    #[instrument]
+    async fn find(&self, schedule_id: &ID) -> anyhow::Result<Option<Schedule>> {
+        sqlx::query_as!(
             ScheduleRaw,
             r#"
             SELECT s.*, u.account_uid FROM schedules AS s
@@ -109,48 +114,48 @@ impl IScheduleRepo for PostgresScheduleRepo {
         )
         .fetch_optional(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Find schedule with id: {:?} failed. DB returned error: {:?}",
                 schedule_id, e
             );
-            e
-        })
-        .ok()?;
-
-        res.map(|schedule| schedule.into())
+        })?
+        .map(|schedule| schedule.try_into())
+        .transpose()
     }
 
-    async fn find_many(&self, schedule_ids: &[ID]) -> Vec<Schedule> {
+    #[instrument]
+    async fn find_many(&self, schedule_ids: &[ID]) -> anyhow::Result<Vec<Schedule>> {
         let ids = schedule_ids
             .iter()
             .map(|id| *id.as_ref())
             .collect::<Vec<_>>();
-        let schedule_raw: Vec<ScheduleRaw> = sqlx::query_as(
+        sqlx::query_as!(
+            ScheduleRaw,
             r#"
             SELECT s.*, u.account_uid FROM schedules AS s
             INNER JOIN users AS u
                 ON u.user_uid = s.user_uid
             WHERE s.schedule_uid = ANY($1)
             "#,
+            &ids
         )
-        .bind(ids)
         .fetch_all(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Find schedules with ids: {:?} failed. DB returned error: {:?}",
                 schedule_ids, e
             );
-            e
-        })
-        .unwrap_or_default();
-
-        schedule_raw.into_iter().map(|e| e.into()).collect()
+        })?
+        .into_iter()
+        .map(|e| e.try_into())
+        .collect()
     }
 
-    async fn find_by_user(&self, user_id: &ID) -> Vec<Schedule> {
-        let schedules: Vec<ScheduleRaw> = sqlx::query_as!(
+    #[instrument]
+    async fn find_by_user(&self, user_id: &ID) -> anyhow::Result<Vec<Schedule>> {
+        sqlx::query_as!(
             ScheduleRaw,
             r#"
             SELECT s.*, u.account_uid FROM schedules AS s
@@ -162,20 +167,20 @@ impl IScheduleRepo for PostgresScheduleRepo {
         )
         .fetch_all(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Find schedules for user id: {:?} failed. DB returned error: {:?}",
                 user_id, e
             );
-            e
-        })
-        .unwrap_or_default();
-
-        schedules.into_iter().map(|s| s.into()).collect()
+        })?
+        .into_iter()
+        .map(|s| s.try_into())
+        .collect()
     }
 
+    #[instrument]
     async fn delete(&self, schedule_id: &ID) -> anyhow::Result<()> {
-        match sqlx::query!(
+        sqlx::query!(
             r#"
             DELETE FROM schedules AS s
             WHERE s.schedule_uid = $1
@@ -185,27 +190,19 @@ impl IScheduleRepo for PostgresScheduleRepo {
         )
         .fetch_optional(&self.pool)
         .await
-        {
-            Ok(res) => {
-                if res.is_some() {
-                    Ok(())
-                } else {
-                    Err(anyhow::Error::msg("Unable to delete schedule"))
-                }
-            }
-            Err(e) => {
-                error!(
-                    "Delete schedule with id: {:?} failed. DB returned error: {:?}",
-                    schedule_id, e
-                );
-
-                Err(anyhow::Error::new(e))
-            }
-        }
+        .inspect_err(|e| {
+            error!(
+                "Delete schedule with id: {:?} failed. DB returned error: {:?}",
+                schedule_id, e
+            );
+        })?
+        .ok_or_else(|| anyhow::Error::msg("Unable to delete schedule"))
+        .map(|_| ())
     }
 
-    async fn find_by_metadata(&self, query: MetadataFindQuery) -> Vec<Schedule> {
-        let schedules: Vec<ScheduleRaw> = sqlx::query_as!(
+    #[instrument]
+    async fn find_by_metadata(&self, query: MetadataFindQuery) -> anyhow::Result<Vec<Schedule>> {
+        sqlx::query_as!(
             ScheduleRaw,
             r#"
             SELECT s.*, u.account_uid FROM schedules AS s
@@ -222,15 +219,14 @@ impl IScheduleRepo for PostgresScheduleRepo {
         )
         .fetch_all(&self.pool)
         .await
-        .map_err(|e| {
+        .inspect_err(|e| {
             error!(
                 "Find schedules by metadata: {:?} failed. DB returned error: {:?}",
                 query, e
             );
-            e
-        })
-        .unwrap_or_default();
-
-        schedules.into_iter().map(|s| s.into()).collect()
+        })?
+        .into_iter()
+        .map(|s| s.try_into())
+        .collect()
     }
 }

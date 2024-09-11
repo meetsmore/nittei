@@ -1,4 +1,4 @@
-import { NettuClient } from '../lib'
+import { INitteiClient, NitteiClient } from '../lib'
 import {
   setupAccount,
   setupUserClientForAccount,
@@ -7,9 +7,10 @@ import {
 import { readPrivateKey, readPublicKey } from './helpers/utils'
 
 describe('Account API', () => {
-  const client = NettuClient()
+  let client: INitteiClient
 
   it('should create account', async () => {
+    client = await NitteiClient({})
     const { status, data } = await client.account.create({
       code: CREATE_ACCOUNT_CODE,
     })
@@ -24,7 +25,9 @@ describe('Account API', () => {
     if (!data) {
       throw new Error('Account not created')
     }
-    const accountClient = NettuClient({ apiKey: data.secretApiKey })
+    const accountClient = await NitteiClient({
+      apiKey: data.secretApiKey,
+    })
     const res = await accountClient.account.me()
     expect(res.status).toBe(200)
     if (!res.data) {

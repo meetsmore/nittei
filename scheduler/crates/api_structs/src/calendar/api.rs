@@ -1,4 +1,4 @@
-use nettu_scheduler_domain::{Calendar, EventInstance, Tz, Weekday, ID};
+use nittei_domain::{Calendar, EventInstance, Tz, Weekday, ID};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -21,7 +21,7 @@ impl CalendarResponse {
 }
 
 pub mod create_calendar {
-    use nettu_scheduler_domain::Metadata;
+    use nittei_domain::Metadata;
 
     use super::*;
 
@@ -47,7 +47,7 @@ fn default_weekday() -> Weekday {
 }
 
 pub mod add_sync_calendar {
-    use nettu_scheduler_domain::IntegrationProvider;
+    use nittei_domain::IntegrationProvider;
 
     use super::*;
 
@@ -68,7 +68,7 @@ pub mod add_sync_calendar {
 }
 
 pub mod remove_sync_calendar {
-    use nettu_scheduler_domain::IntegrationProvider;
+    use nittei_domain::IntegrationProvider;
 
     use super::*;
 
@@ -101,7 +101,7 @@ pub mod delete_calendar {
 
 pub mod get_calendar_events {
     use chrono::{DateTime, Utc};
-    use nettu_scheduler_domain::EventWithInstances;
+    use nittei_domain::EventWithInstances;
 
     use super::*;
     use crate::dtos::CalendarEventDTO;
@@ -181,10 +181,7 @@ pub mod get_calendars_by_meta {
 }
 
 pub mod get_google_calendars {
-    use nettu_scheduler_domain::providers::google::{
-        GoogleCalendarAccessRole,
-        GoogleCalendarListEntry,
-    };
+    use nittei_domain::providers::google::{GoogleCalendarAccessRole, GoogleCalendarListEntry};
 
     use super::*;
 
@@ -213,7 +210,7 @@ pub mod get_google_calendars {
 }
 
 pub mod get_outlook_calendars {
-    use nettu_scheduler_domain::providers::outlook::{OutlookCalendar, OutlookCalendarAccessRole};
+    use nittei_domain::providers::outlook::{OutlookCalendar, OutlookCalendarAccessRole};
 
     use super::*;
 
@@ -292,7 +289,7 @@ pub mod multiple_freebusy {
 }
 
 pub mod update_calendar {
-    use nettu_scheduler_domain::{Metadata, Weekday};
+    use nittei_domain::{Metadata, Weekday};
 
     use super::*;
 

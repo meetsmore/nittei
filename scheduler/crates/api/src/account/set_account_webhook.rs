@@ -1,10 +1,10 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use nettu_scheduler_api_structs::set_account_webhook::{APIResponse, RequestBody};
-use nettu_scheduler_domain::Account;
-use nettu_scheduler_infra::NettuContext;
+use nittei_api_structs::set_account_webhook::{APIResponse, RequestBody};
+use nittei_domain::Account;
+use nittei_infra::NitteiContext;
 
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{
         auth::protect_account_route,
         usecase::{execute, UseCase},
@@ -13,9 +13,9 @@ use crate::{
 
 pub async fn set_account_webhook_controller(
     http_req: HttpRequest,
-    ctx: web::Data<NettuContext>,
+    ctx: web::Data<NitteiContext>,
     body: web::Json<RequestBody>,
-) -> Result<HttpResponse, NettuError> {
+) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
 
     let usecase = SetAccountWebhookUseCase {
@@ -26,7 +26,7 @@ pub async fn set_account_webhook_controller(
     execute(usecase, &ctx)
         .await
         .map(|account| HttpResponse::Ok().json(APIResponse::new(account)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 #[derive(Debug)]
@@ -41,7 +41,7 @@ pub enum UseCaseError {
     StorageError,
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::InvalidURI(err) => {
@@ -60,7 +60,7 @@ impl UseCase for SetAccountWebhookUseCase {
 
     const NAME: &'static str = "SetAccountWebhook";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         let success = self
             .account
             .settings
@@ -83,14 +83,14 @@ impl UseCase for SetAccountWebhookUseCase {
 #[cfg(test)]
 mod tests {
 
-    use nettu_scheduler_infra::setup_context;
+    use nittei_infra::setup_context;
 
     use super::*;
 
     #[actix_web::main]
     #[test]
     async fn it_rejects_invalid_webhook_url() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let bad_uris = vec!["1", "", "test.zzcom", "test.com", "google.com"];
         for bad_uri in bad_uris {
             let mut use_case = SetAccountWebhookUseCase {
@@ -114,7 +114,7 @@ mod tests {
     #[actix_web::main]
     #[test]
     async fn it_accepts_valid_webhook_url() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
 
         let valid_uris = vec!["https://google.com", "https://google.com/v1/webhook"];
         for valid_uri in valid_uris {

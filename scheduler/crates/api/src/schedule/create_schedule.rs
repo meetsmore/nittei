@@ -1,11 +1,11 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono_tz::Tz;
-use nettu_scheduler_api_structs::create_schedule::*;
-use nettu_scheduler_domain::{Metadata, Schedule, ScheduleRule, ID};
-use nettu_scheduler_infra::NettuContext;
+use nittei_api_structs::create_schedule::*;
+use nittei_domain::{Metadata, Schedule, ScheduleRule, ID};
+use nittei_infra::NitteiContext;
 
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{
         auth::{account_can_modify_user, protect_account_route, protect_route, Permission},
         usecase::{execute, execute_with_policy, PermissionBoundary, UseCase},
@@ -16,8 +16,8 @@ pub async fn create_schedule_admin_controller(
     http_req: HttpRequest,
     path_params: web::Path<PathParams>,
     body_params: web::Json<RequestBody>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
     let user = account_can_modify_user(&account, &path_params.user_id, &ctx).await?;
 
@@ -32,14 +32,14 @@ pub async fn create_schedule_admin_controller(
     execute(usecase, &ctx)
         .await
         .map(|res| HttpResponse::Created().json(APIResponse::new(res.schedule)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 pub async fn create_schedule_controller(
     http_req: HttpRequest,
     body_params: web::Json<RequestBody>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let (user, policy) = protect_route(&http_req, &ctx).await?;
 
     let usecase = CreateScheduleUseCase {
@@ -53,7 +53,7 @@ pub async fn create_schedule_controller(
     execute_with_policy(usecase, &policy, &ctx)
         .await
         .map(|res| HttpResponse::Created().json(APIResponse::new(res.schedule)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 #[derive(Debug)]
@@ -68,13 +68,13 @@ struct CreateScheduleUseCase {
 #[derive(Debug)]
 enum UseCaseError {
     UserNotFound(ID),
-    Storage,
+    StorageError,
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
-            UseCaseError::Storage => Self::InternalError,
+            UseCaseError::StorageError => Self::InternalError,
             UseCaseError::UserNotFound(user_id) => {
                 Self::NotFound(format!("The user with id: {}, was not found.", user_id))
             }
@@ -95,16 +95,14 @@ impl UseCase for CreateScheduleUseCase {
 
     const NAME: &'static str = "CreateSchedule";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         let user = ctx
             .repos
             .users
             .find_by_account_id(&self.user_id, &self.account_id)
-            .await;
-        if user.is_none() {
-            return Err(UseCaseError::UserNotFound(self.user_id.clone()));
-        }
-        let user = user.unwrap();
+            .await
+            .map_err(|_| UseCaseError::StorageError)?
+            .ok_or_else(|| UseCaseError::UserNotFound(self.user_id.clone()))?;
 
         let mut schedule = Schedule::new(user.id, user.account_id, &self.timezone);
         if let Some(rules) = &self.rules {
@@ -117,7 +115,7 @@ impl UseCase for CreateScheduleUseCase {
         let res = ctx.repos.schedules.insert(&schedule).await;
         match res {
             Ok(_) => Ok(UseCaseRes { schedule }),
-            Err(_) => Err(UseCaseError::Storage),
+            Err(_) => Err(UseCaseError::StorageError),
         }
     }
 }

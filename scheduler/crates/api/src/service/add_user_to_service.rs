@@ -1,10 +1,10 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use nettu_scheduler_api_structs::add_user_to_service::*;
-use nettu_scheduler_domain::{Account, ServiceResource, TimePlan, ID};
-use nettu_scheduler_infra::NettuContext;
+use nittei_api_structs::add_user_to_service::*;
+use nittei_domain::{Account, ServiceResource, TimePlan, ID};
+use nittei_infra::NitteiContext;
 
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{
         auth::protect_account_route,
         usecase::{execute, UseCase},
@@ -15,8 +15,8 @@ pub async fn add_user_to_service_controller(
     http_req: HttpRequest,
     mut body: web::Json<RequestBody>,
     mut path: web::Path<PathParams>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
 
     let usecase = AddUserToServiceUseCase {
@@ -33,7 +33,7 @@ pub async fn add_user_to_service_controller(
     execute(usecase, &ctx)
         .await
         .map(|res| HttpResponse::Ok().json(APIResponse::new(res.user)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 #[derive(Debug)]
@@ -55,19 +55,21 @@ struct UseCaseRes {
 
 #[derive(Debug)]
 enum UseCaseError {
+    InternalError,
     ServiceNotFound,
     UserNotFound,
     UserAlreadyInService,
     InvalidValue(UpdateServiceResourceError),
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
+            UseCaseError::InternalError => Self::InternalError,
             UseCaseError::ServiceNotFound => Self::NotFound("The requested service was not found".into()),
             UseCaseError::UserNotFound => Self::NotFound("The specified user was not found".into()),
             UseCaseError::UserAlreadyInService => Self::Conflict("The specified user is already registered on the service, can not add the user more than once.".into()),
-            UseCaseError::InvalidValue(e) => e.to_nettu_error(),
+            UseCaseError::InvalidValue(e) => e.to_nittei_error(),
         }
     }
 }
@@ -80,20 +82,22 @@ impl UseCase for AddUserToServiceUseCase {
 
     const NAME: &'static str = "AddUserToService";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         if ctx
             .repos
             .users
             .find_by_account_id(&self.user_id, &self.account.id)
             .await
+            .map_err(|_| UseCaseError::InternalError)?
             .is_none()
         {
             return Err(UseCaseError::UserNotFound);
         }
 
         let service = match ctx.repos.services.find(&self.service_id).await {
-            Some(service) if service.account_id == self.account.id => service,
-            _ => return Err(UseCaseError::ServiceNotFound),
+            Ok(Some(service)) if service.account_id == self.account.id => service,
+            Ok(_) => return Err(UseCaseError::ServiceNotFound),
+            Err(_) => return Err(UseCaseError::InternalError),
         };
 
         let mut user_resource =
@@ -135,6 +139,7 @@ pub struct ServiceResourceUpdate {
 
 #[derive(Debug)]
 pub enum UpdateServiceResourceError {
+    InternalError,
     InvalidBuffer,
     CalendarNotOwnedByUser(String),
     ScheduleNotOwnedByUser(String),
@@ -142,20 +147,21 @@ pub enum UpdateServiceResourceError {
 }
 
 impl UpdateServiceResourceError {
-    pub fn to_nettu_error(&self) -> NettuError {
+    pub fn to_nittei_error(&self) -> NitteiError {
         match self {
+            Self::InternalError => NitteiError::InternalError,
             Self::InvalidBuffer => {
-                NettuError::BadClientData("The provided buffer was invalid, it should be between 0 and 12 hours specified in minutes.".into())
+                NitteiError::BadClientData("The provided buffer was invalid, it should be between 0 and 12 hours specified in minutes.".into())
             }
-            Self::CalendarNotOwnedByUser(calendar_id) => NettuError::NotFound(format!("The calendar: {}, was not found among the calendars for the specified user", calendar_id)),
+            Self::CalendarNotOwnedByUser(calendar_id) => NitteiError::NotFound(format!("The calendar: {}, was not found among the calendars for the specified user", calendar_id)),
             Self::ScheduleNotOwnedByUser(schedule_id) => {
-                NettuError::NotFound(format!(
+                NitteiError::NotFound(format!(
                     "The schedule with id: {}, was not found among the schedules for the specified user",
                     schedule_id
                 ))
             }
             Self::InvalidBookingTimespan(e) => {
-                NettuError::BadClientData(e.to_string())
+                NitteiError::BadClientData(e.to_string())
             }
         }
     }
@@ -164,26 +170,32 @@ impl UpdateServiceResourceError {
 pub async fn update_resource_values(
     user_resource: &mut ServiceResource,
     update: &ServiceResourceUpdate,
-    ctx: &NettuContext,
+    ctx: &NitteiContext,
 ) -> Result<(), UpdateServiceResourceError> {
     if let Some(availability) = &update.availability {
         match availability {
             TimePlan::Calendar(id) => {
                 match ctx.repos.calendars.find(id).await {
-                    Some(cal) if cal.user_id == user_resource.user_id => {}
-                    _ => {
+                    Ok(Some(cal)) if cal.user_id == user_resource.user_id => {}
+                    Ok(_) => {
                         return Err(UpdateServiceResourceError::CalendarNotOwnedByUser(
                             id.to_string(),
                         ));
                     }
+                    Err(_) => {
+                        return Err(UpdateServiceResourceError::InternalError);
+                    }
                 };
             }
             TimePlan::Schedule(id) => match ctx.repos.schedules.find(id).await {
-                Some(schedule) if schedule.user_id == user_resource.user_id => {}
-                _ => {
+                Ok(Some(schedule)) if schedule.user_id == user_resource.user_id => {}
+                Ok(_) => {
                     return Err(UpdateServiceResourceError::ScheduleNotOwnedByUser(
                         id.to_string(),
                     ))
+                }
+                Err(_) => {
+                    return Err(UpdateServiceResourceError::InternalError);
                 }
             },
             _ => (),

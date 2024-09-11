@@ -8,7 +8,7 @@ CREATE DOMAIN ext_calendar_provider AS TEXT
     NOT NULL
     CHECK (VALUE in ('google', 'outlook'));
 COMMENT ON DOMAIN ext_calendar_provider IS
-    'external calendar provider names that are supported by nettu scheduler';
+    'external calendar provider names that are supported by nittei';
 
 CREATE DOMAIN entity_version AS BIGINT
     DEFAULT 1

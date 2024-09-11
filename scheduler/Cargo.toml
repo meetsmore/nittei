@@ -1,9 +1,9 @@
 [package]
-name = "nettu_scheduler"
+name = "nittei"
 version = "0.1.0"
 authors = ["Fredrik Meringdal"]
 edition = "2018"
-default-run = "nettu_scheduler"
+default-run = "nittei"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -21,9 +21,11 @@ members = [
 ######################
 # Runtime dependencies
 [dependencies]
-nettu_scheduler_api = { path = "./crates/api" }
-nettu_scheduler_domain = { path = "./crates/domain" }
-nettu_scheduler_infra = { path = "./crates/infra" }
+nittei_api = { path = "./crates/api" }
+nittei_domain = { path = "./crates/domain" }
+nittei_infra = { path = "./crates/infra" }
+
+anyhow = "1.0"
 
 actix-web = "4.8"
 
@@ -47,7 +49,7 @@ opentelemetry-otlp = { version = "=0.16.0", features = [
     "http-proto",
     "tls",
 ] }
-tracing-bunyan-formatter = "0.3"
+opentelemetry-datadog = { version = "0.11.0", features = ["reqwest-client"] }
 
 openssl-probe = "0.1.2"
 chrono = "0.4.19"
@@ -61,8 +63,7 @@ version = "0.5"
 ##################
 # Dev dependencies
 [dev-dependencies]
-nettu_scheduler_sdk = { path = "./clients/rust" }
-
+nittei_sdk = { path = "./clients/rust" }
 
 #############
 # Lint stuff
@@ -71,9 +72,13 @@ nettu_scheduler_sdk = { path = "./clients/rust" }
 unsafe_code = "forbid"
 
 [lints.clippy]
-print_stdout = "forbid"
-print_err = "forbid"
+print_stdout = "deny"
+print_err = "deny"
+unwrap_used = "deny"
+expect_used = "deny"
 
 [workspace.lints.clippy]
-print_stdout = "forbid"
-print_err = "forbid"
+print_stdout = "deny"
+print_err = "deny"
+unwrap_used = "deny"
+expect_used = "deny"

@@ -1,11 +1,12 @@
-use nettu_scheduler_domain::{IntegrationProvider, UserIntegration, ID};
+use nittei_domain::{IntegrationProvider, UserIntegration, ID};
 use serde::Deserialize;
 use sqlx::{FromRow, PgPool};
-use tracing::error;
+use tracing::{error, instrument};
 use uuid::Uuid;
 
 use super::IUserIntegrationRepo;
 
+#[derive(Debug)]
 pub struct PostgresUserIntegrationRepo {
     pool: PgPool,
 }
@@ -41,6 +42,7 @@ impl From<UserIntegrationRaw> for UserIntegration {
 
 #[async_trait::async_trait]
 impl IUserIntegrationRepo for PostgresUserIntegrationRepo {
+    #[instrument]
     async fn insert(&self, integration: &UserIntegration) -> anyhow::Result<()> {
         let provider: String = integration.provider.clone().into();
         sqlx::query!(
@@ -67,6 +69,7 @@ impl IUserIntegrationRepo for PostgresUserIntegrationRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn save(&self, integration: &UserIntegration) -> anyhow::Result<()> {
         let provider: String = integration.provider.clone().into();
         sqlx::query!(
@@ -97,6 +100,7 @@ impl IUserIntegrationRepo for PostgresUserIntegrationRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn find(&self, user_id: &ID) -> anyhow::Result<Vec<UserIntegration>> {
         let integrations = sqlx::query_as!(
             UserIntegrationRaw,
@@ -118,6 +122,7 @@ impl IUserIntegrationRepo for PostgresUserIntegrationRepo {
         Ok(integrations.into_iter().map(|i| i.into()).collect())
     }
 
+    #[instrument]
     async fn delete(&self, user_id: &ID, provider: IntegrationProvider) -> anyhow::Result<()> {
         let provider: String = provider.into();
         match sqlx::query!(

@@ -1,8 +1,0 @@
-# Test group for running some tests serially
-[test-groups]
-serial-integration = { max-threads = 1 }
-
-# Tests that contain `serial_` are run serially
-[[profile.default.overrides]]
-filter = 'test(serial_)'
-test-group = 'serial-integration'

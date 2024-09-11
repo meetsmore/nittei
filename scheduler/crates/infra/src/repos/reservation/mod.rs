@@ -1,7 +1,7 @@
 mod postgres;
 
 use chrono::{DateTime, Utc};
-use nettu_scheduler_domain::ID;
+use nittei_domain::ID;
 pub use postgres::PostgresReservationRepo;
 
 #[async_trait::async_trait]
@@ -14,13 +14,13 @@ pub trait IReservationRepo: Send + Sync {
 #[cfg(test)]
 mod tests {
     use chrono::DateTime;
-    use nettu_scheduler_domain::{Account, Service};
+    use nittei_domain::{Account, Service};
 
     use crate::setup_context;
 
     #[tokio::test]
     async fn test_reservations_repo() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
 
         let account = Account::new();
         ctx.repos
@@ -85,7 +85,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_delete_reservation() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
 
         let account = Account::new();
         ctx.repos

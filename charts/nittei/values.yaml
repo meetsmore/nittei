@@ -46,6 +46,8 @@ securityContext:
 service:
   type: ClusterIP
   port: 80
+  targetPort: 5000
+  annotations: {}
 
 ingress:
   enabled: false
@@ -80,12 +82,12 @@ resources:
 
 livenessProbe:
   httpGet:
-    path: /
-    port: http
+    path: /api/v1/healthcheck
+    port: 5000
 readinessProbe:
   httpGet:
-    path: /
-    port: http
+    path: /api/v1/healthcheck
+    port: 5000
 
 autoscaling:
   enabled: false
@@ -112,3 +114,5 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+revisionHistoryLimit: 5

@@ -1,14 +1,14 @@
 import {
-  type INettuClient,
-  type INettuUserClient,
+  type INitteiClient,
+  type INitteiUserClient,
   ScheduleRuleVariant,
   Weekday,
 } from '../lib'
-import { setupAccount, setupUserClient } from './helpers/fixtures'
+import { setupUserClient } from './helpers/fixtures'
 
 describe('Service API', () => {
-  let client: INettuClient
-  let userClient: INettuUserClient
+  let client: INitteiClient
+  let userClient: INitteiUserClient
   let accountId: string
   let userId: string
   beforeAll(async () => {

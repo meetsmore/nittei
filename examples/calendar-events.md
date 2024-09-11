@@ -2,11 +2,10 @@
 
 `Calendar Event`s are events in a `Calendar` and can be either a single event or a recurring event. It is also possible to store `Metadata` on the `Calendar Event` to add additional fields if desired (e.g. title, description, videolink, etc.), and also query on those fields.
 
-
 ```js
-import { NettuClient, Frequenzy, config } from "@nettu/scheduler-sdk";
+import { nitteiClient, Frequenzy, config } from "@meetsmore/mittei-client";
 
-const client = NettuClient({ apiKey: "YOUR_API_KEY" });
+const client = nitteiClient({ apiKey: "YOUR_API_KEY" });
 
 // Create a User
 const userRes = await client.user.create();

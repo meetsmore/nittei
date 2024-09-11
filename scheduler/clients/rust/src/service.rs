@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use chrono::{DateTime, Utc};
-use nettu_scheduler_api_structs::*;
-use nettu_scheduler_domain::{BusyCalendar, Metadata, ServiceMultiPersonOptions};
+use nittei_api_structs::*;
+use nittei_domain::{BusyCalendar, Metadata, ServiceMultiPersonOptions};
 use reqwest::StatusCode;
 
 use crate::{shared::MetadataFindInput, APIResponse, BaseClient, TimePlan, Tz, ID};

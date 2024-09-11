@@ -1,4 +1,4 @@
-use nettu_scheduler_domain::{Metadata, ID};
+use nittei_domain::{Metadata, ID};
 
 #[derive(Debug, Clone)]
 pub struct MetadataFindQuery {

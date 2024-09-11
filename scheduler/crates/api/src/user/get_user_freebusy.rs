@@ -3,12 +3,12 @@ use std::collections::HashMap;
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::{DateTime, Utc};
 use futures::future::join_all;
-use nettu_scheduler_api_structs::get_user_freebusy::{APIResponse, PathParams, QueryParams};
-use nettu_scheduler_domain::{CompatibleInstances, EventInstance, TimeSpan, ID};
-use nettu_scheduler_infra::NettuContext;
+use nittei_api_structs::get_user_freebusy::{APIResponse, PathParams, QueryParams};
+use nittei_domain::{CompatibleInstances, EventInstance, TimeSpan, ID};
+use nittei_infra::NitteiContext;
 
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{
         auth::protect_public_account_route,
         usecase::{execute, UseCase},
@@ -29,8 +29,8 @@ pub async fn get_freebusy_controller(
     http_req: HttpRequest,
     mut query_params: web::Query<QueryParams>,
     mut params: web::Path<PathParams>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let _account = protect_public_account_route(&http_req, &ctx).await?;
 
     let usecase = GetFreeBusyUseCase {
@@ -48,7 +48,7 @@ pub async fn get_freebusy_controller(
                 user_id: usecase_res.user_id.to_string(),
             })
         })
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 #[derive(Debug)]
@@ -67,12 +67,14 @@ pub struct GetFreeBusyResponse {
 
 #[derive(Debug)]
 pub enum UseCaseError {
+    InternalError,
     InvalidTimespan,
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
+            UseCaseError::InternalError => Self::InternalError,
             UseCaseError::InvalidTimespan => {
                 Self::BadClientData("The provided start_ts and end_ts is invalid".into())
             }
@@ -88,7 +90,7 @@ impl UseCase for GetFreeBusyUseCase {
 
     const NAME: &'static str = "GetUserFreebusy";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         let timespan = TimeSpan::new(self.start_time, self.end_time);
         if timespan.greater_than(ctx.config.event_instances_query_duration_limit) {
             return Err(UseCaseError::InvalidTimespan);
@@ -97,6 +99,7 @@ impl UseCase for GetFreeBusyUseCase {
         let busy_event_instances = self
             .get_event_instances_from_calendars(&timespan, ctx)
             .await
+            .map_err(|_| UseCaseError::InternalError)?
             .into_iter()
             .filter(|e| e.busy)
             .collect::<Vec<_>>();
@@ -114,15 +117,15 @@ impl GetFreeBusyUseCase {
     async fn get_event_instances_from_calendars(
         &self,
         timespan: &TimeSpan,
-        ctx: &NettuContext,
-    ) -> Vec<EventInstance> {
+        ctx: &NitteiContext,
+    ) -> anyhow::Result<Vec<EventInstance>> {
         let calendar_ids = match &self.calendar_ids {
             Some(ids) if !ids.is_empty() => ids,
-            _ => return Vec::new(),
+            _ => return Ok(Vec::new()),
         };
 
         // can probably make query to event repo instead
-        let mut calendars = ctx.repos.calendars.find_by_user(&self.user_id).await;
+        let mut calendars = ctx.repos.calendars.find_by_user(&self.user_id).await?;
 
         if !calendar_ids.is_empty() {
             calendars.retain(|cal| calendar_ids.contains(&cal.id));
@@ -139,31 +142,38 @@ impl GetFreeBusyUseCase {
                 .find_by_calendar(&calendar.id, Some(timespan))
         });
 
-        join_all(all_events_futures)
-            .await
-            .into_iter()
-            .map(|events_res| events_res.unwrap_or_default())
-            .flat_map(|events| {
-                events
-                    .into_iter()
-                    .map(|event| {
+        let events: Vec<Result<Vec<nittei_domain::CalendarEvent>, anyhow::Error>> =
+            join_all(all_events_futures).await.into_iter().collect();
+
+        let mut all_expanded_events = Vec::new();
+        for events in events {
+            match events {
+                Ok(events) => {
+                    for event in events {
                         let calendar = calendars_lookup
                             .get(&event.calendar_id.to_string())
-                            .unwrap();
-                        event.expand(Some(timespan), &calendar.settings)
-                    })
-                    // It is possible that there are no instances in the expanded event, should remove them
-                    .filter(|instances| !instances.is_empty())
-            })
-            .flatten()
-            .collect::<Vec<_>>()
+                            .ok_or_else(|| {
+                                anyhow::anyhow!("Calendar with id: {} not found", event.calendar_id)
+                            })?;
+                        let expanded_events = event.expand(Some(timespan), &calendar.settings);
+
+                        all_expanded_events.extend(expanded_events);
+                    }
+                }
+                Err(e) => {
+                    return Err(e);
+                }
+            }
+        }
+
+        Ok(all_expanded_events)
     }
 }
 
 #[cfg(test)]
 mod test {
-    use nettu_scheduler_domain::{Account, Calendar, CalendarEvent, Entity, RRuleOptions, User};
-    use nettu_scheduler_infra::setup_context;
+    use nittei_domain::{Account, Calendar, CalendarEvent, Entity, RRuleOptions, User};
+    use nittei_infra::setup_context;
 
     use super::*;
 
@@ -188,7 +198,7 @@ mod test {
     #[actix_web::main]
     #[test]
     async fn freebusy_works() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let account = Account::default();
         ctx.repos.accounts.insert(&account).await.unwrap();
         let user = User::new(account.id.clone(), None);

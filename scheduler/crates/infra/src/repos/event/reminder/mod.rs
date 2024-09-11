@@ -1,7 +1,7 @@
 mod postgres;
 
 use chrono::{DateTime, Utc};
-use nettu_scheduler_domain::{Reminder, ID};
+use nittei_domain::{Reminder, ID};
 pub use postgres::PostgresReminderRepo;
 
 #[async_trait::async_trait]
@@ -9,19 +9,19 @@ pub trait IReminderRepo: Send + Sync {
     async fn bulk_insert(&self, reminders: &[Reminder]) -> anyhow::Result<()>;
     async fn init_version(&self, event_id: &ID) -> anyhow::Result<i64>;
     async fn inc_version(&self, event_id: &ID) -> anyhow::Result<i64>;
-    async fn delete_all_before(&self, before: DateTime<Utc>) -> Vec<Reminder>;
+    async fn delete_all_before(&self, before: DateTime<Utc>) -> anyhow::Result<Vec<Reminder>>;
 }
 
 #[cfg(test)]
 mod tests {
     use chrono::DateTime;
-    use nettu_scheduler_domain::{Account, Calendar, CalendarEvent, Reminder, User};
+    use nittei_domain::{Account, Calendar, CalendarEvent, Reminder, User};
 
     use crate::setup_context;
 
     #[tokio::test]
     async fn crud() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let account = Account::default();
         ctx.repos.accounts.insert(&account).await.unwrap();
         let user = User::new(account.id.clone(), None);
@@ -82,7 +82,8 @@ mod tests {
             .repos
             .reminders
             .delete_all_before(reminders[1].remind_at)
-            .await;
+            .await
+            .unwrap();
         assert_eq!(delete_res.len(), 2);
         assert_eq!(delete_res[0], reminders[0]);
         assert_eq!(delete_res[1], reminders[1]);
@@ -99,7 +100,8 @@ mod tests {
             .repos
             .reminders
             .delete_all_before(reminders[3].remind_at)
-            .await;
+            .await
+            .unwrap();
         // Reminders has been deleted because there is a new version now
         assert_eq!(delete_res.len(), 0);
     }

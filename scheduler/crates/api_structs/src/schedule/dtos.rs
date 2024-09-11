@@ -1,4 +1,4 @@
-use nettu_scheduler_domain::{Metadata, Schedule, ScheduleRule, Tz, ID};
+use nittei_domain::{Metadata, Schedule, ScheduleRule, Tz, ID};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

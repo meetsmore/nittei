@@ -1,7 +1,7 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use nettu_scheduler_api_structs::update_service_user::*;
-use nettu_scheduler_domain::{Account, ServiceResource, TimePlan, ID};
-use nettu_scheduler_infra::NettuContext;
+use nittei_api_structs::update_service_user::*;
+use nittei_domain::{Account, ServiceResource, TimePlan, ID};
+use nittei_infra::NitteiContext;
 
 use super::add_user_to_service::{
     update_resource_values,
@@ -9,7 +9,7 @@ use super::add_user_to_service::{
     UpdateServiceResourceError,
 };
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{
         auth::protect_account_route,
         usecase::{execute, UseCase},
@@ -20,8 +20,8 @@ pub async fn update_service_user_controller(
     http_req: HttpRequest,
     mut body: web::Json<RequestBody>,
     mut path: web::Path<PathParams>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
 
     let usecase = UpdateServiceUserUseCase {
@@ -38,7 +38,7 @@ pub async fn update_service_user_controller(
     execute(usecase, &ctx)
         .await
         .map(|usecase_res| HttpResponse::Ok().json(APIResponse::new(usecase_res.user)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 #[derive(Debug)]
@@ -66,7 +66,7 @@ enum UseCaseError {
     InvalidValue(UpdateServiceResourceError),
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::StorageError => Self::InternalError,
@@ -74,7 +74,7 @@ impl From<UseCaseError> for NettuError {
                 Self::NotFound("The requested service was not found".into())
             }
             UseCaseError::UserNotFound => Self::NotFound("The specified user was not found".into()),
-            UseCaseError::InvalidValue(e) => e.to_nettu_error(),
+            UseCaseError::InvalidValue(e) => e.to_nittei_error(),
         }
     }
 }
@@ -87,10 +87,11 @@ impl UseCase for UpdateServiceUserUseCase {
 
     const NAME: &'static str = "UpdateServiceUser";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         let _service = match ctx.repos.services.find(&self.service_id).await {
-            Some(service) if service.account_id == self.account.id => service,
-            _ => return Err(UseCaseError::ServiceNotFound),
+            Ok(Some(service)) if service.account_id == self.account.id => service,
+            Ok(_) => return Err(UseCaseError::ServiceNotFound),
+            Err(_) => return Err(UseCaseError::StorageError),
         };
 
         let mut user_resource = match ctx
@@ -99,8 +100,9 @@ impl UseCase for UpdateServiceUserUseCase {
             .find(&self.service_id, &self.user_id)
             .await
         {
-            Some(res) => res,
-            _ => return Err(UseCaseError::UserNotFound),
+            Ok(Some(res)) => res,
+            Ok(None) => return Err(UseCaseError::UserNotFound),
+            Err(_) => return Err(UseCaseError::StorageError),
         };
 
         update_resource_values(

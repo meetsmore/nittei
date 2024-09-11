@@ -1,13 +1,13 @@
 use std::{collections::HashMap, time::Duration};
 
 use actix_web::rt::time::Instant;
-use chrono::{DateTime, TimeDelta};
-use nettu_scheduler_api_structs::send_event_reminders::{AccountEventReminder, AccountReminders};
-use nettu_scheduler_domain::{Account, CalendarEvent, Reminder};
-use nettu_scheduler_infra::NettuContext;
+use chrono::TimeDelta;
+use nittei_api_structs::send_event_reminders::{AccountEventReminder, AccountReminders};
+use nittei_domain::{Account, CalendarEvent, Reminder};
+use nittei_infra::NitteiContext;
 use tracing::error;
 
-use crate::shared::usecase::UseCase;
+use crate::{error::NitteiError, shared::usecase::UseCase};
 
 /// Creates EventReminders for a calendar event
 #[derive(Debug)]
@@ -17,32 +17,42 @@ pub struct GetUpcomingRemindersUseCase {
 }
 
 #[derive(Debug)]
-pub enum UseCaseError {}
+pub enum UseCaseError {
+    IntervalServerError,
+}
+
+impl From<UseCaseError> for NitteiError {
+    fn from(e: UseCaseError) -> Self {
+        match e {
+            UseCaseError::IntervalServerError => Self::InternalError,
+        }
+    }
+}
 
 async fn get_accounts_from_reminders(
     reminders: &[Reminder],
-    ctx: &NettuContext,
-) -> HashMap<String, Account> {
+    ctx: &NitteiContext,
+) -> anyhow::Result<HashMap<String, Account>> {
     let account_ids: Vec<_> = reminders
         .iter()
         .map(|r| r.account_id.to_owned())
         .collect::<Vec<_>>();
-    ctx.repos
+    Ok(ctx
+        .repos
         .accounts
         .find_many(&account_ids)
-        .await
-        .unwrap()
+        .await?
         .into_iter()
         .map(|a| (a.id.to_string(), a))
-        .collect()
+        .collect())
 }
 
 async fn create_reminders_for_accounts(
     reminders: Vec<Reminder>,
     event_lookup: HashMap<String, CalendarEvent>,
-    ctx: &NettuContext,
-) -> Vec<(Account, AccountReminders)> {
-    let account_lookup = get_accounts_from_reminders(&reminders, ctx).await;
+    ctx: &NitteiContext,
+) -> anyhow::Result<Vec<(Account, AccountReminders)>> {
+    let account_lookup = get_accounts_from_reminders(&reminders, ctx).await?;
 
     let mut account_reminders: HashMap<String, (&Account, AccountReminders)> = HashMap::new();
 
@@ -82,10 +92,10 @@ async fn create_reminders_for_accounts(
         };
     }
 
-    account_reminders
+    Ok(account_reminders
         .into_iter()
         .map(|(_, (acc, reminders))| (acc.clone(), reminders))
-        .collect()
+        .collect())
 }
 
 #[async_trait::async_trait(?Send)]
@@ -97,13 +107,17 @@ impl UseCase for GetUpcomingRemindersUseCase {
     const NAME: &'static str = "GetUpcomingReminders";
 
     /// This will run every minute
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         // Find all occurrences for the next interval and delete them
-        let ts = DateTime::from_timestamp_millis(ctx.sys.get_timestamp_millis()).unwrap()
-            + TimeDelta::milliseconds(self.reminders_interval);
+        let ts = ctx.sys.get_timestamp() + TimeDelta::milliseconds(self.reminders_interval);
 
         // Get all reminders and filter out invalid / expired reminders
-        let reminders = ctx.repos.reminders.delete_all_before(ts).await;
+        let reminders = ctx
+            .repos
+            .reminders
+            .delete_all_before(ts)
+            .await
+            .map_err(|_| UseCaseError::IntervalServerError)?;
 
         let event_lookup = ctx
             .repos
@@ -115,12 +129,20 @@ impl UseCase for GetUpcomingRemindersUseCase {
                     .collect::<Vec<_>>(),
             )
             .await
-            .unwrap()
+            .map_err(|e| {
+                error!("{:?}", e);
+                UseCaseError::IntervalServerError
+            })?
             .into_iter()
             .map(|e| (e.id.to_string(), e))
             .collect::<HashMap<_, _>>();
 
-        let grouped_reminders = create_reminders_for_accounts(reminders, event_lookup, ctx).await;
+        let grouped_reminders = create_reminders_for_accounts(reminders, event_lookup, ctx)
+            .await
+            .map_err(|e| {
+                error!("{:?}", e);
+                UseCaseError::IntervalServerError
+            })?;
 
         let millis_to_send = ts.timestamp_millis() - ctx.sys.get_timestamp_millis();
         let instant = if millis_to_send > 0 {
@@ -137,9 +159,9 @@ impl UseCase for GetUpcomingRemindersUseCase {
 mod tests {
     use std::sync::Arc;
 
-    use chrono::Utc;
-    use nettu_scheduler_domain::{Calendar, CalendarEventReminder, User};
-    use nettu_scheduler_infra::{setup_context as _setup_ctx, ISys};
+    use chrono::{DateTime, Utc};
+    use nittei_domain::{Calendar, CalendarEventReminder, User};
+    use nittei_infra::{setup_context as _setup_ctx, ISys};
 
     use super::{super::create_event::CreateEventUseCase, *};
     use crate::{
@@ -147,12 +169,13 @@ mod tests {
         shared::usecase::execute,
     };
 
-    async fn setup_context() -> NettuContext {
-        let ctx = _setup_ctx().await;
+    async fn setup_context() -> NitteiContext {
+        let ctx = _setup_ctx().await.unwrap();
         ctx.repos
             .reminders
             .delete_all_before(DateTime::<Utc>::MAX_UTC)
-            .await;
+            .await
+            .unwrap();
 
         ctx
     }
@@ -162,12 +185,18 @@ mod tests {
         fn get_timestamp_millis(&self) -> i64 {
             1613862000000 // Sun Feb 21 2021 00:00:00 GMT+0100 (Central European Standard Time) {}
         }
+        fn get_timestamp(&self) -> DateTime<Utc> {
+            DateTime::from_timestamp_millis(1613862000000).unwrap()
+        }
     }
 
     pub struct StaticTimeSys2;
     impl ISys for StaticTimeSys2 {
         fn get_timestamp_millis(&self) -> i64 {
             1613862000000 + 1000 * 60 * 49 // Sun Feb 21 2021 00:49:00 GMT+0100 (Central European Standard Time) {}
+        }
+        fn get_timestamp(&self) -> DateTime<Utc> {
+            DateTime::from_timestamp_millis(1613862000000 + 1000 * 60 * 49).unwrap()
         }
     }
 
@@ -176,9 +205,12 @@ mod tests {
         fn get_timestamp_millis(&self) -> i64 {
             1613862000000 + 1000 * 60 * 60 * 24 // Sun Feb 22 2021 00:00:00 GMT+0100 (Central European Standard Time) {}
         }
+        fn get_timestamp(&self) -> DateTime<Utc> {
+            DateTime::from_timestamp_millis(1613862000000 + 1000 * 60 * 60 * 24).unwrap()
+        }
     }
 
-    async fn insert_common_data(ctx: &NettuContext) -> (User, Calendar) {
+    async fn insert_common_data(ctx: &NitteiContext) -> (User, Calendar) {
         let account = Account::default();
         ctx.repos.accounts.insert(&account).await.unwrap();
 
@@ -202,7 +234,7 @@ mod tests {
         let usecase = CreateEventUseCase {
             user: user.clone(),
             calendar_id: calendar.id.clone(),
-            start_time: DateTime::from_timestamp_millis(ctx.sys.get_timestamp_millis()).unwrap(),
+            start_time: ctx.sys.get_timestamp(),
             duration: 1000 * 60 * 60 * 2,
             recurrence: Some(Default::default()),
             reminders: vec![
@@ -224,8 +256,7 @@ mod tests {
         let usecase = CreateEventUseCase {
             calendar_id: calendar.id.clone(),
             user,
-            start_time: DateTime::from_timestamp_millis(sys3.get_timestamp_millis()).unwrap()
-                + TimeDelta::milliseconds(1000 * 60 * 5),
+            start_time: sys3.get_timestamp() + TimeDelta::milliseconds(1000 * 60 * 5),
             duration: 1000 * 60 * 60 * 2,
             reminders: vec![CalendarEventReminder {
                 delta: -10,
@@ -281,9 +312,8 @@ mod tests {
         let mut ctx = setup_context().await;
         ctx.sys = Arc::new(StaticTimeSys1 {});
 
-        let now = ctx.sys.get_timestamp_millis();
-        let initial_start_time =
-            DateTime::from_timestamp_millis(now).unwrap() + TimeDelta::milliseconds(30 * 60 * 1000);
+        let now = ctx.sys.get_timestamp();
+        let initial_start_time = now + TimeDelta::milliseconds(30 * 60 * 1000);
         let delta = -10;
 
         let (user, calendar) = insert_common_data(&ctx).await;
@@ -305,7 +335,8 @@ mod tests {
             .repos
             .reminders
             .delete_all_before(initial_start_time)
-            .await;
+            .await
+            .unwrap();
         ctx.repos
             .reminders
             .bulk_insert(&old_reminders)
@@ -314,7 +345,7 @@ mod tests {
 
         let start_ts_diff = TimeDelta::milliseconds(15 * 60 * 1000); // 15 minutes
         let new_start = calendar_event.start_time + start_ts_diff; // Postponed 15 minutes
-        let user = ctx.repos.users.find(&user.id).await.unwrap();
+        let user = ctx.repos.users.find(&user.id).await.unwrap().unwrap();
         let update_event_usecase = UpdateEventUseCase {
             event_id: calendar_event.id,
             user,
@@ -327,7 +358,12 @@ mod tests {
             ..Default::default()
         };
         execute(update_event_usecase, &ctx).await.unwrap();
-        let new_reminders = ctx.repos.reminders.delete_all_before(new_start).await;
+        let new_reminders = ctx
+            .repos
+            .reminders
+            .delete_all_before(new_start)
+            .await
+            .unwrap();
         assert_eq!(new_reminders.len(), old_reminders.len());
         assert_eq!(new_reminders.len(), 1);
         assert_eq!(
@@ -348,7 +384,7 @@ mod tests {
         let mut ctx = setup_context().await;
         ctx.sys = Arc::new(StaticTimeSys1 {});
 
-        let now = DateTime::from_timestamp_millis(ctx.sys.get_timestamp_millis()).unwrap();
+        let now = ctx.sys.get_timestamp();
         let delta = 120;
         let remind_at = now + TimeDelta::milliseconds(120 * 60 * 1000);
 
@@ -367,7 +403,12 @@ mod tests {
         };
 
         let calendar_event = execute(usecase, &ctx).await.unwrap();
-        let old_reminders = ctx.repos.reminders.delete_all_before(remind_at).await;
+        let old_reminders = ctx
+            .repos
+            .reminders
+            .delete_all_before(remind_at)
+            .await
+            .unwrap();
         ctx.repos
             .reminders
             .bulk_insert(&old_reminders)
@@ -387,7 +428,12 @@ mod tests {
             ..Default::default()
         };
         execute(update_event_usecase, &ctx).await.unwrap();
-        let new_reminders = ctx.repos.reminders.delete_all_before(remind_at).await;
+        let new_reminders = ctx
+            .repos
+            .reminders
+            .delete_all_before(remind_at)
+            .await
+            .unwrap();
         let acc_reminders = new_reminders
             .into_iter()
             .filter(|r| r.event_id == calendar_event.id)
@@ -403,7 +449,7 @@ mod tests {
         let mut ctx = setup_context().await;
         ctx.sys = Arc::new(StaticTimeSys1 {});
 
-        let now = DateTime::from_timestamp_millis(ctx.sys.get_timestamp_millis()).unwrap();
+        let now = ctx.sys.get_timestamp();
 
         let (user, calendar) = insert_common_data(&ctx).await;
         let delta = 120;
@@ -422,7 +468,12 @@ mod tests {
         };
 
         let calendar_event = execute(usecase, &ctx).await.unwrap();
-        let old_reminders = ctx.repos.reminders.delete_all_before(remind_at).await;
+        let old_reminders = ctx
+            .repos
+            .reminders
+            .delete_all_before(remind_at)
+            .await
+            .unwrap();
 
         ctx.repos
             .reminders
@@ -440,7 +491,12 @@ mod tests {
             event_id: calendar_event.id,
         };
         execute(update_event_usecase, &ctx).await.unwrap();
-        let new_reminders = ctx.repos.reminders.delete_all_before(remind_at).await;
+        let new_reminders = ctx
+            .repos
+            .reminders
+            .delete_all_before(remind_at)
+            .await
+            .unwrap();
         assert!(new_reminders.is_empty());
     }
 }

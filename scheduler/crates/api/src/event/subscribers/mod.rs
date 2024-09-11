@@ -1,5 +1,5 @@
-use nettu_scheduler_domain::{CalendarEvent, IntegrationProvider, SyncedCalendarEvent};
-use nettu_scheduler_infra::{
+use nittei_domain::{CalendarEvent, IntegrationProvider, SyncedCalendarEvent};
+use nittei_infra::{
     google_calendar::GoogleCalendarProvider,
     outlook_calendar::OutlookCalendarProvider,
 };
@@ -16,7 +16,7 @@ pub struct CreateRemindersOnEventCreated;
 
 #[async_trait::async_trait(?Send)]
 impl Subscriber<CreateEventUseCase> for CreateRemindersOnEventCreated {
-    async fn notify(&self, e: &CalendarEvent, ctx: &nettu_scheduler_infra::NettuContext) {
+    async fn notify(&self, e: &CalendarEvent, ctx: &nittei_infra::NitteiContext) {
         let sync_event_reminders = SyncEventRemindersUseCase {
             request: SyncEventRemindersTrigger::EventModified(e, EventOperation::Created),
         };
@@ -30,7 +30,7 @@ pub struct SyncRemindersOnEventUpdated;
 
 #[async_trait::async_trait(?Send)]
 impl Subscriber<UpdateEventUseCase> for SyncRemindersOnEventUpdated {
-    async fn notify(&self, e: &CalendarEvent, ctx: &nettu_scheduler_infra::NettuContext) {
+    async fn notify(&self, e: &CalendarEvent, ctx: &nittei_infra::NitteiContext) {
         let sync_event_reminders = SyncEventRemindersUseCase {
             request: SyncEventRemindersTrigger::EventModified(e, EventOperation::Updated),
         };
@@ -44,7 +44,7 @@ pub struct CreateSyncedEventsOnEventCreated;
 
 #[async_trait::async_trait(?Send)]
 impl Subscriber<CreateEventUseCase> for CreateSyncedEventsOnEventCreated {
-    async fn notify(&self, e: &CalendarEvent, ctx: &nettu_scheduler_infra::NettuContext) {
+    async fn notify(&self, e: &CalendarEvent, ctx: &nittei_infra::NitteiContext) {
         info!("Calendar event created, going to insert into synced calendars.");
         let synced_calendars = match ctx
             .repos
@@ -71,10 +71,15 @@ impl Subscriber<CreateEventUseCase> for CreateSyncedEventsOnEventCreated {
         if synced_google_calendars.is_empty() && synced_outlook_calendars.is_empty() {
             return;
         }
-        let user = match ctx.repos.users.find(&e.user_id).await {
-            Some(u) => u,
-            None => {
+        let user = ctx.repos.users.find(&e.user_id).await;
+        let user = match user {
+            Ok(Some(u)) => u,
+            Ok(None) => {
                 error!("Unable to find user when creating sync events");
+                return;
+            }
+            Err(e) => {
+                error!("Unable to find user when creating sync events {:?}", e);
                 return;
             }
         };
@@ -157,7 +162,7 @@ pub struct UpdateSyncedEventsOnEventUpdated;
 
 #[async_trait::async_trait(?Send)]
 impl Subscriber<UpdateEventUseCase> for UpdateSyncedEventsOnEventUpdated {
-    async fn notify(&self, e: &CalendarEvent, ctx: &nettu_scheduler_infra::NettuContext) {
+    async fn notify(&self, e: &CalendarEvent, ctx: &nittei_infra::NitteiContext) {
         let synced_events = match ctx.repos.event_synced.find_by_event(&e.id).await {
             Ok(synced_calendars) => synced_calendars,
             Err(e) => {
@@ -179,9 +184,13 @@ impl Subscriber<UpdateEventUseCase> for UpdateSyncedEventsOnEventUpdated {
             return;
         }
         let user = match ctx.repos.users.find(&e.user_id).await {
-            Some(u) => u,
-            None => {
+            Ok(Some(u)) => u,
+            Ok(None) => {
                 error!("Unable to find user when updating sync events");
+                return;
+            }
+            Err(e) => {
+                error!("Unable to find user when updating sync events {:?}", e);
                 return;
             }
         };

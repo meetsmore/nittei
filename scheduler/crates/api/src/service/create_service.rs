@@ -1,10 +1,10 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use nettu_scheduler_api_structs::create_service::*;
-use nettu_scheduler_domain::{Account, Metadata, Service, ServiceMultiPersonOptions};
-use nettu_scheduler_infra::NettuContext;
+use nittei_api_structs::create_service::*;
+use nittei_domain::{Account, Metadata, Service, ServiceMultiPersonOptions};
+use nittei_infra::NitteiContext;
 
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{
         auth::protect_account_route,
         usecase::{execute, UseCase},
@@ -14,8 +14,8 @@ use crate::{
 pub async fn create_service_controller(
     http_req: HttpRequest,
     body: web::Json<RequestBody>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
 
     let body = body.0;
@@ -28,7 +28,7 @@ pub async fn create_service_controller(
     execute(usecase, &ctx)
         .await
         .map(|usecase_res| HttpResponse::Created().json(APIResponse::new(usecase_res.service)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 #[derive(Debug)]
@@ -47,7 +47,7 @@ enum UseCaseError {
     StorageError,
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::StorageError => Self::InternalError,
@@ -63,7 +63,7 @@ impl UseCase for CreateServiceUseCase {
 
     const NAME: &'static str = "CreateService";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         let mut service = Service::new(self.account.id.clone());
         service.metadata = self.metadata.clone();
         service.multi_person = self.multi_person.clone();

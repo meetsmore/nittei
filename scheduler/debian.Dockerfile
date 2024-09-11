@@ -1,5 +1,5 @@
-ARG RUST_VERSION=1.79.0
-ARG APP_NAME=nettu_scheduler
+ARG RUST_VERSION=1.80.1
+ARG APP_NAME=nittei
 
 FROM rust:${RUST_VERSION}-slim AS builder
 ARG APP_NAME
@@ -24,6 +24,9 @@ RUN --mount=type=bind,source=src,target=/app/${APP_NAME}/src \
   cp ./target/release/$APP_NAME /bin/server
 
 FROM debian:stable-slim
+
+# Enable backtraces
+ENV RUST_BACKTRACE=1
 
 RUN apt update \
   && apt install -y openssl ca-certificates \

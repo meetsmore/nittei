@@ -1,10 +1,10 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use nettu_scheduler_api_structs::remove_user_from_service::*;
-use nettu_scheduler_domain::{Account, ID};
-use nettu_scheduler_infra::NettuContext;
+use nittei_api_structs::remove_user_from_service::*;
+use nittei_domain::{Account, ID};
+use nittei_infra::NitteiContext;
 
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{
         auth::protect_account_route,
         usecase::{execute, UseCase},
@@ -14,8 +14,8 @@ use crate::{
 pub async fn remove_user_from_service_controller(
     http_req: HttpRequest,
     mut path: web::Path<PathParams>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
 
     let usecase = RemoveUserFromServiceUseCase {
@@ -27,7 +27,7 @@ pub async fn remove_user_from_service_controller(
     execute(usecase, &ctx)
         .await
         .map(|_usecase_res| HttpResponse::Ok().json(APIResponse::from("User removed from service")))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 #[derive(Debug)]
@@ -42,13 +42,15 @@ struct UseCaseRes {}
 
 #[derive(Debug)]
 enum UseCaseError {
+    InternalError,
     ServiceNotFound,
     UserNotFound,
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
+            UseCaseError::InternalError => Self::InternalError,
             UseCaseError::ServiceNotFound => {
                 Self::NotFound("The requested service was not found".to_string())
             }
@@ -67,10 +69,11 @@ impl UseCase for RemoveUserFromServiceUseCase {
 
     const NAME: &'static str = "RemoveUserFromService";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         let service = match ctx.repos.services.find(&self.service_id).await {
-            Some(service) if service.account_id == self.account.id => service,
-            _ => return Err(UseCaseError::ServiceNotFound),
+            Ok(Some(service)) if service.account_id == self.account.id => service,
+            Ok(_) => return Err(UseCaseError::ServiceNotFound),
+            Err(_) => return Err(UseCaseError::InternalError),
         };
 
         ctx.repos

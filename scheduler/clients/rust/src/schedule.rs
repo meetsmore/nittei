@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use nettu_scheduler_api_structs::*;
-use nettu_scheduler_domain::{Metadata, Tz};
+use nittei_api_structs::*;
+use nittei_domain::{Metadata, Tz};
 use reqwest::StatusCode;
 
 use crate::{APIResponse, BaseClient, ScheduleRule, ID};

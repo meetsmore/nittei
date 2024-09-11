@@ -1,3 +1,7 @@
+// Allow clippy lints because this is a test helper
+#![allow(clippy::unwrap_used)]
+#![allow(clippy::expect_used)]
+
 mod helpers;
 
 use chrono::{DateTime, Duration, TimeDelta, Utc, Weekday};
@@ -5,8 +9,8 @@ use helpers::{
     setup::spawn_app,
     utils::{assert_equal_user_lists, format_datetime},
 };
-use nettu_scheduler_domain::{BusyCalendar, ServiceMultiPersonOptions, TimePlan, ID};
-use nettu_scheduler_sdk::{
+use nittei_domain::{BusyCalendar, ServiceMultiPersonOptions, TimePlan, ID};
+use nittei_sdk::{
     AddBusyCalendar,
     AddServiceUserInput,
     Calendar,
@@ -17,12 +21,15 @@ use nettu_scheduler_sdk::{
     CreateServiceInput,
     CreateUserInput,
     GetServiceBookingSlotsInput,
-    NettuSDK,
+    NitteiSDK,
     RoundRobinAlgorithm,
     User,
 };
 
-async fn create_default_service_host(admin_client: &NettuSDK, service_id: &ID) -> (User, Calendar) {
+async fn create_default_service_host(
+    admin_client: &NitteiSDK,
+    service_id: &ID,
+) -> (User, Calendar) {
     let input = CreateUserInput {
         metadata: None,
         user_id: None,
@@ -76,7 +83,7 @@ async fn create_default_service_host(admin_client: &NettuSDK, service_id: &ID) -
     let input = AddBusyCalendar {
         user_id: host.id.clone(),
         service_id: service_id.clone(),
-        calendar: BusyCalendar::Nettu(busy_calendar.id.clone()),
+        calendar: BusyCalendar::Nittei(busy_calendar.id.clone()),
     };
     admin_client
         .service
@@ -96,7 +103,7 @@ async fn test_round_robin_scheduling_simple_test() {
         .await
         .expect("Expected to create account");
 
-    let admin_client = NettuSDK::new(address, res.secret_api_key);
+    let admin_client = NitteiSDK::new(address, res.secret_api_key);
 
     let users_count_list: Vec<usize> = vec![0, 1, 5, 10];
     let round_robin_algos = vec![
@@ -226,7 +233,7 @@ async fn test_round_robin_equal_distribution_scheduling() {
         .await
         .expect("Expected to create account");
 
-    let admin_client = NettuSDK::new(address, res.secret_api_key);
+    let admin_client = NitteiSDK::new(address, res.secret_api_key);
 
     // Each test case is a list of upcoming service events for a host
     let test_cases: Vec<Vec<usize>> = vec![
@@ -378,7 +385,7 @@ async fn test_round_robin_availability_scheduling() {
         .await
         .expect("Expected to create account");
 
-    let admin_client = NettuSDK::new(address, res.secret_api_key);
+    let admin_client = NitteiSDK::new(address, res.secret_api_key);
 
     // Each test case is a list of timestamps for the least recently assigned event for a host
     let test_cases: Vec<Vec<i64>> = vec![
@@ -472,6 +479,7 @@ async fn test_round_robin_availability_scheduling() {
                 .events
                 .find(&event_id)
                 .await
+                .unwrap()
                 .expect("To find event");
             service_event.created = *last_assigned_service_event;
             app.ctx

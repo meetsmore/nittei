@@ -1,6 +1,6 @@
 mod postgres;
 
-use nettu_scheduler_domain::{SyncedCalendar, ID};
+use nittei_domain::{SyncedCalendar, ID};
 pub use postgres::PostgresCalendarSyncedRepo;
 
 #[async_trait::async_trait]
@@ -12,7 +12,7 @@ pub trait ICalendarSyncedRepo: Send + Sync {
 
 #[cfg(test)]
 mod tests {
-    use nettu_scheduler_domain::{
+    use nittei_domain::{
         Account,
         AccountIntegration,
         Calendar,
@@ -26,7 +26,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_calendar_synced_repo() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
 
         let account = Account::new();
         ctx.repos

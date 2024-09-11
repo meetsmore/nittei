@@ -1,17 +1,13 @@
-import {
-  INettuClient,
-  NettuClient,
-  config,
-  type INettuUserClient,
-} from '../lib'
+import { INitteiClient, NitteiClient, type INitteiUserClient } from '../lib'
 import { setupUserClient } from './helpers/fixtures'
 
 describe('Calendar API', () => {
-  let client: INettuUserClient
+  let client: INitteiUserClient
   let userId: string
-  const unauthClient = NettuClient()
+  let unauthClient: INitteiClient
 
   beforeAll(async () => {
+    unauthClient = await NitteiClient({})
     const data = await setupUserClient()
     client = data.userClient
     userId = data.userId

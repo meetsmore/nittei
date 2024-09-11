@@ -6,7 +6,7 @@ ARG ARCH=x86_64
 FROM messense/rust-musl-cross:${ARCH}-musl AS builder
 
 ARG ARCH=x86_64
-ARG APP_NAME=nettu_scheduler
+ARG APP_NAME=nittei
 
 # Copy source code from previous stage
 COPY . .
@@ -18,7 +18,7 @@ RUN cargo build --release --target ${ARCH}-unknown-linux-musl && \
 #Create a new stage with a minimal image
 FROM busybox:musl
 
-ARG APP_NAME=nettu_scheduler
+ARG APP_NAME=nittei
 ENV APP_NAME=${APP_NAME}
 
 COPY --from=builder /${APP_NAME} /${APP_NAME}

@@ -1,11 +1,11 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::{DateTime, Utc};
-use nettu_scheduler_api_structs::get_events_by_calendars::*;
-use nettu_scheduler_domain::{EventWithInstances, TimeSpan, ID};
-use nettu_scheduler_infra::NettuContext;
+use nittei_api_structs::get_events_by_calendars::*;
+use nittei_domain::{EventWithInstances, TimeSpan, ID};
+use nittei_infra::NitteiContext;
 
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{
         auth::protect_account_route,
         usecase::{execute, UseCase},
@@ -15,8 +15,8 @@ use crate::{
 pub async fn get_events_by_calendars_controller(
     http_req: HttpRequest,
     query: web::Query<QueryParams>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
 
     let calendar_ids = match &query.calendar_ids {
@@ -34,7 +34,7 @@ pub async fn get_events_by_calendars_controller(
     execute(usecase, &ctx)
         .await
         .map(|events| HttpResponse::Ok().json(APIResponse::new(events.events)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 #[derive(Debug)]
@@ -52,13 +52,15 @@ pub struct UseCaseResponse {
 
 #[derive(Debug)]
 pub enum UseCaseError {
+    InternalError,
     NotFound(String, String),
     InvalidTimespan,
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
+            UseCaseError::InternalError => Self::InternalError,
             UseCaseError::InvalidTimespan => {
                 Self::BadClientData("The provided start_ts and end_ts is invalid".into())
             }
@@ -78,12 +80,13 @@ impl UseCase for GetEventsByCalendarsUseCase {
 
     const NAME: &'static str = "GetEventsByCalendars";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<UseCaseResponse, UseCaseError> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<UseCaseResponse, UseCaseError> {
         let calendars = ctx
             .repos
             .calendars
             .find_multiple(self.calendar_ids.iter().collect::<Vec<_>>())
-            .await;
+            .await
+            .map_err(|_| UseCaseError::InternalError)?;
 
         // Check that all calendars exist and belong to the same account
         if calendars.is_empty()

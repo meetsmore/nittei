@@ -5,7 +5,7 @@ import type {
   OutlookCalendar,
   OutlookCalendarAccessRole,
 } from './domain/calendar'
-import { type APIResponse, NettuBaseClient } from './baseClient'
+import { type APIResponse, NitteiBaseClient } from './baseClient'
 import type {
   CalendarEvent,
   CalendarEventInstance,
@@ -128,7 +128,7 @@ type StopCalendarSyncInput = {
  * Client for the calendar endpoints
  * This is an admin client (usually backend)
  */
-export class NettuCalendarClient extends NettuBaseClient {
+export class NitteiCalendarClient extends NitteiBaseClient {
   /**
    * Create a calendar
    * @param userId - uuid of the user to create the calendar for
@@ -294,7 +294,7 @@ export class NettuCalendarClient extends NettuBaseClient {
  * Client for the calendar endpoints
  * This is an end user client (usually frontend)
  */
-export class NettuCalendarUserClient extends NettuBaseClient {
+export class NitteiCalendarUserClient extends NitteiBaseClient {
   public create(data: CreateCalendarRequest) {
     return this.post<CalendarResponse>('/calendar', data)
   }

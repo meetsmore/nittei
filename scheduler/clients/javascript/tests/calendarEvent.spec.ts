@@ -1,20 +1,22 @@
 import {
-  type INettuClient,
-  NettuClient,
+  type INitteiClient,
+  NitteiClient,
   Frequenzy,
-  type INettuUserClient,
+  type INitteiUserClient,
 } from '../lib'
 import { setupUserClient } from './helpers/fixtures'
 
 describe('CalendarEvent API', () => {
   let calendarId: string
   let userId: string
-  let client: INettuUserClient
-  let unauthClient: INettuClient
+  let client: INitteiUserClient
+  let unauthClient: INitteiClient
   beforeAll(async () => {
     const data = await setupUserClient()
     client = data.userClient
-    unauthClient = NettuClient({ nettuAccount: data.accountId })
+    unauthClient = await NitteiClient({
+      nitteiAccount: data.accountId,
+    })
     const calendarRes = await client.calendar.create({
       timezone: 'UTC',
     })

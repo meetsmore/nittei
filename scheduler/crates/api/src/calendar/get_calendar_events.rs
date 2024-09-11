@@ -1,11 +1,12 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::{DateTime, Utc};
-use nettu_scheduler_api_structs::get_calendar_events::{APIResponse, PathParams, QueryParams};
-use nettu_scheduler_domain::{Calendar, EventWithInstances, TimeSpan, ID};
-use nettu_scheduler_infra::NettuContext;
+use nittei_api_structs::get_calendar_events::{APIResponse, PathParams, QueryParams};
+use nittei_domain::{Calendar, EventWithInstances, TimeSpan, ID};
+use nittei_infra::NitteiContext;
+use tracing::error;
 
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{
         auth::{account_can_modify_calendar, protect_account_route, protect_route},
         usecase::{execute, UseCase},
@@ -16,8 +17,8 @@ pub async fn get_calendar_events_admin_controller(
     http_req: HttpRequest,
     query_params: web::Query<QueryParams>,
     path: web::Path<PathParams>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
     let cal = account_can_modify_calendar(&account, &path.calendar_id, &ctx).await?;
 
@@ -30,18 +31,18 @@ pub async fn get_calendar_events_admin_controller(
 
     execute(usecase, &ctx)
         .await
+        .map_err(NitteiError::from)
         .map(|usecase_res| {
             HttpResponse::Ok().json(APIResponse::new(usecase_res.calendar, usecase_res.events))
         })
-        .map_err(NettuError::from)
 }
 
 pub async fn get_calendar_events_controller(
     http_req: HttpRequest,
     query_params: web::Query<QueryParams>,
     path: web::Path<PathParams>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let (user, _policy) = protect_route(&http_req, &ctx).await?;
 
     let usecase = GetCalendarEventsUseCase {
@@ -53,10 +54,10 @@ pub async fn get_calendar_events_controller(
 
     execute(usecase, &ctx)
         .await
+        .map_err(NitteiError::from)
         .map(|usecase_res| {
             HttpResponse::Ok().json(APIResponse::new(usecase_res.calendar, usecase_res.events))
         })
-        .map_err(NettuError::from)
 }
 #[derive(Debug)]
 pub struct GetCalendarEventsUseCase {
@@ -76,9 +77,10 @@ pub struct UseCaseResponse {
 pub enum UseCaseError {
     NotFound(ID),
     InvalidTimespan,
+    IntervalServerError,
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::InvalidTimespan => {
@@ -88,6 +90,7 @@ impl From<UseCaseError> for NettuError {
                 "The calendar with id: {}, was not found.",
                 calendar_id
             )),
+            UseCaseError::IntervalServerError => Self::InternalError,
         }
     }
 }
@@ -100,8 +103,13 @@ impl UseCase for GetCalendarEventsUseCase {
 
     const NAME: &'static str = "GetCalendarEvents";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
-        let calendar = ctx.repos.calendars.find(&self.calendar_id).await;
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
+        let calendar = ctx
+            .repos
+            .calendars
+            .find(&self.calendar_id)
+            .await
+            .map_err(|_| UseCaseError::IntervalServerError)?;
 
         let timespan = TimeSpan::new(self.start_time, self.end_time);
         if timespan.greater_than(ctx.config.event_instances_query_duration_limit) {
@@ -115,7 +123,10 @@ impl UseCase for GetCalendarEventsUseCase {
                     .events
                     .find_by_calendar(&calendar.id, Some(&timespan))
                     .await
-                    .unwrap()
+                    .map_err(|e| {
+                        error!("{:?}", e);
+                        UseCaseError::IntervalServerError
+                    })?
                     .into_iter()
                     .map(|event| {
                         let instances = event.expand(Some(&timespan), &calendar.settings);

@@ -1,11 +1,11 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::Utc;
-use nettu_scheduler_api_structs::oauth_integration::*;
-use nettu_scheduler_domain::{IntegrationProvider, User, UserIntegration};
-use nettu_scheduler_infra::{CodeTokenRequest, NettuContext, ProviderOAuth};
+use nittei_api_structs::oauth_integration::*;
+use nittei_domain::{IntegrationProvider, User, UserIntegration};
+use nittei_infra::{CodeTokenRequest, NitteiContext, ProviderOAuth};
 
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{
         auth::{account_can_modify_user, protect_account_route, protect_route},
         usecase::{execute, UseCase},
@@ -16,8 +16,8 @@ pub async fn oauth_integration_admin_controller(
     http_req: HttpRequest,
     path: web::Path<PathParams>,
     body: web::Json<RequestBody>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
     let user = account_can_modify_user(&account, &path.user_id, &ctx).await?;
 
@@ -30,14 +30,14 @@ pub async fn oauth_integration_admin_controller(
     execute(usecase, &ctx)
         .await
         .map(|usecase_res| HttpResponse::Ok().json(APIResponse::new(usecase_res.user)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 pub async fn oauth_integration_controller(
     http_req: HttpRequest,
     body: web::Json<RequestBody>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let (user, _) = protect_route(&http_req, &ctx).await?;
 
     let usecase = OAuthIntegrationUseCase {
@@ -49,7 +49,7 @@ pub async fn oauth_integration_controller(
     execute(usecase, &ctx)
         .await
         .map(|usecase_res| HttpResponse::Ok().json(APIResponse::new(usecase_res.user)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 #[derive(Debug)]
@@ -72,7 +72,7 @@ pub enum UseCaseError {
     OAuthFailed,
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::StorageError => Self::InternalError,
@@ -94,7 +94,7 @@ impl UseCase for OAuthIntegrationUseCase {
 
     const NAME: &'static str = "OAuthIntegration";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         let account_integrations = ctx
             .repos
             .account_integrations

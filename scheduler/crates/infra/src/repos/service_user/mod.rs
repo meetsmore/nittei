@@ -1,34 +1,26 @@
 mod postgres;
 
-use nettu_scheduler_domain::{ServiceResource, ID};
+use nittei_domain::{ServiceResource, ID};
 pub use postgres::{PostgresServiceUserRepo, ServiceUserRaw};
 
 #[async_trait::async_trait]
 pub trait IServiceUserRepo: Send + Sync {
     async fn insert(&self, user: &ServiceResource) -> anyhow::Result<()>;
     async fn save(&self, user: &ServiceResource) -> anyhow::Result<()>;
-    async fn find(&self, service_id: &ID, user_id: &ID) -> Option<ServiceResource>;
-    async fn find_by_user(&self, user_id: &ID) -> Vec<ServiceResource>;
+    async fn find(&self, service_id: &ID, user_id: &ID) -> anyhow::Result<Option<ServiceResource>>;
+    async fn find_by_user(&self, user_id: &ID) -> anyhow::Result<Vec<ServiceResource>>;
     async fn delete(&self, service_id: &ID, user_uid: &ID) -> anyhow::Result<()>;
 }
 
 #[cfg(test)]
 mod tests {
-    use nettu_scheduler_domain::{
-        Account,
-        Calendar,
-        Entity,
-        Service,
-        ServiceResource,
-        TimePlan,
-        User,
-    };
+    use nittei_domain::{Account, Calendar, Entity, Service, ServiceResource, TimePlan, User};
 
     use crate::setup_context;
 
     #[tokio::test]
     async fn crud() {
-        let ctx = setup_context().await;
+        let ctx = setup_context().await.unwrap();
         let account = Account::default();
         ctx.repos.accounts.insert(&account).await.unwrap();
         let user = User::new(account.id.clone(), None);
@@ -47,11 +39,17 @@ mod tests {
             .service_users
             .find(&service.id, &user.id)
             .await
+            .unwrap()
             .unwrap();
         assert!(res.eq(&service_user));
 
         // Find by user
-        let find_by_user = ctx.repos.service_users.find_by_user(&user.id).await;
+        let find_by_user = ctx
+            .repos
+            .service_users
+            .find_by_user(&user.id)
+            .await
+            .unwrap();
         assert_eq!(find_by_user.len(), 1);
         assert!(find_by_user[0].eq(&service_user));
 
@@ -69,6 +67,7 @@ mod tests {
             .service_users
             .find(&service.id, &user.id)
             .await
+            .unwrap()
             .unwrap();
         assert_eq!(updated_service_user.buffer_after, service_user.buffer_after);
         assert_eq!(updated_service_user.user_id, service_user.user_id);
@@ -88,6 +87,7 @@ mod tests {
             .service_users
             .find(&service.id, &user.id)
             .await
+            .unwrap()
             .is_none());
     }
 }

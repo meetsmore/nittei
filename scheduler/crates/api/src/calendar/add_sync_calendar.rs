@@ -1,20 +1,20 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use nettu_scheduler_api_structs::add_sync_calendar::{APIResponse, PathParams, RequestBody};
-use nettu_scheduler_domain::{
+use nittei_api_structs::add_sync_calendar::{APIResponse, PathParams, RequestBody};
+use nittei_domain::{
     providers::{google::GoogleCalendarAccessRole, outlook::OutlookCalendarAccessRole},
     IntegrationProvider,
     SyncedCalendar,
     User,
     ID,
 };
-use nettu_scheduler_infra::{
+use nittei_infra::{
     google_calendar::GoogleCalendarProvider,
     outlook_calendar::OutlookCalendarProvider,
-    NettuContext,
+    NitteiContext,
 };
 
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{
         auth::{account_can_modify_user, protect_account_route, Permission},
         usecase::{execute, PermissionBoundary, UseCase},
@@ -25,8 +25,8 @@ pub async fn add_sync_calendar_admin_controller(
     http_req: HttpRequest,
     path_params: web::Path<PathParams>,
     body: web::Json<RequestBody>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
     let user = account_can_modify_user(&account, &path_params.user_id, &ctx).await?;
 
@@ -41,14 +41,14 @@ pub async fn add_sync_calendar_admin_controller(
     execute(usecase, &ctx)
         .await
         .map(|_| HttpResponse::Ok().json(APIResponse::from("Calendar sync created")))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 // pub async fn add_sync_calendar_controller(
 //     http_req: web::HttpRequest,
 //     body: web::Json<RequestBody>,
-//     ctx: web::Data<NettuContext>,
-// ) -> Result<HttpResponse, NettuError> {
+//     ctx: web::Data<nitteiContext>,
+// ) -> Result<HttpResponse, nitteiError> {
 //     let (user, policy) = protect_route(&http_req, &ctx).await?;
 
 //     let body = body.0;
@@ -64,7 +64,7 @@ pub async fn add_sync_calendar_admin_controller(
 //         .await
 //         .map(|_| HttpResponse::Ok().json(APIResponse::from("Calendar sync created")))
 //         .map_err(|e| match e {
-//             UseCaseErrorContainer::Unauthorized(e) => NettuError::Unauthorized(e),
+//             UseCaseErrorContainer::Unauthorized(e) => nitteiError::Unauthorized(e),
 //             UseCaseErrorContainer::UseCase(e) => error_handler(e),
 //         })
 // }
@@ -85,7 +85,7 @@ enum UseCaseError {
     StorageError,
 }
 
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::StorageError => Self::InternalError,
@@ -104,7 +104,7 @@ impl UseCase for AddSyncCalendarUseCase {
 
     const NAME: &'static str = "AddSyncCalendar";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         // Check that user has integrated to that provider
         ctx.repos
             .user_integrations

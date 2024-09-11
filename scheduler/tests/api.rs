@@ -4,8 +4,8 @@ use std::collections::HashMap;
 
 use chrono::DateTime;
 use helpers::setup::spawn_app;
-use nettu_scheduler_domain::{PEMKey, Weekday};
-use nettu_scheduler_sdk::{
+use nittei_domain::{PEMKey, Weekday};
+use nittei_sdk::{
     AddServiceUserInput,
     CreateCalendarInput,
     CreateEventInput,
@@ -20,7 +20,7 @@ use nettu_scheduler_sdk::{
     Metadata,
     MetadataFindInput,
     MultipleFreeBusyRequestBody,
-    NettuSDK,
+    NitteiSDK,
     RemoveServiceUserInput,
     UpdateCalendarInput,
     UpdateEventInput,
@@ -57,7 +57,7 @@ async fn test_get_account() {
         .await
         .expect("Expected to create account");
 
-    let admin_client = NettuSDK::new(address, res.secret_api_key);
+    let admin_client = NitteiSDK::new(address, res.secret_api_key);
     assert!(admin_client.account.get().await.is_ok());
     assert!(sdk.account.get().await.is_err());
 }
@@ -72,7 +72,7 @@ async fn test_crud_user() {
         .await
         .expect("Expected to create account");
 
-    let admin_client = NettuSDK::new(address, res.secret_api_key);
+    let admin_client = NitteiSDK::new(address, res.secret_api_key);
 
     let metadata = Metadata::new_kv("group_id".to_string(), "123".to_string());
 
@@ -151,7 +151,7 @@ async fn test_user_provide_id() {
         .await
         .expect("Expected to create account");
 
-    let admin_client = NettuSDK::new(address, res.secret_api_key);
+    let admin_client = NitteiSDK::new(address, res.secret_api_key);
 
     let mut metadata = HashMap::new();
     metadata.insert("group_id".to_string(), "123".to_string());
@@ -186,7 +186,7 @@ async fn test_crud_schedule() {
         .await
         .expect("Expected to create account");
 
-    let admin_client = NettuSDK::new(address, res.secret_api_key);
+    let admin_client = NitteiSDK::new(address, res.secret_api_key);
     let create_user_res = admin_client
         .user
         .create(CreateUserInput {
@@ -255,7 +255,7 @@ async fn test_create_user() {
         .create(&app.config.create_account_secret_code)
         .await
         .expect("Expected to create account");
-    let admin_client = NettuSDK::new(address, res.secret_api_key);
+    let admin_client = NitteiSDK::new(address, res.secret_api_key);
     let create_user_res = admin_client
         .user
         .create(CreateUserInput {
@@ -291,7 +291,7 @@ async fn test_crud_account() {
         .create(&app.config.create_account_secret_code)
         .await
         .expect("Expected to create account");
-    let admin_client = NettuSDK::new(address, res.secret_api_key);
+    let admin_client = NitteiSDK::new(address, res.secret_api_key);
 
     // Setting webhook url
     let webhook_url = "https://example.com";
@@ -346,7 +346,7 @@ async fn test_crud_calendars() {
         .create(&app.config.create_account_secret_code)
         .await
         .expect("Expected to create account");
-    let admin_client = NettuSDK::new(address, res.secret_api_key);
+    let admin_client = NitteiSDK::new(address, res.secret_api_key);
     let user = admin_client
         .user
         .create(CreateUserInput {
@@ -428,7 +428,7 @@ async fn test_crud_events() {
         .create(&app.config.create_account_secret_code)
         .await
         .expect("Expected to create account");
-    let admin_client = NettuSDK::new(address, res.secret_api_key);
+    let admin_client = NitteiSDK::new(address, res.secret_api_key);
     let user = admin_client
         .user
         .create(CreateUserInput {
@@ -534,7 +534,7 @@ async fn test_crud_service() {
         .create(&app.config.create_account_secret_code)
         .await
         .expect("Expected to create account");
-    let admin_client = NettuSDK::new(address, res.secret_api_key);
+    let admin_client = NitteiSDK::new(address, res.secret_api_key);
     let user = admin_client
         .user
         .create(CreateUserInput {
@@ -661,7 +661,7 @@ async fn test_freebusy_multiple() {
         .create(&app.config.create_account_secret_code)
         .await
         .expect("Expected to create account");
-    let admin_client = NettuSDK::new(address, res.secret_api_key);
+    let admin_client = NitteiSDK::new(address, res.secret_api_key);
     let user1 = admin_client
         .user
         .create(CreateUserInput {

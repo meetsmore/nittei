@@ -1,9 +1,10 @@
-use nettu_scheduler_domain::{BusyCalendar, ID};
+use nittei_domain::{BusyCalendar, ID};
 use sqlx::{FromRow, PgPool};
-use tracing::error;
+use tracing::{error, instrument};
 
 use super::{BusyCalendarIdentifier, ExternalBusyCalendarIdentifier, IServiceUserBusyCalendarRepo};
 
+#[derive(Debug)]
 pub struct PostgresServiceUseBusyCalendarRepo {
     pool: PgPool,
 }
@@ -25,7 +26,9 @@ impl From<BusyCalendarRaw> for BusyCalendar {
         match &e.provider[..] {
             "google" => BusyCalendar::Google(e.calendar_id),
             "outlook" => BusyCalendar::Outlook(e.calendar_id),
-            "nettu" => BusyCalendar::Nettu(e.calendar_id.parse().unwrap()),
+            // TODO: to fix
+            #[allow(clippy::unwrap_used)]
+            "nittei" => BusyCalendar::Nittei(e.calendar_id.parse().unwrap()),
             _ => unreachable!("Invalid provider"),
         }
     }
@@ -33,6 +36,7 @@ impl From<BusyCalendarRaw> for BusyCalendar {
 
 #[async_trait::async_trait]
 impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
+    #[instrument]
     async fn exists(&self, input: BusyCalendarIdentifier) -> anyhow::Result<bool> {
         let res = sqlx::query!(
             r#"
@@ -49,7 +53,7 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
         .await
         .map_err(|e| {
             error!(
-                "Unable to check if nettu busy calendar: {:?} exists. DB returned error: {:?}",
+                "Unable to check if nittei busy calendar: {:?} exists. DB returned error: {:?}",
                 input, e
             );
             e
@@ -58,6 +62,7 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
         Ok(res.rows_affected() == 1)
     }
 
+    #[instrument]
     async fn exists_ext(&self, input: ExternalBusyCalendarIdentifier) -> anyhow::Result<bool> {
         let res = sqlx::query!(
             r#"
@@ -83,6 +88,7 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
         Ok(res.rows_affected() == 1)
     }
 
+    #[instrument]
     async fn insert(&self, input: BusyCalendarIdentifier) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -97,7 +103,7 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
         .await
         .map_err(|e| {
             error!(
-                "Unable to insert nettu busy calendar: {:?}. DB returned error: {:?}",
+                "Unable to insert nittei busy calendar: {:?}. DB returned error: {:?}",
                 input, e
             );
             e
@@ -106,6 +112,7 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn insert_ext(&self, input: ExternalBusyCalendarIdentifier) -> anyhow::Result<()> {
         let provider: String = input.provider.clone().into();
         sqlx::query!(
@@ -131,6 +138,7 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn delete(&self, input: BusyCalendarIdentifier) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -147,7 +155,7 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
         .await
         .map_err(|e| {
             error!(
-                "Delete nettu busy calendar: {:?} failed. DB returned error: {:?}",
+                "Delete nittei busy calendar: {:?} failed. DB returned error: {:?}",
                 input, e
             );
             e
@@ -156,6 +164,7 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn delete_ext(&self, input: ExternalBusyCalendarIdentifier) -> anyhow::Result<()> {
         let provider: String = input.provider.clone().into();
         sqlx::query!(
@@ -184,6 +193,7 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
         Ok(())
     }
 
+    #[instrument]
     async fn find(&self, service_id: &ID, user_id: &ID) -> anyhow::Result<Vec<BusyCalendar>> {
         let busy_calendars: Vec<BusyCalendarRaw> = sqlx::query_as(
             r#"
@@ -191,7 +201,7 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
             FROM service_user_external_busy_calendars AS ext_c
             WHERE ext_c.service_uid = $1 AND ext_c.user_uid = $2
             UNION ALL
-            SELECT 'nettu' as provider, bc.calendar_uid::text as calendar_id
+            SELECT 'nittei' as provider, bc.calendar_uid::text as calendar_id
             FROM service_user_busy_calendars AS bc
             WHERE bc.service_uid = $1 AND bc.user_uid = $2
             "#,

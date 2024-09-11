@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use nettu_scheduler_domain::{
+use nittei_domain::{
     CalendarEvent,
     CalendarEventReminder,
     EventInstance,

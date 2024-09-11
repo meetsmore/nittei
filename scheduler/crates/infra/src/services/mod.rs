@@ -2,7 +2,7 @@ pub mod google_calendar;
 pub mod outlook_calendar;
 
 use chrono::{DateTime, Utc};
-use nettu_scheduler_domain::IntegrationProvider;
+use nittei_domain::IntegrationProvider;
 use serde::Deserialize;
 
 #[derive(Debug)]

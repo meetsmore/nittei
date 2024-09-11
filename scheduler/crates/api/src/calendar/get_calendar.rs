@@ -1,10 +1,10 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use nettu_scheduler_api_structs::get_calendar::{APIResponse, PathParams};
-use nettu_scheduler_domain::{Calendar, ID};
-use nettu_scheduler_infra::NettuContext;
+use nittei_api_structs::get_calendar::{APIResponse, PathParams};
+use nittei_domain::{Calendar, ID};
+use nittei_infra::NitteiContext;
 
 use crate::{
-    error::NettuError,
+    error::NitteiError,
     shared::{
         auth::{account_can_modify_calendar, protect_account_route, protect_route},
         usecase::{execute, UseCase},
@@ -14,8 +14,8 @@ use crate::{
 pub async fn get_calendar_admin_controller(
     http_req: HttpRequest,
     path: web::Path<PathParams>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
     let cal = account_can_modify_calendar(&account, &path.calendar_id, &ctx).await?;
 
@@ -27,14 +27,14 @@ pub async fn get_calendar_admin_controller(
     execute(usecase, &ctx)
         .await
         .map(|calendar| HttpResponse::Ok().json(APIResponse::new(calendar)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 pub async fn get_calendar_controller(
     http_req: HttpRequest,
     path: web::Path<PathParams>,
-    ctx: web::Data<NettuContext>,
-) -> Result<HttpResponse, NettuError> {
+    ctx: web::Data<NitteiContext>,
+) -> Result<HttpResponse, NitteiError> {
     let (user, _policy) = protect_route(&http_req, &ctx).await?;
 
     let usecase = GetCalendarUseCase {
@@ -45,7 +45,7 @@ pub async fn get_calendar_controller(
     execute(usecase, &ctx)
         .await
         .map(|calendar| HttpResponse::Ok().json(APIResponse::new(calendar)))
-        .map_err(NettuError::from)
+        .map_err(NitteiError::from)
 }
 
 #[derive(Debug)]
@@ -56,11 +56,13 @@ struct GetCalendarUseCase {
 
 #[derive(Debug)]
 enum UseCaseError {
+    InternalError,
     NotFound(ID),
 }
-impl From<UseCaseError> for NettuError {
+impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
+            UseCaseError::InternalError => Self::InternalError,
             UseCaseError::NotFound(calendar_id) => Self::NotFound(format!(
                 "The calendar with id: {}, was not found.",
                 calendar_id
@@ -77,8 +79,13 @@ impl UseCase for GetCalendarUseCase {
 
     const NAME: &'static str = "GetCalendar";
 
-    async fn execute(&mut self, ctx: &NettuContext) -> Result<Self::Response, Self::Error> {
-        let cal = ctx.repos.calendars.find(&self.calendar_id).await;
+    async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
+        let cal = ctx
+            .repos
+            .calendars
+            .find(&self.calendar_id)
+            .await
+            .map_err(|_| UseCaseError::InternalError)?;
         match cal {
             Some(cal) if cal.user_id == self.user_id => Ok(cal),
             _ => Err(UseCaseError::NotFound(self.calendar_id.clone())),

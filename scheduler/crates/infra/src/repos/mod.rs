@@ -3,13 +3,13 @@ mod account_integrations;
 mod calendar;
 mod calendar_synced;
 mod event;
-// mod kv;
 mod reservation;
 mod schedule;
 mod service;
 mod service_user;
 mod service_user_busy_calendars;
 mod shared;
+mod status;
 pub(crate) mod user;
 mod user_integrations;
 
@@ -40,6 +40,7 @@ use service_user_busy_calendars::{
 };
 pub use shared::query_structs::*;
 use sqlx::postgres::PgPoolOptions;
+use status::{IStatusRepo, PostgresStatusRepo};
 use tracing::info;
 use user::{IUserRepo, PostgresUserRepo};
 use user_integrations::{IUserIntegrationRepo, PostgresUserIntegrationRepo};
@@ -59,23 +60,21 @@ pub struct Repos {
     pub services: Arc<dyn IServiceRepo>,
     pub service_users: Arc<dyn IServiceUserRepo>,
     pub service_user_busy_calendars: Arc<dyn IServiceUserBusyCalendarRepo>,
+    pub status: Arc<dyn IStatusRepo>,
     pub users: Arc<dyn IUserRepo>,
     pub user_integrations: Arc<dyn IUserIntegrationRepo>,
 }
 
 impl Repos {
-    pub async fn create_postgres(
-        connection_string: &str,
-    ) -> Result<Self, Box<dyn std::error::Error>> {
+    pub async fn create_postgres(connection_string: &str) -> anyhow::Result<Self> {
         info!("DB CHECKING CONNECTION ...");
         let pool = PgPoolOptions::new()
             .max_connections(5)
             .connect(connection_string)
-            .await
-            .expect("TO CONNECT TO POSTGRES");
+            .await?;
         info!("DB CHECKING CONNECTION ... [done]");
 
-        if std::env::var("NETTU_SKIP_MIGRATION").is_err() {
+        if std::env::var("nittei_SKIP_MIGRATION").is_err() {
             info!("DB EXECUTING MIGRATION ...");
             sqlx::migrate!().run(&pool).await?;
             info!("DB EXECUTING MIGRATION ... [done]");
@@ -101,8 +100,9 @@ impl Repos {
             reminders: Arc::new(PostgresReminderRepo::new(pool.clone())),
             reservations: Arc::new(PostgresReservationRepo::new(pool.clone())),
             event_reminders_generation_jobs: Arc::new(
-                PostgresEventReminderGenerationJobsRepo::new(pool),
+                PostgresEventReminderGenerationJobsRepo::new(pool.clone()),
             ),
+            status: Arc::new(PostgresStatusRepo::new(pool)),
         })
     }
 }
