@@ -1,7 +1,3 @@
--- TODO: Better docs and comments on schema
--- TODO: Better indexing strategy
--- TODO: Have external calendars and events relations for better normalization / consistency
--- TODO: Split schema into multiple files
 ------------------ DOMAIN
 CREATE DOMAIN ext_calendar_provider AS TEXT NOT NULL CHECK (VALUE in ('google', 'outlook'));
 
