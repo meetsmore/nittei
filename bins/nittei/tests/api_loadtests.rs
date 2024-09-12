@@ -120,7 +120,7 @@ async fn loadtests_single_user() {
         #[allow(clippy::print_stdout)]
         {
             // Scope is needed to avoid clippy warning
-            println!("[single_big] Skipped");
+            println!("[single_user] Skipped");
         }
         return;
     }
@@ -195,7 +195,7 @@ async fn loadtests_multi_users() {
         #[allow(clippy::print_stdout)]
         {
             // Scope is needed to avoid clippy warning
-            println!("[single_big] Skipped");
+            println!("[multi_users] Skipped");
         }
         return;
     }
