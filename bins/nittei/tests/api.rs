@@ -472,9 +472,6 @@ async fn test_crud_events() {
             metadata: None,
         })
         .await
-        .inspect_err(|e| {
-            println!("{:?}", e);
-        })
         .unwrap()
         .event;
     assert_eq!(event.calendar_id, calendar.id);
