@@ -116,6 +116,14 @@ async fn create_300_events_1_month(
 #[actix_web::main]
 #[test]
 async fn loadtests_single_user() {
+    if std::env::var("INCLUDE_LOAD_TESTS").is_err() {
+        #[allow(clippy::print_stdout)]
+        {
+            // Scope is needed to avoid clippy warning
+            println!("[single_big] Skipped");
+        }
+        return;
+    }
     // Setup
     let (admin_client, _) = create_account_and_admin_client().await;
 
@@ -183,6 +191,15 @@ async fn loadtests_single_user() {
 #[actix_web::main]
 #[test]
 async fn loadtests_multi_users() {
+    if std::env::var("INCLUDE_LOAD_TESTS").is_err() {
+        #[allow(clippy::print_stdout)]
+        {
+            // Scope is needed to avoid clippy warning
+            println!("[single_big] Skipped");
+        }
+        return;
+    }
+
     // Setup
     let (admin_client, _) = create_account_and_admin_client().await;
 
@@ -314,6 +331,15 @@ async fn loadtests_multi_users() {
 #[actix_web::main]
 #[test_log::test]
 async fn loadtests_single_user_lots_of_data() {
+    if std::env::var("INCLUDE_LOAD_TESTS").is_err() {
+        #[allow(clippy::print_stdout)]
+        {
+            // Scope is needed to avoid clippy warning
+            println!("[single_big] Skipped");
+        }
+        return;
+    }
+
     // Setup
     let (admin_client, _) = create_account_and_admin_client().await;
 
