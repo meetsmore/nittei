@@ -19,13 +19,13 @@ jobs:
         image: postgres:13
         env:
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: nettuscheduler
+          POSTGRES_DB: nittei
         ports:
           - 5432:5432
 
     env:
       PORT: 5000
-      DATABASE_URL: postgresql://postgres:postgres@localhost/nettuscheduler
+      DATABASE_URL: postgresql://postgres:postgres@localhost/nittei
       RUST_BACKTRACE: 1
 
     steps:
@@ -45,7 +45,7 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            scheduler/target/
+            target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       # Install Nextest
@@ -54,20 +54,16 @@ jobs:
 
       - name: Run migrations
         run: |
-          cd scheduler
-
           # run the migrations first
           cargo install sqlx-cli --no-default-features --features postgres || true
           (cd crates/infra && sqlx migrate run)
 
       - name: Formatting
         run: |
-          cd scheduler
           cargo +nightly fmt --all -- --check
 
       - name: Clippy
         run: |
-          cd scheduler
           cargo clippy --all
           # To re-enable
           # cargo clippy --all -- --deny "warnings"
@@ -76,17 +72,14 @@ jobs:
       # TODO: find a solution (e.g. by using caching) or re-enable only on master
       # - name: Unused dependencies
       #   run: |
-      #     cd scheduler
       #     cargo install cargo-udeps --locked
       #     cargo +nightly udeps --all-targets
 
       # - name: Outdated dependencies
       #   run: |
-      #     cd scheduler
       #     # cargo outdated --exit-code 1 --workspace
       #     cargo outdated --workspace
 
       - name: Run server tests
         run: |
-          cd scheduler
           cargo test --workspace

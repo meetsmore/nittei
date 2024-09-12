@@ -1,0 +1,29 @@
+
+[workspace]
+members = [
+    "bins/nittei",
+    "crates/api",
+    "crates/api_structs",
+    "crates/domain",
+    "crates/infra",
+    "crates/utils",
+    "clients/rust",
+]
+resolver = "2"
+
+[workspace.dependencies]
+nittei_api = { path = "crates/api" }
+nittei_api_structs = { path = "crates/api_structs" }
+nittei_domain = { path = "crates/domain" }
+nittei_infra = { path = "crates/infra" }
+nittei_utils = { path = "crates/utils" }
+nittei_sdk = { path = "clients/rust" }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+print_stdout = "deny"
+print_err = "deny"
+unwrap_used = "deny"
+expect_used = "deny"

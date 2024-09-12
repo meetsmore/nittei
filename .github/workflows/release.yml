@@ -24,11 +24,11 @@ jobs:
         image: postgres:13
         env:
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: nettuscheduler
+          POSTGRES_DB: nittei
         ports:
           - 5432:5432
     env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost/nettuscheduler
+      DATABASE_URL: postgresql://postgres:postgres@localhost/nittei
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -45,7 +45,7 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            scheduler/target/
+            target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Set up QEMU
@@ -61,16 +61,14 @@ jobs:
 
       - name: Run migrations
         run: |
-          cd scheduler
           cargo install sqlx-cli --no-default-features --features postgres || true
           (cd crates/infra && sqlx migrate run)
 
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: ./scheduler
           push: true
-          file: "./scheduler/debian.Dockerfile"
+          file: "./debian.Dockerfile"
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
@@ -85,11 +83,11 @@ jobs:
   #       image: postgres:13
   #       env:
   #         POSTGRES_PASSWORD: postgres
-  #         POSTGRES_DB: nettuscheduler
+  #         POSTGRES_DB: nittei
   #       ports:
   #         - 5432:5432
   #   env:
-  #     DATABASE_URL: postgresql://postgres:postgres@localhost/nettuscheduler
+  #     DATABASE_URL: postgresql://postgres:postgres@localhost/nittei
   #   steps:
   #     - name: Checkout
   #       uses: actions/checkout@v2
@@ -238,17 +236,17 @@ jobs:
           version: 9
       - name: Install deps
         run: |
-          cd scheduler/clients/javascript
+          cd clients/javascript
           pnpm install
 
       - name: Set version number
         run: |
-          cd scheduler/clients/javascript
+          cd clients/javascript
           pnpm version $VERSION
 
       - name: Publish package
         run: |
-          cd scheduler/clients/javascript
+          cd clients/javascript
           pnpm run deploy
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
