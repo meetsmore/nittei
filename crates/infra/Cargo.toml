@@ -23,7 +23,7 @@ tracing = "0.1.25"
 reqwest = { version = "0.12", features = ["json"] }
 uuid = { version = "1.1.2", features = ["serde"] }
 futures = "0.3"
-sqlx = { version = "0.7.4", features = [
+sqlx = { version = "0.8.1", features = [
   "runtime-tokio",
   "postgres",
   "uuid",
