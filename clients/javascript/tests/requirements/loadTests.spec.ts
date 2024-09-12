@@ -12,6 +12,13 @@ const TIMESTAMP_FIRST_JANUARY_2024 = 1704067200000 // 2024-01-01 00:00:00 UTC
 
 // This test suite is load testing the server
 
+/**
+ * Create 300 events for a user
+ * @param client SDK's client to use
+ * @param user user to create the events for
+ * @param calendar calendar to create the events in
+ * @returns array of created events
+ */
 async function create300Events(
   client: INitteiClient,
   user: User,
@@ -87,7 +94,7 @@ describe('Load tests', () => {
       user1Calendar1 = resCalendar.data?.calendar
     })
 
-    it('should create 300 events', async () => {
+    it('WILL create 300 events in the calendar', async () => {
       if (!client) {
         throw new Error('Client not created')
       }
@@ -104,7 +111,7 @@ describe('Load tests', () => {
       expect(timeTakenLoadTest).toBeLessThan(2000)
     })
 
-    it('should get 300 instances', async () => {
+    it('WILL get the 300 events of the calendar', async () => {
       if (!client) {
         throw new Error('Client not created')
       }
@@ -128,10 +135,11 @@ describe('Load tests', () => {
 
       expect(res.status).toBe(200)
       expect(res.data?.events.length).toBe(300)
+      // Should take less than 1 second
       expect(timeTakenLoadTest).toBeLessThan(1000)
     })
 
-    it('should delete user', async () => {
+    it('WILL delete the user', async () => {
       if (!client || !user1) {
         throw new Error('Client or user not created')
       }
