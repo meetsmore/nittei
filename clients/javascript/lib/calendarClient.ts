@@ -253,9 +253,9 @@ export class NitteiCalendarClient extends NitteiBaseClient {
       status: res.status,
       data: {
         calendar: res.data.calendar,
-        events: res.data.events.map(event => ({
+        events: res.data.events?.map(event => ({
           event: convertEventDates(event.event),
-          instances: event.instances.map(convertInstanceDates),
+          instances: event.instances?.map(convertInstanceDates),
         })),
       },
     }

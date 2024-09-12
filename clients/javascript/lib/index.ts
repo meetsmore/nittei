@@ -3,11 +3,17 @@ import {
   createAxiosInstanceBackend,
   createAxiosInstanceFrontend,
 } from './baseClient'
-import { NitteiCalendarClient, NitteiCalendarUserClient } from './calendarClient'
+import {
+  NitteiCalendarClient,
+  NitteiCalendarUserClient,
+} from './calendarClient'
 import { NitteiEventClient, NitteiEventUserClient } from './eventClient'
 import { NitteiHealthClient } from './healthClient'
 import { createCreds, PartialCredentials } from './helpers/credentials'
-import { NitteiScheduleUserClient, NitteiScheduleClient } from './scheduleClient'
+import {
+  NitteiScheduleUserClient,
+  NitteiScheduleClient,
+} from './scheduleClient'
 import { NitteiServiceUserClient, NitteiServiceClient } from './serviceClient'
 import {
   NitteiUserClient as _NitteiUserClient,
