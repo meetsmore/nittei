@@ -73,10 +73,10 @@ export class APIResponse<T> {
 
 /**
  * Create an Axios instance for the frontend
- * 
+ *
  * Compared to the backend, this function is not async
  * And the frontend cannot keep the connection alive
- * 
+ *
  * @param args specify base URL for the API
  * @param credentials credentials for the API
  * @returns an Axios instance
@@ -101,7 +101,7 @@ export const createAxiosInstanceFrontend = (
 
 /**
  * Create an Axios instance for the backend
- * 
+ *
  * On the backend (NodeJS), it is possible to keep the connection alive
  * @param args specify base URL and if the connection should be kept alive
  * @param credentials credentials for the API

@@ -1,7 +1,3 @@
-// Allow clippy lints because this is a test helper
-#![allow(clippy::unwrap_used)]
-#![allow(clippy::expect_used)]
-
 mod helpers;
 
 use chrono::{Duration, Utc, Weekday};
@@ -25,6 +21,7 @@ use nittei_sdk::{
     User,
 };
 
+#[cfg(test)]
 async fn create_default_service_host(
     admin_client: &NitteiSDK,
     service_id: &ID,
