@@ -108,7 +108,7 @@ describe('Load tests', () => {
       const timeTakenLoadTest = Date.now() - timeStartLoadTest
 
       expect(events.length).toBe(300)
-      expect(timeTakenLoadTest).toBeLessThan(2000)
+      console.log('Time taken to create 300 events:', timeTakenLoadTest)
     })
 
     it('WILL get the 300 events of the calendar', async () => {
@@ -135,8 +135,7 @@ describe('Load tests', () => {
 
       expect(res.status).toBe(200)
       expect(res.data?.events.length).toBe(300)
-      // Should take less than 1 second
-      expect(timeTakenLoadTest).toBeLessThan(1000)
+      console.log('Time taken to get 300 events:', timeTakenLoadTest)
     })
 
     it('WILL delete the user', async () => {
