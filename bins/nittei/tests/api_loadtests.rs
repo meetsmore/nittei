@@ -92,6 +92,12 @@ async fn create_300_events_1_month(
             .create(CreateEventInput {
                 user_id: user_id.clone(),
                 calendar_id: calendar_id.clone(),
+                parent_id: None,
+                title: None,
+                description: None,
+                location: None,
+                status: nittei_domain::CalendarEventStatus::Tentative,
+                all_day: None,
                 duration: 1000 * 60 * 60, // 1 hour
                 reminders: Vec::new(),
                 busy: Some(true),

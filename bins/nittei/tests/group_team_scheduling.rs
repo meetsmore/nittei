@@ -183,6 +183,12 @@ async fn test_group_team_scheduling() {
             assert!(booking_intend.create_event_for_hosts);
             for (host, calendar) in hosts_with_calendar {
                 let service_event = CreateEventInput {
+                    parent_id: None,
+                    title: None,
+                    description: None,
+                    location: None,
+                    status: nittei_domain::CalendarEventStatus::Tentative,
+                    all_day: None,
                     user_id: host.id.clone(),
                     busy: Some(true),
                     calendar_id: calendar.id.clone(),
@@ -504,6 +510,12 @@ async fn test_group_team_scheduling_increase_max_count() {
         );
         assert!(booking_intend.create_event_for_hosts);
         let service_event = CreateEventInput {
+            parent_id: None,
+            title: None,
+            description: None,
+            location: None,
+            status: nittei_domain::CalendarEventStatus::Tentative,
+            all_day: None,
             user_id: host.id.clone(),
             busy: Some(true),
             calendar_id: busy_calendar.id.clone(),
@@ -921,6 +933,12 @@ async fn test_group_team_scheduling_decrease_max_count() {
         );
         assert!(booking_intend.create_event_for_hosts);
         let service_event = CreateEventInput {
+            parent_id: None,
+            title: None,
+            description: None,
+            location: None,
+            status: nittei_domain::CalendarEventStatus::Tentative,
+            all_day: None,
             user_id: host.id.clone(),
             busy: Some(true),
             calendar_id: busy_calendar.id.clone(),
@@ -1123,6 +1141,12 @@ async fn test_combination_of_services() {
 
     // And then create service event which is not busy
     let service_event = CreateEventInput {
+        parent_id: None,
+        title: None,
+        description: None,
+        location: None,
+        status: nittei_domain::CalendarEventStatus::Tentative,
+        all_day: None,
         user_id: host.id.clone(),
         busy: Some(false),
         calendar_id: busy_calendar.id.clone(),

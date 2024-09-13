@@ -1,3 +1,5 @@
+use std::convert::TryFrom;
+
 use chrono::{prelude::*, Duration, TimeDelta};
 use rrule::RRuleSet;
 use serde::{Deserialize, Serialize};
@@ -15,9 +17,46 @@ use crate::{
     Meta,
 };
 
+#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub enum CalendarEventStatus {
+    #[default]
+    Tentative,
+    Confirmed,
+    Cancelled,
+}
+
+impl From<CalendarEventStatus> for String {
+    fn from(e: CalendarEventStatus) -> Self {
+        match e {
+            CalendarEventStatus::Tentative => "tentative".into(),
+            CalendarEventStatus::Confirmed => "confirmed".into(),
+            CalendarEventStatus::Cancelled => "cancelled".into(),
+        }
+    }
+}
+
+impl TryFrom<String> for CalendarEventStatus {
+    type Error = anyhow::Error;
+    fn try_from(e: String) -> anyhow::Result<CalendarEventStatus> {
+        Ok(match &e[..] {
+            "tentative" => CalendarEventStatus::Tentative,
+            "confirmed" => CalendarEventStatus::Confirmed,
+            "cancelled" => CalendarEventStatus::Cancelled,
+            _ => Err(anyhow::anyhow!("Invalid status"))?,
+        })
+    }
+}
+
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct CalendarEvent {
     pub id: ID,
+    pub parent_id: Option<String>,
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub location: Option<String>,
+    pub all_day: bool,
+    pub status: CalendarEventStatus,
     pub start_time: DateTime<Utc>,
     pub duration: i64,
     pub busy: bool,

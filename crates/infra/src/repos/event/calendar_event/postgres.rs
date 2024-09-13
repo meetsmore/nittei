@@ -45,6 +45,12 @@ struct EventRaw {
     calendar_uid: Uuid,
     user_uid: Uuid,
     account_uid: Uuid,
+    parent_id: Option<String>,
+    title: Option<String>,
+    description: Option<String>,
+    location: Option<String>,
+    all_day: bool,
+    status: String,
     start_time: DateTime<Utc>,
     duration: i64,
     busy: bool,
@@ -76,6 +82,12 @@ impl TryFrom<EventRaw> for CalendarEvent {
             user_id: e.user_uid.into(),
             account_id: e.account_uid.into(),
             calendar_id: e.calendar_uid.into(),
+            parent_id: e.parent_id,
+            title: e.title,
+            description: e.description,
+            location: e.location,
+            all_day: e.all_day,
+            status: e.status.try_into()?,
             start_time: e.start_time,
             duration: e.duration,
             busy: e.busy,
@@ -95,11 +107,18 @@ impl TryFrom<EventRaw> for CalendarEvent {
 impl IEventRepo for PostgresEventRepo {
     #[instrument]
     async fn insert(&self, e: &CalendarEvent) -> anyhow::Result<()> {
+        let status: String = e.status.clone().into();
         sqlx::query!(
             r#"
             INSERT INTO calendar_events(
                 event_uid,
                 calendar_uid,
+                parent_id,
+                title,
+                description,
+                location,
+                status,
+                all_day,
                 start_time,
                 duration,
                 end_time,
@@ -112,10 +131,16 @@ impl IEventRepo for PostgresEventRepo {
                 service_uid,
                 metadata
             )
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
             "#,
             e.id.as_ref(),
             e.calendar_id.as_ref(),
+            e.parent_id,
+            e.title,
+            e.description,
+            e.location,
+            status,
+            e.all_day,
             e.start_time,
             e.duration,
             e.end_time,

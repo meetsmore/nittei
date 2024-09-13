@@ -165,6 +165,12 @@ async fn test_collective_team_scheduling() {
 
         for (host, calendar) in hosts_with_calendar {
             let service_event = CreateEventInput {
+                parent_id: None,
+                title: None,
+                description: None,
+                location: None,
+                status: nittei_domain::CalendarEventStatus::Tentative,
+                all_day: None,
                 user_id: host.id.clone(),
                 busy: Some(true),
                 calendar_id: calendar.id.clone(),
