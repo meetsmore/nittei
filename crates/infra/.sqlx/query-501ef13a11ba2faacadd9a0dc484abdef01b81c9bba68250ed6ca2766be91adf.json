@@ -15,56 +15,86 @@
       },
       {
         "ordinal": 2,
+        "name": "parent_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "location",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "all_day",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
         "name": "start_time",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 3,
+        "ordinal": 9,
         "name": "duration",
         "type_info": "Int8"
       },
       {
-        "ordinal": 4,
+        "ordinal": 10,
         "name": "end_time",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 5,
+        "ordinal": 11,
         "name": "busy",
         "type_info": "Bool"
       },
       {
-        "ordinal": 6,
+        "ordinal": 12,
         "name": "created",
         "type_info": "Int8"
       },
       {
-        "ordinal": 7,
+        "ordinal": 13,
         "name": "updated",
         "type_info": "Int8"
       },
       {
-        "ordinal": 8,
+        "ordinal": 14,
         "name": "recurrence",
         "type_info": "Json"
       },
       {
-        "ordinal": 9,
+        "ordinal": 15,
         "name": "exdates",
         "type_info": "TimestamptzArray"
       },
       {
-        "ordinal": 10,
+        "ordinal": 16,
         "name": "reminders",
         "type_info": "Json"
       },
       {
-        "ordinal": 11,
+        "ordinal": 17,
         "name": "service_uid",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 12,
+        "ordinal": 18,
         "name": "metadata",
         "type_info": "Jsonb"
       }
@@ -75,6 +105,12 @@
       ]
     },
     "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
       false,
       false,
       false,

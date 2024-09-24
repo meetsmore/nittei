@@ -1,7 +1,15 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::{DateTime, TimeDelta, Utc};
 use nittei_api_structs::create_event::*;
-use nittei_domain::{CalendarEvent, CalendarEventReminder, Metadata, RRuleOptions, User, ID};
+use nittei_domain::{
+    CalendarEvent,
+    CalendarEventReminder,
+    CalendarEventStatus,
+    Metadata,
+    RRuleOptions,
+    User,
+    ID,
+};
 use nittei_infra::NitteiContext;
 
 use super::subscribers::CreateRemindersOnEventCreated;
@@ -25,7 +33,13 @@ pub async fn create_event_admin_controller(
 
     let body = body.0;
     let usecase = CreateEventUseCase {
+        parent_id: body.parent_id,
+        title: body.title,
+        description: body.description,
+        location: body.location,
+        status: body.status,
         busy: body.busy.unwrap_or(false),
+        all_day: body.all_day.unwrap_or(false),
         start_time: body.start_time,
         duration: body.duration,
         user,
@@ -51,7 +65,13 @@ pub async fn create_event_controller(
 
     let body = body.0;
     let usecase = CreateEventUseCase {
+        parent_id: body.parent_id,
+        title: body.title,
+        description: body.description,
+        location: body.location,
+        status: body.status,
         busy: body.busy.unwrap_or(false),
+        all_day: body.all_day.unwrap_or(false),
         start_time: body.start_time,
         duration: body.duration,
         calendar_id: body.calendar_id,
@@ -72,6 +92,12 @@ pub async fn create_event_controller(
 pub struct CreateEventUseCase {
     pub calendar_id: ID,
     pub user: User,
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub parent_id: Option<String>,
+    pub location: Option<String>,
+    pub status: CalendarEventStatus,
+    pub all_day: bool,
     pub start_time: DateTime<Utc>,
     pub duration: i64,
     pub busy: bool,
@@ -135,6 +161,12 @@ impl UseCase for CreateEventUseCase {
 
         let mut e = CalendarEvent {
             id: Default::default(),
+            parent_id: self.parent_id.clone(),
+            title: self.title.clone(),
+            description: self.description.clone(),
+            location: self.location.clone(),
+            status: self.status.clone(),
+            all_day: self.all_day,
             busy: self.busy,
             start_time: self.start_time,
             duration: self.duration,

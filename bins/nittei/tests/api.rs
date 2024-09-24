@@ -455,6 +455,12 @@ async fn test_crud_events() {
     let event = admin_client
         .event
         .create(CreateEventInput {
+            parent_id: None,
+            title: None,
+            description: None,
+            location: None,
+            status: nittei_domain::CalendarEventStatus::Tentative,
+            all_day: None,
             user_id: user.id.clone(),
             calendar_id: calendar.id.clone(),
             duration: 1000 * 60 * 60,
@@ -708,6 +714,12 @@ async fn test_freebusy_multiple() {
     let _event1 = admin_client
         .event
         .create(CreateEventInput {
+            parent_id: None,
+            title: None,
+            description: None,
+            location: None,
+            status: nittei_domain::CalendarEventStatus::Tentative,
+            all_day: None,
             user_id: user1.id.clone(),
             calendar_id: calendar1.id.clone(),
             duration: 1000 * 60 * 60,
@@ -724,6 +736,12 @@ async fn test_freebusy_multiple() {
     let _event2 = admin_client
         .event
         .create(CreateEventInput {
+            parent_id: None,
+            title: None,
+            description: None,
+            location: None,
+            status: nittei_domain::CalendarEventStatus::Tentative,
+            all_day: None,
             user_id: user2.id.clone(),
             calendar_id: calendar2.id.clone(),
             duration: 1000 * 60 * 60,

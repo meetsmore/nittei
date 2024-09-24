@@ -1,7 +1,3 @@
-// Allow clippy lints because this is a test helper
-#![allow(clippy::unwrap_used)]
-#![allow(clippy::expect_used)]
-
 mod helpers;
 
 use chrono::{DateTime, Duration, TimeDelta, Utc, Weekday};
@@ -26,6 +22,7 @@ use nittei_sdk::{
     User,
 };
 
+#[cfg(test)]
 async fn create_default_service_host(
     admin_client: &NitteiSDK,
     service_id: &ID,
@@ -191,6 +188,12 @@ async fn test_round_robin_scheduling_simple_test() {
 
                 // Create service event
                 let service_event = CreateEventInput {
+                    parent_id: None,
+                    title: None,
+                    description: None,
+                    location: None,
+                    status: nittei_domain::CalendarEventStatus::Tentative,
+                    all_day: None,
                     user_id: selected_host.id.clone(),
                     busy: Some(true),
                     calendar_id: busy_calendar.id.clone(),
@@ -303,6 +306,12 @@ async fn test_round_robin_equal_distribution_scheduling() {
             for _ in 0..*upcoming_service_events {
                 // Create service event
                 let service_event = CreateEventInput {
+                    parent_id: None,
+                    title: None,
+                    description: None,
+                    location: None,
+                    status: nittei_domain::CalendarEventStatus::Tentative,
+                    all_day: None,
                     user_id: host.id.clone(),
                     busy: Some(true),
                     calendar_id: busy_calendar.id.clone(),
@@ -356,6 +365,12 @@ async fn test_round_robin_equal_distribution_scheduling() {
                 .find(|(h, _)| h.id == booking_intend.selected_hosts[0].id)
                 .expect("To find selected host");
             let service_event = CreateEventInput {
+                parent_id: None,
+                title: None,
+                description: None,
+                location: None,
+                status: nittei_domain::CalendarEventStatus::Tentative,
+                all_day: None,
                 user_id: host.id.clone(),
                 busy: Some(true),
                 calendar_id: busy_calendar.id.clone(),
@@ -454,6 +469,12 @@ async fn test_round_robin_availability_scheduling() {
         {
             // Create service event
             let service_event = CreateEventInput {
+                parent_id: None,
+                title: None,
+                description: None,
+                location: None,
+                status: nittei_domain::CalendarEventStatus::Tentative,
+                all_day: None,
                 user_id: host.id.clone(),
                 busy: Some(true),
                 calendar_id: busy_calendar.id.clone(),
@@ -526,6 +547,12 @@ async fn test_round_robin_availability_scheduling() {
                 .expect("To find selected host");
 
             let service_event = CreateEventInput {
+                parent_id: None,
+                title: None,
+                description: None,
+                location: None,
+                status: nittei_domain::CalendarEventStatus::Tentative,
+                all_day: None,
                 user_id: host.id.clone(),
                 busy: Some(true),
                 calendar_id: busy_calendar.id.clone(),

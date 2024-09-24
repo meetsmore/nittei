@@ -19,7 +19,7 @@ impl CalendarEventResponse {
 
 pub mod create_event {
     use chrono::{DateTime, Utc};
-    use nittei_domain::Metadata;
+    use nittei_domain::{CalendarEventStatus, Metadata};
 
     use super::*;
 
@@ -32,10 +32,24 @@ pub mod create_event {
     #[serde(rename_all = "camelCase")]
     pub struct RequestBody {
         pub calendar_id: ID,
+        #[serde(default)]
+        pub title: Option<String>,
+        #[serde(default)]
+        pub description: Option<String>,
+        #[serde(default)]
+        pub parent_id: Option<String>,
+        #[serde(default)]
+        pub location: Option<String>,
+        #[serde(default)]
+        pub status: CalendarEventStatus,
+
+        #[serde(default)]
+        pub all_day: Option<bool>,
         pub start_time: DateTime<Utc>,
         pub duration: i64,
         #[serde(default)]
         pub busy: Option<bool>,
+
         #[serde(default)]
         pub recurrence: Option<RRuleOptions>,
         #[serde(default)]

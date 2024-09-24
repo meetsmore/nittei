@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use chrono::{DateTime, Utc};
 use nittei_api_structs::*;
-use nittei_domain::Metadata;
+use nittei_domain::{CalendarEventStatus, Metadata};
 use reqwest::StatusCode;
 use serde::Serialize;
 
@@ -25,6 +25,19 @@ pub struct CalendarEventClient {
 pub struct CreateEventInput {
     pub user_id: ID,
     pub calendar_id: ID,
+    #[serde(default)]
+    pub title: Option<String>,
+    #[serde(default)]
+    pub description: Option<String>,
+    #[serde(default)]
+    pub parent_id: Option<String>,
+    #[serde(default)]
+    pub location: Option<String>,
+    #[serde(default)]
+    pub status: CalendarEventStatus,
+
+    #[serde(default)]
+    pub all_day: Option<bool>,
     pub start_time: DateTime<Utc>,
     pub duration: i64,
     #[serde(default)]
@@ -93,6 +106,12 @@ impl CalendarEventClient {
     pub async fn create(&self, input: CreateEventInput) -> APIResponse<create_event::APIResponse> {
         let user_id = input.user_id.clone();
         let body = create_event::RequestBody {
+            parent_id: input.parent_id,
+            title: input.title,
+            description: input.description,
+            location: input.location,
+            status: input.status,
+            all_day: input.all_day,
             calendar_id: input.calendar_id,
             start_time: input.start_time,
             duration: input.duration,

@@ -12,7 +12,7 @@ export function convertEventDates(event: CalendarEvent): CalendarEvent {
   return {
     ...event,
     startTime: new Date(event.startTime),
-    exdates: event.exdates.map(date => new Date(date)),
+    exdates: event.exdates?.map(date => new Date(date)),
   }
 }
 
