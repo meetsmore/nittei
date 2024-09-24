@@ -7,17 +7,11 @@ version: 2
 updates:
   - package-ecosystem: "npm" # See documentation for possible values
     directories:
-      - "/clients/javascript"
+      - "/"
     schedule:
       interval: "weekly"
   - package-ecosystem: "cargo" # See documentation for possible values
     directories:
-      - "/bins/nittei"
-      - "/clients/rust"
-      - "/crates/api"
-      - "/crates/api_structs"
-      - "/crates/domain"
-      - "/crates/infra"
-      - "/crates/utils"
+      - "/"
     schedule:
       interval: "weekly"
