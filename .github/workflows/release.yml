@@ -287,4 +287,4 @@ jobs:
         uses: helm/chart-releaser-action@v1.6.0
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-          mark_as_latest: ${{ !(github.event && github.event.release && github.event.release.prerelease == true) }}
+          mark_as_latest: "${{ !github.event.release.prerelease }}"
