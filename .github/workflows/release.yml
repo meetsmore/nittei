@@ -280,7 +280,6 @@ jobs:
 
       - name: Set Chart to tag version
         run: |
-          cd scheduler/charts/nettu-scheduler
           sed -i "s/\$VERSION_REPLACED_IN_CI/$VERSION/g" charts/nittei/Chart.yaml
           sed -i "s/\$VERSION_REPLACED_IN_CI/$VERSION/g" charts/nittei/values.yaml
 
