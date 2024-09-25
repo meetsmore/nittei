@@ -1,3 +1,26 @@
+# Merge the `defaultEnv` and `env` together to create a new map of environment variables
+# This map is used to populate the `env` field
+{{- $defaultEnv := .Values.defaultEnv | default list }}
+{{- $extraEnv := .Values.env | default list }}
+
+{{- $envMap := dict }}
+
+{{- range $defaultEnv }}
+  {{- $envMap = merge $envMap (dict .name .) }}
+{{- end }}
+
+{{- range $extraEnv }}
+  {{- $envMap = merge $envMap (dict .name .) }}
+{{- end }}
+# End of the environment variable merge
+
+# Set default SERVICE_VERSION env var
+{{- $defaultServiceVersion := .Values.image.tag }}
+{{- if not (hasKey $envMap "SERVICE_VERSION") }}
+  {{- $envMap = merge $envMap (dict "SERVICE_VERSION" (dict "name" "SERVICE_VERSION" "value" $defaultServiceVersion)) }}
+{{- end }}
+# End of setting default SERVICE_VERSION env var
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -51,10 +74,11 @@ spec:
           volumeMounts:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.env }}
           env:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
+            {{- range $key, $value := $envMap }}
+            - name: {{ $key }}
+              value: {{ $value.value }}
+            {{- end }}
       {{- with .Values.volumes }}
       volumes:
         {{- toYaml . | nindent 8 }}
