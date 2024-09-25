@@ -29,7 +29,7 @@ pub use event_instance::{
 pub use reminder::{EventRemindersExpansionJob, Reminder};
 pub use schedule::{Schedule, ScheduleRule};
 pub use service::{
-    BusyCalendar,
+    BusyCalendarProvider,
     Service,
     ServiceMultiPersonOptions,
     ServiceResource,

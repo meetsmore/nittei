@@ -1,13 +1,15 @@
 use itertools::Itertools;
 use rand::{thread_rng, Rng};
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use crate::{CalendarEvent, ID};
 
 /// Round robin algorithm to decide which member should be assigned a
 /// `Service Event` when there are multiple members of a `Service`
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub enum RoundRobinAlgorithm {
     /// Optimizes for availability
     ///

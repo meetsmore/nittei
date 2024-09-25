@@ -1,7 +1,9 @@
-import type { BusyCalendar, Service, TimePlan } from './domain/service'
 import { NitteiBaseClient } from './baseClient'
-import type { Metadata } from './domain/metadata'
-import { UUID } from './domain'
+import { BusyCalendarProvider } from './types/BusyCalendarProvider'
+import { ID } from './types/ID'
+import { Metadata } from './types/Metadata'
+import { ServiceDTO } from './types/ServiceDTO'
+import { TimePlan } from './types/TimePlan'
 
 /**
  * Request for adding a user to a service
@@ -10,7 +12,7 @@ type AddUserToServiceRequest = {
   /**
    * Uuid of the user to add to the service
    */
-  userId: UUID
+  userId: ID
   /**
    * Optional availability for the user in the service
    */
@@ -46,7 +48,7 @@ type UpdateUserToServiceRequest = {
   /**
    * Uuid of the user to update in the service
    */
-  userId: UUID
+  userId: ID
   /**
    * Optional availability for the user in the service
    */
@@ -109,7 +111,7 @@ type GetServiceBookingslotsReq = {
    * @default []
    * @format uuid[]
    */
-  userIds?: UUID[]
+  userIds?: ID[]
 }
 
 /**
@@ -133,7 +135,7 @@ type ServiceBookingSlot = {
    * @default []
    * @format uuid[]
    */
-  userIds: UUID[]
+  userIds: ID[]
 }
 
 /**
@@ -182,7 +184,21 @@ type ServiceResponse = {
   /**
    * Created or updated service
    */
-  service: Service
+  service: ServiceDTO
+}
+
+/**
+ * Busy calendar object
+ */
+export interface BusyCalendar {
+  /**
+   * Uuid
+   */
+  id: ID
+  /**
+   * Provider of the busy calendar
+   */
+  provider: BusyCalendarProvider
 }
 
 /**
@@ -192,11 +208,11 @@ type AddBusyCalendar = {
   /**
    * Uuid of the service to add the calendar to
    */
-  serviceId: UUID
+  serviceId: ID
   /**
    * Uuid of the user to add the calendar to
    */
-  userId: UUID
+  userId: ID
   /**
    * Calendar to add to the user
    * It can be an internal calendar (nittei) or an external calendar (Google, Outlook)
@@ -211,11 +227,11 @@ type RemoveBusyCalendar = {
   /**
    * Uuid of the service to remove the calendar from
    */
-  serviceId: UUID
+  serviceId: ID
   /**
    * Uuid of the user to remove the calendar from
    */
-  userId: UUID
+  userId: ID
   /**
    * Calendar to remove from the user
    */
@@ -227,28 +243,28 @@ export class NitteiServiceClient extends NitteiBaseClient {
     return this.post<ServiceResponse>('/service', data ?? {})
   }
 
-  public update(serviceId: UUID, data?: UpdateServiceRequest) {
+  public update(serviceId: ID, data?: UpdateServiceRequest) {
     return this.put<ServiceResponse>(`/service/${serviceId}`, data ?? {})
   }
 
-  public find(serviceId: UUID) {
-    return this.get<Service>(`/service/${serviceId}`)
+  public find(serviceId: ID) {
+    return this.get<ServiceDTO>(`/service/${serviceId}`)
   }
 
-  public remove(serviceId: UUID) {
+  public remove(serviceId: ID) {
     return this.delete<ServiceResponse>(`/service/${serviceId}`)
   }
 
-  public addUser(serviceId: UUID, data: AddUserToServiceRequest) {
+  public addUser(serviceId: ID, data: AddUserToServiceRequest) {
     return this.post<ServiceResponse>(`/service/${serviceId}/users`, data)
   }
 
-  public removeUser(serviceId: UUID, userId: UUID) {
+  public removeUser(serviceId: ID, userId: ID) {
     return this.delete<ServiceResponse>(`/service/${serviceId}/users/${userId}`)
   }
 
   public updateUserInService(
-    serviceId: UUID,
+    serviceId: ID,
     data: UpdateUserToServiceRequest
   ) {
     return this.put<ServiceResponse>(
@@ -257,7 +273,7 @@ export class NitteiServiceClient extends NitteiBaseClient {
     )
   }
 
-  public getBookingslots(serviceId: UUID, req: GetServiceBookingslotsReq) {
+  public getBookingslots(serviceId: ID, req: GetServiceBookingslotsReq) {
     return this.get<GetServiceBookingslotsResponse>(
       `/service/${serviceId}/booking`,
       {
@@ -291,7 +307,7 @@ export class NitteiServiceClient extends NitteiBaseClient {
 }
 
 export class NitteiServiceUserClient extends NitteiBaseClient {
-  public getBookingslots(serviceId: UUID, req: GetServiceBookingslotsReq) {
+  public getBookingslots(serviceId: ID, req: GetServiceBookingslotsReq) {
     return this.get<GetServiceBookingslotsResponse>(
       `/service/${serviceId}/booking`,
       {

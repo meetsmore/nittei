@@ -3,6 +3,7 @@ use std::convert::TryFrom;
 use chrono::{prelude::*, Duration, TimeDelta};
 use rrule::RRuleSet;
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use crate::{
     calendar::CalendarSettings,
@@ -17,8 +18,9 @@ use crate::{
     Meta,
 };
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub enum CalendarEventStatus {
     #[default]
     Tentative,
@@ -48,7 +50,8 @@ impl TryFrom<String> for CalendarEventStatus {
     }
 }
 
-#[derive(Debug, Clone, Default, Serialize)]
+#[derive(Debug, Clone, Default, Serialize, TS)]
+#[ts(export)]
 pub struct CalendarEvent {
     pub id: ID,
     pub parent_id: Option<String>,
@@ -70,6 +73,7 @@ pub struct CalendarEvent {
     pub account_id: ID,
     pub reminders: Vec<CalendarEventReminder>,
     pub service_id: Option<ID>,
+    #[ts(type = "Record<string, string>")]
     pub metadata: Metadata,
 }
 
@@ -98,8 +102,9 @@ impl Meta<ID> for CalendarEvent {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct CalendarEventReminder {
     pub delta: i64, // In minutes
     pub identifier: String,

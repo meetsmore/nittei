@@ -3,6 +3,7 @@ use std::{collections::HashMap, str::FromStr};
 use chrono::{offset::LocalResult, prelude::*, Duration};
 use chrono_tz::Tz;
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use crate::{
     date,
@@ -84,16 +85,20 @@ impl Entity<ID> for Schedule {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, TS)]
 #[serde(tag = "type", content = "value")]
+#[ts(export)]
 pub enum ScheduleRuleVariant {
     WDay(Weekday),
     Date(String),
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, TS)]
+#[ts(export)]
 struct Time {
+    #[ts(type = "number")]
     pub hours: i64,
+    #[ts(type = "number")]
     pub minutes: i64,
 }
 
@@ -109,7 +114,8 @@ impl std::cmp::PartialOrd for Time {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, TS)]
+#[ts(export)]
 pub struct ScheduleRuleInterval {
     start: Time,
     end: Time,
@@ -197,7 +203,8 @@ impl ScheduleRuleInterval {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, TS)]
+#[ts(export)]
 pub struct ScheduleRule {
     pub variant: ScheduleRuleVariant,
     pub intervals: Vec<ScheduleRuleInterval>,

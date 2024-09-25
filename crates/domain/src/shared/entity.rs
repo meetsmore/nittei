@@ -2,6 +2,7 @@ use std::{fmt::Display, hash::Hash, str::FromStr};
 
 use serde::{de::Visitor, Deserialize, Serialize};
 use thiserror::Error;
+use ts_rs::TS;
 use uuid::Uuid;
 
 pub trait Entity<T: PartialEq> {
@@ -11,7 +12,9 @@ pub trait Entity<T: PartialEq> {
     }
 }
 
-#[derive(Debug, Clone, Eq)]
+/// ID - a unique identifier for an entity (UUID)
+#[derive(Debug, Clone, Eq, TS)]
+#[ts(export)]
 pub struct ID(Uuid);
 
 impl AsMut<Uuid> for ID {

@@ -1,6 +1,7 @@
 import { NitteiBaseClient } from './baseClient'
-import { UUID } from './domain'
-import type { Schedule, ScheduleRule } from './domain/schedule'
+import { ID } from './types/ID'
+import { ScheduleDTO } from './types/ScheduleDTO'
+import { ScheduleRule } from './types/ScheduleRule'
 
 interface UpdateScheduleRequest {
   rules?: ScheduleRule[]
@@ -13,26 +14,26 @@ interface CreateScheduleRequest {
 }
 
 type ScheduleResponse = {
-  schedule: Schedule
+  schedule: ScheduleDTO
 }
 
 export class NitteiScheduleClient extends NitteiBaseClient {
-  public async create(userId: UUID, req: CreateScheduleRequest) {
+  public async create(userId: ID, req: CreateScheduleRequest) {
     return await this.post<ScheduleResponse>(`/user/${userId}/schedule`, req)
   }
 
-  public async update(scheduleId: UUID, update: UpdateScheduleRequest) {
+  public async update(scheduleId: ID, update: UpdateScheduleRequest) {
     return await this.put<ScheduleResponse>(
       `/user/schedule/${scheduleId}`,
       update
     )
   }
 
-  public async remove(scheduleId: UUID) {
+  public async remove(scheduleId: ID) {
     return await this.delete<ScheduleResponse>(`/user/schedule/${scheduleId}`)
   }
 
-  public async find(scheduleId: UUID) {
+  public async find(scheduleId: ID) {
     return await this.get<ScheduleResponse>(`/user/schedule/${scheduleId}`)
   }
 }
@@ -42,15 +43,15 @@ export class NitteiScheduleUserClient extends NitteiBaseClient {
     return await this.post<ScheduleResponse>('/schedule', req)
   }
 
-  public async update(scheduleId: UUID, update: UpdateScheduleRequest) {
+  public async update(scheduleId: ID, update: UpdateScheduleRequest) {
     return await this.put<ScheduleResponse>(`/schedule/${scheduleId}`, update)
   }
 
-  public async remove(scheduleId: UUID) {
+  public async remove(scheduleId: ID) {
     return await this.delete<ScheduleResponse>(`/schedule/${scheduleId}`)
   }
 
-  public async find(scheduleId: UUID) {
+  public async find(scheduleId: ID) {
     return await this.get<ScheduleResponse>(`/schedule/${scheduleId}`)
   }
 }

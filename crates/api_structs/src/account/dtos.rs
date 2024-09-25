@@ -1,11 +1,17 @@
 use nittei_domain::{Account, AccountSettings, AccountWebhookSettings, PEMKey, ID};
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+/// Account - an account can have multiple users
+#[derive(Debug, Serialize, Deserialize, Clone, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct AccountDTO {
+    /// The unique identifier for the account
     pub id: ID,
+    /// Optional public key for JWT verification
     pub public_jwt_key: Option<PEMKey>,
+    /// Account settings
     pub settings: AccountSettingsDTO,
 }
 
@@ -19,8 +25,9 @@ impl AccountDTO {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct AccountSettingsDTO {
     pub webhook: Option<AccountWebhookSettingsDTO>,
 }
@@ -38,8 +45,9 @@ impl AccountSettingsDTO {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct AccountWebhookSettingsDTO {
     pub url: String,
     pub key: String,

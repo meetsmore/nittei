@@ -1,4 +1,12 @@
-use nittei_domain::{BusyCalendar, Service, ServiceResource, ServiceWithUsers, TimePlan, Tz, ID};
+use nittei_domain::{
+    BusyCalendarProvider,
+    Service,
+    ServiceResource,
+    ServiceWithUsers,
+    TimePlan,
+    Tz,
+    ID,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::dtos::{ServiceDTO, ServiceResourceDTO, ServiceWithUsersDTO};
@@ -81,7 +89,7 @@ pub mod add_busy_calendar {
     #[derive(Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct RequestBody {
-        pub busy: BusyCalendar,
+        pub busy: BusyCalendarProvider,
     }
 
     pub type APIResponse = String;
@@ -99,7 +107,7 @@ pub mod remove_busy_calendar {
     #[derive(Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct RequestBody {
-        pub busy: BusyCalendar,
+        pub busy: BusyCalendarProvider,
     }
 
     pub type APIResponse = String;

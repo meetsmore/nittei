@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{Entity, ID};
 
+/// Metadata - a key-value pair for storing additional information
 #[derive(Serialize, Deserialize, Default, Debug, Clone)]
 pub struct Metadata {
     #[serde(flatten)]

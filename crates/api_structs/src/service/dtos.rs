@@ -1,8 +1,10 @@
 use nittei_domain::{Metadata, Service, ServiceResource, ServiceWithUsers, TimePlan, ID};
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct ServiceResourceDTO {
     pub user_id: ID,
     pub service_id: ID,
@@ -27,10 +29,12 @@ impl ServiceResourceDTO {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct ServiceDTO {
     pub id: ID,
+    #[ts(type = "Record<string, string>")]
     pub metadata: Metadata,
 }
 

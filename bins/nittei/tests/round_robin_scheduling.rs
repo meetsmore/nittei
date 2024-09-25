@@ -5,7 +5,7 @@ use helpers::{
     setup::spawn_app,
     utils::{assert_equal_user_lists, format_datetime},
 };
-use nittei_domain::{BusyCalendar, ServiceMultiPersonOptions, TimePlan, ID};
+use nittei_domain::{BusyCalendarProvider, ServiceMultiPersonOptions, TimePlan, ID};
 use nittei_sdk::{
     AddBusyCalendar,
     AddServiceUserInput,
@@ -80,7 +80,7 @@ async fn create_default_service_host(
     let input = AddBusyCalendar {
         user_id: host.id.clone(),
         service_id: service_id.clone(),
-        calendar: BusyCalendar::Nittei(busy_calendar.id.clone()),
+        calendar: BusyCalendarProvider::Nittei(busy_calendar.id.clone()),
     };
     admin_client
         .service

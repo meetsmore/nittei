@@ -1,6 +1,6 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use nittei_api_structs::remove_busy_calendar::*;
-use nittei_domain::{Account, BusyCalendar, IntegrationProvider, ID};
+use nittei_domain::{Account, BusyCalendarProvider, IntegrationProvider, ID};
 use nittei_infra::{BusyCalendarIdentifier, ExternalBusyCalendarIdentifier, NitteiContext};
 
 use crate::{
@@ -39,7 +39,7 @@ struct RemoveBusyCalendarUseCase {
     pub account: Account,
     pub service_id: ID,
     pub user_id: ID,
-    pub busy: BusyCalendar,
+    pub busy: BusyCalendarProvider,
 }
 
 #[derive(Debug)]
@@ -80,7 +80,7 @@ impl UseCase for RemoveBusyCalendarUseCase {
 
         // Check if busy calendar exists
         match &self.busy {
-            BusyCalendar::Google(g_cal_id) => {
+            BusyCalendarProvider::Google(g_cal_id) => {
                 let identifier = ExternalBusyCalendarIdentifier {
                     ext_calendar_id: g_cal_id.clone(),
                     provider: IntegrationProvider::Google,
@@ -97,7 +97,7 @@ impl UseCase for RemoveBusyCalendarUseCase {
                     return Err(UseCaseError::BusyCalendarNotFound);
                 }
             }
-            BusyCalendar::Outlook(o_cal_id) => {
+            BusyCalendarProvider::Outlook(o_cal_id) => {
                 let identifier = ExternalBusyCalendarIdentifier {
                     ext_calendar_id: o_cal_id.clone(),
                     provider: IntegrationProvider::Outlook,
@@ -114,7 +114,7 @@ impl UseCase for RemoveBusyCalendarUseCase {
                     return Err(UseCaseError::BusyCalendarNotFound);
                 }
             }
-            BusyCalendar::Nittei(n_cal_id) => {
+            BusyCalendarProvider::Nittei(n_cal_id) => {
                 let identifier = BusyCalendarIdentifier {
                     calendar_id: n_cal_id.clone(),
                     service_id: self.service_id.clone(),
@@ -134,7 +134,7 @@ impl UseCase for RemoveBusyCalendarUseCase {
 
         // Delete busy calendar
         match &self.busy {
-            BusyCalendar::Google(g_cal_id) => {
+            BusyCalendarProvider::Google(g_cal_id) => {
                 let identifier = ExternalBusyCalendarIdentifier {
                     ext_calendar_id: g_cal_id.clone(),
                     provider: IntegrationProvider::Google,
@@ -147,7 +147,7 @@ impl UseCase for RemoveBusyCalendarUseCase {
                     .await
                     .map_err(|_| UseCaseError::StorageError)
             }
-            BusyCalendar::Outlook(o_cal_id) => {
+            BusyCalendarProvider::Outlook(o_cal_id) => {
                 let identifier = ExternalBusyCalendarIdentifier {
                     ext_calendar_id: o_cal_id.clone(),
                     provider: IntegrationProvider::Outlook,
@@ -160,7 +160,7 @@ impl UseCase for RemoveBusyCalendarUseCase {
                     .await
                     .map_err(|_| UseCaseError::StorageError)
             }
-            BusyCalendar::Nittei(n_cal_id) => {
+            BusyCalendarProvider::Nittei(n_cal_id) => {
                 let identifier = BusyCalendarIdentifier {
                     calendar_id: n_cal_id.clone(),
                     service_id: self.service_id.clone(),

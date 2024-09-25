@@ -46,7 +46,7 @@ pub use nittei_api_structs::{
 pub use nittei_domain::{
     providers::{google::*, outlook::*},
     scheduling::RoundRobinAlgorithm,
-    BusyCalendar,
+    BusyCalendarProvider,
     CalendarEventReminder,
     IntegrationProvider,
     Metadata,

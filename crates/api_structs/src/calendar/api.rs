@@ -1,13 +1,15 @@
 use nittei_domain::{Calendar, EventInstance, Tz, Weekday, ID};
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use crate::{
     dtos::{CalendarDTO, EventWithInstancesDTO},
     helpers::deserialize_uuids_list::deserialize_stringified_uuids_list,
 };
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct CalendarResponse {
     pub calendar: CalendarDTO,
 }
@@ -30,12 +32,16 @@ pub mod create_calendar {
         pub user_id: ID,
     }
 
-    #[derive(Deserialize, Serialize)]
+    #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "CreateCalendarRequestBody")]
     pub struct RequestBody {
+        #[ts(type = "string")]
         pub timezone: Tz,
         #[serde(default = "default_weekday")]
+        #[ts(optional, as = "Option<_>")]
         pub week_start: Weekday,
+        #[ts(optional, type = "Record<string, string>")]
         pub metadata: Option<Metadata>,
     }
 
@@ -51,13 +57,16 @@ pub mod add_sync_calendar {
 
     use super::*;
 
-    #[derive(Deserialize)]
+    #[derive(Deserialize, TS)]
+    #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "AddSyncCalendarPathParams")]
     pub struct PathParams {
         pub user_id: ID,
     }
 
-    #[derive(Deserialize, Serialize)]
+    #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "AddSyncCalendarRequestBody")]
     pub struct RequestBody {
         pub provider: IntegrationProvider,
         pub calendar_id: ID,
@@ -72,13 +81,16 @@ pub mod remove_sync_calendar {
 
     use super::*;
 
-    #[derive(Deserialize)]
+    #[derive(Deserialize, TS)]
+    #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "RemoveSyncCalendarPathParams")]
     pub struct PathParams {
         pub user_id: ID,
     }
 
-    #[derive(Deserialize, Serialize)]
+    #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "RemoveSyncCalendarRequestBody")]
     pub struct RequestBody {
         pub provider: IntegrationProvider,
         pub calendar_id: ID,
@@ -118,8 +130,9 @@ pub mod get_calendar_events {
         pub end_time: DateTime<Utc>,
     }
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "GetCalendarEventsAPIResponse")]
     pub struct APIResponse {
         pub calendar: CalendarDTO,
         pub events: Vec<EventWithInstancesDTO>,
@@ -165,8 +178,9 @@ pub mod get_calendars_by_meta {
         pub limit: Option<usize>,
     }
 
-    #[derive(Deserialize, Serialize)]
+    #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "GetCalendarsByMetaAPIResponse")]
     pub struct APIResponse {
         pub calendars: Vec<CalendarDTO>,
     }
@@ -196,8 +210,9 @@ pub mod get_google_calendars {
         pub min_access_role: GoogleCalendarAccessRole,
     }
 
-    #[derive(Deserialize, Serialize)]
+    #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "GetGoogleCalendarsAPIResponse")]
     pub struct APIResponse {
         pub calendars: Vec<GoogleCalendarListEntry>,
     }
@@ -225,8 +240,9 @@ pub mod get_outlook_calendars {
         pub min_access_role: OutlookCalendarAccessRole,
     }
 
-    #[derive(Deserialize, Serialize)]
+    #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "GetOutlookCalendarsAPIResponse")]
     pub struct APIResponse {
         pub calendars: Vec<OutlookCalendar>,
     }
@@ -239,8 +255,6 @@ pub mod get_outlook_calendars {
 }
 
 pub mod get_user_freebusy {
-    use std::collections::VecDeque;
-
     use chrono::{DateTime, Utc};
 
     use super::*;
@@ -250,42 +264,49 @@ pub mod get_user_freebusy {
         pub user_id: ID,
     }
 
-    #[derive(Debug, Deserialize)]
+    #[derive(Debug, Deserialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "GetUserFreeBusyQueryParams")]
     pub struct QueryParams {
+        #[ts(type = "Date")]
         pub start_time: DateTime<Utc>,
+        #[ts(type = "Date")]
         pub end_time: DateTime<Utc>,
         #[serde(default, deserialize_with = "deserialize_stringified_uuids_list")]
         pub calendar_ids: Option<Vec<ID>>,
     }
 
-    #[derive(Debug, Serialize, Deserialize)]
+    #[derive(Debug, Serialize, Deserialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "GetUserFreeBusyAPIResponse")]
     pub struct APIResponse {
-        pub busy: VecDeque<EventInstance>,
+        pub busy: Vec<EventInstance>,
         pub user_id: String,
     }
 }
 
 pub mod multiple_freebusy {
-    use std::collections::{HashMap, VecDeque};
+    use std::collections::HashMap;
 
     use chrono::{DateTime, Utc};
 
     use super::*;
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Debug, Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "MultipleFreeBusyRequestBody")]
     pub struct RequestBody {
         #[serde(default)]
         pub user_ids: Vec<ID>,
+        #[ts(type = "Date")]
         pub start_time: DateTime<Utc>,
+        #[ts(type = "Date")]
         pub end_time: DateTime<Utc>,
     }
 
-    #[derive(Debug, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct APIResponse(pub HashMap<ID, VecDeque<EventInstance>>);
+    #[derive(Debug, Serialize, Deserialize, TS)]
+    #[ts(export, rename = "MultipleFreeBusyAPIResponse")]
+    pub struct APIResponse(pub HashMap<ID, Vec<EventInstance>>);
 }
 
 pub mod update_calendar {
@@ -298,19 +319,23 @@ pub mod update_calendar {
         pub calendar_id: ID,
     }
 
-    #[derive(Deserialize, Serialize)]
+    #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "UpdateCalendarSettings")]
     pub struct CalendarSettings {
         #[serde(default)]
         pub week_start: Option<Weekday>,
+        #[ts(type = "string", optional)]
         pub timezone: Option<Tz>,
     }
 
-    #[derive(Deserialize, Serialize)]
+    #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "UpdateCalendarRequestBody")]
     pub struct RequestBody {
         pub settings: CalendarSettings,
         #[serde(default)]
+        #[ts(optional, type = "Record<string, string>")]
         pub metadata: Option<Metadata>,
     }
 

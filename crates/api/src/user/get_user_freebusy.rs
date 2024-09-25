@@ -44,7 +44,7 @@ pub async fn get_freebusy_controller(
         .await
         .map(|usecase_res| {
             HttpResponse::Ok().json(APIResponse {
-                busy: usecase_res.busy.inner(),
+                busy: usecase_res.busy.inner().into(),
                 user_id: usecase_res.user_id.to_string(),
             })
         })

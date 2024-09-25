@@ -3,7 +3,7 @@ use nittei_api_structs::add_busy_calendar::*;
 use nittei_domain::{
     providers::{google::GoogleCalendarAccessRole, outlook::OutlookCalendarAccessRole},
     Account,
-    BusyCalendar,
+    BusyCalendarProvider,
     IntegrationProvider,
     ID,
 };
@@ -50,7 +50,7 @@ struct AddBusyCalendarUseCase {
     pub account: Account,
     pub service_id: ID,
     pub user_id: ID,
-    pub busy: BusyCalendar,
+    pub busy: BusyCalendarProvider,
 }
 
 #[derive(Debug)]
@@ -97,7 +97,7 @@ impl UseCase for AddBusyCalendarUseCase {
 
         // Check if busy calendar already exists
         match &self.busy {
-            BusyCalendar::Google(g_cal_id) => {
+            BusyCalendarProvider::Google(g_cal_id) => {
                 let identifier = ExternalBusyCalendarIdentifier {
                     ext_calendar_id: g_cal_id.clone(),
                     provider: IntegrationProvider::Google,
@@ -114,7 +114,7 @@ impl UseCase for AddBusyCalendarUseCase {
                     return Err(UseCaseError::CalendarAlreadyRegistered);
                 }
             }
-            BusyCalendar::Outlook(o_cal_id) => {
+            BusyCalendarProvider::Outlook(o_cal_id) => {
                 let identifier = ExternalBusyCalendarIdentifier {
                     ext_calendar_id: o_cal_id.clone(),
                     provider: IntegrationProvider::Outlook,
@@ -131,7 +131,7 @@ impl UseCase for AddBusyCalendarUseCase {
                     return Err(UseCaseError::CalendarAlreadyRegistered);
                 }
             }
-            BusyCalendar::Nittei(n_cal_id) => {
+            BusyCalendarProvider::Nittei(n_cal_id) => {
                 let identifier = BusyCalendarIdentifier {
                     calendar_id: n_cal_id.clone(),
                     service_id: self.service_id.clone(),
@@ -151,7 +151,7 @@ impl UseCase for AddBusyCalendarUseCase {
 
         // Validate calendar permissions
         match &self.busy {
-            BusyCalendar::Google(g_cal_id) => {
+            BusyCalendarProvider::Google(g_cal_id) => {
                 let provider = GoogleCalendarProvider::new(&user, ctx)
                     .await
                     .map_err(|_| UseCaseError::StorageError)?;
@@ -169,7 +169,7 @@ impl UseCase for AddBusyCalendarUseCase {
                     return Err(UseCaseError::CalendarNotFound);
                 }
             }
-            BusyCalendar::Outlook(o_cal_id) => {
+            BusyCalendarProvider::Outlook(o_cal_id) => {
                 let provider = OutlookCalendarProvider::new(&user, ctx)
                     .await
                     .map_err(|_| UseCaseError::StorageError)?;
@@ -186,7 +186,7 @@ impl UseCase for AddBusyCalendarUseCase {
                     return Err(UseCaseError::CalendarNotFound);
                 }
             }
-            BusyCalendar::Nittei(n_cal_id) => match ctx.repos.calendars.find(n_cal_id).await {
+            BusyCalendarProvider::Nittei(n_cal_id) => match ctx.repos.calendars.find(n_cal_id).await {
                 Ok(Some(cal)) if cal.user_id == user.id => (),
                 Ok(_) => return Err(UseCaseError::CalendarNotFound),
                 Err(_) => return Err(UseCaseError::StorageError),
@@ -195,7 +195,7 @@ impl UseCase for AddBusyCalendarUseCase {
 
         // Insert busy calendar
         match &self.busy {
-            BusyCalendar::Google(g_cal_id) => {
+            BusyCalendarProvider::Google(g_cal_id) => {
                 let identifier = ExternalBusyCalendarIdentifier {
                     ext_calendar_id: g_cal_id.clone(),
                     provider: IntegrationProvider::Google,
@@ -208,7 +208,7 @@ impl UseCase for AddBusyCalendarUseCase {
                     .await
                     .map_err(|_| UseCaseError::StorageError)
             }
-            BusyCalendar::Outlook(o_cal_id) => {
+            BusyCalendarProvider::Outlook(o_cal_id) => {
                 let identifier = ExternalBusyCalendarIdentifier {
                     ext_calendar_id: o_cal_id.clone(),
                     provider: IntegrationProvider::Outlook,
@@ -221,7 +221,7 @@ impl UseCase for AddBusyCalendarUseCase {
                     .await
                     .map_err(|_| UseCaseError::StorageError)
             }
-            BusyCalendar::Nittei(n_cal_id) => {
+            BusyCalendarProvider::Nittei(n_cal_id) => {
                 let identifier = BusyCalendarIdentifier {
                     calendar_id: n_cal_id.clone(),
                     service_id: self.service_id.clone(),

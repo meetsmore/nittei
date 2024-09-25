@@ -4,11 +4,13 @@ use chrono::{prelude::*, TimeDelta};
 use chrono_tz::Tz;
 use date::format_date;
 use serde::Serialize;
+use ts_rs::TS;
 
 use crate::{date, event_instance::EventInstance, CompatibleInstances, ID};
 
-#[derive(Serialize, PartialEq, Debug)]
+#[derive(Serialize, PartialEq, Debug, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct BookingSlot {
     pub start: DateTime<Utc>,
     pub duration: i64,

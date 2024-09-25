@@ -1,10 +1,12 @@
 use nittei_domain::{User, ID};
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use crate::dtos::UserDTO;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct UserResponse {
     pub user: UserDTO,
 }
@@ -28,10 +30,12 @@ pub mod create_user {
 
     use super::*;
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Debug, Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "CreateUserRequestBody")]
     pub struct RequestBody {
         #[serde(default)]
+        #[ts(optional, type = "Record<string, string>")]
         pub metadata: Option<Metadata>,
 
         pub user_id: Option<ID>,
@@ -45,8 +49,9 @@ pub mod oauth_integration {
 
     use super::*;
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Debug, Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "OAuthIntegrationRequestBody")]
     pub struct RequestBody {
         pub code: String,
         pub provider: IntegrationProvider,
@@ -77,8 +82,9 @@ pub mod remove_integration {
 pub mod oauth_outlook {
     use super::*;
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Debug, Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "OAuthOutlookRequestBody")]
     pub struct RequestBody {
         pub code: String,
     }
@@ -96,10 +102,12 @@ pub mod update_user {
 
     use super::*;
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Debug, Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "UpdateUserRequestBody")]
     pub struct RequestBody {
         #[serde(default)]
+        #[ts(optional, type = "Record<string, string>")]
         pub metadata: Option<Metadata>,
     }
 
@@ -146,8 +154,9 @@ pub mod get_users_by_meta {
         pub limit: Option<usize>,
     }
 
-    #[derive(Deserialize, Serialize)]
+    #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "GetUsersByMetaAPIResponse")]
     pub struct APIResponse {
         pub users: Vec<UserDTO>,
     }

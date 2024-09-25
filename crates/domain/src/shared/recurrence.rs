@@ -4,11 +4,14 @@ use chrono::{prelude::*, TimeDelta};
 use rrule::{Frequency, RRule, RRuleSet};
 use serde::{de::Visitor, Deserialize, Serialize};
 use thiserror::Error;
+use ts_rs::TS;
 
 use crate::CalendarSettings;
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+/// Frequency rule for recurring events
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, TS)]
 #[serde(rename_all = "lowercase")]
+#[ts(export)]
 pub enum RRuleFrequency {
     Yearly,
     Monthly,
@@ -16,18 +19,28 @@ pub enum RRuleFrequency {
     Daily,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+/// Options for recurring events
+#[derive(Clone, Debug, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct RRuleOptions {
     pub freq: RRuleFrequency,
     pub interval: isize,
+    #[ts(optional)]
     pub count: Option<i32>,
+    #[ts(optional)]
     pub until: Option<DateTime<Utc>>,
+    #[ts(optional)]
     pub bysetpos: Option<Vec<isize>>,
+    #[ts(optional)]
     pub byweekday: Option<Vec<WeekDay>>,
+    #[ts(optional)]
     pub bymonthday: Option<Vec<isize>>,
+    #[ts(optional)]
     pub bymonth: Option<Vec<Month>>,
+    #[ts(optional)]
     pub byyearday: Option<Vec<isize>>,
+    #[ts(optional)]
     pub byweekno: Option<Vec<isize>>,
 }
 
@@ -203,7 +216,8 @@ impl Default for RRuleOptions {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, TS)]
+#[ts(export)]
 pub struct WeekDay {
     n: Option<isize>,
     weekday: Weekday,
