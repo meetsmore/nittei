@@ -1,14 +1,6 @@
 
 [workspace]
-members = [
-    "bins/nittei",
-    "crates/api",
-    "crates/api_structs",
-    "crates/domain",
-    "crates/infra",
-    "crates/utils",
-    "clients/rust",
-]
+members = ["bins/*", "crates/*", "clients/rust"]
 resolver = "2"
 
 [workspace.dependencies]
