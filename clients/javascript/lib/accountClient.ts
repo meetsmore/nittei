@@ -54,7 +54,7 @@ export class NitteiAccountClient extends NitteiBaseClient {
    * @returns AccountResponse - updated account
    */
   public connectGoogle(data: AddAccountIntegrationRequestBody) {
-    return this.put<AccountResponse>('/account/integration', data)
+    return this.put<AccountResponse>('/account/integration/google', data)
   }
 
   /**
