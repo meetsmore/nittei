@@ -287,8 +287,7 @@ impl EventInstance {
     }
 }
 
-#[derive(Debug, Serialize, TS)]
-#[ts(export)]
+#[derive(Debug, Serialize)]
 pub struct EventWithInstances {
     pub event: CalendarEvent,
     pub instances: Vec<EventInstance>,

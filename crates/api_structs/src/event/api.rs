@@ -177,7 +177,10 @@ pub mod get_events_by_calendars {
     use nittei_domain::EventWithInstances;
 
     use super::*;
-    use crate::helpers::deserialize_uuids_list::deserialize_stringified_uuids_list;
+    use crate::{
+        dtos::EventWithInstancesDTO,
+        helpers::deserialize_uuids_list::deserialize_stringified_uuids_list,
+    };
 
     /// Query parameters for getting events by calendars
     #[derive(Deserialize, Serialize, TS)]
@@ -198,16 +201,23 @@ pub mod get_events_by_calendars {
         pub end_time: DateTime<Utc>,
     }
 
+    /// API response for getting events by calendars
     #[derive(Serialize, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "GetEventsByCalendarsAPIResponse")]
     pub struct APIResponse {
-        pub events: Vec<EventWithInstances>,
+        /// List of calendar events retrieved
+        pub events: Vec<EventWithInstancesDTO>,
     }
 
     impl APIResponse {
         pub fn new(events: Vec<EventWithInstances>) -> Self {
-            Self { events }
+            Self {
+                events: events
+                    .into_iter()
+                    .map(|e| EventWithInstancesDTO::new(e.event, e.instances))
+                    .collect(),
+            }
         }
     }
 }

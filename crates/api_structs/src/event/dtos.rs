@@ -88,3 +88,12 @@ pub struct EventWithInstancesDTO {
     /// List of event instances (e.g. recurring events)
     pub instances: Vec<EventInstance>,
 }
+
+impl EventWithInstancesDTO {
+    pub fn new(event: CalendarEvent, instances: Vec<EventInstance>) -> Self {
+        Self {
+            event: CalendarEventDTO::new(event),
+            instances,
+        }
+    }
+}

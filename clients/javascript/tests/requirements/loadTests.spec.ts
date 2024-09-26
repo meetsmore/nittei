@@ -6,7 +6,6 @@ import timezone from 'dayjs/plugin/timezone'
 import { INitteiClient } from '../../lib'
 import { UserDTO } from '../../lib/gen_types/UserDTO'
 import { CalendarDTO } from '../../lib/gen_types/CalendarDTO'
-import { CalendarEvent } from '../../lib/gen_types/CalendarEvent'
 import { CalendarEventDTO } from '../../lib/gen_types/CalendarEventDTO'
 
 dayjs.extend(utc)
