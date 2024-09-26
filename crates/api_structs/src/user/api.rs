@@ -1,11 +1,15 @@
 use nittei_domain::{User, ID};
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use crate::dtos::UserDTO;
 
-#[derive(Deserialize, Serialize)]
+/// User response object
+#[derive(Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct UserResponse {
+    /// User retrieved
     pub user: UserDTO,
 }
 
@@ -28,12 +32,19 @@ pub mod create_user {
 
     use super::*;
 
-    #[derive(Debug, Deserialize, Serialize)]
+    /// Request body for creating a user
+    #[derive(Debug, Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "CreateUserRequestBody")]
     pub struct RequestBody {
+        /// Optional metadata (e.g. {"key": "value"})
         #[serde(default)]
+        #[ts(optional, type = "Record<string, string>")]
         pub metadata: Option<Metadata>,
 
+        /// Optional user ID
+        /// If not provided, a new UUID will be generated
+        /// This is useful for external applications that need to link Nittei's users to their own data models
         pub user_id: Option<ID>,
     }
 
@@ -45,10 +56,15 @@ pub mod oauth_integration {
 
     use super::*;
 
-    #[derive(Debug, Deserialize, Serialize)]
+    /// Request body for creating an OAuth integration
+    #[derive(Debug, Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "OAuthIntegrationRequestBody")]
     pub struct RequestBody {
+        /// OAuth code
         pub code: String,
+        /// Integration provider
+        /// E.g. "Google", "Outlook"
         pub provider: IntegrationProvider,
     }
 
@@ -77,8 +93,9 @@ pub mod remove_integration {
 pub mod oauth_outlook {
     use super::*;
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Debug, Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "OAuthOutlookRequestBody")]
     pub struct RequestBody {
         pub code: String,
     }
@@ -96,10 +113,14 @@ pub mod update_user {
 
     use super::*;
 
-    #[derive(Debug, Deserialize, Serialize)]
+    /// Request body for updating a user
+    #[derive(Debug, Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "UpdateUserRequestBody")]
     pub struct RequestBody {
+        /// Optional metadata (e.g. {"key": "value"})
         #[serde(default)]
+        #[ts(optional, type = "Record<string, string>")]
         pub metadata: Option<Metadata>,
     }
 
@@ -146,9 +167,12 @@ pub mod get_users_by_meta {
         pub limit: Option<usize>,
     }
 
-    #[derive(Deserialize, Serialize)]
+    /// API response for getting users by metadata
+    #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "GetUsersByMetaAPIResponse")]
     pub struct APIResponse {
+        /// List of users matching the metadata query
         pub users: Vec<UserDTO>,
     }
 

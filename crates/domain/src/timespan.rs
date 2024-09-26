@@ -3,10 +3,12 @@ use std::error::Error;
 use chrono::{prelude::*, DateTime};
 use chrono_tz::Tz;
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 /// A `TimeSpan` type represents a time interval (duration of time)
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct TimeSpan {
     start_time: DateTime<Utc>,
     end_time: DateTime<Utc>,

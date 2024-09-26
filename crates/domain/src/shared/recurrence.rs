@@ -4,11 +4,14 @@ use chrono::{prelude::*, TimeDelta};
 use rrule::{Frequency, RRule, RRuleSet};
 use serde::{de::Visitor, Deserialize, Serialize};
 use thiserror::Error;
+use ts_rs::TS;
 
 use crate::CalendarSettings;
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+/// Frequency rule for recurring events
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, TS)]
 #[serde(rename_all = "lowercase")]
+#[ts(export)]
 pub enum RRuleFrequency {
     Yearly,
     Monthly,
@@ -16,18 +19,28 @@ pub enum RRuleFrequency {
     Daily,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+/// Options for recurring events
+#[derive(Clone, Debug, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct RRuleOptions {
     pub freq: RRuleFrequency,
     pub interval: isize,
+    #[ts(optional)]
     pub count: Option<i32>,
+    #[ts(optional)]
     pub until: Option<DateTime<Utc>>,
+    #[ts(optional)]
     pub bysetpos: Option<Vec<isize>>,
-    pub byweekday: Option<Vec<WeekDay>>,
+    #[ts(optional)]
+    pub byweekday: Option<Vec<WeekDayRecurrence>>,
+    #[ts(optional)]
     pub bymonthday: Option<Vec<isize>>,
+    #[ts(optional)]
     pub bymonth: Option<Vec<Month>>,
+    #[ts(optional)]
     pub byyearday: Option<Vec<isize>>,
+    #[ts(optional)]
     pub byweekno: Option<Vec<isize>>,
 }
 
@@ -203,13 +216,14 @@ impl Default for RRuleOptions {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct WeekDay {
+#[derive(Clone, Debug, PartialEq, TS)]
+#[ts(export)]
+pub struct WeekDayRecurrence {
     n: Option<isize>,
     weekday: Weekday,
 }
 
-impl WeekDay {
+impl WeekDayRecurrence {
     fn create(weekday: Weekday, n: Option<isize>) -> Option<Self> {
         if let Some(n) = n {
             if !Self::is_valid_n(n) {
@@ -239,7 +253,7 @@ impl WeekDay {
     }
 }
 
-impl Display for WeekDay {
+impl Display for WeekDayRecurrence {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let n_prefix = match self.n {
             Some(n) => format!("{}", n),
@@ -257,7 +271,7 @@ pub enum InvalidWeekDayError {
     Malformed(String),
 }
 
-impl FromStr for WeekDay {
+impl FromStr for WeekDayRecurrence {
     type Err = InvalidWeekDayError;
 
     fn from_str(day: &str) -> Result<Self, Self::Err> {
@@ -268,7 +282,7 @@ impl FromStr for WeekDay {
             0..=2 => Err(e),
             3 => {
                 let wday = Weekday::from_str(day).map_err(|_| Malformed(day.to_string()))?;
-                Ok(WeekDay::new(wday).ok_or_else(|| Malformed(day.to_string()))?)
+                Ok(WeekDayRecurrence::new(wday).ok_or_else(|| Malformed(day.to_string()))?)
             }
             _ => {
                 let wday = Weekday::from_str(&day[day.len() - 3..])
@@ -276,13 +290,13 @@ impl FromStr for WeekDay {
                 let n = day[0..day.len() - 3]
                     .parse::<isize>()
                     .map_err(|_| Malformed(day.to_string()))?;
-                WeekDay::new_nth(wday, n).ok_or(e)
+                WeekDayRecurrence::new_nth(wday, n).ok_or(e)
             }
         }
     }
 }
 
-impl Serialize for WeekDay {
+impl Serialize for WeekDayRecurrence {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
@@ -291,7 +305,7 @@ impl Serialize for WeekDay {
     }
 }
 
-impl<'de> Deserialize<'de> for WeekDay {
+impl<'de> Deserialize<'de> for WeekDayRecurrence {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
@@ -299,18 +313,18 @@ impl<'de> Deserialize<'de> for WeekDay {
         struct WeekDayVisitor;
 
         impl<'de> Visitor<'de> for WeekDayVisitor {
-            type Value = WeekDay;
+            type Value = WeekDayRecurrence;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
                 formatter.write_str("A valid string representation of weekday")
             }
 
-            fn visit_str<E>(self, value: &str) -> Result<WeekDay, E>
+            fn visit_str<E>(self, value: &str) -> Result<WeekDayRecurrence, E>
             where
                 E: serde::de::Error,
             {
                 value
-                    .parse::<WeekDay>()
+                    .parse::<WeekDayRecurrence>()
                     .map_err(|_| E::custom(format!("Malformed weekday: {}", value)))
             }
         }
@@ -326,70 +340,83 @@ mod test {
     #[test]
     fn parses_valid_weekday_str_correctly() {
         assert_eq!(
-            "mon".parse::<WeekDay>().unwrap(),
-            WeekDay::new(Weekday::Mon).unwrap()
+            "mon".parse::<WeekDayRecurrence>().unwrap(),
+            WeekDayRecurrence::new(Weekday::Mon).unwrap()
         );
         assert_eq!(
-            "sun".parse::<WeekDay>().unwrap(),
-            WeekDay::new(Weekday::Sun).unwrap()
+            "sun".parse::<WeekDayRecurrence>().unwrap(),
+            WeekDayRecurrence::new(Weekday::Sun).unwrap()
         );
         assert_eq!(
-            "1mon".parse::<WeekDay>().unwrap(),
-            WeekDay::new_nth(Weekday::Mon, 1).unwrap()
+            "1mon".parse::<WeekDayRecurrence>().unwrap(),
+            WeekDayRecurrence::new_nth(Weekday::Mon, 1).unwrap()
         );
         assert_eq!(
-            "17mon".parse::<WeekDay>().unwrap(),
-            WeekDay::new_nth(Weekday::Mon, 17).unwrap()
+            "17mon".parse::<WeekDayRecurrence>().unwrap(),
+            WeekDayRecurrence::new_nth(Weekday::Mon, 17).unwrap()
         );
         assert_eq!(
-            "170mon".parse::<WeekDay>().unwrap(),
-            WeekDay::new_nth(Weekday::Mon, 170).unwrap()
+            "170mon".parse::<WeekDayRecurrence>().unwrap(),
+            WeekDayRecurrence::new_nth(Weekday::Mon, 170).unwrap()
         );
         assert_eq!(
-            "+2mon".parse::<WeekDay>().unwrap(),
-            WeekDay::new_nth(Weekday::Mon, 2).unwrap()
+            "+2mon".parse::<WeekDayRecurrence>().unwrap(),
+            WeekDayRecurrence::new_nth(Weekday::Mon, 2).unwrap()
         );
         assert_eq!(
-            "+22mon".parse::<WeekDay>().unwrap(),
-            WeekDay::new_nth(Weekday::Mon, 22).unwrap()
+            "+22mon".parse::<WeekDayRecurrence>().unwrap(),
+            WeekDayRecurrence::new_nth(Weekday::Mon, 22).unwrap()
         );
         assert_eq!(
-            "-2mon".parse::<WeekDay>().unwrap(),
-            WeekDay::new_nth(Weekday::Mon, -2).unwrap()
+            "-2mon".parse::<WeekDayRecurrence>().unwrap(),
+            WeekDayRecurrence::new_nth(Weekday::Mon, -2).unwrap()
         );
         assert_eq!(
-            "-22mon".parse::<WeekDay>().unwrap(),
-            WeekDay::new_nth(Weekday::Mon, -22).unwrap()
+            "-22mon".parse::<WeekDayRecurrence>().unwrap(),
+            WeekDayRecurrence::new_nth(Weekday::Mon, -22).unwrap()
         );
     }
 
     #[test]
     fn parses_invalid_weekday_str_correctly() {
-        assert!("".parse::<WeekDay>().is_err());
-        assert!("-1".parse::<WeekDay>().is_err());
-        assert!("7".parse::<WeekDay>().is_err());
-        assert!("00".parse::<WeekDay>().is_err());
-        assert!("-1!?".parse::<WeekDay>().is_err());
-        assert!("-1WEDn".parse::<WeekDay>().is_err());
-        assert!("-1mond".parse::<WeekDay>().is_err());
-        assert!("mond".parse::<WeekDay>().is_err());
-        assert!("1000mon".parse::<WeekDay>().is_err());
-        assert!("0mon".parse::<WeekDay>().is_err());
-        assert!("000mon".parse::<WeekDay>().is_err());
-        assert!("+0mon".parse::<WeekDay>().is_err());
+        assert!("".parse::<WeekDayRecurrence>().is_err());
+        assert!("-1".parse::<WeekDayRecurrence>().is_err());
+        assert!("7".parse::<WeekDayRecurrence>().is_err());
+        assert!("00".parse::<WeekDayRecurrence>().is_err());
+        assert!("-1!?".parse::<WeekDayRecurrence>().is_err());
+        assert!("-1WEDn".parse::<WeekDayRecurrence>().is_err());
+        assert!("-1mond".parse::<WeekDayRecurrence>().is_err());
+        assert!("mond".parse::<WeekDayRecurrence>().is_err());
+        assert!("1000mon".parse::<WeekDayRecurrence>().is_err());
+        assert!("0mon".parse::<WeekDayRecurrence>().is_err());
+        assert!("000mon".parse::<WeekDayRecurrence>().is_err());
+        assert!("+0mon".parse::<WeekDayRecurrence>().is_err());
     }
 
     #[test]
     fn serializes_weekday() {
-        assert_eq!(WeekDay::new(Weekday::Mon).unwrap().to_string(), "Mon");
-        assert_eq!(WeekDay::new(Weekday::Tue).unwrap().to_string(), "Tue");
-        assert_eq!(WeekDay::new(Weekday::Sun).unwrap().to_string(), "Sun");
         assert_eq!(
-            WeekDay::new_nth(Weekday::Sun, 1).unwrap().to_string(),
+            WeekDayRecurrence::new(Weekday::Mon).unwrap().to_string(),
+            "Mon"
+        );
+        assert_eq!(
+            WeekDayRecurrence::new(Weekday::Tue).unwrap().to_string(),
+            "Tue"
+        );
+        assert_eq!(
+            WeekDayRecurrence::new(Weekday::Sun).unwrap().to_string(),
+            "Sun"
+        );
+        assert_eq!(
+            WeekDayRecurrence::new_nth(Weekday::Sun, 1)
+                .unwrap()
+                .to_string(),
             "1Sun"
         );
         assert_eq!(
-            WeekDay::new_nth(Weekday::Sun, -1).unwrap().to_string(),
+            WeekDayRecurrence::new_nth(Weekday::Sun, -1)
+                .unwrap()
+                .to_string(),
             "-1Sun"
         );
     }

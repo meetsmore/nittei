@@ -29,7 +29,7 @@ pub use event_instance::{
 pub use reminder::{EventRemindersExpansionJob, Reminder};
 pub use schedule::{Schedule, ScheduleRule};
 pub use service::{
-    BusyCalendar,
+    BusyCalendarProvider,
     Service,
     ServiceMultiPersonOptions,
     ServiceResource,
@@ -39,7 +39,7 @@ pub use service::{
 pub use shared::{
     entity::{Entity, ID},
     metadata::{Meta, Metadata},
-    recurrence::{RRuleFrequency, RRuleOptions, WeekDay},
+    recurrence::{RRuleFrequency, RRuleOptions, WeekDayRecurrence},
 };
 pub use timespan::TimeSpan;
 pub use user::{IntegrationProvider, User, UserIntegration};

@@ -86,10 +86,13 @@ TEST_NAME=$1
 
 # Add `-- --nocapture` if DEBUG is set
 if [ -n "$DEBUG" ]; then
-  cargo test --workspace $1 -- --nocapture && cd ..
+  cargo test --workspace $1 -- --nocapture
 else
   # If not in debug mode, run the tests with `cargo-pretty-test`
-  cargo-pretty-test --workspace $1 && cd ..
+  cargo-pretty-test --workspace $1
 fi
+
+# Format TS code
+pnpm run format
 
 # The cleanup function will be called automatically

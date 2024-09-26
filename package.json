@@ -3,7 +3,9 @@
   "version": "0.0.1",
   "description": "",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "format": "cd clients/javascript && pnpm run format"
+  },
   "author": "",
   "license": "MIT",
   "devDependencies": {}

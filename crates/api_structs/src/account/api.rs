@@ -1,11 +1,15 @@
 use nittei_domain::Account;
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use crate::dtos::AccountDTO;
 
-#[derive(Deserialize, Serialize)]
+/// Account response object
+#[derive(Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct AccountResponse {
+    /// Account retrieved
     pub account: AccountDTO,
 }
 
@@ -20,16 +24,24 @@ impl AccountResponse {
 pub mod create_account {
     use super::*;
 
-    #[derive(Deserialize, Serialize)]
+    /// Request body for creating an account
+    #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "CreateAccountRequestBody")]
     pub struct RequestBody {
+        /// Code used for authentifying the request
+        /// Creating accounts is an admin operation, so it requires a specific code
         pub code: String,
     }
 
-    #[derive(Serialize, Deserialize)]
+    /// Response body for creating an account
+    #[derive(Serialize, Deserialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "CreateAccountResponseBody")]
     pub struct APIResponse {
+        /// Account created
         pub account: AccountDTO,
+        /// API Key that can be used for doing requests for this account
         pub secret_api_key: String,
     }
 
@@ -52,9 +64,12 @@ pub mod get_account {
 pub mod set_account_pub_key {
     use super::*;
 
-    #[derive(Debug, Deserialize, Serialize)]
+    /// Request body for setting the public JWT key of an account
+    #[derive(Debug, Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "SetAccountPubKeyRequestBody")]
     pub struct RequestBody {
+        /// Public JWT key
         pub public_jwt_key: Option<String>,
     }
 
@@ -62,11 +77,15 @@ pub mod set_account_pub_key {
 }
 
 pub mod set_account_webhook {
+
     use super::*;
 
-    #[derive(Debug, Deserialize, Serialize)]
+    /// Request body for setting the webhook of an account
+    #[derive(Debug, Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "SetAccountWebhookRequestBody")]
     pub struct RequestBody {
+        /// Webhook URL
         pub webhook_url: String,
     }
 
@@ -84,12 +103,20 @@ pub mod add_account_integration {
 
     use super::*;
 
-    #[derive(Debug, Deserialize, Serialize)]
+    /// Request body for adding an integration to an account
+    #[derive(Debug, Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "AddAccountIntegrationRequestBody")]
     pub struct RequestBody {
+        /// Client ID of the integration
         pub client_id: String,
+        // Client secret of the integration
         pub client_secret: String,
+        // Redirect URI of the integration
         pub redirect_uri: String,
+        /// Provider of the integration
+        /// This is used to know which integration to use
+        /// E.g. Google, Outlook, etc.
         pub provider: IntegrationProvider,
     }
 

@@ -1,7 +1,7 @@
 import {
   type INitteiClient,
   NitteiClient,
-  Frequenzy,
+  Frequency,
   type INitteiUserClient,
 } from '../lib'
 import { setupUserClient } from './helpers/fixtures'
@@ -99,7 +99,7 @@ describe('User API', () => {
       startTime: new Date(0),
       busy: true,
       recurrence: {
-        freq: Frequenzy.Daily,
+        freq: Frequency.Daily,
         interval: 1,
         count: 100,
       },
@@ -128,7 +128,7 @@ describe('User API', () => {
       startTime: new Date(0),
       busy: true,
       recurrence: {
-        freq: Frequenzy.Daily,
+        freq: Frequency.Daily,
         interval: 1,
         count: 100,
       },
@@ -142,7 +142,7 @@ describe('User API', () => {
       startTime: new Date(1000 * 60 * 60 * 4),
       busy: true,
       recurrence: {
-        freq: Frequenzy.Daily,
+        freq: Frequency.Daily,
         interval: 1,
         count: 100,
       },
@@ -156,7 +156,7 @@ describe('User API', () => {
       startTime: new Date(0),
       busy: false,
       recurrence: {
-        freq: Frequenzy.Daily,
+        freq: Frequency.Daily,
         interval: 2,
         count: 100,
       },

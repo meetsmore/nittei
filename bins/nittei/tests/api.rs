@@ -208,7 +208,7 @@ async fn test_crud_schedule() {
         .expect("Expected to create schedule")
         .schedule;
     assert_eq!(schedule.user_id, create_user_res.user.id);
-    assert_eq!(schedule.timezone, chrono_tz::UTC);
+    assert_eq!(schedule.timezone, chrono_tz::UTC.to_string());
     assert_eq!(schedule.rules.len(), 7);
 
     let schedule = admin_client
@@ -231,7 +231,7 @@ async fn test_crud_schedule() {
         .schedule;
 
     assert_eq!(get_schedule.rules.len(), 0);
-    assert_eq!(get_schedule.timezone, chrono_tz::Europe::Oslo);
+    assert_eq!(get_schedule.timezone, chrono_tz::Europe::Oslo.to_string());
 
     assert!(admin_client
         .schedule
@@ -778,20 +778,20 @@ async fn test_freebusy_multiple() {
     let user2_free_busy = multiple_free_busy_res.0.get(&user2.id).unwrap();
 
     assert_eq!(
-        user1_free_busy.front().unwrap().start_time,
+        user1_free_busy.first().unwrap().start_time,
         DateTime::from_timestamp_millis(0).unwrap(),
     );
     assert_eq!(
-        user1_free_busy.front().unwrap().end_time,
+        user1_free_busy.first().unwrap().end_time,
         DateTime::from_timestamp_millis(1000 * 60 * 60).unwrap(),
     );
 
     assert_eq!(
-        user2_free_busy.front().unwrap().start_time,
+        user2_free_busy.first().unwrap().start_time,
         DateTime::from_timestamp_millis(1000 * 60 * 60).unwrap(),
     );
     assert_eq!(
-        user2_free_busy.front().unwrap().end_time,
+        user2_free_busy.first().unwrap().end_time,
         DateTime::from_timestamp_millis(1000 * 60 * 60 * 2).unwrap(),
     );
 }

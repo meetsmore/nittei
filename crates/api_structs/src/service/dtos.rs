@@ -1,15 +1,28 @@
 use nittei_domain::{Metadata, Service, ServiceResource, ServiceWithUsers, TimePlan, ID};
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+/// User service resource object
+/// This is the configuration of a user for a service
+#[derive(Deserialize, Serialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct ServiceResourceDTO {
+    /// UUID of the user
     pub user_id: ID,
+    /// UUID of the service
     pub service_id: ID,
+    /// Availability of the user
+    /// This allow to decide if the availability checks should be done
+    /// on the user schedule or on the service schedule
     pub availability: TimePlan,
+    /// Buffer after the booking time in minutes
     pub buffer_after: i64,
+    /// Buffer before the booking time in minutes
     pub buffer_before: i64,
+    /// Closest booking time in minutes
     pub closest_booking_time: i64,
+    /// Optional furthest booking time in minutes
     pub furthest_booking_time: Option<i64>,
 }
 
@@ -27,10 +40,15 @@ impl ServiceResourceDTO {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+/// Service object
+#[derive(Deserialize, Serialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct ServiceDTO {
+    /// UUID of the service
     pub id: ID,
+    /// Metadata (e.g. {"key": "value"})
+    #[ts(type = "Record<string, string>")]
     pub metadata: Metadata,
 }
 
@@ -43,11 +61,13 @@ impl ServiceDTO {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct ServiceWithUsersDTO {
     pub id: ID,
     pub users: Vec<ServiceResourceDTO>,
+    #[ts(type = "Record<string, string>")]
     pub metadata: Metadata,
 }
 

@@ -2,9 +2,11 @@ use chrono::DateTime;
 use chrono_tz::{Tz, UTC};
 use serde::{Deserialize, Serialize};
 use tracing::error;
+use ts_rs::TS;
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub enum OutlookCalendarAccessRole {
     Writer,
     Reader,
@@ -40,7 +42,9 @@ impl OutlookCalendarEventTime {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub enum OutlookOnlineMeetingProvider {
     #[serde(rename = "teamsForBusiness")]
     BusinessTeams,
@@ -99,8 +103,9 @@ pub struct OutlookCalendarEventBody {
     pub content: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct OutlookCalendar {
     pub id: String,
     name: String,
@@ -117,8 +122,9 @@ pub struct OutlookCalendar {
     owner: OutlookCalendarOwner,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 struct OutlookCalendarOwner {
     name: String,
     address: String,

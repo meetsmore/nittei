@@ -93,7 +93,7 @@ describe('Service API', () => {
         startDate: '2030-1-1',
         endDate: '2030-1-3',
         duration: 60 * 60 * 1000,
-        ianaTz: 'UTC',
+        timezone: 'UTC',
         interval: 15 * 60 * 1000,
       }
     )
@@ -163,7 +163,7 @@ describe('Service API', () => {
       startDate: today,
       endDate: today,
       duration: 60 * 60 * 1000,
-      ianaTz: 'UTC',
+      timezone: 'UTC',
       interval: 15 * 60 * 1000,
     })
     if (!data) {
@@ -182,7 +182,7 @@ describe('Service API', () => {
         startDate: '2030-10-10',
         endDate: '2030-10-10',
         duration: 60 * 60 * 1000,
-        ianaTz: 'UTC',
+        timezone: 'UTC',
         interval: 15 * 60 * 1000,
       }
     )
@@ -199,7 +199,7 @@ describe('Service API', () => {
       startDate: '1980-1-1',
       endDate: '1980-1-1',
       duration: 60 * 60 * 1000,
-      ianaTz: 'UTC',
+      timezone: 'UTC',
       interval: 15 * 60 * 1000,
     })
     if (!data2) {

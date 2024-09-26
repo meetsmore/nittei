@@ -43,8 +43,13 @@ loadtest:
 
 # Lint
 lint: _setup_db
-	cargo fmt
+	cargo +nightly fmt --all -- --check
 	cargo clippy --verbose
+
+# Format
+format:
+	cargo +nightly fmt --all -- --check
+	pnpm run format
 
 # Check unused dependencies
 check-unused: _setup_db

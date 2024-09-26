@@ -1,6 +1,6 @@
 use std::convert::{TryFrom, TryInto};
 
-use nittei_domain::{BusyCalendar, ID};
+use nittei_domain::{BusyCalendarProvider, ID};
 use sqlx::{FromRow, PgPool};
 use tracing::{error, instrument};
 
@@ -23,13 +23,13 @@ struct BusyCalendarRaw {
     calendar_id: String,
 }
 
-impl TryFrom<BusyCalendarRaw> for BusyCalendar {
+impl TryFrom<BusyCalendarRaw> for BusyCalendarProvider {
     type Error = anyhow::Error;
     fn try_from(e: BusyCalendarRaw) -> anyhow::Result<Self> {
         Ok(match &e.provider[..] {
-            "google" => BusyCalendar::Google(e.calendar_id),
-            "outlook" => BusyCalendar::Outlook(e.calendar_id),
-            "nittei" => BusyCalendar::Nittei(e.calendar_id.parse()?),
+            "google" => BusyCalendarProvider::Google(e.calendar_id),
+            "outlook" => BusyCalendarProvider::Outlook(e.calendar_id),
+            "nittei" => BusyCalendarProvider::Nittei(e.calendar_id.parse()?),
             _ => unreachable!("Invalid provider"),
         })
     }
@@ -189,7 +189,11 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
     }
 
     #[instrument]
-    async fn find(&self, service_id: &ID, user_id: &ID) -> anyhow::Result<Vec<BusyCalendar>> {
+    async fn find(
+        &self,
+        service_id: &ID,
+        user_id: &ID,
+    ) -> anyhow::Result<Vec<BusyCalendarProvider>> {
         let busy_calendars: Vec<BusyCalendarRaw> = sqlx::query_as(
             r#"
             SELECT ext_c.provider, ext_c.ext_calendar_id as calendar_id

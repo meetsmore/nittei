@@ -20,8 +20,6 @@ import {
   NitteiUserUserClient,
 } from './userClient'
 
-export * from './domain'
-
 export interface INitteiUserClient {
   calendar: NitteiCalendarUserClient
   events: NitteiEventUserClient
@@ -114,3 +112,9 @@ export const NitteiClient = async (
     health: new NitteiHealthClient(axiosClient),
   })
 }
+
+// Enums
+export { RRuleFrequency } from './gen_types/RRuleFrequency'
+export { ScheduleRuleVariant } from './types/ScheduleRuleVariant'
+export { Weekday } from './types/Weekday'
+export { Frequency } from './types/Frequency'

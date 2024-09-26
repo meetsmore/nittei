@@ -1,7 +1,9 @@
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub enum GoogleCalendarAccessRole {
     Owner,
     Writer,
@@ -9,8 +11,9 @@ pub enum GoogleCalendarAccessRole {
     FreeBusyReader,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct GoogleCalendarListEntry {
     pub id: String,
     pub access_role: GoogleCalendarAccessRole,
