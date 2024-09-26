@@ -1,7 +1,7 @@
 import { NitteiBaseClient } from './baseClient'
-import { ID } from './types/ID'
-import { ScheduleDTO } from './types/ScheduleDTO'
-import { ScheduleRule } from './types/ScheduleRule'
+import { ID } from './gen_types/ID'
+import { ScheduleDTO } from './gen_types/ScheduleDTO'
+import { ScheduleRule } from './gen_types/ScheduleRule'
 
 interface UpdateScheduleRequest {
   rules?: ScheduleRule[]

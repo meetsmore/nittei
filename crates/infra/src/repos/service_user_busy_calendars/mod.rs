@@ -26,7 +26,11 @@ pub trait IServiceUserBusyCalendarRepo: Send + Sync {
     async fn insert_ext(&self, input: ExternalBusyCalendarIdentifier) -> anyhow::Result<()>;
     async fn delete(&self, input: BusyCalendarIdentifier) -> anyhow::Result<()>;
     async fn delete_ext(&self, input: ExternalBusyCalendarIdentifier) -> anyhow::Result<()>;
-    async fn find(&self, service_id: &ID, user_id: &ID) -> anyhow::Result<Vec<BusyCalendarProvider>>;
+    async fn find(
+        &self,
+        service_id: &ID,
+        user_id: &ID,
+    ) -> anyhow::Result<Vec<BusyCalendarProvider>>;
 }
 
 #[cfg(test)]

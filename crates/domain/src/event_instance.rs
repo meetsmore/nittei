@@ -11,7 +11,9 @@ use crate::CalendarEvent;
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct EventInstance {
+    #[ts(type = "Date")]
     pub start_time: DateTime<Utc>,
+    #[ts(type = "Date")]
     pub end_time: DateTime<Utc>,
     pub busy: bool,
 }

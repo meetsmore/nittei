@@ -51,6 +51,7 @@ impl TryFrom<String> for CalendarEventStatus {
 }
 
 #[derive(Debug, Clone, Default, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct CalendarEvent {
     pub id: ID,
@@ -60,13 +61,16 @@ pub struct CalendarEvent {
     pub location: Option<String>,
     pub all_day: bool,
     pub status: CalendarEventStatus,
+    #[ts(type = "Date")]
     pub start_time: DateTime<Utc>,
     pub duration: i64,
     pub busy: bool,
+    #[ts(type = "Date")]
     pub end_time: DateTime<Utc>,
     pub created: i64,
     pub updated: i64,
     pub recurrence: Option<RRuleOptions>,
+    #[ts(type = "Array<Date>")]
     pub exdates: Vec<DateTime<Utc>>,
     pub calendar_id: ID,
     pub user_id: ID,
@@ -249,7 +253,7 @@ mod test {
     use chrono_tz::UTC;
 
     use super::*;
-    use crate::{shared::recurrence::WeekDay, RRuleFrequency};
+    use crate::{shared::recurrence::WeekDayRecurrence, RRuleFrequency};
 
     #[test]
     fn daily_calendar_event() {
@@ -353,11 +357,11 @@ mod test {
             ..Default::default()
         });
         valid_rrules.push(RRuleOptions {
-            byweekday: Some(vec![WeekDay::new(Weekday::Tue).unwrap()]),
+            byweekday: Some(vec![WeekDayRecurrence::new(Weekday::Tue).unwrap()]),
             ..Default::default()
         });
         valid_rrules.push(RRuleOptions {
-            byweekday: Some(vec![WeekDay::new_nth(Weekday::Tue, 1).unwrap()]),
+            byweekday: Some(vec![WeekDayRecurrence::new_nth(Weekday::Tue, 1).unwrap()]),
             freq: RRuleFrequency::Monthly,
             ..Default::default()
         });

@@ -186,11 +186,13 @@ impl UseCase for AddBusyCalendarUseCase {
                     return Err(UseCaseError::CalendarNotFound);
                 }
             }
-            BusyCalendarProvider::Nittei(n_cal_id) => match ctx.repos.calendars.find(n_cal_id).await {
-                Ok(Some(cal)) if cal.user_id == user.id => (),
-                Ok(_) => return Err(UseCaseError::CalendarNotFound),
-                Err(_) => return Err(UseCaseError::StorageError),
-            },
+            BusyCalendarProvider::Nittei(n_cal_id) => {
+                match ctx.repos.calendars.find(n_cal_id).await {
+                    Ok(Some(cal)) if cal.user_id == user.id => (),
+                    Ok(_) => return Err(UseCaseError::CalendarNotFound),
+                    Err(_) => return Err(UseCaseError::StorageError),
+                }
+            }
         }
 
         // Insert busy calendar

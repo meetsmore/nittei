@@ -122,8 +122,9 @@ pub struct Service {
     pub metadata: Metadata,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, TS)]
 #[serde(tag = "variant", content = "data", rename_all = "camelCase")]
+#[ts(export)]
 pub enum ServiceMultiPersonOptions {
     RoundRobinAlgorithm(RoundRobinAlgorithm),
     Collective,

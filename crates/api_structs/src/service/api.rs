@@ -8,11 +8,13 @@ use nittei_domain::{
     ID,
 };
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use crate::dtos::{ServiceDTO, ServiceResourceDTO, ServiceWithUsersDTO};
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct ServiceResponse {
     pub service: ServiceDTO,
 }
@@ -25,8 +27,9 @@ impl ServiceResponse {
     }
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct ServiceWithUsersResponse {
     pub service: ServiceWithUsersDTO,
 }
@@ -39,8 +42,9 @@ impl ServiceWithUsersResponse {
     }
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct ServiceResourceResponse {
     pub user: ServiceResourceDTO,
 }
@@ -61,16 +65,22 @@ pub mod add_user_to_service {
         pub service_id: ID,
     }
 
-    #[derive(Deserialize, Serialize)]
+    #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "AddUserToServiceRequestBody")]
     pub struct RequestBody {
         pub user_id: ID,
+        #[ts(optional)]
         pub availability: Option<TimePlan>,
         #[serde(default)]
+        #[ts(optional, type = "number")]
         pub buffer_after: Option<i64>,
         #[serde(default)]
+        #[ts(optional, type = "number")]
         pub buffer_before: Option<i64>,
+        #[ts(optional, type = "number")]
         pub closest_booking_time: Option<i64>,
+        #[ts(optional, type = "number")]
         pub furthest_booking_time: Option<i64>,
     }
 
@@ -80,14 +90,16 @@ pub mod add_user_to_service {
 pub mod add_busy_calendar {
     use super::*;
 
-    #[derive(Deserialize)]
+    #[derive(Deserialize, TS)]
+    #[ts(export, rename_all = "camelCase", rename = "AddBusyCalendarPathParams")]
     pub struct PathParams {
         pub service_id: ID,
         pub user_id: ID,
     }
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "AddBusyCalendarRequestBody")]
     pub struct RequestBody {
         pub busy: BusyCalendarProvider,
     }
@@ -98,14 +110,20 @@ pub mod add_busy_calendar {
 pub mod remove_busy_calendar {
     use super::*;
 
-    #[derive(Deserialize)]
+    #[derive(Deserialize, TS)]
+    #[ts(
+        export,
+        rename_all = "camelCase",
+        rename = "RemoveBusyCalendarPathParams"
+    )]
     pub struct PathParams {
         pub service_id: ID,
         pub user_id: ID,
     }
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "RemoveBusyCalendarRequestBody")]
     pub struct RequestBody {
         pub busy: BusyCalendarProvider,
     }
@@ -156,8 +174,9 @@ pub mod create_service_event_intend {
         pub service_id: ID,
     }
 
-    #[derive(Deserialize, Serialize)]
+    #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "CreateServiceEventIntendRequestBody")]
     pub struct RequestBody {
         #[serde(default)]
         pub host_user_ids: Option<Vec<ID>>,
@@ -188,10 +207,12 @@ pub mod create_service {
 
     use super::*;
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Debug, Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "CreateServiceRequestBody")]
     pub struct RequestBody {
         #[serde(default)]
+        #[ts(type = "Record<string, string>")]
         pub metadata: Option<Metadata>,
         #[serde(default)]
         pub multi_person: Option<ServiceMultiPersonOptions>,
@@ -205,10 +226,12 @@ pub mod update_service {
 
     use super::*;
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Debug, Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "UpdateServiceRequestBody")]
     pub struct RequestBody {
         #[serde(default)]
+        #[ts(type = "Record<string, string>")]
         pub metadata: Option<Metadata>,
         #[serde(default)]
         pub multi_person: Option<ServiceMultiPersonOptions>,
@@ -237,20 +260,26 @@ pub mod get_service_bookingslots {
         pub service_id: ID,
     }
 
-    #[derive(Debug, Deserialize)]
+    #[derive(Debug, Deserialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "GetServiceBookingSlotsQueryParams")]
     pub struct QueryParams {
+        #[ts(optional, type = "string")]
         pub timezone: Option<Tz>,
+        #[ts(type = "number")]
         pub duration: i64,
+        #[ts(type = "number")]
         pub interval: i64,
         pub start_date: String,
         pub end_date: String,
         #[serde(default)]
+        #[ts(optional)]
         pub host_user_ids: Option<String>,
     }
 
-    #[derive(Deserialize, Serialize, Debug)]
+    #[derive(Deserialize, Serialize, Debug, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export)]
     pub struct ServiceBookingSlotDTO {
         pub start: DateTime<Utc>,
         pub duration: i64,
@@ -267,8 +296,9 @@ pub mod get_service_bookingslots {
         }
     }
 
-    #[derive(Deserialize, Serialize, Debug)]
+    #[derive(Deserialize, Serialize, Debug, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export)]
     pub struct ServiceBookingSlotsDateDTO {
         pub date: String,
         pub slots: Vec<ServiceBookingSlotDTO>,
@@ -287,8 +317,9 @@ pub mod get_service_bookingslots {
         }
     }
 
-    #[derive(Deserialize, Serialize, Debug)]
+    #[derive(Deserialize, Serialize, Debug, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "GetServiceBookingSlotsAPIResponse")]
     pub struct APIResponse {
         pub dates: Vec<ServiceBookingSlotsDateDTO>,
     }
@@ -331,8 +362,9 @@ pub mod get_services_by_meta {
         pub limit: Option<usize>,
     }
 
-    #[derive(Deserialize, Serialize)]
+    #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "GetServicesByMetaAPIResponse")]
     pub struct APIResponse {
         pub services: Vec<ServiceDTO>,
     }
@@ -378,8 +410,9 @@ pub mod update_service_user {
         pub user_id: ID,
     }
 
-    #[derive(Deserialize, Serialize)]
+    #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "UpdateServiceUserRequestBody")]
     pub struct RequestBody {
         pub availability: Option<TimePlan>,
         pub buffer_after: Option<i64>,

@@ -39,7 +39,7 @@ pub use service::{
 pub use shared::{
     entity::{Entity, ID},
     metadata::{Meta, Metadata},
-    recurrence::{RRuleFrequency, RRuleOptions, WeekDay},
+    recurrence::{RRuleFrequency, RRuleOptions, WeekDayRecurrence},
 };
 pub use timespan::TimeSpan;
 pub use user::{IntegrationProvider, User, UserIntegration};

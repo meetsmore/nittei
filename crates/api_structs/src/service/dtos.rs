@@ -47,11 +47,13 @@ impl ServiceDTO {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct ServiceWithUsersDTO {
     pub id: ID,
     pub users: Vec<ServiceResourceDTO>,
+    #[ts(type = "Record<string, string>")]
     pub metadata: Metadata,
 }
 

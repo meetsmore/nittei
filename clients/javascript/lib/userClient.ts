@@ -3,20 +3,18 @@ import {
   convertEventDates,
   convertInstanceDates,
 } from './helpers/datesConverters'
-import { CreateUserRequestBody } from './types/CreateUserRequestBody'
-import { GetEventsByCalendarsAPIResponse } from './types/GetEventsByCalendarsAPIResponse'
-import { GetEventsByCalendarsQueryParams } from './types/GetEventsByCalendarsQueryParams'
-import { GetUserFreeBusyAPIResponse } from './types/GetUserFreeBusyAPIResponse'
-import { GetUserFreeBusyQueryParams } from './types/GetUserFreeBusyQueryParams'
-import { ID } from './types/ID'
-import { IntegrationProvider } from './types/IntegrationProvider'
-import { Metadata } from './types/Metadata'
-import { MultipleFreeBusyAPIResponse } from './types/MultipleFreeBusyAPIResponse'
-import { MultipleFreeBusyRequestBody } from './types/MultipleFreeBusyRequestBody'
-import { UpdateUserRequestBody } from './types/UpdateUserRequestBody'
-import { UserDTO } from './types/UserDTO'
-import { UserResponse } from './types/UserResponse'
-
+import { CreateUserRequestBody } from './gen_types/CreateUserRequestBody'
+import { GetEventsByCalendarsAPIResponse } from './gen_types/GetEventsByCalendarsAPIResponse'
+import { GetEventsByCalendarsQueryParams } from './gen_types/GetEventsByCalendarsQueryParams'
+import { GetUserFreeBusyAPIResponse } from './gen_types/GetUserFreeBusyAPIResponse'
+import { GetUserFreeBusyQueryParams } from './gen_types/GetUserFreeBusyQueryParams'
+import { ID } from './gen_types/ID'
+import { IntegrationProvider } from './gen_types/IntegrationProvider'
+import { MultipleFreeBusyAPIResponse } from './gen_types/MultipleFreeBusyAPIResponse'
+import { MultipleFreeBusyRequestBody } from './gen_types/MultipleFreeBusyRequestBody'
+import { UpdateUserRequestBody } from './gen_types/UpdateUserRequestBody'
+import { UserDTO } from './gen_types/UserDTO'
+import { UserResponse } from './gen_types/UserResponse'
 
 /**
  * Client for the user endpoints

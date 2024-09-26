@@ -4,26 +4,24 @@ import {
   convertEventDates,
   convertInstanceDates,
 } from './helpers/datesConverters'
-import { AddSyncCalendarPathParams } from './types/AddSyncCalendarPathParams'
-import { AddSyncCalendarRequestBody } from './types/AddSyncCalendarRequestBody'
-import { CalendarDTO } from './types/CalendarDTO'
-import { CalendarResponse } from './types/CalendarResponse'
-import { CreateCalendarRequestBody } from './types/CreateCalendarRequestBody'
-import { GetCalendarEventsAPIResponse } from './types/GetCalendarEventsAPIResponse'
-import { GoogleCalendarAccessRole } from './types/GoogleCalendarAccessRole'
-import { GoogleCalendarListEntry } from './types/GoogleCalendarListEntry'
-import { ID } from './types/ID'
-import { OutlookCalendar } from './types/OutlookCalendar'
-import { OutlookCalendarAccessRole } from './types/OutlookCalendarAccessRole'
-import { RemoveSyncCalendarPathParams } from './types/RemoveSyncCalendarPathParams'
-import { RemoveSyncCalendarRequestBody } from './types/RemoveSyncCalendarRequestBody'
-
+import { AddSyncCalendarPathParams } from './gen_types/AddSyncCalendarPathParams'
+import { AddSyncCalendarRequestBody } from './gen_types/AddSyncCalendarRequestBody'
+import { CalendarDTO } from './gen_types/CalendarDTO'
+import { CalendarResponse } from './gen_types/CalendarResponse'
+import { CreateCalendarRequestBody } from './gen_types/CreateCalendarRequestBody'
+import { GetCalendarEventsAPIResponse } from './gen_types/GetCalendarEventsAPIResponse'
+import { GoogleCalendarAccessRole } from './gen_types/GoogleCalendarAccessRole'
+import { GoogleCalendarListEntry } from './gen_types/GoogleCalendarListEntry'
+import { ID } from './gen_types/ID'
+import { OutlookCalendar } from './gen_types/OutlookCalendar'
+import { OutlookCalendarAccessRole } from './gen_types/OutlookCalendarAccessRole'
+import { RemoveSyncCalendarPathParams } from './gen_types/RemoveSyncCalendarPathParams'
+import { RemoveSyncCalendarRequestBody } from './gen_types/RemoveSyncCalendarRequestBody'
 
 /**
  * Request for updating a calendar
  */
 type UpdateCalendarRequest = CreateCalendarRequestBody
-
 
 /**
  * Client for the calendar endpoints
@@ -167,7 +165,9 @@ export class NitteiCalendarClient extends NitteiBaseClient {
    * @param input - data for syncing the calendar
    * @returns - void
    */
-  public syncCalendar(input: AddSyncCalendarRequestBody & AddSyncCalendarPathParams) {
+  public syncCalendar(
+    input: AddSyncCalendarRequestBody & AddSyncCalendarPathParams
+  ) {
     const body = {
       calendarId: input.calendarId,
       extCalendarId: input.extCalendarId,
@@ -181,7 +181,9 @@ export class NitteiCalendarClient extends NitteiBaseClient {
    * @param input - data for stopping the calendar sync
    * @returns - void
    */
-  public stopCalendarSync(input: RemoveSyncCalendarRequestBody & RemoveSyncCalendarPathParams) {
+  public stopCalendarSync(
+    input: RemoveSyncCalendarRequestBody & RemoveSyncCalendarPathParams
+  ) {
     const body = {
       calendarId: input.calendarId,
       extCalendarId: input.extCalendarId,

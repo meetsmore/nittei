@@ -58,7 +58,7 @@ pub use nittei_domain::{
     SyncedCalendar,
     TimePlan,
     Tz,
-    WeekDay,
+    WeekDayRecurrence,
     Weekday,
     ID,
 };
