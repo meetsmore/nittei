@@ -17,6 +17,7 @@ import { OutlookCalendar } from './gen_types/OutlookCalendar'
 import { OutlookCalendarAccessRole } from './gen_types/OutlookCalendarAccessRole'
 import { RemoveSyncCalendarPathParams } from './gen_types/RemoveSyncCalendarPathParams'
 import { RemoveSyncCalendarRequestBody } from './gen_types/RemoveSyncCalendarRequestBody'
+import { GetCalendarsByUserAPIResponse } from './gen_types/GetCalendarsByUserAPIResponse'
 
 /**
  * Request for updating a calendar
@@ -45,6 +46,15 @@ export class NitteiCalendarClient extends NitteiBaseClient {
    */
   public findById(calendarId: ID) {
     return this.get<CalendarResponse>(`/user/calendar/${calendarId}`)
+  }
+
+  /**
+   * List all calendars
+   * @param userId - ID of the user to list the calendars for
+   * @returns list of found calendars
+   */
+  public findByUser(userId: ID) {
+    return this.get<GetCalendarsByUserAPIResponse>(`/user/${userId}/calendar`)
   }
 
   /**
@@ -204,6 +214,10 @@ export class NitteiCalendarUserClient extends NitteiBaseClient {
 
   public findById(calendarId: ID) {
     return this.get<CalendarResponse>(`/calendar/${calendarId}`)
+  }
+
+  public list() {
+    return this.get<GetCalendarsByUserAPIResponse>('/calendar')
   }
 
   async findGoogle(minAccessRole: GoogleCalendarAccessRole) {

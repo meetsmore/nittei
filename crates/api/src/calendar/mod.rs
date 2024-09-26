@@ -5,6 +5,7 @@ mod create_calendar;
 mod delete_calendar;
 mod get_calendar;
 mod get_calendar_events;
+mod get_calendars;
 mod get_calendars_by_meta;
 mod get_google_calendars;
 mod get_outlook_calendars;
@@ -33,6 +34,15 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.route(
         "/user/{user_id}/calendar",
         web::post().to(create_calendar_admin_controller),
+    );
+
+    cfg.route(
+        "/calendar",
+        web::get().to(get_calendars::get_calendars_controller),
+    );
+    cfg.route(
+        "/user/{user_id}/calendar",
+        web::get().to(get_calendars::get_calendars_admin_controller),
     );
 
     cfg.route(
