@@ -3,7 +3,7 @@ name: Release
 env:
   ORG_NAME: ${{ github.repository_owner }}
   IMAGE_NAME: ${{ github.event.repository.name }}
-  REGISTRY_IMAGE: ${{ github.repository.repository_owner }}/${{ github.event.repository.name }}
+  REGISTRY_IMAGE: ${{ github.repository_owner }}/${{ github.event.repository.name }}
 
 on:
   push:
