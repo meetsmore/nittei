@@ -116,4 +116,5 @@ export const NitteiClient = async (
 // Enums
 export { RRuleFrequency } from './gen_types/RRuleFrequency'
 export { ScheduleRuleVariant } from './types/ScheduleRuleVariant'
-export { Weekday } from './types/Weekday'
+export { Weekday } from './types/Weekdday'
+export { Frequency } from './types/Frequency'
