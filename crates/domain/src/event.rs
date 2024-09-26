@@ -50,9 +50,8 @@ impl TryFrom<String> for CalendarEventStatus {
     }
 }
 
-#[derive(Debug, Clone, Default, Serialize, TS)]
+#[derive(Debug, Clone, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
-#[ts(export)]
 pub struct CalendarEvent {
     pub id: ID,
     pub parent_id: Option<String>,
@@ -61,23 +60,19 @@ pub struct CalendarEvent {
     pub location: Option<String>,
     pub all_day: bool,
     pub status: CalendarEventStatus,
-    #[ts(type = "Date")]
     pub start_time: DateTime<Utc>,
     pub duration: i64,
     pub busy: bool,
-    #[ts(type = "Date")]
     pub end_time: DateTime<Utc>,
     pub created: i64,
     pub updated: i64,
     pub recurrence: Option<RRuleOptions>,
-    #[ts(type = "Array<Date>")]
     pub exdates: Vec<DateTime<Utc>>,
     pub calendar_id: ID,
     pub user_id: ID,
     pub account_id: ID,
     pub reminders: Vec<CalendarEventReminder>,
     pub service_id: Option<ID>,
-    #[ts(type = "Record<string, string>")]
     pub metadata: Metadata,
 }
 
