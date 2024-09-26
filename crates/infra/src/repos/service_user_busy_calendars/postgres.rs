@@ -189,7 +189,11 @@ impl IServiceUserBusyCalendarRepo for PostgresServiceUseBusyCalendarRepo {
     }
 
     #[instrument]
-    async fn find(&self, service_id: &ID, user_id: &ID) -> anyhow::Result<Vec<BusyCalendarProvider>> {
+    async fn find(
+        &self,
+        service_id: &ID,
+        user_id: &ID,
+    ) -> anyhow::Result<Vec<BusyCalendarProvider>> {
         let busy_calendars: Vec<BusyCalendarRaw> = sqlx::query_as(
             r#"
             SELECT ext_c.provider, ext_c.ext_calendar_id as calendar_id
