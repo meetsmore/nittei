@@ -405,13 +405,13 @@ describe('Requirements', () => {
           expect.arrayContaining([
             expect.objectContaining({
               event: expect.objectContaining({
-              id: user1Calendar1Event1?.id,
-              })
+                id: user1Calendar1Event1?.id,
+              }),
             }),
             expect.objectContaining({
               event: expect.objectContaining({
-              id: user1Calendar2Event1?.id,
-              })
+                id: user1Calendar2Event1?.id,
+              }),
             }),
           ])
         )

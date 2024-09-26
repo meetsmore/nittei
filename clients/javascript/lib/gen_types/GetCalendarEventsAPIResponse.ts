@@ -2,7 +2,16 @@
 import type { CalendarDTO } from './CalendarDTO'
 import type { EventWithInstancesDTO } from './EventWithInstancesDTO'
 
+/**
+ * API response for getting calendar events
+ */
 export type GetCalendarEventsAPIResponse = {
+  /**
+   * Calendar's data
+   */
   calendar: CalendarDTO
+  /**
+   * Events with their instances (occurrences)
+   */
   events: Array<EventWithInstancesDTO>
 }

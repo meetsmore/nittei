@@ -5,11 +5,17 @@ use ts_rs::TS;
 #[derive(Debug, Serialize, Deserialize, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
+/// A schedule is a set of rules that define when a service is available
 pub struct ScheduleDTO {
+    /// UUID of the schedule
     pub id: ID,
+    /// UUID of the user that owns the schedule
     pub user_id: ID,
+    /// Array of rules for this schedule
     pub rules: Vec<ScheduleRule>,
+    /// Timezone (e.g. "America/New_York")
     pub timezone: String,
+    /// Metadata (e.g. {"key": "value"})
     #[ts(type = "Record<string, string>")]
     pub metadata: Metadata,
 }

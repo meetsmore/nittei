@@ -2,12 +2,39 @@
 import type { ID } from './ID'
 import type { TimePlan } from './TimePlan'
 
+/**
+ * User service resource object
+ * This is the configuration of a user for a service
+ */
 export type ServiceResourceDTO = {
+  /**
+   * UUID of the user
+   */
   userId: ID
+  /**
+   * UUID of the service
+   */
   serviceId: ID
+  /**
+   * Availability of the user
+   * This allow to decide if the availability checks should be done
+   * on the user schedule or on the service schedule
+   */
   availability: TimePlan
+  /**
+   * Buffer after the booking time in minutes
+   */
   bufferAfter: bigint
+  /**
+   * Buffer before the booking time in minutes
+   */
   bufferBefore: bigint
+  /**
+   * Closest booking time in minutes
+   */
   closestBookingTime: bigint
+  /**
+   * Optional furthest booking time in minutes
+   */
   furthestBookingTime: bigint | null
 }

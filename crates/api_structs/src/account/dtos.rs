@@ -25,10 +25,12 @@ impl AccountDTO {
     }
 }
 
+/// Account settings
 #[derive(Debug, Serialize, Deserialize, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct AccountSettingsDTO {
+    /// Optional webhook settings
     pub webhook: Option<AccountWebhookSettingsDTO>,
 }
 
@@ -45,11 +47,14 @@ impl AccountSettingsDTO {
     }
 }
 
+/// Account webhook settings
 #[derive(Debug, Serialize, Deserialize, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct AccountWebhookSettingsDTO {
+    /// Webhook URL
     pub url: String,
+    /// Webhook key
     pub key: String,
 }
 

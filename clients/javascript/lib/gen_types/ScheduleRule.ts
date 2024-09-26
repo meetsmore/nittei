@@ -2,7 +2,16 @@
 import type { ScheduleRuleInterval } from './ScheduleRuleInterval'
 import type { ScheduleRuleVariant } from './ScheduleRuleVariant'
 
+/**
+ * Rule of a schedule
+ */
 export type ScheduleRule = {
+  /**
+   * Variant of the rule
+   */
   variant: ScheduleRuleVariant
+  /**
+   * Intervals of the rule
+   */
   intervals: Array<ScheduleRuleInterval>
 }

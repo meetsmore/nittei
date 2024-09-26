@@ -7,10 +7,12 @@ use crate::{
     helpers::deserialize_uuids_list::deserialize_stringified_uuids_list,
 };
 
+/// Calendar object
 #[derive(Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct CalendarResponse {
+    /// Calendar retrieved
     pub calendar: CalendarDTO,
 }
 
@@ -32,15 +34,20 @@ pub mod create_calendar {
         pub user_id: ID,
     }
 
+    /// Request body for creating a calendar
     #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "CreateCalendarRequestBody")]
     pub struct RequestBody {
+        /// Timezone for the calendar (e.g. "America/New_York")
         #[ts(type = "string")]
         pub timezone: Tz,
+        /// Weekday for the calendar
+        /// Default is Monday
         #[serde(default = "default_weekday")]
         #[ts(optional, as = "Option<_>")]
         pub week_start: Weekday,
+        /// Optional metadata (e.g. {"key": "value"})
         #[ts(optional, type = "Record<string, string>")]
         pub metadata: Option<Metadata>,
     }
@@ -64,12 +71,17 @@ pub mod add_sync_calendar {
         pub user_id: ID,
     }
 
+    /// Request body for adding a sync calendar
     #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "AddSyncCalendarRequestBody")]
     pub struct RequestBody {
+        /// Integration provider
+        /// E.g. Google, Outlook, etc.
         pub provider: IntegrationProvider,
+        /// Calendar UUID to sync to
         pub calendar_id: ID,
+        /// External calendar ID
         pub ext_calendar_id: String,
     }
 
@@ -88,12 +100,17 @@ pub mod remove_sync_calendar {
         pub user_id: ID,
     }
 
+    /// Request body for removing a sync calendar
     #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "RemoveSyncCalendarRequestBody")]
     pub struct RequestBody {
+        /// Integration provider
+        /// E.g. Google, Outlook, etc.
         pub provider: IntegrationProvider,
+        /// Calendar UUID to stop syncing to
         pub calendar_id: ID,
+        /// External calendar ID
         pub ext_calendar_id: String,
     }
 
@@ -130,11 +147,14 @@ pub mod get_calendar_events {
         pub end_time: DateTime<Utc>,
     }
 
+    /// API response for getting calendar events
     #[derive(Serialize, Deserialize, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "GetCalendarEventsAPIResponse")]
     pub struct APIResponse {
+        /// Calendar's data
         pub calendar: CalendarDTO,
+        /// Events with their instances (occurrences)
         pub events: Vec<EventWithInstancesDTO>,
     }
 
@@ -264,23 +284,31 @@ pub mod get_user_freebusy {
         pub user_id: ID,
     }
 
+    /// Query parameters for getting user free/busy
     #[derive(Debug, Deserialize, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "GetUserFreeBusyQueryParams")]
     pub struct QueryParams {
+        /// Start time for the query (UTC)
         #[ts(type = "Date")]
         pub start_time: DateTime<Utc>,
+        /// End time for the query (UTC)
         #[ts(type = "Date")]
         pub end_time: DateTime<Utc>,
+        /// Optional list of calendar UUIDs to query
+        /// If not provided, all calendars of the user will be queried
         #[serde(default, deserialize_with = "deserialize_stringified_uuids_list")]
         pub calendar_ids: Option<Vec<ID>>,
     }
 
+    /// API response for getting user free/busy
     #[derive(Debug, Serialize, Deserialize, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "GetUserFreeBusyAPIResponse")]
     pub struct APIResponse {
+        /// List of busy events
         pub busy: Vec<EventInstance>,
+        /// UUID of the user
         pub user_id: String,
     }
 }
@@ -292,18 +320,24 @@ pub mod multiple_freebusy {
 
     use super::*;
 
+    /// Request body for getting multiple free/busy
     #[derive(Debug, Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "MultipleFreeBusyRequestBody")]
     pub struct RequestBody {
+        /// List of user UUIDs to query
         #[serde(default)]
         pub user_ids: Vec<ID>,
+        /// Start time for the query (UTC)
         #[ts(type = "Date")]
         pub start_time: DateTime<Utc>,
+        /// End time for the query (UTC)
         #[ts(type = "Date")]
         pub end_time: DateTime<Utc>,
     }
 
+    /// API response for getting multiple free/busy
+    /// HashMap<user_id, List of busy events>
     #[derive(Debug, Serialize, Deserialize, TS)]
     #[ts(export, rename = "MultipleFreeBusyAPIResponse")]
     pub struct APIResponse(pub HashMap<ID, Vec<EventInstance>>);
@@ -319,21 +353,28 @@ pub mod update_calendar {
         pub calendar_id: ID,
     }
 
+    /// Request body for updating a calendar's settings
     #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "UpdateCalendarSettings")]
     pub struct CalendarSettings {
+        /// Optional weekday for the calendar
         #[serde(default)]
+        #[ts(optional)]
         pub week_start: Option<Weekday>,
+        /// Optional timezone for the calendar (e.g. "America/New_York")
         #[ts(type = "string", optional)]
         pub timezone: Option<Tz>,
     }
 
+    /// Request body for updating a calendar
     #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "UpdateCalendarRequestBody")]
     pub struct RequestBody {
+        /// Calendar settings
         pub settings: CalendarSettings,
+        /// Optional metadata (e.g. {"key": "value"})
         #[serde(default)]
         #[ts(optional, type = "Record<string, string>")]
         pub metadata: Option<Metadata>,

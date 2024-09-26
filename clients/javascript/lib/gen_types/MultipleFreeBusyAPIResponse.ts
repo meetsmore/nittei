@@ -2,4 +2,8 @@
 import type { EventInstance } from './EventInstance'
 import type { ID } from './ID'
 
+/**
+ * API response for getting multiple free/busy
+ * HashMap<user_id, List of busy events>
+ */
 export type MultipleFreeBusyAPIResponse = { [key in ID]?: Array<EventInstance> }

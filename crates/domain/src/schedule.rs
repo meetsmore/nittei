@@ -93,11 +93,14 @@ pub enum ScheduleRuleVariant {
     Date(String),
 }
 
+/// Time of the day
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, TS)]
 #[ts(export)]
 struct Time {
+    /// Hours for this time (UTC)
     #[ts(type = "number")]
     pub hours: i64,
+    /// Minutes for this time (UTC)
     #[ts(type = "number")]
     pub minutes: i64,
 }
@@ -114,10 +117,13 @@ impl std::cmp::PartialOrd for Time {
     }
 }
 
+/// Interval used by the rule
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, TS)]
 #[ts(export)]
 pub struct ScheduleRuleInterval {
+    /// Start time of the interval
     start: Time,
+    // End time of the interval
     end: Time,
 }
 
@@ -203,10 +209,13 @@ impl ScheduleRuleInterval {
     }
 }
 
+/// Rule of a schedule
 #[derive(Debug, Serialize, Deserialize, Clone, TS)]
 #[ts(export)]
 pub struct ScheduleRule {
+    /// Variant of the rule
     pub variant: ScheduleRuleVariant,
+    /// Intervals of the rule
     pub intervals: Vec<ScheduleRuleInterval>,
 }
 

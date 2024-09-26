@@ -2,10 +2,28 @@
 import type { ID } from './ID'
 import type { ScheduleRule } from './ScheduleRule'
 
+/**
+ * A schedule is a set of rules that define when a service is available
+ */
 export type ScheduleDTO = {
+  /**
+   * UUID of the schedule
+   */
   id: ID
+  /**
+   * UUID of the user that owns the schedule
+   */
   userId: ID
+  /**
+   * Array of rules for this schedule
+   */
   rules: Array<ScheduleRule>
+  /**
+   * Timezone (e.g. "America/New_York")
+   */
   timezone: string
+  /**
+   * Metadata (e.g. {"key": "value"})
+   */
   metadata: Record<string, string>
 }

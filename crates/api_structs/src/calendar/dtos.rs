@@ -2,22 +2,30 @@ use nittei_domain::{Calendar, CalendarSettings, Metadata, Weekday, ID};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
+/// Calendar object
 #[derive(Debug, Deserialize, Serialize, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct CalendarDTO {
+    /// UUID of the calendar
     pub id: ID,
+    /// UUID of the user that owns the calendar
     pub user_id: ID,
+    /// Calendar settings
     pub settings: CalendarSettingsDTO,
+    /// Metadata (e.g. {"key": "value"})
     #[ts(type = "Record<string, string>")]
     pub metadata: Metadata,
 }
 
+/// Calendar settings
 #[derive(Debug, Deserialize, Serialize, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct CalendarSettingsDTO {
+    /// Week start day
     pub week_start: Weekday,
+    /// Timezone (e.g. "America/New_York")
     pub timezone: String,
 }
 

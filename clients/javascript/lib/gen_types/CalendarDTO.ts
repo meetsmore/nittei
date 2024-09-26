@@ -2,9 +2,24 @@
 import type { CalendarSettingsDTO } from './CalendarSettingsDTO'
 import type { ID } from './ID'
 
+/**
+ * Calendar object
+ */
 export type CalendarDTO = {
+  /**
+   * UUID of the calendar
+   */
   id: ID
+  /**
+   * UUID of the user that owns the calendar
+   */
   userId: ID
+  /**
+   * Calendar settings
+   */
   settings: CalendarSettingsDTO
+  /**
+   * Metadata (e.g. {"key": "value"})
+   */
   metadata: Record<string, string>
 }

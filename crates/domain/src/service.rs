@@ -13,9 +13,9 @@ use crate::{
 #[serde(tag = "variant", content = "id")]
 #[ts(export)]
 pub enum TimePlan {
-    /// Calendar id
+    /// Calendar UUID
     Calendar(ID),
-    /// Schedule id
+    /// Schedule UUID
     Schedule(ID),
     // No plan
     Empty,
@@ -172,6 +172,8 @@ pub struct ServiceWithUsers {
     pub metadata: Metadata,
 }
 
+/// Enum for the different provider for busy calendars
+/// Nittei is the internal provider
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, TS)]
 #[serde(tag = "provider", content = "id")]
 #[ts(export)]

@@ -2,8 +2,21 @@
 import type { ID } from './ID'
 import type { IntegrationProvider } from './IntegrationProvider'
 
+/**
+ * Request body for adding a sync calendar
+ */
 export type AddSyncCalendarRequestBody = {
+  /**
+   * Integration provider
+   * E.g. Google, Outlook, etc.
+   */
   provider: IntegrationProvider
+  /**
+   * Calendar UUID to sync to
+   */
   calendarId: ID
+  /**
+   * External calendar ID
+   */
   extCalendarId: string
 }

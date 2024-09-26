@@ -2,7 +2,16 @@
 import type { CalendarEventDTO } from './CalendarEventDTO'
 import type { EventInstance } from './EventInstance'
 
+/**
+ * Calendar event with instances
+ */
 export type EventWithInstancesDTO = {
+  /**
+   * Calendar event
+   */
   event: CalendarEventDTO
+  /**
+   * List of event instances (e.g. recurring events)
+   */
   instances: Array<EventInstance>
 }

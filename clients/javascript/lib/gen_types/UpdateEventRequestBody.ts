@@ -3,13 +3,40 @@ import type { CalendarEventReminder } from './CalendarEventReminder'
 import type { ID } from './ID'
 import type { RRuleOptions } from './RRuleOptions'
 
+/**
+ * Request body for updating an event
+ */
 export type UpdateEventRequestBody = {
+  /**
+   * Optional start time of the event (UTC)
+   */
   startTime?: Date
+  /**
+   * Optional duration of the event in minutes
+   */
   duration?: number
+  /**
+   * Optional busy flag
+   */
   busy?: boolean
+  /**
+   * Optional new recurrence rule
+   */
   recurrence?: RRuleOptions
+  /**
+   * Optional service UUID
+   */
   serviceId?: ID
+  /**
+   * Optional list of exclusion dates for the recurrence rule
+   */
   exdates?: Array<Date>
+  /**
+   * Optional list of reminders
+   */
   reminders?: Array<CalendarEventReminder>
+  /**
+   * Optional metadata (e.g. {"key": "value"})
+   */
   metadata?: Record<string, string>
 }

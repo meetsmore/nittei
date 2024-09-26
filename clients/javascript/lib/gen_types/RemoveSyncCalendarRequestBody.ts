@@ -2,8 +2,21 @@
 import type { ID } from './ID'
 import type { IntegrationProvider } from './IntegrationProvider'
 
+/**
+ * Request body for removing a sync calendar
+ */
 export type RemoveSyncCalendarRequestBody = {
+  /**
+   * Integration provider
+   * E.g. Google, Outlook, etc.
+   */
   provider: IntegrationProvider
+  /**
+   * Calendar UUID to stop syncing to
+   */
   calendarId: ID
+  /**
+   * External calendar ID
+   */
   extCalendarId: string
 }

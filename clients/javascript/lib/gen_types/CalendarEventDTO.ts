@@ -3,17 +3,56 @@ import type { CalendarEventReminder } from './CalendarEventReminder'
 import type { ID } from './ID'
 import type { RRuleOptions } from './RRuleOptions'
 
+/**
+ * Calendar event object
+ */
 export type CalendarEventDTO = {
+  /**
+   * UUID of the event
+   */
   id: ID
+  /**
+   * Start time of the event (UTC)
+   */
   startTime: Date
+  /**
+   * Duration of the event in minutes
+   */
   duration: number
+  /**
+   * Busy flag
+   */
   busy: boolean
+  /**
+   * Last updated timestamp
+   */
   updated: number
+  /**
+   * Created timestamp
+   */
   created: number
+  /**
+   * Recurrence rule
+   */
   recurrence?: RRuleOptions
+  /**
+   * List of exclusion dates for the recurrence rule
+   */
   exdates: Array<Date>
+  /**
+   * UUID of the calendar
+   */
   calendarId: ID
+  /**
+   * UUID of the user
+   */
   userId: ID
+  /**
+   * List of reminders
+   */
   reminders: Array<CalendarEventReminder>
+  /**
+   * Metadata (e.g. {"key": "value"})
+   */
   metadata: Record<string, string>
 }
