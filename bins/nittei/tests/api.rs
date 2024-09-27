@@ -379,6 +379,15 @@ async fn test_crud_calendars() {
 
     assert_eq!(calendar_get_res.id, calendar.id);
 
+    let calendars = admin_client
+        .calendar
+        .get_by_user(user.id.clone())
+        .await
+        .unwrap();
+
+    assert_eq!(calendars.calendars.len(), 1);
+    assert_eq!(calendars.calendars[0].id, calendar.id);
+
     let events = admin_client
         .calendar
         .get_events(GetCalendarEventsInput {

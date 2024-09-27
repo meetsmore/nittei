@@ -24,6 +24,32 @@ impl CalendarResponse {
     }
 }
 
+pub mod get_calendars_by_user {
+    use super::*;
+
+    #[derive(Deserialize)]
+    pub struct PathParams {
+        pub user_id: ID,
+    }
+
+    /// API response for getting calendars by user
+    #[derive(Deserialize, Serialize, TS)]
+    #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "GetCalendarsByUserAPIResponse")]
+    pub struct APIResponse {
+        /// List of calendars
+        pub calendars: Vec<CalendarDTO>,
+    }
+
+    impl APIResponse {
+        pub fn new(calendars: Vec<Calendar>) -> Self {
+            Self {
+                calendars: calendars.into_iter().map(CalendarDTO::new).collect(),
+            }
+        }
+    }
+}
+
 pub mod create_calendar {
     use nittei_domain::Metadata;
 
