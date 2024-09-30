@@ -44,7 +44,7 @@ chrono = "0.4.19"
 chrono-tz = "0.8.1"
 
 # Used Jemalloc for musl targets
-[target.'cfg(all(target_env = "musl", target_pointer_width = "64"))'.dependencies.jemallocator]
+[target.'cfg(all(target_env = "musl", target_pointer_width = "64"))'.dependencies.tikv-jemallocator]
 version = "0.5"
 
 
