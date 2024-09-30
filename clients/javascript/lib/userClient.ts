@@ -41,7 +41,7 @@ export class NitteiUserClient extends NitteiBaseClient {
 
   /**
    * Update a user
-   * @param userId - ID of the user to update 
+   * @param userId - ID of the user to update
    * @param data - data for updating the user
    * @returns - updated user, if found
    */
@@ -74,7 +74,7 @@ export class NitteiUserClient extends NitteiBaseClient {
 
   /**
    * Remove a user
-   * @param userId - ID of the user to remove 
+   * @param userId - ID of the user to remove
    * @returns - removed user, if found
    */
   public async remove(userId: ID) {

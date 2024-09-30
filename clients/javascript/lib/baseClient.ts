@@ -4,7 +4,11 @@ import axios, {
   type AxiosResponse,
 } from 'axios'
 import { ICredentials } from './helpers/credentials'
-import { BadRequestError } from './helpers/errors'
+import {
+  BadRequestError,
+  NotFoundError,
+  UnauthorizedError,
+} from './helpers/errors'
 
 /**
  * Base client for the API
@@ -118,6 +122,10 @@ export abstract class NitteiBaseClient {
     if (res.status >= 400) {
       if (res.status === 400) {
         throw new BadRequestError(res.data)
+      } else if (res.status === 401 || res.status === 403) {
+        throw new UnauthorizedError(res.data)
+      } else if (res.status === 404) {
+        throw new NotFoundError(res.data)
       } else {
         throw new Error(`Request failed with status code ${res.status}`)
       }

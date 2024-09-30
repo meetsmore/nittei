@@ -296,11 +296,11 @@ describe('Requirements', () => {
 
       it('should not find the event anymore', async () => {
         await expect(() => {
-        if (!user1Calendar1Event1) {
-          throw new Error('No event')
-        }
+          if (!user1Calendar1Event1) {
+            throw new Error('No event')
+          }
           return client?.events.getById(user1Calendar1Event1.id)
-      }).rejects.toThrow()
+        }).rejects.toThrow()
       })
 
       it('should list the events in the calendar and get none', async () => {
@@ -515,9 +515,7 @@ describe('Requirements', () => {
           throw new Error('Freebusy not found')
         }
         expect(res.busy.length).toBe(1)
-        expect(res.busy[0].startTime).toEqual(
-          user1Calendar1Event1?.startTime
-        )
+        expect(res.busy[0].startTime).toEqual(user1Calendar1Event1?.startTime)
       })
 
       it('should create an event in the second calendar', async () => {
@@ -588,9 +586,7 @@ describe('Requirements', () => {
           throw new Error('Freebusy not found')
         }
         expect(res.busy.length).toBe(1)
-        expect(res.busy[0].startTime).toEqual(
-          user1Calendar1Event1?.startTime
-        )
+        expect(res.busy[0].startTime).toEqual(user1Calendar1Event1?.startTime)
         expect(res.busy[0].endTime).toEqual(new Date(1000 * 60 * 121)) // 2h01
       })
     })
