@@ -26,6 +26,8 @@ pub async fn create_calendar_admin_controller(
         user_id: user.id,
         account_id: account.id,
         week_start: body.0.week_start,
+        name: body.0.name.clone(),
+        key: body.0.key.clone(),
         timezone: body.0.timezone,
         metadata: body.0.metadata.unwrap_or_default(),
     };
@@ -47,6 +49,8 @@ pub async fn create_calendar_controller(
         user_id: user.id,
         account_id: user.account_id,
         week_start: body.0.week_start,
+        name: body.0.name.clone(),
+        key: body.0.key.clone(),
         timezone: body.0.timezone,
         metadata: body.0.metadata.unwrap_or_default(),
     };
@@ -62,6 +66,8 @@ struct CreateCalendarUseCase {
     pub user_id: ID,
     pub account_id: ID,
     pub week_start: Weekday,
+    pub name: Option<String>,
+    pub key: Option<String>,
     pub timezone: Tz,
     pub metadata: Metadata,
 }
@@ -110,7 +116,12 @@ impl UseCase for CreateCalendarUseCase {
             week_start: self.week_start,
             timezone: self.timezone,
         };
-        let mut calendar = Calendar::new(&self.user_id, &user.account_id);
+        let mut calendar = Calendar::new(
+            &self.user_id,
+            &user.account_id,
+            self.name.clone(),
+            self.key.clone(),
+        );
         calendar.settings = settings;
         calendar.metadata = self.metadata.clone();
 

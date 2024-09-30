@@ -363,6 +363,8 @@ async fn test_crud_calendars() {
         .create(CreateCalendarInput {
             user_id: user.id.clone(),
             timezone: chrono_tz::UTC,
+            name: Some("My calendar".to_string()),
+            key: Some("my_calendar".to_string()),
             week_start: Weekday::Mon,
             metadata: None,
         })
@@ -381,12 +383,21 @@ async fn test_crud_calendars() {
 
     let calendars = admin_client
         .calendar
-        .get_by_user(user.id.clone())
+        .get_by_user(user.id.clone(), None)
         .await
         .unwrap();
 
     assert_eq!(calendars.calendars.len(), 1);
     assert_eq!(calendars.calendars[0].id, calendar.id);
+
+    let calendars_by_key = admin_client
+        .calendar
+        .get_by_user(user.id.clone(), Some("my_calendar".to_string()))
+        .await
+        .unwrap();
+
+    assert_eq!(calendars_by_key.calendars.len(), 1);
+    assert_eq!(calendars_by_key.calendars[0].id, calendar.id);
 
     let events = admin_client
         .calendar
@@ -406,6 +417,7 @@ async fn test_crud_calendars() {
         .update(UpdateCalendarInput {
             calendar_id: calendar.id.clone(),
             timezone: None,
+            name: None,
             week_start: Some(week_start),
             metadata: None,
         })
@@ -454,6 +466,8 @@ async fn test_crud_events() {
         .create(CreateCalendarInput {
             user_id: user.id.clone(),
             timezone: chrono_tz::UTC,
+            name: None,
+            key: None,
             week_start: Weekday::Mon,
             metadata: None,
         })
@@ -702,6 +716,8 @@ async fn test_freebusy_multiple() {
         .create(CreateCalendarInput {
             user_id: user1.id.clone(),
             timezone: chrono_tz::UTC,
+            name: None,
+            key: None,
             week_start: Weekday::Mon,
             metadata: None,
         })
@@ -713,6 +729,8 @@ async fn test_freebusy_multiple() {
         .create(CreateCalendarInput {
             user_id: user2.id.clone(),
             timezone: chrono_tz::UTC,
+            name: None,
+            key: None,
             week_start: Weekday::Mon,
             metadata: None,
         })

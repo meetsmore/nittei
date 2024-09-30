@@ -1,5 +1,5 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use nittei_api_structs::get_calendars_by_user::{APIResponse, PathParams};
+use nittei_api_structs::get_calendars_by_user::{APIResponse, PathParams, QueryParams};
 use nittei_domain::{Calendar, ID};
 use nittei_infra::NitteiContext;
 
@@ -11,8 +11,10 @@ use crate::{
     },
 };
 
+/// Get calendars for a user (admin)
 pub async fn get_calendars_admin_controller(
     http_req: HttpRequest,
+    query: web::Query<QueryParams>,
     path: web::Path<PathParams>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
@@ -20,6 +22,7 @@ pub async fn get_calendars_admin_controller(
 
     let usecase = GetCalendarsUseCase {
         user_id: path.user_id.clone(),
+        key: query.key.clone(),
     };
 
     execute(usecase, &ctx)
@@ -28,14 +31,17 @@ pub async fn get_calendars_admin_controller(
         .map_err(NitteiError::from)
 }
 
+// Get calendars for a user
 pub async fn get_calendars_controller(
     http_req: HttpRequest,
+    query: web::Query<QueryParams>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
     let (user, _policy) = protect_route(&http_req, &ctx).await?;
 
     let usecase = GetCalendarsUseCase {
         user_id: user.id.clone(),
+        key: query.key.clone(),
     };
 
     execute(usecase, &ctx)
@@ -47,6 +53,7 @@ pub async fn get_calendars_controller(
 #[derive(Debug)]
 struct GetCalendarsUseCase {
     pub user_id: ID,
+    pub key: Option<String>,
 }
 
 #[derive(Debug)]
@@ -70,10 +77,20 @@ impl UseCase for GetCalendarsUseCase {
     const NAME: &'static str = "GetCalendar";
 
     async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
-        ctx.repos
-            .calendars
-            .find_by_user(&self.user_id)
-            .await
-            .map_err(|_| UseCaseError::InternalError)
+        match &self.key {
+            Some(key) => ctx
+                .repos
+                .calendars
+                .find_by_user_and_key(&self.user_id, key)
+                .await
+                .map_err(|_| UseCaseError::InternalError)
+                .map(|calendar| calendar.into_iter().collect()),
+            None => ctx
+                .repos
+                .calendars
+                .find_by_user(&self.user_id)
+                .await
+                .map_err(|_| UseCaseError::InternalError),
+        }
     }
 }

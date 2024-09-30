@@ -586,9 +586,9 @@ mod test {
             furthest_booking_time: None,
         };
 
-        let calendar_user_1 = Calendar::new(&resource1.user_id, account_id);
+        let calendar_user_1 = Calendar::new(&resource1.user_id, account_id, None, None);
         resource1.availability = TimePlan::Calendar(calendar_user_1.id.clone());
-        let calendar_user_2 = Calendar::new(&resource2.user_id, account_id);
+        let calendar_user_2 = Calendar::new(&resource2.user_id, account_id, None, None);
         resource2.availability = TimePlan::Calendar(calendar_user_2.id.clone());
 
         ctx.repos.calendars.insert(&calendar_user_1).await.unwrap();
