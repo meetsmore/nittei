@@ -69,10 +69,10 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Run migrations
-        run: |
-          cargo install sqlx-cli --no-default-features --features postgres || true
-          (cd crates/infra && sqlx migrate run)
+      # - name: Run migrations
+      #   run: |
+      #     cargo install sqlx-cli --no-default-features --features postgres || true
+      #     (cd crates/infra && sqlx migrate run)
 
       - name: Build and push
         id: build
