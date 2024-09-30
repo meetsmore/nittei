@@ -10,7 +10,7 @@ use crate::{
 
 pub async fn create_account_controller(
     ctx: web::Data<NitteiContext>,
-    body: web::Json<RequestBody>,
+    body: actix_web_validator::Json<RequestBody>,
 ) -> Result<HttpResponse, NitteiError> {
     let usecase = CreateAccountUseCase { code: body.0.code };
     execute(usecase, &ctx)

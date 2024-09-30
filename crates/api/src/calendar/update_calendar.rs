@@ -23,7 +23,7 @@ pub async fn update_calendar_admin_controller(
     http_req: HttpRequest,
     ctx: web::Data<NitteiContext>,
     path: web::Path<PathParams>,
-    body: web::Json<RequestBody>,
+    body: actix_web_validator::Json<RequestBody>,
 ) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
     let cal = account_can_modify_calendar(&account, &path.calendar_id, &ctx).await?;

@@ -16,7 +16,7 @@ use crate::{
 pub async fn create_calendar_admin_controller(
     http_req: HttpRequest,
     path_params: web::Path<PathParams>,
-    body: web::Json<RequestBody>,
+    body: actix_web_validator::Json<RequestBody>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
