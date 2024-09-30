@@ -2,6 +2,7 @@ use chrono::{DateTime, Utc};
 use nittei_domain::{
     CalendarEvent,
     CalendarEventReminder,
+    CalendarEventStatus,
     EventInstance,
     Metadata,
     RRuleOptions,
@@ -17,6 +18,21 @@ use ts_rs::TS;
 pub struct CalendarEventDTO {
     /// UUID of the event
     pub id: ID,
+
+    /// Optional title of the event
+    pub title: Option<String>,
+
+    /// Optional description of the event
+    pub description: Option<String>,
+
+    /// Optional location of the event
+    pub location: Option<String>,
+
+    /// Flag to indicate if the event is all day, default is false
+    pub all_day: bool,
+
+    /// Status of the event, default is tentative
+    pub status: CalendarEventStatus,
 
     /// Start time of the event (UTC)
     #[ts(type = "Date")]
@@ -62,7 +78,12 @@ pub struct CalendarEventDTO {
 impl CalendarEventDTO {
     pub fn new(event: CalendarEvent) -> Self {
         Self {
-            id: event.id.clone(),
+            id: event.id,
+            title: event.title,
+            description: event.description,
+            location: event.location,
+            all_day: event.all_day,
+            status: event.status,
             start_time: event.start_time,
             duration: event.duration,
             busy: event.busy,
@@ -70,8 +91,8 @@ impl CalendarEventDTO {
             created: event.created,
             recurrence: event.recurrence,
             exdates: event.exdates,
-            calendar_id: event.calendar_id.clone(),
-            user_id: event.user_id.clone(),
+            calendar_id: event.calendar_id,
+            user_id: event.user_id,
             reminders: event.reminders,
             metadata: event.metadata,
         }
