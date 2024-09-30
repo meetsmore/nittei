@@ -34,13 +34,12 @@ describe('Requirements', () => {
         const res = await client?.user.create({
           userId: userUuid,
         })
-        if (!res?.data) {
+        if (!res) {
           throw new Error('User not created')
         }
-        expect(res?.status).toBe(201)
-        expect(res?.data.user.id).toEqual(userUuid)
+        expect(res.user.id).toEqual(userUuid)
 
-        user1 = res.data.user
+        user1 = res.user
       })
 
       it('should create a calendar for that user', async () => {
@@ -50,13 +49,11 @@ describe('Requirements', () => {
         const res = await client?.calendar.create(user1.id, {
           timezone: 'Asia/Tokyo',
         })
-        expect(res?.status).toBe(201)
-
-        if (!res?.data) {
+        if (!res) {
           throw new Error('Calendar not created')
         }
 
-        user1Calendar1 = res.data?.calendar
+        user1Calendar1 = res.calendar
       })
 
       it('should fetch the calendar', async () => {
@@ -64,10 +61,8 @@ describe('Requirements', () => {
           throw new Error('No calendar')
         }
         const res = await client?.calendar.findById(user1Calendar1.id)
-        expect(res?.status).toBe(200)
-        expect(res?.data).toBeDefined()
-        expect(res?.data?.calendar.id).toEqual(user1Calendar1.id)
-        expect(res?.data?.calendar.userId).toEqual(user1?.id)
+        expect(res?.calendar.id).toEqual(user1Calendar1.id)
+        expect(res?.calendar.userId).toEqual(user1?.id)
       })
     })
 
@@ -79,12 +74,10 @@ describe('Requirements', () => {
       beforeAll(async () => {
         const userUuid = v4()
         const res = await client?.user.create({ userId: userUuid })
-        if (!res?.data) {
+        if (!res) {
           throw new Error('User not created')
         }
-        expect(res?.status).toBe(201)
-
-        user1 = res.data.user
+        user1 = res.user
       })
 
       it('should create a calendar', async () => {
@@ -94,13 +87,11 @@ describe('Requirements', () => {
         const res = await client?.calendar.create(user1.id, {
           timezone: 'Asia/Tokyo',
         })
-        expect(res?.status).toBe(201)
-
-        if (!res?.data) {
+        if (!res) {
           throw new Error('Calendar not created')
         }
 
-        user1Calendar1 = res.data?.calendar
+        user1Calendar1 = res.calendar
       })
 
       it('should create a second calendar', async () => {
@@ -111,13 +102,11 @@ describe('Requirements', () => {
           timezone: 'Asia/Tokyo',
           key: 'second-calendar',
         })
-        expect(res?.status).toBe(201)
-
-        if (!res?.data) {
+        if (!res) {
           throw new Error('Calendar not created')
         }
 
-        user1Calendar2 = res.data?.calendar
+        user1Calendar2 = res.calendar
       })
 
       it('should list the calendars for the user', async () => {
@@ -125,22 +114,16 @@ describe('Requirements', () => {
           throw new Error('One or both calendars are missing')
         }
         const res = await client?.calendar.findById(user1Calendar1.id)
-        expect(res?.status).toBe(200)
-        expect(res?.data).toBeDefined()
-        expect(res?.data?.calendar.id).toEqual(user1Calendar1.id)
-        expect(res?.data?.calendar.userId).toEqual(user1?.id)
+        expect(res?.calendar.id).toEqual(user1Calendar1.id)
+        expect(res?.calendar.userId).toEqual(user1?.id)
 
         const res2 = await client?.calendar.findById(user1Calendar2.id)
-        expect(res2?.status).toBe(200)
-        expect(res2?.data).toBeDefined()
-        expect(res2?.data?.calendar.id).toEqual(user1Calendar2.id)
-        expect(res2?.data?.calendar.userId).toEqual(user1?.id)
+        expect(res2?.calendar.id).toEqual(user1Calendar2.id)
+        expect(res2?.calendar.userId).toEqual(user1?.id)
 
         const res3 = await client?.calendar.findByUser(user1Calendar1.userId)
-        expect(res3?.status).toBe(200)
-        expect(res3?.data).toBeDefined()
-        expect(res3?.data?.calendars.length).toBe(2)
-        expect(res3?.data?.calendars).toEqual(
+        expect(res3?.calendars.length).toBe(2)
+        expect(res3?.calendars).toEqual(
           expect.arrayContaining([
             expect.objectContaining({ id: user1Calendar1.id }),
             expect.objectContaining({ id: user1Calendar2.id }),
@@ -151,11 +134,9 @@ describe('Requirements', () => {
           user1Calendar1.userId,
           'second-calendar'
         )
-        expect(res4?.status).toBe(200)
-        expect(res4?.data).toBeDefined()
-        expect(res4?.data?.calendars.length).toBe(1)
-        expect(res4?.data?.calendars[0]?.id).toEqual(user1Calendar2.id)
-        expect(res4?.data?.calendars[0]?.key).toEqual('second-calendar')
+        expect(res4?.calendars.length).toBe(1)
+        expect(res4?.calendars[0]?.id).toEqual(user1Calendar2.id)
+        expect(res4?.calendars[0]?.key).toEqual('second-calendar')
       })
     })
 
@@ -166,12 +147,11 @@ describe('Requirements', () => {
 
       beforeAll(async () => {
         const res = await client?.user.create()
-        if (!res?.data) {
+        if (!res) {
           throw new Error('User not created')
         }
-        expect(res?.status).toBe(201)
 
-        user1 = res.data.user
+        user1 = res.user
 
         if (!user1) {
           throw new Error('No user')
@@ -179,8 +159,7 @@ describe('Requirements', () => {
         const resCal = await client?.calendar.create(user1.id, {
           timezone: 'Asia/Tokyo',
         })
-        expect(resCal?.status).toBe(201)
-        user1Calendar1 = resCal?.data?.calendar
+        user1Calendar1 = resCal?.calendar
       })
 
       it('should create an event', async () => {
@@ -193,8 +172,7 @@ describe('Requirements', () => {
           startTime: new Date(0),
           busy: true,
         })
-        expect(res?.status).toBe(201)
-        user1Calendar1Event1 = res?.data?.event
+        user1Calendar1Event1 = res?.event
       })
 
       it('should fetch the event', async () => {
@@ -202,9 +180,7 @@ describe('Requirements', () => {
           throw new Error('No event')
         }
         const res = await client?.events.findById(user1Calendar1Event1.id)
-        expect(res?.status).toBe(200)
-        expect(res?.data).toBeDefined()
-        expect(res?.data?.event.id).toEqual(user1Calendar1Event1.id)
+        expect(res?.event.id).toEqual(user1Calendar1Event1.id)
       })
 
       it('should list the events in the calendar and get one event', async () => {
@@ -220,10 +196,8 @@ describe('Requirements', () => {
           endTime
         )
 
-        expect(res?.status).toBe(200)
-        expect(res?.data).toBeDefined()
-        expect(res?.data?.events.length).toBe(1)
-        expect(res?.data?.events[0].event.id).toEqual(user1Calendar1Event1?.id)
+        expect(res?.events.length).toBe(1)
+        expect(res?.events[0].event.id).toEqual(user1Calendar1Event1?.id)
       })
     })
 
@@ -234,11 +208,10 @@ describe('Requirements', () => {
 
       beforeAll(async () => {
         const res = await client?.user.create()
-        if (!res?.data) {
+        if (!res) {
           throw new Error('User not created')
         }
-        expect(res?.status).toBe(201)
-        user1 = res.data.user
+        user1 = res.user
 
         if (!user1) {
           throw new Error('No user')
@@ -246,8 +219,7 @@ describe('Requirements', () => {
         const resCal = await client?.calendar.create(user1.id, {
           timezone: 'Asia/Tokyo',
         })
-        expect(resCal?.status).toBe(201)
-        user1Calendar1 = resCal?.data?.calendar
+        user1Calendar1 = resCal?.calendar
 
         if (!user1 || !user1Calendar1) {
           throw new Error('No user or calendar')
@@ -258,19 +230,17 @@ describe('Requirements', () => {
           startTime: new Date(0),
           busy: true,
         })
-        expect(resEvent?.status).toBe(201)
-        user1Calendar1Event1 = resEvent?.data?.event
+        user1Calendar1Event1 = resEvent?.event
       })
 
       it('should update the event', async () => {
         if (!user1Calendar1Event1) {
           throw new Error('No event')
         }
-        const res = await client?.events.update(user1Calendar1Event1.id, {
+        await client?.events.update(user1Calendar1Event1.id, {
           duration: 1000 * 60 * 60 * 2,
           startTime: new Date(1000 * 60 * 60),
         })
-        expect(res?.status).toBe(200)
       })
 
       it('should fetch the updated event', async () => {
@@ -278,11 +248,9 @@ describe('Requirements', () => {
           throw new Error('No event')
         }
         const res = await client?.events.findById(user1Calendar1Event1.id)
-        expect(res?.status).toBe(200)
-        expect(res?.data).toBeDefined()
-        expect(res?.data?.event.id).toEqual(user1Calendar1Event1.id)
-        expect(res?.data?.event.duration).toEqual(1000 * 60 * 60 * 2)
-        expect(res?.data?.event.startTime).toEqual(new Date(1000 * 60 * 60))
+        expect(res?.event.id).toEqual(user1Calendar1Event1.id)
+        expect(res?.event.duration).toEqual(1000 * 60 * 60 * 2)
+        expect(res?.event.startTime).toEqual(new Date(1000 * 60 * 60))
       })
     })
 
@@ -293,11 +261,10 @@ describe('Requirements', () => {
 
       beforeAll(async () => {
         const res = await client?.user.create()
-        if (!res?.data) {
+        if (!res) {
           throw new Error('User not created')
         }
-        expect(res?.status).toBe(201)
-        user1 = res.data.user
+        user1 = res.user
 
         if (!user1) {
           throw new Error('No user')
@@ -305,8 +272,7 @@ describe('Requirements', () => {
         const resCal = await client?.calendar.create(user1.id, {
           timezone: 'Asia/Tokyo',
         })
-        expect(resCal?.status).toBe(201)
-        user1Calendar1 = resCal?.data?.calendar
+        user1Calendar1 = resCal?.calendar
 
         if (!user1 || !user1Calendar1) {
           throw new Error('No user or calendar')
@@ -317,8 +283,7 @@ describe('Requirements', () => {
           startTime: new Date(0),
           busy: true,
         })
-        expect(resEvent?.status).toBe(201)
-        user1Calendar1Event1 = resEvent?.data?.event
+        user1Calendar1Event1 = resEvent?.event
       })
 
       it('should delete the event', async () => {
@@ -326,15 +291,16 @@ describe('Requirements', () => {
           throw new Error('No event')
         }
         const res = await client?.events.remove(user1Calendar1Event1.id)
-        expect(res?.status).toBe(200)
+        expect(res?.event.id).toEqual(user1Calendar1Event1.id)
       })
 
       it('should not find the event anymore', async () => {
+        await expect(() => {
         if (!user1Calendar1Event1) {
           throw new Error('No event')
         }
-        const res = await client?.events.findById(user1Calendar1Event1.id)
-        expect(res?.status).toBe(404)
+          return client?.events.findById(user1Calendar1Event1.id)
+      }).rejects.toThrow()
       })
 
       it('should list the events in the calendar and get none', async () => {
@@ -350,9 +316,7 @@ describe('Requirements', () => {
           endTime
         )
 
-        expect(res?.status).toBe(200)
-        expect(res?.data).toBeDefined()
-        expect(res?.data?.events.length).toBe(0)
+        expect(res?.events.length).toBe(0)
       })
     })
 
@@ -365,11 +329,10 @@ describe('Requirements', () => {
 
       beforeAll(async () => {
         const res = await client?.user.create()
-        if (!res?.data) {
+        if (!res) {
           throw new Error('User not created')
         }
-        expect(res?.status).toBe(201)
-        user1 = res.data.user
+        user1 = res.user
 
         if (!user1) {
           throw new Error('No user')
@@ -377,14 +340,12 @@ describe('Requirements', () => {
         const resCal1 = await client?.calendar.create(user1.id, {
           timezone: 'Asia/Tokyo',
         })
-        expect(resCal1?.status).toBe(201)
-        user1Calendar1 = resCal1?.data?.calendar
+        user1Calendar1 = resCal1?.calendar
 
         const resCal2 = await client?.calendar.create(user1.id, {
           timezone: 'Asia/Tokyo',
         })
-        expect(resCal2?.status).toBe(201)
-        user1Calendar2 = resCal2?.data?.calendar
+        user1Calendar2 = resCal2?.calendar
 
         if (!user1 || !user1Calendar1 || !user1Calendar2) {
           throw new Error('No user or calendar')
@@ -395,8 +356,7 @@ describe('Requirements', () => {
           startTime: new Date(0),
           busy: true,
         })
-        expect(resEvent1?.status).toBe(201)
-        user1Calendar1Event1 = resEvent1?.data?.event
+        user1Calendar1Event1 = resEvent1?.event
 
         const resEvent2 = await client?.events.create(user1.id, {
           calendarId: user1Calendar2.id,
@@ -404,8 +364,7 @@ describe('Requirements', () => {
           startTime: new Date(1000 * 60 * 60),
           busy: true,
         })
-        expect(resEvent2?.status).toBe(201)
-        user1Calendar2Event1 = resEvent2?.data?.event
+        user1Calendar2Event1 = resEvent2?.event
       })
 
       it('should list the events in the calendars', async () => {
@@ -420,10 +379,8 @@ describe('Requirements', () => {
           startTime,
           endTime,
         })
-        expect(res?.status).toBe(200)
-        expect(res?.data).toBeDefined()
-        expect(res?.data?.events.length).toBe(2)
-        expect(res?.data?.events).toEqual(
+        expect(res?.events.length).toBe(2)
+        expect(res?.events).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
               event: expect.objectContaining({
@@ -447,11 +404,10 @@ describe('Requirements', () => {
 
       beforeAll(async () => {
         const res = await client?.user.create()
-        if (!res?.data) {
+        if (!res) {
           throw new Error('User not created')
         }
-        expect(res?.status).toBe(201)
-        user1 = res.data.user
+        user1 = res.user
 
         if (!user1) {
           throw new Error('No user')
@@ -459,8 +415,7 @@ describe('Requirements', () => {
         const resCal = await client?.calendar.create(user1.id, {
           timezone: 'Asia/Tokyo',
         })
-        expect(resCal?.status).toBe(201)
-        user1Calendar1 = resCal?.data?.calendar
+        user1Calendar1 = resCal?.calendar
 
         if (!user1 || !user1Calendar1) {
           throw new Error('No user or calendar')
@@ -471,8 +426,7 @@ describe('Requirements', () => {
           startTime: new Date(0),
           busy: true,
         })
-        expect(resEvent?.status).toBe(201)
-        user1Calendar1Event1 = resEvent?.data?.event
+        user1Calendar1Event1 = resEvent?.event
       })
 
       it('should show correct freebusy with a single event in calendar', async () => {
@@ -484,10 +438,10 @@ describe('Requirements', () => {
           startTime: new Date(10),
           calendarIds: [user1Calendar1.id],
         })
-        if (!res?.data) {
+        if (!res) {
           throw new Error('Freebusy not found')
         }
-        expect(res.data.busy.length).toBe(1)
+        expect(res.busy.length).toBe(1)
       })
     })
 
@@ -501,25 +455,22 @@ describe('Requirements', () => {
 
       beforeAll(async () => {
         const res = await client?.user.create()
-        if (!res?.data) {
+        if (!res) {
           throw new Error('User not created')
         }
-        expect(res?.status).toBe(201)
-        user1 = res.data.user
+        user1 = res.user
 
         // Calendar1
         const resCal1 = await client?.calendar.create(user1.id, {
           timezone: 'Asia/Tokyo',
         })
-        expect(resCal1?.status).toBe(201)
-        user1Calendar1 = resCal1?.data?.calendar
+        user1Calendar1 = resCal1?.calendar
 
         // Calendar2
         const resCal2 = await client?.calendar.create(user1.id, {
           timezone: 'Asia/Tokyo',
         })
-        expect(resCal2?.status).toBe(201)
-        user1Calendar2 = resCal2?.data?.calendar
+        user1Calendar2 = resCal2?.calendar
       })
 
       it('should query on the 2 calendars of of the user, and get no events', async () => {
@@ -531,10 +482,10 @@ describe('Requirements', () => {
           startTime: new Date(10),
           calendarIds: [user1Calendar1.id, user1Calendar2.id],
         })
-        if (!res?.data) {
+        if (!res) {
           throw new Error('Freebusy not found')
         }
-        expect(res.data.busy.length).toBe(0)
+        expect(res.busy.length).toBe(0)
       })
 
       it('should create an event in the first calendar', async () => {
@@ -548,8 +499,7 @@ describe('Requirements', () => {
           startTime: new Date(0),
           busy: true,
         })
-        expect(res?.status).toBe(201)
-        user1Calendar1Event1 = res?.data?.event
+        user1Calendar1Event1 = res?.event
       })
 
       it('should query on the 2 calendars of the user, and get one busy period', async () => {
@@ -561,11 +511,11 @@ describe('Requirements', () => {
           startTime: new Date(10),
           calendarIds: [user1Calendar1.id, user1Calendar2.id],
         })
-        if (!res?.data) {
+        if (!res) {
           throw new Error('Freebusy not found')
         }
-        expect(res.data.busy.length).toBe(1)
-        expect(res.data.busy[0].startTime).toEqual(
+        expect(res.busy.length).toBe(1)
+        expect(res.busy[0].startTime).toEqual(
           user1Calendar1Event1?.startTime
         )
       })
@@ -581,8 +531,7 @@ describe('Requirements', () => {
           startTime: new Date(1000 * 60 * 61), // 1h01
           busy: true,
         })
-        expect(res?.status).toBe(201)
-        user1Calendar2Event1 = res?.data?.event
+        user1Calendar2Event1 = res?.event
       })
 
       it('should query on the 2 calendars of of the user, and get two busy periods', async () => {
@@ -595,12 +544,12 @@ describe('Requirements', () => {
           calendarIds: [user1Calendar1.id, user1Calendar2.id],
         })
 
-        if (!res?.data) {
+        if (!res) {
           throw new Error('Freebusy not found')
         }
 
-        expect(res.data.busy.length).toBe(2)
-        expect(res.data.busy).toEqual(
+        expect(res.busy.length).toBe(2)
+        expect(res.busy).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
               startTime: user1Calendar1Event1?.startTime,
@@ -623,8 +572,7 @@ describe('Requirements', () => {
           startTime: new Date(1000 * 60 * 60), // 1h
           busy: true,
         })
-        expect(res?.status).toBe(201)
-        user1Calendar2Event2 = res?.data?.event
+        user1Calendar2Event2 = res?.event
       })
 
       it('should query on the 2 calendars of of the user, and get one busy period covering the 3 events', async () => {
@@ -636,14 +584,14 @@ describe('Requirements', () => {
           startTime: new Date(10),
           calendarIds: [user1Calendar1.id, user1Calendar2.id],
         })
-        if (!res?.data) {
+        if (!res) {
           throw new Error('Freebusy not found')
         }
-        expect(res.data.busy.length).toBe(1)
-        expect(res.data.busy[0].startTime).toEqual(
+        expect(res.busy.length).toBe(1)
+        expect(res.busy[0].startTime).toEqual(
           user1Calendar1Event1?.startTime
         )
-        expect(res.data.busy[0].endTime).toEqual(new Date(1000 * 60 * 121)) // 2h01
+        expect(res.busy[0].endTime).toEqual(new Date(1000 * 60 * 121)) // 2h01
       })
     })
 
@@ -652,30 +600,26 @@ describe('Requirements', () => {
       let user2: UserDTO | undefined
       beforeAll(async () => {
         const resUser1 = await client?.user.create()
-        if (!resUser1?.data) {
+        if (!resUser1) {
           throw new Error('User not created')
         }
-        expect(resUser1.status).toBe(201)
-        user1 = resUser1.data.user
+        user1 = resUser1.user
 
         const resCal1 = await client?.calendar.create(user1.id, {
           timezone: 'Asia/Tokyo',
         })
-        expect(resCal1?.status).toBe(201)
-        const user1Calendar1 = resCal1?.data?.calendar
+        const user1Calendar1 = resCal1?.calendar
 
         const resUser2 = await client?.user.create()
-        if (!resUser2?.data) {
+        if (!resUser2) {
           throw new Error('User not created')
         }
-        expect(resUser2.status).toBe(201)
-        user2 = resUser2.data.user
+        user2 = resUser2.user
 
         const resCal2 = await client?.calendar.create(user2.id, {
           timezone: 'Asia/Tokyo',
         })
-        expect(resCal2?.status).toBe(201)
-        const user2Calendar1 = resCal2?.data?.calendar
+        const user2Calendar1 = resCal2?.calendar
 
         if (!user1 || !user1Calendar1 || !user2 || !user2Calendar1) {
           throw new Error('No user or calendar')
@@ -688,7 +632,7 @@ describe('Requirements', () => {
           startTime: new Date(0),
           busy: true,
         })
-        expect(resEvent1?.status).toBe(201)
+        expect(resEvent1?.event.calendarId).toBe(user1Calendar1.id)
 
         // Covers from 1h01 to 2h01
         const resEvent2 = await client?.events.create(user2.id, {
@@ -697,7 +641,7 @@ describe('Requirements', () => {
           startTime: new Date(1000 * 60 * 61),
           busy: true,
         })
-        expect(resEvent2?.status).toBe(201)
+        expect(resEvent2?.event.calendarId).toBe(user2Calendar1.id)
       })
 
       it('should query on the 2 calendars of the 2 users, and get 2 busy periods', async () => {
@@ -709,11 +653,11 @@ describe('Requirements', () => {
           startTime: new Date(10),
           userIds: [user1.id, user2.id],
         })
-        if (!res?.data) {
+        if (!res) {
           throw new Error('Freebusy not found')
         }
-        expect(res.data[user1.id]?.length).toBe(1)
-        expect(res.data[user2.id]?.length).toBe(1)
+        expect(res[user1.id]?.length).toBe(1)
+        expect(res[user2.id]?.length).toBe(1)
       })
     })
 
@@ -726,11 +670,10 @@ describe('Requirements', () => {
 
       beforeAll(async () => {
         const res = await client?.user.create()
-        if (!res?.data) {
+        if (!res) {
           throw new Error('User not created')
         }
-        expect(res?.status).toBe(201)
-        user1 = res.data.user
+        user1 = res.user
 
         if (!user1) {
           throw new Error('No user')
@@ -738,8 +681,7 @@ describe('Requirements', () => {
         const resCal = await client?.calendar.create(user1.id, {
           timezone: 'Asia/Tokyo',
         })
-        expect(resCal?.status).toBe(201)
-        user1Calendar1 = resCal?.data?.calendar
+        user1Calendar1 = resCal?.calendar
       })
 
       it('should create a pending booking', async () => {
@@ -753,8 +695,7 @@ describe('Requirements', () => {
           busy: true,
           // TODO: we need to add a state or pending field to the event
         })
-        expect(res?.status).toBe(201)
-        user1Calendar1Event1 = res?.data?.event
+        user1Calendar1Event1 = res?.event
       })
 
       it('should create a confirmed booking', async () => {
@@ -767,8 +708,7 @@ describe('Requirements', () => {
           startTime: new Date(1000 * 60 * 60), // TODO: change the start time for more realistic tests
           busy: true,
         })
-        expect(res?.status).toBe(201)
-        user1Calendar1Event2 = res?.data?.event
+        user1Calendar1Event2 = res?.event
       })
 
       it('should list the events in the calendar and get two events', async () => {
@@ -784,11 +724,9 @@ describe('Requirements', () => {
           endTime
         )
 
-        expect(res?.status).toBe(200)
-        expect(res?.data).toBeDefined()
-        expect(res?.data?.events.length).toBe(2)
+        expect(res?.events.length).toBe(2)
 
-        expect(res?.data?.events).toEqual(
+        expect(res?.events).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
               event: expect.objectContaining({ id: user1Calendar1Event1?.id }),
@@ -818,11 +756,10 @@ describe('Requirements', () => {
 
       beforeAll(async () => {
         const res = await client?.user.create()
-        if (!res?.data) {
+        if (!res) {
           throw new Error('User not created')
         }
-        expect(res?.status).toBe(201)
-        user1 = res.data.user
+        user1 = res.user
 
         if (!user1) {
           throw new Error('No user')
@@ -830,8 +767,7 @@ describe('Requirements', () => {
         const resCal = await client?.calendar.create(user1.id, {
           timezone: 'Asia/Tokyo',
         })
-        expect(resCal?.status).toBe(201)
-        user1Calendar1 = resCal?.data?.calendar
+        user1Calendar1 = resCal?.calendar
       })
 
       it('should create an event with a Japanese event name', async () => {
@@ -847,9 +783,8 @@ describe('Requirements', () => {
             name: '日本語のイベント',
           },
         })
-        expect(res?.status).toBe(201)
-        user1Calendar1Event1 = res?.data?.event
-        expect(res?.data?.event.metadata.name).toEqual('日本語のイベント')
+        user1Calendar1Event1 = res?.event
+        expect(res?.event.metadata.name).toEqual('日本語のイベント')
       })
 
       it('should fetch the event', async () => {
@@ -857,10 +792,8 @@ describe('Requirements', () => {
           throw new Error('No event')
         }
         const res = await client?.events.findById(user1Calendar1Event1.id)
-        expect(res?.status).toBe(200)
-        expect(res?.data).toBeDefined()
-        expect(res?.data?.event.id).toEqual(user1Calendar1Event1.id)
-        expect(res?.data?.event.metadata.name).toEqual('日本語のイベント')
+        expect(res?.event.id).toEqual(user1Calendar1Event1.id)
+        expect(res?.event.metadata.name).toEqual('日本語のイベント')
       })
     })
 
@@ -873,21 +806,19 @@ describe('Requirements', () => {
 
       beforeAll(async () => {
         const res = await client?.user.create()
-        if (!res?.data) {
+        if (!res) {
           throw new Error('User not created')
         }
-        expect(res?.status).toBe(201)
-        user1 = res.data.user
+        user1 = res.user
 
         // Create JST calendar
-        const resCal1 = await client?.calendar.create(res.data.user.id, {
+        const resCal1 = await client?.calendar.create(res.user.id, {
           timezone: 'Asia/Tokyo',
         })
-        if (!resCal1?.data) {
+        if (!resCal1) {
           throw new Error('Calendar not created')
         }
-        expect(resCal1?.status).toBe(201)
-        user1Calendar1 = resCal1.data.calendar
+        user1Calendar1 = resCal1.calendar
       })
 
       it('should create an event in JST timezone', async () => {
@@ -900,7 +831,7 @@ describe('Requirements', () => {
           startTime: date1.toDate(), // 1st January 2024 at 0h00 in JST
           busy: true,
         })
-        expect(res?.status).toBe(201)
+        expect(res?.event.calendarId).toBe(user1Calendar1.id)
       })
 
       it('should fetch the event and times should match', async () => {
@@ -912,14 +843,8 @@ describe('Requirements', () => {
           date1.toDate(),
           date1.add(1, 'day').toDate()
         )
-        expect(res?.status).toBe(200)
-        expect(res?.data).toBeDefined()
-        expect(res?.data?.events.length).toBe(1)
-        console.log(
-          'res?.data?.events[0].event.startTime',
-          res?.data?.events[0].event.startTime
-        )
-        expect(res?.data?.events[0].event.startTime).toEqual(date1.toDate())
+        expect(res?.events.length).toBe(1)
+        expect(res?.events[0].event.startTime).toEqual(date1.toDate())
       })
 
       it('should create a 2nd event, in UTC timezone', async () => {
@@ -932,7 +857,7 @@ describe('Requirements', () => {
           startTime: date2.toDate(), // 1st January 2024 at 0h00 in UTC
           busy: true,
         })
-        expect(res?.status).toBe(201)
+        expect(res?.event.calendarId).toBe(user1Calendar1.id)
       })
 
       it('should fetch the 2nd event, and times should match', async () => {
@@ -944,10 +869,8 @@ describe('Requirements', () => {
           date2.toDate(),
           date2.add(1, 'day').toDate()
         )
-        expect(res?.status).toBe(200)
-        expect(res?.data).toBeDefined()
-        expect(res?.data?.events.length).toBe(1)
-        expect(res?.data?.events[0].event.startTime).toEqual(date2.toDate())
+        expect(res?.events.length).toBe(1)
+        expect(res?.events[0].event.startTime).toEqual(date2.toDate())
       })
 
       // Free busy
@@ -960,11 +883,9 @@ describe('Requirements', () => {
           startTime: date1.toDate(),
           calendarIds: [user1Calendar1.id],
         })
-        expect(res?.status).toBe(200)
-        expect(res?.data).toBeDefined()
-        expect(res?.data?.busy.length).toBe(2)
-        expect(res?.data?.busy[0].startTime).toEqual(date1.toDate())
-        expect(res?.data?.busy[1].startTime).toEqual(date2.toDate())
+        expect(res?.busy.length).toBe(2)
+        expect(res?.busy[0].startTime).toEqual(date1.toDate())
+        expect(res?.busy[1].startTime).toEqual(date2.toDate())
       })
     })
 
@@ -973,23 +894,22 @@ describe('Requirements', () => {
 
       beforeAll(async () => {
         const resUser1 = await client?.user.create()
-        if (!resUser1?.data) {
+        if (!resUser1) {
           throw new Error('User not created')
         }
-        expect(resUser1.status).toBe(201)
-        user1 = resUser1.data.user
+        user1 = resUser1.user
 
         const resCal1 = await client?.calendar.create(user1.id, {
           timezone: 'Asia/Tokyo',
           metadata: { key: 'group', value: 'A' },
         })
-        expect(resCal1?.status).toBe(201)
+        expect(resCal1?.calendar.userId).toEqual(user1.id)
 
         const resCal2 = await client?.calendar.create(user1.id, {
           timezone: 'Asia/Tokyo',
           metadata: { key: 'group', value: 'B' },
         })
-        expect(resCal2?.status).toBe(201)
+        expect(resCal2?.calendar.userId).toEqual(user1.id)
       })
 
       it('should query the calendars with metadata key group and value A', async () => {
@@ -998,10 +918,8 @@ describe('Requirements', () => {
           0,
           10
         )
-        expect(res?.status).toBe(200)
-        expect(res?.data).toBeDefined()
-        expect(res?.data?.calendars.length).toBe(1)
-        expect(res?.data?.calendars[0].metadata).toEqual({
+        expect(res?.calendars.length).toBe(1)
+        expect(res?.calendars[0].metadata).toEqual({
           key: 'group',
           value: 'A',
         })
@@ -1013,10 +931,8 @@ describe('Requirements', () => {
           0,
           10
         )
-        expect(res?.status).toBe(200)
-        expect(res?.data).toBeDefined()
-        expect(res?.data?.calendars.length).toBe(1)
-        expect(res?.data?.calendars[0].metadata).toEqual({
+        expect(res?.calendars.length).toBe(1)
+        expect(res?.calendars[0].metadata).toEqual({
           key: 'group',
           value: 'B',
         })

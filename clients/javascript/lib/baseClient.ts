@@ -4,6 +4,7 @@ import axios, {
   type AxiosResponse,
 } from 'axios'
 import { ICredentials } from './helpers/credentials'
+import { BadRequestError } from './helpers/errors'
 
 /**
  * Base client for the API
@@ -18,56 +19,69 @@ export abstract class NitteiBaseClient {
   protected async get<T>(
     path: string,
     params: Record<string, unknown> = {}
-  ): Promise<APIResponse<T>> {
-    const res = await this.axiosClient.get(path, {
+  ): Promise<T> {
+    const res = await this.axiosClient.get<T>(path, {
       params,
     })
-    return new APIResponse(res)
+
+    this.handleStatusCode(res)
+
+    return res.data
   }
 
-  protected async delete<T>(path: string): Promise<APIResponse<T>> {
-    const res = await this.axiosClient.delete(path)
-    return new APIResponse(res)
+  protected async post<T>(path: string, data: unknown): Promise<T> {
+    const res = await this.axiosClient.post<T>(path, data)
+
+    this.handleStatusCode(res)
+
+    return res.data
   }
 
-  protected async deleteWithBody<T>(
-    path: string,
-    data: unknown
-  ): Promise<APIResponse<T>> {
-    const res = await this.axiosClient({
+  protected async put<T>(path: string, data: unknown): Promise<T> {
+    const res = await this.axiosClient.put<T>(path, data)
+
+    this.handleStatusCode(res)
+
+    return res.data
+  }
+
+  protected async delete<T>(path: string): Promise<T> {
+    const res = await this.axiosClient.delete<T>(path)
+
+    this.handleStatusCode(res)
+
+    return res.data
+  }
+
+  protected async deleteWithBody<T>(path: string, data: unknown): Promise<T> {
+    const res = await this.axiosClient<T>({
       method: 'DELETE',
       data,
       url: path,
     })
-    return new APIResponse(res)
+
+    this.handleStatusCode(res)
+
+    return res.data
   }
 
-  protected async post<T>(
-    path: string,
-    data: unknown
-  ): Promise<APIResponse<T>> {
-    const res = await this.axiosClient.post(path, data)
-    return new APIResponse(res)
-  }
+  /**
+   * Handle status code from the server
+   * @param res - response from the server
+   * @throws Error if the status code is 400 or higher
+   */
+  private handleStatusCode(res: AxiosResponse): void {
+    if (res.status >= 500) {
+      throw new Error('Internal server error, please try again later')
+    }
 
-  protected async put<T>(path: string, data: unknown): Promise<APIResponse<T>> {
-    const res = await this.axiosClient.put(path, data)
-    return new APIResponse(res)
-  }
-}
-
-/**
- * Response from the API
- */
-export class APIResponse<T> {
-  readonly data?: T // Could be a failed response and therefore nullable
-  readonly status: number
-  readonly res: AxiosResponse
-
-  constructor(res: AxiosResponse) {
-    this.res = res
-    this.data = res.data
-    this.status = res.status
+    if (res.status >= 400) {
+      if (res.status === 400) {
+        throw new BadRequestError(res.data)
+      } else {
+        throw new Error(`Request failed with status code ${res.status}`)
+      }
+    }
   }
 }
 

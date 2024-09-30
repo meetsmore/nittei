@@ -19,21 +19,18 @@ describe('CalendarEvent API', () => {
     const calendarRes = await client.calendar.create({
       timezone: 'UTC',
     })
-    if (!calendarRes.data) {
-      throw new Error('Calendar not created')
-    }
-    calendarId = calendarRes.data.calendar.id
+    calendarId = calendarRes.calendar.id
     userId = data.userId
   })
 
   it('should not let unauthenticated user create event', async () => {
-    const res = await unauthClient.events.create(userId, {
-      calendarId,
-      duration: 1000,
-      startTime: new Date(1000),
-    })
-
-    expect(res.status).toBe(401)
+    await expect(() =>
+      unauthClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+      })
+    ).rejects.toThrow()
   })
 
   it('should let authenticated user create event', async () => {
@@ -42,7 +39,8 @@ describe('CalendarEvent API', () => {
       duration: 1000,
       startTime: new Date(1000),
     })
-    expect(res.status).toBe(201)
+    expect(res.event).toBeDefined()
+    expect(res.event.calendarId).toBe(calendarId)
   })
 
   it('should create daily event and retrieve instances', async () => {
@@ -57,19 +55,13 @@ describe('CalendarEvent API', () => {
         count,
       },
     })
-    if (!res.data) {
-      throw new Error('Event not created')
-    }
-    const eventId = res.data.event.id
-    expect(res.status).toBe(201)
+    const eventId = res.event.id
+
     const res2 = await client.events.getInstances(eventId, {
       startTime: new Date(20),
       endTime: new Date(1000 * 60 * 60 * 24 * (count + 1)),
     })
-    if (!res2.data) {
-      throw new Error('Instances not found')
-    }
-    let instances = res2.data.instances
+    let instances = res2.instances
     expect(instances.length).toBe(count)
 
     // Query after instances are finished
@@ -77,10 +69,7 @@ describe('CalendarEvent API', () => {
       startTime: new Date(1000 * 60 * 60 * 24 * (count + 1)),
       endTime: new Date(1000 * 60 * 60 * 24 * (count + 30)),
     })
-    if (!res3.data) {
-      throw new Error('Instances not found')
-    }
-    instances = res3.data.instances
+    instances = res3.instances
     expect(instances.length).toBe(0)
   })
 
@@ -96,10 +85,7 @@ describe('CalendarEvent API', () => {
         count,
       },
     })
-    if (!res.data) {
-      throw new Error('Event not created')
-    }
-    const event = res.data.event
+    const event = res.event
     const eventId = event.id
 
     const getInstances = async () => {
@@ -107,20 +93,16 @@ describe('CalendarEvent API', () => {
         startTime: new Date(20),
         endTime: new Date(1000 * 60 * 60 * 24 * (count + 1)),
       })
-      if (!res.data) {
-        throw new Error('Instances not found')
-      }
-      return res.data.instances
+      return res.instances
     }
     const instancesBeforeException = await getInstances()
     expect(instancesBeforeException.length).toBe(count)
 
     // do create exception
-    const res2 = await client.events.update(eventId, {
+    await client.events.update(eventId, {
       recurrence: event.recurrence,
       exdates: [new Date(event.startTime.getTime() + 24 * 60 * 60 * 1000)],
     })
-    expect(res2.status).toBe(200)
 
     const instancesAfterException = await getInstances()
     expect(instancesAfterException.length).toBe(
@@ -140,10 +122,7 @@ describe('CalendarEvent API', () => {
         count,
       },
     })
-    if (!res.data) {
-      throw new Error('Event not created')
-    }
-    const event = res.data.event
+    const event = res.event
     const eventId = event.id
 
     const getInstances = async () => {
@@ -151,18 +130,14 @@ describe('CalendarEvent API', () => {
         startTime: new Date(20),
         endTime: new Date(1000 * 60 * 60 * 24 * (count + 1)),
       })
-      if (!res.data) {
-        throw new Error('Instances not found')
-      }
-      return res.data.instances
+      return res.instances
     }
     const instancesBeforeException = await getInstances()
     // do create exception
-    const res2 = await client.events.update(eventId, {
+    await client.events.update(eventId, {
       recurrence: event.recurrence,
       exdates: [new Date(event.startTime.getTime() + 24 * 60 * 60 * 1000)],
     })
-    expect(res2.status).toBe(200)
 
     const instancesAfterException = await getInstances()
     expect(instancesAfterException.length).toBe(

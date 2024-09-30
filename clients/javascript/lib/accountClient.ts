@@ -14,8 +14,8 @@ export class NitteiAccountClient extends NitteiBaseClient {
    * @param data - data for creating the account
    * @returns CreateAccountResponse - created account
    */
-  public create(data: CreateAccountRequestBody) {
-    return this.post<CreateAccountResponseBody>('/account', data)
+  public async create(data: CreateAccountRequestBody) {
+    return await this.post<CreateAccountResponseBody>('/account', data)
   }
 
   /**
@@ -23,8 +23,8 @@ export class NitteiAccountClient extends NitteiBaseClient {
    * @param publicSigningKey - new key
    * @returns AccountResponse - updated account
    */
-  public setPublicSigningKey(publicSigningKey?: string) {
-    return this.put<AccountResponse>('/account/pubkey', {
+  public async setPublicSigningKey(publicSigningKey?: string) {
+    return await this.put<AccountResponse>('/account/pubkey', {
       publicJwtKey: publicSigningKey,
     })
   }
@@ -33,8 +33,8 @@ export class NitteiAccountClient extends NitteiBaseClient {
    * Remove the public signing key for the account
    * @returns AccountResponse - updated account
    */
-  public removePublicSigningKey() {
-    return this.setPublicSigningKey()
+  public async removePublicSigningKey() {
+    return await this.setPublicSigningKey()
   }
 
   /**
@@ -42,8 +42,8 @@ export class NitteiAccountClient extends NitteiBaseClient {
    * @param url - url to set as webhook
    * @returns {@see AccountResponse} - updated account
    */
-  public setWebhook(url: string) {
-    return this.put<AccountResponse>('/account/webhook', {
+  public async setWebhook(url: string) {
+    return await this.put<AccountResponse>('/account/webhook', {
       webhookUrl: url,
     })
   }
@@ -53,23 +53,23 @@ export class NitteiAccountClient extends NitteiBaseClient {
    * @param data - data for connecting Google integration
    * @returns AccountResponse - updated account
    */
-  public connectGoogle(data: AddAccountIntegrationRequestBody) {
-    return this.put<AccountResponse>('/account/integration/google', data)
+  public async connectGoogle(data: AddAccountIntegrationRequestBody) {
+    return await this.put<AccountResponse>('/account/integration/google', data)
   }
 
   /**
    * Remove the Webhook for the account
    * @returns AccountResponse - updated account
    */
-  public removeWebhook() {
-    return this.delete<AccountResponse>('/account/webhook')
+  public async removeWebhook() {
+    return await this.delete<AccountResponse>('/account/webhook')
   }
 
   /**
    * Get the current account
    * @returns AccountResponse - account
    */
-  public me() {
-    return this.get<AccountResponse>('/account')
+  public async me() {
+    return await this.get<AccountResponse>('/account')
   }
 }

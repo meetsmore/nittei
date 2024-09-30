@@ -47,10 +47,7 @@ async function create300Events(
       busy: true,
     }
     const res = await client.events.create(user.id, event)
-    if (!res.data?.event) {
-      throw new Error('Event not created')
-    }
-    events.push(res.data?.event)
+    events.push(res.event)
     if (i != 0 && i % 10 === 0) {
       dayCount++
     }
@@ -78,23 +75,20 @@ describe('Load tests', () => {
       const resUser = await client?.user.create({
         userId: userUuid,
       })
-      if (!resUser?.data) {
+      if (!resUser) {
         throw new Error('User not created')
       }
-      expect(resUser?.status).toBe(201)
-      expect(resUser?.data.user.id).toEqual(userUuid)
+      expect(resUser.user.id).toEqual(userUuid)
 
-      user1 = resUser.data.user
+      user1 = resUser.user
       const resCalendar = await client?.calendar.create(user1.id, {
         timezone: 'Asia/Tokyo',
       })
-      expect(resCalendar?.status).toBe(201)
-
-      if (!resCalendar?.data) {
+      if (!resCalendar) {
         throw new Error('Calendar not created')
       }
 
-      user1Calendar1 = resCalendar.data?.calendar
+      user1Calendar1 = resCalendar.calendar
     })
 
     it('WILL create 300 events in the calendar', async () => {
@@ -136,8 +130,7 @@ describe('Load tests', () => {
 
       const timeTakenLoadTest = Date.now() - timeStartLoadTest
 
-      expect(res.status).toBe(200)
-      expect(res.data?.events.length).toBe(300)
+      expect(res.events.length).toBe(300)
       console.log('Time taken to get 300 events:', timeTakenLoadTest)
     })
 
@@ -146,7 +139,7 @@ describe('Load tests', () => {
         throw new Error('Client or user not created')
       }
       const res = await client.user.remove(user1.id)
-      expect(res.status).toBe(200)
+      expect(res.user.id).toBe(user1.id)
     })
   })
 })
