@@ -41,7 +41,7 @@ use service_user_busy_calendars::{
 pub use shared::query_structs::*;
 use sqlx::postgres::PgPoolOptions;
 use status::{IStatusRepo, PostgresStatusRepo};
-use tracing::info;
+use tracing::{error, info};
 use user::{IUserRepo, PostgresUserRepo};
 use user_integrations::{IUserIntegrationRepo, PostgresUserIntegrationRepo};
 
@@ -76,7 +76,28 @@ impl Repos {
 
         if std::env::var("nittei_SKIP_MIGRATION").is_err() {
             info!("DB EXECUTING MIGRATION ...");
-            sqlx::migrate!().run(&pool).await?;
+
+            // Run the migrations
+            let migration_result = sqlx::migrate!().run(&pool).await;
+
+            // Check if the migration failed
+            // If the migration failed because the migration was previously applied but is missing in the resolved migrations, log the error and continue
+            // This can happen if the migration was applied by a new deployment, but the app itself failed to start completely
+            // In order to avoid breaking the old deployment (potentially restarting), we log the error and continue
+            if let Err(e) = migration_result {
+                // Convert error to string to check the message
+                let error_message = e.to_string();
+
+                if error_message
+                    .contains("was previously applied but is missing in the resolved migrations")
+                {
+                    error!("Failed to run migration: {}", error_message);
+                    // Continue, i.e., log the error and do not propagate it
+                } else {
+                    // Return early the error
+                    return Err(e.into());
+                }
+            }
             info!("DB EXECUTING MIGRATION ... [done]");
         } else {
             info!("DB MIGRATION SKIPPED");
