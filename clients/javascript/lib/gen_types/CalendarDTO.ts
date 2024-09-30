@@ -14,6 +14,8 @@ export type CalendarDTO = {
    * UUID of the user that owns the calendar
    */
   userId: ID
+  name: string | null
+  key: string | null
   /**
    * Calendar settings
    */

@@ -9,10 +9,20 @@ use ts_rs::TS;
 pub struct CalendarDTO {
     /// UUID of the calendar
     pub id: ID,
+
     /// UUID of the user that owns the calendar
     pub user_id: ID,
+
+    // Name of the calendar (optional)
+    pub name: Option<String>,
+
+    // Key of the calendar (optional)
+    // When defined, this is unique per user
+    pub key: Option<String>,
+
     /// Calendar settings
     pub settings: CalendarSettingsDTO,
+
     /// Metadata (e.g. {"key": "value"})
     #[ts(type = "Record<string, string>")]
     pub metadata: Metadata,
@@ -34,6 +44,8 @@ impl CalendarDTO {
         Self {
             id: calendar.id.clone(),
             user_id: calendar.user_id.clone(),
+            name: calendar.name,
+            key: calendar.key,
             settings: CalendarSettingsDTO::new(&calendar.settings),
             metadata: calendar.metadata,
         }

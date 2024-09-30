@@ -398,6 +398,10 @@ async fn test_crud_calendars() {
 
     assert_eq!(calendars_by_key.calendars.len(), 1);
     assert_eq!(calendars_by_key.calendars[0].id, calendar.id);
+    assert_eq!(
+        calendars_by_key.calendars[0].key,
+        Some("my_calendar".to_string())
+    );
 
     let events = admin_client
         .calendar

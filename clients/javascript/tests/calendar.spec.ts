@@ -36,7 +36,6 @@ describe('Calendar API', () => {
     expect(res.data.calendar.id).toBeDefined()
   })
 
-
   it('should delete calendar for authenticated user and not for unauthenticated user', async () => {
     let res = await client.calendar.create({
       timezone: 'UTC',
@@ -68,7 +67,7 @@ describe('Calendar API', () => {
     it('should create calendar for user', async () => {
       const res = await adminClient.calendar.create(userId, {
         timezone: 'UTC',
-        key: 'my_calendar'
+        key: 'my_calendar',
       })
       if (!res.data) {
         throw new Error('Calendar not created')
@@ -100,7 +99,10 @@ describe('Calendar API', () => {
     })
 
     it('should get calendar by user and key', async () => {
-      const res = await adminClient.calendar.findByUserAndKey(userId, 'my_calendar')
+      const res = await adminClient.calendar.findByUserAndKey(
+        userId,
+        'my_calendar'
+      )
       expect(res.status).toBe(200)
       expect(res.data).toBeDefined()
       if (!res.data) {

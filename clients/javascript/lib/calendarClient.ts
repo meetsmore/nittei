@@ -69,7 +69,6 @@ export class NitteiCalendarClient extends NitteiBaseClient {
     })
   }
 
-
   /**
    * Find calendars by metadata
    * @param meta - metadata to search for
