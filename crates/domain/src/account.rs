@@ -1,5 +1,6 @@
 use nittei_utils::create_random_secret;
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use crate::{
     shared::entity::{Entity, ID},
@@ -19,7 +20,8 @@ pub struct Account {
     pub settings: AccountSettings,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, TS)]
+#[ts(export)]
 pub struct PEMKey(String);
 
 impl PEMKey {

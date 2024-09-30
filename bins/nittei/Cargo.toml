@@ -5,7 +5,8 @@ authors = ["Fredrik Meringdal", "Meetsmore"]
 edition = "2021"
 default-run = "nittei"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lints]
+workspace = true
 
 [dependencies]
 nittei_api = { workspace = true }
@@ -51,3 +52,5 @@ version = "0.5"
 # Dev dependencies
 [dev-dependencies]
 nittei_sdk = { workspace = true }
+futures = "0.3"
+test-log = "0.2"

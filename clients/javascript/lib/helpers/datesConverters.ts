@@ -1,18 +1,19 @@
-import type { CalendarEvent, CalendarEventInstance } from '../domain'
+import { CalendarEventDTO } from '../gen_types/CalendarEventDTO'
+import { EventInstance } from '../gen_types/EventInstance'
 
 /**
  * Convert the dates inside an event to Date objects
  * @param event - event to convert
  * @returns event with dates converted to Date objects
  */
-export function convertEventDates(event: CalendarEvent): CalendarEvent {
+export function convertEventDates(event: CalendarEventDTO): CalendarEventDTO {
   if (!event) {
     return event
   }
   return {
     ...event,
     startTime: new Date(event.startTime),
-    exdates: event.exdates.map(date => new Date(date)),
+    exdates: event.exdates?.map(date => new Date(date)),
   }
 }
 
@@ -21,9 +22,7 @@ export function convertEventDates(event: CalendarEvent): CalendarEvent {
  * @param instance - instance to convert
  * @returns instance with dates converted to Date objects
  */
-export function convertInstanceDates(
-  instance: CalendarEventInstance
-): CalendarEventInstance {
+export function convertInstanceDates(instance: EventInstance): EventInstance {
   if (!instance) {
     return instance
   }

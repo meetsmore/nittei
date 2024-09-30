@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use crate::{
     scheduling::RoundRobinAlgorithm,
@@ -8,12 +9,13 @@ use crate::{
 };
 
 /// A type that describes a time plan and is either a `Calendar` or a `Schedule`
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, TS)]
 #[serde(tag = "variant", content = "id")]
+#[ts(export)]
 pub enum TimePlan {
-    /// Calendar id
+    /// Calendar UUID
     Calendar(ID),
-    /// Schedule id
+    /// Schedule UUID
     Schedule(ID),
     // No plan
     Empty,
@@ -120,8 +122,9 @@ pub struct Service {
     pub metadata: Metadata,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, TS)]
 #[serde(tag = "variant", content = "data", rename_all = "camelCase")]
+#[ts(export)]
 pub enum ServiceMultiPersonOptions {
     RoundRobinAlgorithm(RoundRobinAlgorithm),
     Collective,
@@ -169,9 +172,12 @@ pub struct ServiceWithUsers {
     pub metadata: Metadata,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+/// Enum for the different provider for busy calendars
+/// Nittei is the internal provider
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, TS)]
 #[serde(tag = "provider", content = "id")]
-pub enum BusyCalendar {
+#[ts(export)]
+pub enum BusyCalendarProvider {
     Google(String),
     Outlook(String),
     Nittei(ID),

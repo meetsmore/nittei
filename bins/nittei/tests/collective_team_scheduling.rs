@@ -1,7 +1,3 @@
-// Allow clippy lints because this is a test helper
-#![allow(clippy::unwrap_used)]
-#![allow(clippy::expect_used)]
-
 mod helpers;
 
 use chrono::{Duration, Utc, Weekday};
@@ -9,7 +5,7 @@ use helpers::{
     setup::spawn_app,
     utils::{assert_equal_user_lists, format_datetime},
 };
-use nittei_domain::{BusyCalendar, ServiceMultiPersonOptions, TimePlan, ID};
+use nittei_domain::{BusyCalendarProvider, ServiceMultiPersonOptions, TimePlan, ID};
 use nittei_sdk::{
     AddBusyCalendar,
     AddServiceUserInput,
@@ -25,6 +21,7 @@ use nittei_sdk::{
     User,
 };
 
+#[cfg(test)]
 async fn create_default_service_host(
     admin_client: &NitteiSDK,
     service_id: &ID,
@@ -82,7 +79,7 @@ async fn create_default_service_host(
     let input = AddBusyCalendar {
         user_id: host.id.clone(),
         service_id: service_id.clone(),
-        calendar: BusyCalendar::Nittei(busy_calendar.id.clone()),
+        calendar: BusyCalendarProvider::Nittei(busy_calendar.id.clone()),
     };
     admin_client
         .service
@@ -168,6 +165,12 @@ async fn test_collective_team_scheduling() {
 
         for (host, calendar) in hosts_with_calendar {
             let service_event = CreateEventInput {
+                parent_id: None,
+                title: None,
+                description: None,
+                location: None,
+                status: nittei_domain::CalendarEventStatus::Tentative,
+                all_day: None,
                 user_id: host.id.clone(),
                 busy: Some(true),
                 calendar_id: calendar.id.clone(),

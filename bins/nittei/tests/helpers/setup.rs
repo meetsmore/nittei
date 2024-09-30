@@ -1,6 +1,3 @@
-// Allow clippy lints because this is a test helper
-#![allow(clippy::unwrap_used)]
-#![allow(clippy::expect_used)]
 use nittei_api::Application;
 use nittei_infra::{setup_context, Config, NitteiContext};
 use nittei_sdk::NitteiSDK;
@@ -11,6 +8,7 @@ pub struct TestApp {
     pub ctx: NitteiContext,
 }
 
+#[cfg(test)]
 // Launch the application as a background task
 pub async fn spawn_app() -> (TestApp, NitteiSDK, String) {
     let mut ctx = setup_context().await.unwrap();

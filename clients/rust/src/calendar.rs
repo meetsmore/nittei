@@ -108,6 +108,15 @@ impl CalendarClient {
             .await
     }
 
+    pub async fn get_by_user(
+        &self,
+        user_id: ID,
+    ) -> APIResponse<get_calendars_by_user::APIResponse> {
+        self.base
+            .get(format!("user/{}/calendar", user_id), None, StatusCode::OK)
+            .await
+    }
+
     pub async fn get_events(
         &self,
         input: GetCalendarEventsInput,

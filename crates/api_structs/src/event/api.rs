@@ -1,11 +1,15 @@
 use nittei_domain::{CalendarEvent, CalendarEventReminder, EventInstance, RRuleOptions, ID};
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use crate::dtos::CalendarEventDTO;
 
-#[derive(Deserialize, Serialize)]
+/// Calendar event response object
+#[derive(Deserialize, Serialize, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct CalendarEventResponse {
+    /// Calendar event retrieved
     pub event: CalendarEventDTO,
 }
 
@@ -19,7 +23,7 @@ impl CalendarEventResponse {
 
 pub mod create_event {
     use chrono::{DateTime, Utc};
-    use nittei_domain::Metadata;
+    use nittei_domain::{CalendarEventStatus, Metadata};
 
     use super::*;
 
@@ -28,21 +32,80 @@ pub mod create_event {
         pub user_id: ID,
     }
 
-    #[derive(Serialize, Deserialize)]
+    /// Request body for creating an event
+    #[derive(Serialize, Deserialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "CreateEventRequestBody")]
     pub struct RequestBody {
+        /// UUID of the calendar where the event will be created
         pub calendar_id: ID,
+
+        /// Optional title of the event
+        #[serde(default)]
+        #[ts(optional)]
+        pub title: Option<String>,
+
+        /// Optional description of the event
+        #[serde(default)]
+        #[ts(optional)]
+        pub description: Option<String>,
+
+        /// Optional parent event ID
+        /// This is useful for external applications that need to link Nittei's events to their own data models
+        #[serde(default)]
+        #[ts(optional)]
+        pub parent_id: Option<String>,
+
+        /// Optional location of the event
+        #[serde(default)]
+        #[ts(optional)]
+        pub location: Option<String>,
+
+        /// Optional status of the event
+        /// Default is "Tentative"
+        #[serde(default)]
+        #[ts(optional, as = "Option<_>")]
+        pub status: CalendarEventStatus,
+
+        /// Optional flag to indicate if the event is an all day event
+        /// Default is false
+        #[serde(default)]
+        #[ts(optional)]
+        pub all_day: Option<bool>,
+
+        /// Start time of the event (UTC)
+        #[ts(type = "Date")]
         pub start_time: DateTime<Utc>,
+
+        /// Duration of the event in minutes
+        #[ts(type = "number")]
         pub duration: i64,
+
+        /// Optional flag to indicate if the event is busy
+        /// Default is false
         #[serde(default)]
+        #[ts(optional)]
         pub busy: Option<bool>,
+
+        /// Optional recurrence rule
         #[serde(default)]
+        #[ts(optional)]
         pub recurrence: Option<RRuleOptions>,
+
+        /// Optional list of reminders
         #[serde(default)]
+        #[ts(optional, as = "Option<_>")]
         pub reminders: Vec<CalendarEventReminder>,
+
+        /// Optional service UUID
+        /// This is automatically set when the event is created from a service
         #[serde(default)]
+        #[ts(optional)]
         pub service_id: Option<ID>,
+
+        /// Optional metadata (e.g. {"key": "value"})
         #[serde(default)]
+        #[ts(optional, type = "Record<string, string>")]
         pub metadata: Option<Metadata>,
     }
 
@@ -77,10 +140,14 @@ pub mod get_event_instances {
         pub end_time: DateTime<Utc>,
     }
 
-    #[derive(Deserialize, Serialize)]
+    /// API response for getting event instances
+    #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "GetEventInstancesAPIResponse")]
     pub struct APIResponse {
+        /// Calendar event
         pub event: CalendarEventDTO,
+        /// List of event instances (occurrences)
         pub instances: Vec<EventInstance>,
     }
 
@@ -110,26 +177,47 @@ pub mod get_events_by_calendars {
     use nittei_domain::EventWithInstances;
 
     use super::*;
-    use crate::helpers::deserialize_uuids_list::deserialize_stringified_uuids_list;
+    use crate::{
+        dtos::EventWithInstancesDTO,
+        helpers::deserialize_uuids_list::deserialize_stringified_uuids_list,
+    };
 
-    #[derive(Deserialize, Serialize)]
+    /// Query parameters for getting events by calendars
+    #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "GetEventsByCalendarsQueryParams")]
     pub struct QueryParams {
+        /// Optional list of calendar UUIDs
+        /// If not provided, all calendars will be used
         #[serde(default, deserialize_with = "deserialize_stringified_uuids_list")]
         pub calendar_ids: Option<Vec<ID>>,
+
+        /// Start time of the interval for getting the events (UTC)
+        #[ts(type = "Date")]
         pub start_time: DateTime<Utc>,
+
+        /// End time of the interval for getting the events (UTC)
+        #[ts(type = "Date")]
         pub end_time: DateTime<Utc>,
     }
 
-    #[derive(Serialize)]
+    /// API response for getting events by calendars
+    #[derive(Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "GetEventsByCalendarsAPIResponse")]
     pub struct APIResponse {
-        pub events: Vec<EventWithInstances>,
+        /// List of calendar events retrieved
+        pub events: Vec<EventWithInstancesDTO>,
     }
 
     impl APIResponse {
         pub fn new(events: Vec<EventWithInstances>) -> Self {
-            Self { events }
+            Self {
+                events: events
+                    .into_iter()
+                    .map(|e| EventWithInstancesDTO::new(e.event, e.instances))
+                    .collect(),
+            }
         }
     }
 }
@@ -147,9 +235,12 @@ pub mod get_events_by_meta {
         pub limit: Option<usize>,
     }
 
-    #[derive(Deserialize, Serialize)]
+    /// API response for getting events by metadata
+    #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "GetEventsByMetaAPIResponse")]
     pub struct APIResponse {
+        /// List of calendar events retrieved
         pub events: Vec<CalendarEventDTO>,
     }
 
@@ -168,24 +259,49 @@ pub mod update_event {
 
     use super::*;
 
-    #[derive(Deserialize, Serialize)]
+    /// Request body for updating an event
+    #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "UpdateEventRequestBody")]
     pub struct RequestBody {
+        /// Optional start time of the event (UTC)
         #[serde(default)]
+        #[ts(optional, type = "Date")]
         pub start_time: Option<DateTime<Utc>>,
+
+        /// Optional duration of the event in minutes
         #[serde(default)]
+        #[ts(optional, type = "number")]
         pub duration: Option<i64>,
+
+        /// Optional busy flag
         #[serde(default)]
+        #[ts(optional)]
         pub busy: Option<bool>,
+
+        /// Optional new recurrence rule
         #[serde(default)]
+        #[ts(optional)]
         pub recurrence: Option<RRuleOptions>,
+
+        /// Optional service UUID
         #[serde(default)]
+        #[ts(optional)]
         pub service_id: Option<ID>,
+
+        /// Optional list of exclusion dates for the recurrence rule
         #[serde(default)]
+        #[ts(optional, type = "Array<Date>")]
         pub exdates: Option<Vec<DateTime<Utc>>>,
+
+        /// Optional list of reminders
         #[serde(default)]
+        #[ts(optional)]
         pub reminders: Option<Vec<CalendarEventReminder>>,
+
+        /// Optional metadata (e.g. {"key": "value"})
         #[serde(default)]
+        #[ts(optional, type = "Record<string, string>")]
         pub metadata: Option<Metadata>,
     }
 
@@ -206,10 +322,14 @@ pub mod send_event_reminders {
         pub identifier: String,
     }
 
-    #[derive(Debug, Clone, Serialize, Deserialize)]
+    /// Account event reminders DTO
+    #[derive(Debug, Clone, Serialize, Deserialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export)]
     pub struct AccountEventRemindersDTO {
+        /// Calendar event
         event: CalendarEventDTO,
+        /// Identifier of the reminder
         identifier: String,
     }
 
@@ -227,8 +347,9 @@ pub mod send_event_reminders {
         pub reminders: Vec<AccountEventReminder>,
     }
 
-    #[derive(Debug, Clone, Serialize, Deserialize)]
+    #[derive(Debug, Clone, Serialize, Deserialize, TS)]
     #[serde(rename_all = "camelCase")]
+    #[ts(export)]
     pub struct AccountRemindersDTO {
         reminders: Vec<AccountEventRemindersDTO>,
     }

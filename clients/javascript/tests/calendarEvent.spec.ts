@@ -1,7 +1,6 @@
 import {
   type INitteiClient,
   NitteiClient,
-  Frequenzy,
   type INitteiUserClient,
 } from '../lib'
 import { setupUserClient } from './helpers/fixtures'
@@ -53,7 +52,7 @@ describe('CalendarEvent API', () => {
       duration: 1000,
       startTime: new Date(1000),
       recurrence: {
-        freq: Frequenzy.Daily,
+        freq: 'daily',
         interval: 1,
         count,
       },
@@ -92,7 +91,7 @@ describe('CalendarEvent API', () => {
       duration: 1000,
       startTime: new Date(1000),
       recurrence: {
-        freq: Frequenzy.Daily,
+        freq: 'daily',
         interval: 1,
         count,
       },
@@ -136,7 +135,7 @@ describe('CalendarEvent API', () => {
       duration: 1000,
       startTime: new Date(1000),
       recurrence: {
-        freq: Frequenzy.Daily,
+        freq: 'daily',
         interval: 1,
         count,
       },

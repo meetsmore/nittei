@@ -8,21 +8,54 @@ use nittei_domain::{
     ID,
 };
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+/// Calendar event object
+#[derive(Debug, Deserialize, Serialize, Clone, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct CalendarEventDTO {
+    /// UUID of the event
     pub id: ID,
+
+    /// Start time of the event (UTC)
+    #[ts(type = "Date")]
     pub start_time: DateTime<Utc>,
+
+    /// Duration of the event in minutes
+    #[ts(type = "number")]
     pub duration: i64,
+
+    /// Busy flag
     pub busy: bool,
+
+    /// Last updated timestamp
+    #[ts(type = "number")]
     pub updated: i64,
+
+    /// Created timestamp
+    #[ts(type = "number")]
     pub created: i64,
+
+    /// Recurrence rule
+    #[ts(optional)]
     pub recurrence: Option<RRuleOptions>,
+
+    /// List of exclusion dates for the recurrence rule
+    #[ts(type = "Array<Date>")]
     pub exdates: Vec<DateTime<Utc>>,
+
+    /// UUID of the calendar
     pub calendar_id: ID,
+
+    /// UUID of the user
     pub user_id: ID,
+
+    /// List of reminders
     pub reminders: Vec<CalendarEventReminder>,
+    #[ts(type = "Record<string, string>")]
+
+    /// Metadata (e.g. {"key": "value"})
     pub metadata: Metadata,
 }
 
@@ -45,9 +78,22 @@ impl CalendarEventDTO {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+/// Calendar event with instances
+#[derive(Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct EventWithInstancesDTO {
+    /// Calendar event
     pub event: CalendarEventDTO,
+    /// List of event instances (e.g. recurring events)
     pub instances: Vec<EventInstance>,
+}
+
+impl EventWithInstancesDTO {
+    pub fn new(event: CalendarEvent, instances: Vec<EventInstance>) -> Self {
+        Self {
+            event: CalendarEventDTO::new(event),
+            instances,
+        }
+    }
 }

@@ -18,10 +18,11 @@ rrule = "0.12.0"
 chrono = { version = "0.4.19", features = ["serde"] }
 chrono-tz = { version = "0.8.1", features = ["serde"] }
 anyhow = "1.0"
-url = "2.2.0"
+url = "2.3.0"
 uuid = { version = "1.1.2", features = ["serde", "v4"] }
 jsonwebtoken = "7"
 thiserror = "1.0"
 itertools = "0.10.1"
 rand = "0.8.4"
 tracing = "0.1.25"
+ts-rs = { version = "10.0", features = ["uuid-impl", "chrono-impl"] }

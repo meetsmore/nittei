@@ -37,10 +37,19 @@ prepare_sqlx:
 test test_name="":
 	bash ./scripts/run_tests.sh {{test_name}}
 
+# Run the load tests on a temporary DB container
+loadtest:
+	INCLUDE_LOAD_TESTS=true bash ./scripts/run_tests.sh loadtests
+
 # Lint
 lint: _setup_db
-	cargo fmt
+	cargo +nightly fmt --all -- --check
 	cargo clippy --verbose
+
+# Format
+format:
+	cargo +nightly fmt --all -- --check
+	pnpm run format
 
 # Check unused dependencies
 check-unused: _setup_db

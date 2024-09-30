@@ -3,18 +3,22 @@ import {
   createAxiosInstanceBackend,
   createAxiosInstanceFrontend,
 } from './baseClient'
-import { NitteiCalendarClient, NitteiCalendarUserClient } from './calendarClient'
+import {
+  NitteiCalendarClient,
+  NitteiCalendarUserClient,
+} from './calendarClient'
 import { NitteiEventClient, NitteiEventUserClient } from './eventClient'
 import { NitteiHealthClient } from './healthClient'
 import { createCreds, PartialCredentials } from './helpers/credentials'
-import { NitteiScheduleUserClient, NitteiScheduleClient } from './scheduleClient'
+import {
+  NitteiScheduleUserClient,
+  NitteiScheduleClient,
+} from './scheduleClient'
 import { NitteiServiceUserClient, NitteiServiceClient } from './serviceClient'
 import {
   NitteiUserClient as _NitteiUserClient,
   NitteiUserUserClient,
 } from './userClient'
-
-export * from './domain'
 
 export interface INitteiUserClient {
   calendar: NitteiCalendarUserClient
@@ -108,3 +112,9 @@ export const NitteiClient = async (
     health: new NitteiHealthClient(axiosClient),
   })
 }
+
+// Enums
+export { RRuleFrequency } from './gen_types/RRuleFrequency'
+export { ScheduleRuleVariant } from './types/ScheduleRuleVariant'
+export { Weekday } from './types/Weekday'
+export { Frequency } from './types/Frequency'
