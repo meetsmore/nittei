@@ -39,7 +39,7 @@ use service_user_busy_calendars::{
     PostgresServiceUseBusyCalendarRepo,
 };
 pub use shared::query_structs::*;
-use sqlx::postgres::PgPoolOptions;
+use sqlx::{migrate::MigrateError, postgres::PgPoolOptions};
 use status::{IStatusRepo, PostgresStatusRepo};
 use tracing::{error, info};
 use user::{IUserRepo, PostgresUserRepo};
@@ -85,14 +85,9 @@ impl Repos {
             // This can happen if the migration was applied by a new deployment, but the app itself failed to start completely
             // In order to avoid breaking the old deployment (potentially restarting), we log the error and continue
             if let Err(e) = migration_result {
-                // Convert error to string to check the message
-                let error_message = e.to_string();
-
-                if error_message
-                    .contains("was previously applied but is missing in the resolved migrations")
-                {
-                    error!("Failed to run migration: {}", error_message);
-                    // Continue, i.e., log the error and do not propagate it
+                if let MigrateError::VersionMissing(_) = e {
+                    error!("Failed to run migration: {}", e);
+                    // Log the error and do not propagate it
                 } else {
                     // Return early the error
                     return Err(e.into());
