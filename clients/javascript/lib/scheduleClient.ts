@@ -17,6 +17,9 @@ type ScheduleResponse = {
   schedule: ScheduleDTO
 }
 
+/**
+ * Client for the schedule endpoints (admin)
+ */
 export class NitteiScheduleClient extends NitteiBaseClient {
   public async create(userId: ID, req: CreateScheduleRequest) {
     return await this.post<ScheduleResponse>(`/user/${userId}/schedule`, req)
@@ -38,6 +41,9 @@ export class NitteiScheduleClient extends NitteiBaseClient {
   }
 }
 
+/**
+ * Client for the schedule endpoints (user)
+ */
 export class NitteiScheduleUserClient extends NitteiBaseClient {
   public async create(req: CreateScheduleRequest) {
     return await this.post<ScheduleResponse>('/schedule', req)

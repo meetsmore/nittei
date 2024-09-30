@@ -12,6 +12,9 @@ import { ServiceResponse } from './gen_types/ServiceResponse'
 import { ServiceWithUsersDTO } from './gen_types/ServiceWithUsersDTO'
 import { UpdateServiceRequestBody } from './gen_types/UpdateServiceRequestBody'
 
+/**
+ * Client for the service endpoints (admin)
+ */
 export class NitteiServiceClient extends NitteiBaseClient {
   public async create(data?: CreateServiceRequestBody) {
     return await this.post<ServiceResponse>('/service', data ?? {})
@@ -89,6 +92,9 @@ export class NitteiServiceClient extends NitteiBaseClient {
   }
 }
 
+/**
+ * Client for the service endpoints (user)
+ */
 export class NitteiServiceUserClient extends NitteiBaseClient {
   public async getBookingslots(
     serviceId: ID,

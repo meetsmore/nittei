@@ -51,7 +51,7 @@ export class NitteiEventClient extends NitteiBaseClient {
     }
   }
 
-  public async findById(eventId: ID): Promise<CalendarEventResponse> {
+  public async getById(eventId: ID): Promise<CalendarEventResponse> {
     const res = await this.get<CalendarEventResponse>(`/user/events/${eventId}`)
 
     return {
