@@ -109,6 +109,7 @@ describe('Requirements', () => {
         }
         const res = await client?.calendar.create(user1.id, {
           timezone: 'Asia/Tokyo',
+          key: 'second-calendar',
         })
         expect(res?.status).toBe(201)
 
@@ -134,6 +135,27 @@ describe('Requirements', () => {
         expect(res2?.data).toBeDefined()
         expect(res2?.data?.calendar.id).toEqual(user1Calendar2.id)
         expect(res2?.data?.calendar.userId).toEqual(user1?.id)
+
+        const res3 = await client?.calendar.findByUser(user1Calendar1.userId)
+        expect(res3?.status).toBe(200)
+        expect(res3?.data).toBeDefined()
+        expect(res3?.data?.calendars.length).toBe(2)
+        expect(res3?.data?.calendars).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({ id: user1Calendar1.id }),
+            expect.objectContaining({ id: user1Calendar2.id }),
+          ])
+        )
+
+        const res4 = await client?.calendar.findByUserAndKey(
+          user1Calendar1.userId,
+          'second-calendar'
+        )
+        expect(res4?.status).toBe(200)
+        expect(res4?.data).toBeDefined()
+        expect(res4?.data?.calendars.length).toBe(1)
+        expect(res4?.data?.calendars[0]?.id).toEqual(user1Calendar2.id)
+        expect(res4?.data?.calendars[0]?.key).toEqual('second-calendar')
       })
     })
 

@@ -28,6 +28,11 @@ pub mod get_calendars_by_user {
     use super::*;
 
     #[derive(Deserialize)]
+    pub struct QueryParams {
+        pub key: Option<String>,
+    }
+
+    #[derive(Deserialize)]
     pub struct PathParams {
         pub user_id: ID,
     }
@@ -73,6 +78,10 @@ pub mod create_calendar {
         #[serde(default = "default_weekday")]
         #[ts(optional, as = "Option<_>")]
         pub week_start: Weekday,
+        #[ts(optional)]
+        pub name: Option<String>,
+        #[ts(optional)]
+        pub key: Option<String>,
         /// Optional metadata (e.g. {"key": "value"})
         #[ts(optional, type = "Record<string, string>")]
         pub metadata: Option<Metadata>,
@@ -400,6 +409,8 @@ pub mod update_calendar {
     pub struct RequestBody {
         /// Calendar settings
         pub settings: CalendarSettings,
+        // Name of the calendar
+        pub name: Option<String>,
         /// Optional metadata (e.g. {"key": "value"})
         #[serde(default)]
         #[ts(optional, type = "Record<string, string>")]

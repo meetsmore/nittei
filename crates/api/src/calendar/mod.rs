@@ -30,12 +30,14 @@ use remove_sync_calendar::remove_sync_calendar_admin_controller;
 use update_calendar::{update_calendar_admin_controller, update_calendar_controller};
 
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
+    // Create a calendar
     cfg.route("/calendar", web::post().to(create_calendar_controller));
     cfg.route(
         "/user/{user_id}/calendar",
         web::post().to(create_calendar_admin_controller),
     );
 
+    // List calendars for a user
     cfg.route(
         "/calendar",
         web::get().to(get_calendars::get_calendars_controller),
@@ -45,11 +47,13 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
         web::get().to(get_calendars::get_calendars_admin_controller),
     );
 
+    // List calendars by metadata
     cfg.route(
         "/calendar/meta",
         web::get().to(get_calendars_by_meta_controller),
     );
 
+    // Get a specific calendar by uid
     cfg.route(
         "/calendar/{calendar_id}",
         web::get().to(get_calendar_controller),
@@ -59,6 +63,7 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
         web::get().to(get_calendar_admin_controller),
     );
 
+    // Delete a calendar by uid
     cfg.route(
         "/calendar/{calendar_id}",
         web::delete().to(delete_calendar_controller),
@@ -68,6 +73,7 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
         web::delete().to(delete_calendar_admin_controller),
     );
 
+    // Update a calendar by uid
     cfg.route(
         "/calendar/{calendar_id}",
         web::put().to(update_calendar_controller),
@@ -77,6 +83,7 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
         web::put().to(update_calendar_admin_controller),
     );
 
+    // Get events for a calendar
     cfg.route(
         "/calendar/{calendar_id}/events",
         web::get().to(get_calendar_events_controller),

@@ -53,6 +53,8 @@ async fn create_default_service_host(
     let input = CreateCalendarInput {
         metadata: None,
         timezone: chrono_tz::UTC,
+        name: None,
+        key: None,
         user_id: host.id.clone(),
         week_start: Weekday::Mon,
     };
@@ -407,6 +409,8 @@ async fn test_group_team_scheduling_increase_max_count() {
         let input = CreateCalendarInput {
             metadata: None,
             timezone: chrono_tz::UTC,
+            name: None,
+            key: None,
             user_id: host.id.clone(),
             week_start: Weekday::Mon,
         };
@@ -642,6 +646,8 @@ async fn test_group_team_scheduling_increase_max_count() {
         let input = CreateCalendarInput {
             metadata: None,
             timezone: chrono_tz::UTC,
+            name: None,
+            key: None,
             user_id: host.id.clone(),
             week_start: Weekday::Mon,
         };
@@ -830,6 +836,8 @@ async fn test_group_team_scheduling_decrease_max_count() {
         let input = CreateCalendarInput {
             metadata: None,
             timezone: chrono_tz::UTC,
+            name: None,
+            key: None,
             user_id: host.id.clone(),
             week_start: Weekday::Mon,
         };
@@ -1056,6 +1064,8 @@ async fn test_combination_of_services() {
     let input = CreateCalendarInput {
         metadata: None,
         timezone: chrono_tz::UTC,
+        name: None,
+        key: None,
         user_id: host.id.clone(),
         week_start: Weekday::Mon,
     };

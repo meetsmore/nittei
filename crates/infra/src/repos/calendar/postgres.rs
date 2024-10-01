@@ -28,6 +28,8 @@ struct CalendarRaw {
     calendar_uid: Uuid,
     user_uid: Uuid,
     account_uid: Uuid,
+    name: Option<String>,
+    key: Option<String>,
     settings: Value,
     metadata: Value,
 }
@@ -40,6 +42,8 @@ impl TryFrom<CalendarRaw> for Calendar {
             id: e.calendar_uid.into(),
             user_id: e.user_uid.into(),
             account_id: e.account_uid.into(),
+            name: e.name,
+            key: e.key,
             settings: serde_json::from_value(e.settings)?,
             metadata: serde_json::from_value(e.metadata)?,
         })
@@ -52,11 +56,13 @@ impl ICalendarRepo for PostgresCalendarRepo {
     async fn insert(&self, calendar: &Calendar) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
-            INSERT INTO calendars(calendar_uid, user_uid, settings, metadata)
-            VALUES($1, $2, $3, $4)
+            INSERT INTO calendars(calendar_uid, user_uid, name, key, settings, metadata)
+            VALUES($1, $2, $3, $4, $5, $6)
             "#,
             calendar.id.as_ref(),
             calendar.user_id.as_ref(),
+            calendar.name.as_ref(),
+            calendar.key.as_ref(),
             Json(&calendar.settings) as _,
             Json(&calendar.metadata) as _,
         )
@@ -78,11 +84,15 @@ impl ICalendarRepo for PostgresCalendarRepo {
         sqlx::query!(
             r#"
             UPDATE calendars
-            SET settings = $2,
-            metadata = $3
+            SET name = $2,
+            key = $3,
+            settings = $4,
+            metadata = $5
             WHERE calendar_uid = $1
             "#,
             calendar.id.as_ref(),
+            calendar.name.as_ref(),
+            calendar.key.as_ref(),
             Json(&calendar.settings) as _,
             Json(&calendar.metadata) as _,
         )
@@ -173,6 +183,34 @@ impl ICalendarRepo for PostgresCalendarRepo {
         .into_iter()
         .map(|c| c.try_into())
         .collect()
+    }
+
+    async fn find_by_user_and_key(
+        &self,
+        user_id: &ID,
+        key: &str,
+    ) -> anyhow::Result<Option<Calendar>> {
+        sqlx::query_as!(
+            CalendarRaw,
+            r#"
+            SELECT c.*, u.account_uid FROM calendars AS c
+            INNER JOIN users AS u
+                ON u.user_uid = c.user_uid
+            WHERE c.user_uid = $1 AND c.key = $2
+            "#,
+            user_id.as_ref(),
+            key,
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .inspect_err(|e| {
+            error!(
+                "Find calendar by user id: {:?} and key: {:?} failed. DB returned error: {:?}",
+                user_id, key, e
+            );
+        })?
+        .map(|cal| cal.try_into())
+        .transpose()
     }
 
     #[instrument]

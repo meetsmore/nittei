@@ -12,6 +12,11 @@ pub trait ICalendarRepo: Send + Sync {
     async fn find(&self, calendar_id: &ID) -> anyhow::Result<Option<Calendar>>;
     async fn find_multiple(&self, calendar_ids: Vec<&ID>) -> anyhow::Result<Vec<Calendar>>;
     async fn find_by_user(&self, user_id: &ID) -> anyhow::Result<Vec<Calendar>>;
+    async fn find_by_user_and_key(
+        &self,
+        user_id: &ID,
+        key: &str,
+    ) -> anyhow::Result<Option<Calendar>>;
     async fn delete(&self, calendar_id: &ID) -> anyhow::Result<()>;
     async fn find_by_metadata(&self, query: MetadataFindQuery) -> anyhow::Result<Vec<Calendar>>;
 }
@@ -29,7 +34,7 @@ mod tests {
         ctx.repos.accounts.insert(&account).await.unwrap();
         let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.unwrap();
-        let calendar = Calendar::new(&user.id, &account.id);
+        let calendar = Calendar::new(&user.id, &account.id, None, None);
 
         // Insert
         assert!(ctx.repos.calendars.insert(&calendar).await.is_ok());
@@ -67,7 +72,7 @@ mod tests {
         ctx.repos.accounts.insert(&account).await.unwrap();
         let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.unwrap();
-        let mut calendar = Calendar::new(&user.id, &account.id);
+        let mut calendar = Calendar::new(&user.id, &account.id, None, None);
 
         // Insert
         assert!(ctx.repos.calendars.insert(&calendar).await.is_ok());
@@ -96,7 +101,7 @@ mod tests {
         ctx.repos.accounts.insert(&account).await.unwrap();
         let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.unwrap();
-        let calendar = Calendar::new(&user.id, &account.id);
+        let calendar = Calendar::new(&user.id, &account.id, None, None);
 
         // Insert
         assert!(ctx.repos.calendars.insert(&calendar).await.is_ok());

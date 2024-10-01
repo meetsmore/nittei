@@ -98,7 +98,7 @@ mod tests {
                 .is_ok());
         }
 
-        let calendar = Calendar::new(&user.id, &account.id);
+        let calendar = Calendar::new(&user.id, &account.id, None, None);
         assert!(ctx.repos.calendars.insert(&calendar).await.is_ok());
 
         // Insert nittei busy calendar

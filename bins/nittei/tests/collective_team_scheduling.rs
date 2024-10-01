@@ -52,6 +52,8 @@ async fn create_default_service_host(
     let input = CreateCalendarInput {
         metadata: None,
         timezone: chrono_tz::UTC,
+        name: None,
+        key: None,
         user_id: host.id.clone(),
         week_start: Weekday::Mon,
     };

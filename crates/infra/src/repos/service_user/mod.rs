@@ -54,7 +54,7 @@ mod tests {
         assert!(find_by_user[0].eq(&service_user));
 
         // Update
-        let calendar = Calendar::new(&user.id, &account.id);
+        let calendar = Calendar::new(&user.id, &account.id, None, None);
         ctx.repos.calendars.insert(&calendar).await.unwrap();
 
         let mut service_user = res;

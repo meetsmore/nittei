@@ -25,6 +25,8 @@ pub struct CalendarClient {
 pub struct CreateCalendarInput {
     pub user_id: ID,
     pub timezone: Tz,
+    pub name: Option<String>,
+    pub key: Option<String>,
     pub week_start: Weekday,
     pub metadata: Option<Metadata>,
 }
@@ -52,6 +54,7 @@ pub struct GetCalendarEventsInput {
 pub struct UpdateCalendarInput {
     pub calendar_id: ID,
     pub week_start: Option<Weekday>,
+    pub name: Option<String>,
     pub timezone: Option<Tz>,
     pub metadata: Option<Metadata>,
 }
@@ -81,6 +84,7 @@ impl CalendarClient {
         };
         let body = update_calendar::RequestBody {
             settings,
+            name: input.name,
             metadata: input.metadata,
         };
         self.base
@@ -111,10 +115,24 @@ impl CalendarClient {
     pub async fn get_by_user(
         &self,
         user_id: ID,
+        key: Option<String>,
     ) -> APIResponse<get_calendars_by_user::APIResponse> {
-        self.base
-            .get(format!("user/{}/calendar", user_id), None, StatusCode::OK)
-            .await
+        match key {
+            Some(key) => {
+                self.base
+                    .get(
+                        format!("user/{}/calendar", user_id),
+                        Some(vec![("key".to_string(), key)]),
+                        StatusCode::OK,
+                    )
+                    .await
+            }
+            None => {
+                self.base
+                    .get(format!("user/{}/calendar", user_id), None, StatusCode::OK)
+                    .await
+            }
+        }
     }
 
     pub async fn get_events(
@@ -152,6 +170,8 @@ impl CalendarClient {
     ) -> APIResponse<create_calendar::APIResponse> {
         let body = create_calendar::RequestBody {
             timezone: input.timezone,
+            name: input.name,
+            key: input.key,
             week_start: input.week_start,
             metadata: input.metadata,
         };

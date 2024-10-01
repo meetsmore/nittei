@@ -16,6 +16,8 @@ pub struct Calendar {
     pub id: ID,
     pub user_id: ID,
     pub account_id: ID,
+    pub name: Option<String>,
+    pub key: Option<String>,
     pub settings: CalendarSettings,
     pub metadata: Metadata,
 }
@@ -53,11 +55,13 @@ impl Default for CalendarSettings {
 }
 
 impl Calendar {
-    pub fn new(user_id: &ID, account_id: &ID) -> Self {
+    pub fn new(user_id: &ID, account_id: &ID, name: Option<String>, key: Option<String>) -> Self {
         Self {
             id: Default::default(),
             user_id: user_id.clone(),
             account_id: account_id.clone(),
+            name,
+            key,
             settings: Default::default(),
             metadata: Default::default(),
         }

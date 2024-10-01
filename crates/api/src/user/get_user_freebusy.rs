@@ -203,7 +203,7 @@ mod test {
         ctx.repos.accounts.insert(&account).await.unwrap();
         let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.unwrap();
-        let calendar = Calendar::new(&user.id(), &user.account_id);
+        let calendar = Calendar::new(&user.id(), &user.account_id, None, None);
         ctx.repos.calendars.insert(&calendar).await.unwrap();
         let one_hour = 1000 * 60 * 60;
         let mut e1 = CalendarEvent {
