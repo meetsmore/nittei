@@ -40,7 +40,7 @@ pub async fn create_calendar_admin_controller(
 
 pub async fn create_calendar_controller(
     http_req: HttpRequest,
-    body: web::Json<RequestBody>,
+    body: actix_web_validator::Json<RequestBody>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
     let (user, policy) = protect_route(&http_req, &ctx).await?;
