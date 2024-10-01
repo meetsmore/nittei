@@ -75,18 +75,6 @@ export class NitteiCalendarClient extends NitteiBaseClient {
   }
 
   /**
-   * Find a calendar by user and key
-   * @param userId - ID of the user to find the calendar for
-   * @param key - key of the calendar to find
-   * @returns list of found calendars, but as key is unique, it will be at most one
-   */
-  public findByUserAndKey(userId: ID, key: string) {
-    return this.get<GetCalendarsByUserAPIResponse>(`/user/${userId}/calendar`, {
-      key,
-    })
-  }
-
-  /**
    * Find calendars by metadata
    * @param meta - metadata to search for
    * @param skip - number of calendars to skip
