@@ -20,7 +20,7 @@ actix-cors = "0.7"
 actix-web-validator = "6.0.0"
 validator = { version = "0.18", features = ["derive"] }
 awc = "3.5"
-async-trait = "0.1.42"
+async-trait = "0.1.83"
 rrule = "0.12.0"
 chrono = { version = "0.4.19", features = ["serde"] }
 chrono-tz = "0.8.1"

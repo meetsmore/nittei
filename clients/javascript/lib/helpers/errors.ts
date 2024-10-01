@@ -3,9 +3,9 @@
  */
 export class BadRequestError extends Error {
   /**
-   * @param errorMessage - error message from the server
+   * @param apiMessage - error message from the server
    */
-  constructor(public errorMessage: string) {
+  constructor(public apiMessage: string) {
     super('Bad request')
   }
 }
@@ -14,7 +14,10 @@ export class BadRequestError extends Error {
  * Error thrown when a request is made to the server and the server responds with a 404 status code
  */
 export class NotFoundError extends Error {
-  constructor(public errorMessage: string) {
+  /**
+   * @param apiMessage - error message from the server
+   */
+  constructor(public apiMessage: string) {
     super('Not found')
   }
 }
@@ -23,7 +26,10 @@ export class NotFoundError extends Error {
  * Error thrown when a request is made to the server and the server responds with a 401 or 403 status code
  */
 export class UnauthorizedError extends Error {
-  constructor(public errorMessage: string) {
+  /**
+   * @param apiMessage - error message from the server
+   */
+  constructor(public apiMessage: string) {
     super('Unauthorized')
   }
 }
