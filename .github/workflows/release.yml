@@ -14,7 +14,7 @@ on:
 
 jobs:
   build-docker:
-    runs-on: ${{ matrix.platform == 'linux/amd64' && 'ubuntu-latest' || 'self-hosted-arm64' }}
+    runs-on: ${{ matrix.platform == 'linux/amd64' && 'ubuntu-latest' || 'macos-latest' }}
     strategy:
       fail-fast: false
       matrix:
