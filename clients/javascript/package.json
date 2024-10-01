@@ -18,8 +18,8 @@
     "registry": "https://npm.pkg.github.com"
   },
   "contributors": [
-    "Fredrik Meringdal <fredrik@nettu.no>",
-    "Meetsmore"
+    "Meetsmore",
+    "Fredrik Meringdal <fredrik@nettu.no>"
   ],
   "files": [
     "dist/"
