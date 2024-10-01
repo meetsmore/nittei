@@ -260,12 +260,12 @@ pub mod get_events_by_meta {
 
 pub mod update_event {
     use chrono::{DateTime, Utc};
-    use nittei_domain::Metadata;
+    use nittei_domain::{CalendarEventStatus, Metadata};
 
     use super::*;
 
     /// Request body for updating an event
-    #[derive(Deserialize, Serialize, TS)]
+    #[derive(Deserialize, Serialize, Validate, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "UpdateEventRequestBody")]
     pub struct RequestBody {
@@ -273,6 +273,43 @@ pub mod update_event {
         #[serde(default)]
         #[ts(optional, type = "Date")]
         pub start_time: Option<DateTime<Utc>>,
+
+        /// Optional title of the event
+        #[serde(default)]
+        #[ts(optional)]
+        #[validate(length(min = 1))]
+        pub title: Option<String>,
+
+        /// Optional description of the event
+        #[serde(default)]
+        #[ts(optional)]
+        #[validate(length(min = 1))]
+        pub description: Option<String>,
+
+        /// Optional parent event ID
+        /// This is useful for external applications that need to link Nittei's events to their own data models
+        #[serde(default)]
+        #[ts(optional)]
+        #[validate(length(min = 1))]
+        pub parent_id: Option<String>,
+
+        /// Optional location of the event
+        #[serde(default)]
+        #[ts(optional)]
+        #[validate(length(min = 1))]
+        pub location: Option<String>,
+
+        /// Optional status of the event
+        /// Default is "Tentative"
+        #[serde(default)]
+        #[ts(optional, as = "Option<_>")]
+        pub status: Option<CalendarEventStatus>,
+
+        /// Optional flag to indicate if the event is an all day event
+        /// Default is false
+        #[serde(default)]
+        #[ts(optional)]
+        pub all_day: Option<bool>,
 
         /// Optional duration of the event in minutes
         #[serde(default)]

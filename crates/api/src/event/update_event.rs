@@ -2,7 +2,15 @@ use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::{DateTime, Utc};
 use event::subscribers::SyncRemindersOnEventUpdated;
 use nittei_api_structs::update_event::*;
-use nittei_domain::{CalendarEvent, CalendarEventReminder, Metadata, RRuleOptions, User, ID};
+use nittei_domain::{
+    CalendarEvent,
+    CalendarEventReminder,
+    CalendarEventStatus,
+    Metadata,
+    RRuleOptions,
+    User,
+    ID,
+};
 use nittei_infra::NitteiContext;
 
 use crate::{
@@ -34,6 +42,12 @@ pub async fn update_event_admin_controller(
     let usecase = UpdateEventUseCase {
         user,
         event_id: e.id,
+        title: body.title,
+        description: body.description,
+        parent_id: body.parent_id,
+        location: body.location,
+        status: body.status,
+        all_day: body.all_day,
         duration: body.duration,
         start_time: body.start_time,
         reminders: body.reminders,
@@ -62,6 +76,12 @@ pub async fn update_event_controller(
     let usecase = UpdateEventUseCase {
         user,
         event_id: path_params.event_id.clone(),
+        title: body.title,
+        description: body.description,
+        parent_id: body.parent_id,
+        location: body.location,
+        status: body.status,
+        all_day: body.all_day,
         duration: body.duration,
         start_time: body.start_time,
         reminders: body.reminders,
@@ -82,6 +102,13 @@ pub async fn update_event_controller(
 pub struct UpdateEventUseCase {
     pub user: User,
     pub event_id: ID,
+
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub parent_id: Option<String>,
+    pub location: Option<String>,
+    pub status: Option<CalendarEventStatus>,
+    pub all_day: Option<bool>,
     pub start_time: Option<DateTime<Utc>>,
     pub busy: Option<bool>,
     pub duration: Option<i64>,
@@ -130,6 +157,12 @@ impl UseCase for UpdateEventUseCase {
         let UpdateEventUseCase {
             user,
             event_id,
+            title,
+            description,
+            parent_id,
+            location,
+            status,
+            all_day,
             start_time,
             busy,
             duration,
@@ -220,6 +253,22 @@ impl UseCase for UpdateEventUseCase {
         if !valid_recurrence {
             return Err(UseCaseError::InvalidRecurrenceRule);
         };
+
+        e.title.clone_from(title);
+
+        e.description.clone_from(description);
+
+        e.parent_id.clone_from(parent_id);
+
+        e.location.clone_from(location);
+
+        if let Some(status) = status {
+            e.status.clone_from(status);
+        }
+
+        if let Some(all_day) = all_day {
+            e.all_day = *all_day;
+        }
 
         e.updated = ctx.sys.get_timestamp_millis();
 
