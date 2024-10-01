@@ -2,8 +2,10 @@ pub use postgres::PostgresStatusRepo;
 
 mod postgres;
 
+/// The status repository trait
 #[async_trait::async_trait]
 pub trait IStatusRepo: Send + Sync {
+    /// Check the connection to the database
     async fn check_connection(&self) -> anyhow::Result<()>;
 }
 

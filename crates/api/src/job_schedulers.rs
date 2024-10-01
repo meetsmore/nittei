@@ -14,6 +14,7 @@ use crate::{
     shared::usecase::execute,
 };
 
+/// Get the delay in seconds to the next minute
 pub fn get_start_delay(now_ts: usize, secs_before_min: usize) -> usize {
     let secs_to_next_minute = 60 - (now_ts / 1000) % 60;
     if secs_to_next_minute > secs_before_min {
@@ -23,6 +24,7 @@ pub fn get_start_delay(now_ts: usize, secs_before_min: usize) -> usize {
     }
 }
 
+/// Start the job scheduler for generating reminders
 pub fn start_reminder_generation_job(ctx: NitteiContext) {
     actix_web::rt::spawn(async move {
         let mut interval = interval(Duration::from_secs(30 * 60));
@@ -37,6 +39,7 @@ pub fn start_reminder_generation_job(ctx: NitteiContext) {
     });
 }
 
+/// Start the job scheduler for sending reminders
 pub fn start_send_reminders_job(ctx: NitteiContext) {
     actix_web::rt::spawn(async move {
         let now = ctx.sys.get_timestamp_millis();
@@ -53,6 +56,7 @@ pub fn start_send_reminders_job(ctx: NitteiContext) {
     });
 }
 
+/// Send reminders to clients
 async fn send_reminders(context: NitteiContext) {
     let client = Client::new();
 

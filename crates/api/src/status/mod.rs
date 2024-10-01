@@ -2,6 +2,7 @@ use actix_web::{web, HttpResponse};
 use nittei_api_structs::get_service_health::*;
 use nittei_infra::NitteiContext;
 
+/// Get the status of the service
 async fn status(ctx: web::Data<NitteiContext>) -> HttpResponse {
     match ctx.repos.status.check_connection().await {
         Ok(_) => HttpResponse::Ok().json(APIResponse {
@@ -13,6 +14,8 @@ async fn status(ctx: web::Data<NitteiContext>) -> HttpResponse {
     }
 }
 
+/// Configure the routes for the status module
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
+    // Get the health status of the service
     cfg.route("/healthcheck", web::get().to(status));
 }

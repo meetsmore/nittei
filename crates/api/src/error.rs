@@ -4,6 +4,7 @@ use actix_web::{
 };
 use thiserror::Error;
 
+/// Custom error types for the Nittei API
 #[derive(Error, Debug)]
 pub enum NitteiError {
     #[error("Internal server error")]
@@ -22,6 +23,8 @@ pub enum NitteiError {
     NotFound(String),
 }
 
+/// Implement the ResponseError trait (from Actix) for the custom error types
+/// This allows to automatically convert the error types to HTTP responses
 impl actix_web::error::ResponseError for NitteiError {
     fn status_code(&self) -> StatusCode {
         match *self {
