@@ -9,28 +9,28 @@
 
 ## Overview
 
-`Nittei` is a self-hosted calendar and scheduler server built upon [nittei](https://github.com/fmeringdal/nittei-scheduler).
+`Nittei` is a self-hosted calendar and scheduler server built upon [nittei](https://github.com/fmeringdal/nettu-scheduler).
 
 <!-- It aims to provide the building blocks for building calendar / booking apps with ease. It has a simple REST API and also a [JavaScript SDK](https://www.npmjs.com/package/@nittei/sdk-scheduler) and [Rust SDK](https://crates.io/crates/nittei_sdk). -->
 
-It supports authentication through api keys for server - server communication and JSON Web Tokens for browser - server communication.
+It supports authentication through
+
+- API keys for server - server
+- JSON Web Tokens for browser - server
 
 ## Features
 
-- **Booking**: Create a `Service` and register `User`s on it to make them bookable.
-- **Calendar Events**: Supports recurrence rules, flexible querying and reminders.
-- **Calendars**: For grouping `Calendar Event`s.
-- **Freebusy**: Find out when `User`s are free and when they are busy.
-- **Integrations**: Connect your nittei, Google and Outlook calendars
-- **Multi-tenancy**: All resources are grouped by `Account`s.
+- **Multi-tenancy**: All resources are grouped by `Account`s
+- **Calendars**: For grouping `Calendar Event`s
+- **Calendar Events**: Supports recurrence rules, flexible querying and reminders
+- **Freebusy**: Find out when `User`s are free and when they are busy
 - **Metadata queries**: Add key-value metadata to your resources and then query on that metadata
-- **Webhooks**: Notifying your server about `Calendar Event` reminders.
 
-<br/>
+More advanced features include
 
-<!-- <div align="center">
-<img src="docs/flow.svg" alt="Application flow">
-</div> -->
+- **Booking**: Create a `Service` and register `User`s on it to make them bookable
+- **Integrations**: Connect your Nittei, Google and Outlook calendars
+- **Webhooks**: Notifying your server about `Calendar Event` reminders
 
 ## Quick start
 
@@ -57,6 +57,8 @@ just install_tools
 This will compile and install
 
 - `sqlx-cli`: CLI used for applying the SQL migrations & for generating the offline files for [SQLx](https://github.com/launchbadge/sqlx/blob/main/sqlx-cli/README.md)
+- `cargo-pretty-test`: CLI for running the tests and print them in a prettier way compared to `cargo test`
+- `cargo-watch`: CLI for auto-reloading the backend when source files have changed
 
 ### Initial setup
 
@@ -68,13 +70,13 @@ just setup
 
 ### Launching the server
 
-Now we are ready to start the `nittei` server
+Now we are ready to start the `Nittei` server
 
 ```bash
 just dev
 ```
 
-There are a few environment variables that can be used to control the server.
+There are a few environment variables that can be used to control the server
 
 - `DATABASE_URL` allows to specify the database the server should use
 - `PORT` allows to specify the port to be used by the server
@@ -128,4 +130,4 @@ Contributions are welcome and are greatly appreciated!
 
 ## Special thanks
 
-- [fmeringdal](https://github.com/fmeringdal/nittei-scheduler) for the initial project. This repository is a fork adapted to our needs.
+- [fmeringdal](https://github.com/fmeringdal/nettu-scheduler) for the initial project. This repository is a fork adapted to our needs.
