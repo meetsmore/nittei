@@ -13,6 +13,10 @@ use sqlx::postgres::PgPoolOptions;
 pub use system::ISys;
 use system::RealSys;
 
+/// The context for the application
+/// Contains the repositories, configuration, and system
+///
+/// System is abstracted to allow for testing
 #[derive(Clone)]
 pub struct NitteiContext {
     pub repos: Repos,
@@ -20,6 +24,7 @@ pub struct NitteiContext {
     pub sys: Arc<dyn ISys>,
 }
 
+/// The parameters to create the context
 struct ContextParams {
     pub postgres_connection_string: String,
 }
@@ -49,6 +54,10 @@ fn get_psql_connection_string() -> anyhow::Result<String> {
     Ok(std::env::var(PSQL_CONNECTION_STRING)?)
 }
 
+/// Run the migrations
+///
+/// This is not run by the application itself, but is provided as a utility
+/// Usage is in bins/nittei/src/bin/migrate.rs
 pub async fn run_migration() -> anyhow::Result<()> {
     let pool = PgPoolOptions::new()
         .max_connections(5)

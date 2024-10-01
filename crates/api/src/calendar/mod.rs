@@ -29,19 +29,22 @@ use get_outlook_calendars::{
 use remove_sync_calendar::remove_sync_calendar_admin_controller;
 use update_calendar::{update_calendar_admin_controller, update_calendar_controller};
 
+/// Configure the routes for the calendar module
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     // Create a calendar
     cfg.route("/calendar", web::post().to(create_calendar_controller));
+    // Create a calendar for a user (admin route)
     cfg.route(
         "/user/{user_id}/calendar",
         web::post().to(create_calendar_admin_controller),
     );
 
-    // List calendars for a user
+    // List calendars
     cfg.route(
         "/calendar",
         web::get().to(get_calendars::get_calendars_controller),
     );
+    // List calendars for a user (admin route)
     cfg.route(
         "/user/{user_id}/calendar",
         web::get().to(get_calendars::get_calendars_admin_controller),
@@ -58,6 +61,7 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
         "/calendar/{calendar_id}",
         web::get().to(get_calendar_controller),
     );
+    // Get a specific calendar by uid for a user (admin route)
     cfg.route(
         "/user/calendar/{calendar_id}",
         web::get().to(get_calendar_admin_controller),
@@ -68,6 +72,7 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
         "/calendar/{calendar_id}",
         web::delete().to(delete_calendar_controller),
     );
+    // Delete a calendar by uid for a user (admin route)
     cfg.route(
         "/user/calendar/{calendar_id}",
         web::delete().to(delete_calendar_admin_controller),
@@ -78,6 +83,7 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
         "/calendar/{calendar_id}",
         web::put().to(update_calendar_controller),
     );
+    // Update a calendar by uid for a user (admin route)
     cfg.route(
         "/user/calendar/{calendar_id}",
         web::put().to(update_calendar_admin_controller),
@@ -88,6 +94,7 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
         "/calendar/{calendar_id}/events",
         web::get().to(get_calendar_events_controller),
     );
+    // Get events for a calendar for a user (admin route)
     cfg.route(
         "/user/calendar/{calendar_id}/events",
         web::get().to(get_calendar_events_admin_controller),

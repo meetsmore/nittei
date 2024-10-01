@@ -34,6 +34,8 @@ use nittei_infra::NitteiContext;
 use tracing::{info, warn};
 use tracing_actix_web::TracingLogger;
 
+/// Configure the Actix server API
+/// Add all the routes to the server
 pub fn configure_server_api(cfg: &mut web::ServiceConfig) {
     account::configure_routes(cfg);
     calendar::configure_routes(cfg);
@@ -44,9 +46,13 @@ pub fn configure_server_api(cfg: &mut web::ServiceConfig) {
     user::configure_routes(cfg);
 }
 
+/// Struct for storing the main application state
 pub struct Application {
+    /// The Actix server instance
     server: Server,
+    /// The port the server is running on
     port: u16,
+    /// The application context (database connections, etc.)
     context: NitteiContext,
 }
 
@@ -67,6 +73,8 @@ impl Application {
         self.port
     }
 
+    /// Start the background jobs of the application
+    /// Note that the jobs are only started if the environment variable NITTEI_REMINDERS_JOB_ENABLED is set to true
     fn start_jobs(context: NitteiContext) {
         if let Ok(reminders_job_enabled) = std::env::var("NITTEI_REMINDERS_JOB_ENABLED") {
             // Parse the value of NITTEI_REMINDERS_JOB_ENABLED to a boolean
@@ -88,6 +96,13 @@ impl Application {
         }
     }
 
+    /// Configure the Actix server
+    /// This function creates the server and adds all the routes to it
+    ///
+    /// This adds the following middleware:
+    /// - CORS (permissive)
+    /// - Compression
+    /// - Tracing logger
     async fn configure_server(context: NitteiContext) -> anyhow::Result<(Server, u16)> {
         let port = context.config.port;
         let address = std::env::var("NITTEI_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
@@ -113,11 +128,26 @@ impl Application {
         Ok((server, port))
     }
 
+    /// Init the default account and start the Actix server
     pub async fn start(self) -> anyhow::Result<()> {
         self.init_default_account().await?;
         self.server.await.map_err(|e| anyhow::anyhow!(e))
     }
 
+    /// Initialize the default account
+    /// The default account is created if it doesn't exist
+    ///
+    /// It uses the following environment variables:
+    /// - ACCOUNT_API_KEY: The secret API key of the account
+    /// - ACCOUNT_ID: The ID of the account
+    /// - ACCOUNT_WEBHOOK_URL: The URL of the webhook
+    /// - ACCOUNT_PUB_KEY: The public key of the account
+    /// - ACCOUNT_GOOGLE_CLIENT_ID: The Google client ID
+    /// - ACCOUNT_GOOGLE_CLIENT_SECRET: The Google client secret
+    /// - ACCOUNT_GOOGLE_REDIRECT_URI: The Google redirect URI
+    /// - ACCOUNT_OUTLOOK_CLIENT_ID: The Outlook client ID
+    /// - ACCOUNT_OUTLOOK_CLIENT_SECRET: The Outlook client secret
+    /// - ACCOUNT_OUTLOOK_REDIRECT_URI: The Outlook redirect URI
     async fn init_default_account(&self) -> anyhow::Result<()> {
         let secret_api_key = match std::env::var("ACCOUNT_API_KEY") {
             Ok(key) => key,

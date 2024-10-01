@@ -6,9 +6,11 @@ use actix_web::{
 use tracing::{Level, Span};
 use tracing_actix_web::{DefaultRootSpanBuilder, RootSpanBuilder};
 
+/// Custom root span builder (tracing) for Actix Web
 pub struct NitteiTracingRootSpanBuilder;
 
 impl RootSpanBuilder for NitteiTracingRootSpanBuilder {
+    /// Create a new root span for the incoming request
     fn on_request_start(request: &ServiceRequest) -> Span {
         // Ignore healthcheck endpoint
         let level = if request.path() == "/api/v1/healthcheck" {
@@ -19,6 +21,7 @@ impl RootSpanBuilder for NitteiTracingRootSpanBuilder {
         tracing_actix_web::root_span!(level = level, request)
     }
 
+    /// End the root span for the incoming request
     fn on_request_end<B: MessageBody>(span: Span, outcome: &Result<ServiceResponse<B>, Error>) {
         // Log the outcome of the request
         log_request(outcome);

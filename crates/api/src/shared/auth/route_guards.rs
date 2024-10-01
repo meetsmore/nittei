@@ -25,6 +25,7 @@ struct Claims {
     scheduler_policy: Option<Policy>,
 }
 
+/// Parses the `Authorization` header and extracts the token
 fn parse_authtoken_header(token_header_value: &str) -> String {
     if token_header_value.len() < 6 || token_header_value[..6].to_lowercase() != "bearer" {
         String::new()
@@ -33,6 +34,9 @@ fn parse_authtoken_header(token_header_value: &str) -> String {
     }
 }
 
+/// Authenticates the user by checking the `Authorization` header
+/// and decodes the token to find out which `User` is making the request
+/// and what `Policy` it has
 pub async fn auth_user_req(
     req: &HttpRequest,
     account: &Account,
@@ -78,6 +82,7 @@ pub async fn get_client_account(
     }
 }
 
+/// Parses the `nittei-account` header and returns the `ID` of the `Account`
 pub fn get_nittei_account_header(req: &HttpRequest) -> Option<Result<ID, NitteiError>> {
     if let Some(account_id) = req.headers().get("nittei-account") {
         let err = NitteiError::UnidentifiableClient(format!(
@@ -110,7 +115,10 @@ fn decode_token(account: &Account, token: &str) -> anyhow::Result<Claims> {
     Ok(claims)
 }
 
-/// Protects routes that can be accessed by authenticated `User`s.
+/// Protects routes that can be accessed by authenticated `User`s
+///
+/// This function will check if the request has a valid `Authorization` header
+/// and if the token is valid and signed by the `Account`'s public key
 pub async fn protect_route(
     req: &HttpRequest,
     ctx: &NitteiContext,
@@ -136,6 +144,9 @@ pub async fn protect_route(
 }
 
 /// Protects an `Account` admin route, like updating `AccountSettings`
+///
+/// This function will check if the request has a valid `x-api-key` header
+/// and if the token is the one stored in DB for the `Account`
 pub async fn protect_account_route(
     req: &HttpRequest,
     ctx: &NitteiContext,
@@ -168,7 +179,7 @@ pub async fn protect_account_route(
 
 /// Only checks which account the request is connected to.
 /// If it cannot decide from the request which account the
-/// client belongs to it will return `nitteiError`
+/// client belongs to it will return `NitteiError`
 pub async fn protect_public_account_route(
     http_req: &HttpRequest,
     ctx: &NitteiContext,
