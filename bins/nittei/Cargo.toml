@@ -26,7 +26,7 @@ tracing-subscriber = { version = "0.3", features = [
     "json",
     "registry",
 ] }
-opentelemetry = { version = "0.23.0", default-features = false, features = [
+opentelemetry = { version = "0.25.0", default-features = false, features = [
     "trace",
 ] }
 opentelemetry_sdk = { version = "0.23.0", features = ["rt-tokio"] }
