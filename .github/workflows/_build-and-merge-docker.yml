@@ -105,10 +105,9 @@ jobs:
 
       - name: Set version env
         run: |
-          # # v1.0.0 --> 1.0.0
-          # VERSION=${GITHUB_REF#refs/*/}
-          # echo "VERSION=${VERSION:1}" >> $GITHUB_ENV
-          echo "VERSION=${{ github.sha }}" >> $GITHUB_ENV
+          # v1.0.0 --> 1.0.0
+          VERSION=${GITHUB_REF#refs/*/}
+          echo "VERSION=${VERSION:1}" >> $GITHUB_ENV
 
       - name: Docker meta
         id: meta
@@ -117,8 +116,7 @@ jobs:
           images: ${{ env.REGISTRY_IMAGE }}
           # For debian: latest, debian, 1.0.0
           # For alpine: alpine, alpine-1.0.0
-          # tags: ${{ inputs.distro == 'debian' && format('latest, debian, {0}', env.VERSION) || format('alpine, alpine-{0}', env.VERSION) }}
-          tags: ${{ inputs.distro == 'debian' && env.VERSION || format('alpine-{0}', env.VERSION) }}
+          tags: ${{ inputs.distro == 'debian' && format('latest, debian, {0}', env.VERSION) || format('alpine, alpine-{0}', env.VERSION) }}
 
       - name: Create manifest list and push
         working-directory: /tmp/digests
