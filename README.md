@@ -99,13 +99,21 @@ Please see below for links to more examples.
 
 ### Running the tests
 
-For running the tests for the server (Rust) and the Rust client SDK, you can simply run:
+For running all the tests at once, you can run:
+
+```sh
+just test-all
+```
+
+> This launches an ephemeral PostgreSQL container used by the tests. The script tries to remove the container at the end.
+
+For running only the tests for the server (Rust) and the Rust client SDK, you can simply run:
 
 ```sh
 just test
 ```
 
-> This launches an ephemeral PostgreSQL container used by the tests. The script tries to remove the container at the end.
+> This also launches an ephemeral PostgreSQL container.
 
 For running the tests for the JS client SDK, you first need to have the server running. As a reminder, this is the command:
 

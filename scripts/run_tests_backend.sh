@@ -23,11 +23,6 @@ cleanup() {
   if [ "$(docker ps -q -f name=ryuk)" ]; then
     docker stop ryuk >/dev/null 2>&1
   fi
-
-  if [ -n "$BACKEND_PID" ]; then
-    # Stop the backend server
-    kill $BACKEND_PID >/dev/null 2>&1
-  fi
 }
 
 # Set up a trap to call the cleanup function on EXIT, SIGINT, and SIGTERM
@@ -97,77 +92,7 @@ else
   cargo-pretty-test --workspace $1
 fi
 
-# Store result
-RESULT=$?
-
-# Format TS code (always run so that we are not in a bad state)
+# Format TS code
 pnpm run format
-
-if [ $RESULT -ne 0 ]; then
-  echo ""
-  echo "#################"
-  echo "Some tests failed!"
-  echo "#################"
-  echo ""
-  exit $RESULT
-fi
-
-#### FRONTEND ####
-
-# Search for a free port to bind the temporary backend server
-BASE_PORT=1234
-INCREMENT=1
-
-PORT=$BASE_PORT
-IS_FREE=$(netstat -taln | grep $PORT)
-
-while [[ -n "$IS_FREE" ]]; do
-  PORT=$((PORT + INCREMENT))
-  IS_FREE=$(netstat -taln | grep $PORT)
-done
-
-export NITTEI_PORT=$PORT
-
-# Launch the backend server
-if [ -n "$DEBUG" ]; then
-  # If in debug, log the output
-  cargo run --bin nittei -- --port $PORT &
-else
-  # If not in debug, run in the background and silently
-  cargo run --bin nittei -- --port $PORT >/dev/null 2>&1 &
-fi
-
-# Save the PID of the backend server
-BACKEND_PID=$!
-
-# Wait for backend server to be ready
-RETRIES=5
-until
-  curl localhost:$PORT/api/v1/healthcheck >/dev/null 2>&1 ||
-    [ $((RETRIES--)) -eq 0 ]
-do
-  sleep 1
-done
-
-# Run JS tests
-pnpm run test
-
-# Store result
-RESULT=$?
-
-if [ $RESULT -ne 0 ]; then
-  echo ""
-  echo "#################"
-  echo "Some tests failed!"
-  echo "#################"
-  echo ""
-  exit $RESULT
-fi
-
-echo ""
-echo "#################"
-echo "All tests passed!"
-echo "#################"
-echo ""
 
 # The cleanup function will be called automatically
