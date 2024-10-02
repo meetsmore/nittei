@@ -87,4 +87,46 @@ describe('Calendar API', () => {
       expect(res.calendars[0].id).toBe(calendarId)
     })
   })
+
+  describe('Admin endpoints', () => {
+    let userId: string
+    let calendarId: string
+    beforeAll(async () => {
+      // Create user
+      const userRes = await adminClient.user.create()
+      if (!userRes) {
+        throw new Error('User not created')
+      }
+      userId = userRes.user.id
+    })
+
+    it('should create calendar for user', async () => {
+      const res = await adminClient.calendar.create(userId, {
+        timezone: 'UTC',
+        key: 'my_calendar',
+      })
+      expect(res.calendar.id).toBeDefined()
+      calendarId = res.calendar.id
+    })
+
+    it('should get calendars for user', async () => {
+      const res = await adminClient.calendar.findByUserId(userId)
+      expect(res.calendars.length).toBe(1)
+      expect(res.calendars[0].id).toBe(calendarId)
+    })
+
+    it('should get calendar by id', async () => {
+      const res = await adminClient.calendar.getById(calendarId)
+      expect(res.calendar.id).toBe(calendarId)
+    })
+
+    it('should get calendar by user and key', async () => {
+      const res = await adminClient.calendar.findByUserIdAndKey(
+        userId,
+        'my_calendar'
+      )
+      expect(res.calendars.length).toBe(1)
+      expect(res.calendars[0].id).toBe(calendarId)
+    })
+  })
 })
