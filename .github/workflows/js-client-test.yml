@@ -53,6 +53,10 @@ jobs:
 
       - name: Start server
         run: |
+          # run the migrations first
+          cargo install sqlx-cli --no-default-features --features postgres || true
+          (cd crates/infra && sqlx migrate run)
+
           export RUST_LOG=error,tracing=info
 
           cargo build
