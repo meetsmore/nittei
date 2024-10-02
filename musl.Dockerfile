@@ -1,24 +1,26 @@
-FROM ekidd/rust-musl-builder as builder
+# Usage:
+# docker buildx build -f musl.Dockerfile -t image:tag --build-arg='ARCH=x86_64' --platform linux/amd64 .
+# docker buildx build -f musl.Dockerfile -t image:tag --build-arg='ARCH=aarch64' --platform linux/arm64 .
 
-WORKDIR /home/rust/
+ARG ARCH=x86_64
+FROM messense/rust-musl-cross:${ARCH}-musl AS builder
 
+ARG ARCH=x86_64
+ARG APP_NAME=nittei
+
+# Copy source code from previous stage
 COPY . .
 
-USER root
-RUN chown -R rust:rust .
-USER rust
+# Build application
+RUN cargo build --release --target ${ARCH}-unknown-linux-musl && \
+  cp ./target/${ARCH}-unknown-linux-musl/release/${APP_NAME} /${APP_NAME}
 
-ENV DATABASE_URL "postgresql://postgres:postgres@172.17.0.1:5432/nittei"
+#Create a new stage with a minimal image
+FROM busybox:musl
 
-# RUN cargo test
-RUN cargo build --release
+ARG APP_NAME=nittei
+ENV APP_NAME=${APP_NAME}
 
-# Size optimization
-RUN strip target/x86_64-unknown-linux-musl/release/nittei
+COPY --from=builder /${APP_NAME} /${APP_NAME}
 
-# Start building the final image
-FROM scratch
-WORKDIR /home/rust/
-COPY --from=builder /home/rust/target/x86_64-unknown-linux-musl/release/nittei .
-
-ENTRYPOINT ["./nittei"]
+CMD /${APP_NAME}
