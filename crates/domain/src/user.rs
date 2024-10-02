@@ -11,6 +11,7 @@ use crate::{
 pub struct User {
     pub id: ID,
     pub account_id: ID,
+    pub external_id: Option<String>,
     pub metadata: Metadata,
 }
 

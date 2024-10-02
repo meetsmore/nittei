@@ -18,6 +18,7 @@ pub struct UserClient {
 }
 pub struct UpdateUserInput {
     pub user_id: ID,
+    pub external_id: Option<String>,
     pub metadata: Option<Metadata>,
 }
 
@@ -77,6 +78,19 @@ impl UserClient {
             .await
     }
 
+    pub async fn get_by_external_id(
+        &self,
+        external_id: String,
+    ) -> APIResponse<get_user::APIResponse> {
+        self.base
+            .get(
+                format!("user/external_id/{}", external_id),
+                None,
+                StatusCode::OK,
+            )
+            .await
+    }
+
     pub async fn delete(&self, user_id: ID) -> APIResponse<delete_user::APIResponse> {
         self.base
             .delete(format!("user/{}", user_id), StatusCode::OK)
@@ -85,6 +99,7 @@ impl UserClient {
 
     pub async fn update(&self, input: UpdateUserInput) -> APIResponse<update_user::APIResponse> {
         let body = update_user::RequestBody {
+            external_id: input.external_id,
             metadata: input.metadata,
         };
         self.base

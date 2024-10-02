@@ -80,6 +80,7 @@ async fn test_crud_user() {
         .user
         .create(CreateUserInput {
             metadata: Some(metadata),
+            external_id: None,
             user_id: None,
         })
         .await
@@ -162,6 +163,7 @@ async fn test_user_provide_id() {
         .user
         .create(CreateUserInput {
             metadata: Some(metadata.into()),
+            external_id: None,
             user_id: Some(user_id.clone()),
         })
         .await
@@ -191,6 +193,7 @@ async fn test_crud_schedule() {
         .user
         .create(CreateUserInput {
             metadata: None,
+            external_id: None,
             user_id: None,
         })
         .await
@@ -260,6 +263,7 @@ async fn test_create_user() {
         .user
         .create(CreateUserInput {
             metadata: None,
+            external_id: None,
             user_id: None,
         })
         .await
@@ -352,6 +356,7 @@ async fn test_crud_calendars() {
         .user
         .create(CreateUserInput {
             metadata: None,
+            external_id: None,
             user_id: None,
         })
         .await
@@ -459,6 +464,7 @@ async fn test_crud_events() {
         .user
         .create(CreateUserInput {
             metadata: None,
+            external_id: None,
             user_id: None,
         })
         .await
@@ -579,6 +585,7 @@ async fn test_crud_service() {
         .user
         .create(CreateUserInput {
             metadata: None,
+            external_id: None,
             user_id: None,
         })
         .await
@@ -706,6 +713,7 @@ async fn test_freebusy_multiple() {
         .user
         .create(CreateUserInput {
             metadata: None,
+            external_id: None,
             user_id: None,
         })
         .await
@@ -715,6 +723,7 @@ async fn test_freebusy_multiple() {
         .user
         .create(CreateUserInput {
             metadata: None,
+            external_id: None,
             user_id: None,
         })
         .await

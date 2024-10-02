@@ -28,6 +28,7 @@ async fn create_default_service_host(
 ) -> (User, Calendar) {
     let input = CreateUserInput {
         metadata: None,
+        external_id: None,
         user_id: None,
     };
     let host = admin_client
@@ -250,6 +251,7 @@ async fn test_collective_team_scheduling_is_collective() {
 
     let input = CreateUserInput {
         metadata: None,
+        external_id: None,
         user_id: None,
     };
     let host1 = admin_client
@@ -260,6 +262,7 @@ async fn test_collective_team_scheduling_is_collective() {
         .user;
     let input = CreateUserInput {
         metadata: None,
+        external_id: None,
         user_id: None,
     };
     let host2 = admin_client
