@@ -1,7 +1,14 @@
 #! /bin/bash
 
-# Script to run all the (Rust) tests
-# It launches a temporary PostgreSQL container, runs the migrations, runs the tests and then stops and removes the container
+# Script to run all the tests (Rust and JS)
+# It
+# - launches a temporary PostgreSQL container
+# - runs the migrations
+# - runs the Rust tests
+# - launches the server in background
+# - runs the JS tests
+# - stops and removes the container
+# - stops the server
 
 # Function to clean up the containers
 CLEANUP_CALLED=false
