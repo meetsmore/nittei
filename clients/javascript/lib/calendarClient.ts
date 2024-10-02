@@ -1,4 +1,4 @@
-import { type APIResponse, NitteiBaseClient } from './baseClient'
+import { NitteiBaseClient } from './baseClient'
 import type { Timespan } from './eventClient'
 import {
   convertEventDates,
@@ -35,8 +35,8 @@ export class NitteiCalendarClient extends NitteiBaseClient {
    * @param data - data for creating the calendar
    * @returns CalendarResponse - created calendar
    */
-  public create(userId: ID, data: CreateCalendarRequestBody) {
-    return this.post<CalendarResponse>(`/user/${userId}/calendar`, data)
+  public async create(userId: ID, data: CreateCalendarRequestBody) {
+    return await this.post<CalendarResponse>(`/user/${userId}/calendar`, data)
   }
 
   /**
@@ -44,8 +44,8 @@ export class NitteiCalendarClient extends NitteiBaseClient {
    * @param calendarId - ID of the calendar to find
    * @returns CalendarResponse - found calendar, if any
    */
-  public findById(calendarId: ID) {
-    return this.get<CalendarResponse>(`/user/calendar/${calendarId}`)
+  public async findById(calendarId: ID) {
+    return await this.get<CalendarResponse>(`/user/calendar/${calendarId}`)
   }
 
   /**
@@ -53,8 +53,10 @@ export class NitteiCalendarClient extends NitteiBaseClient {
    * @param userId - ID of the user to list the calendars for
    * @returns list of found calendars
    */
-  public findByUser(userId: ID) {
-    return this.get<GetCalendarsByUserAPIResponse>(`/user/${userId}/calendar`)
+  public async findByUser(userId: ID) {
+    return await this.get<GetCalendarsByUserAPIResponse>(
+      `/user/${userId}/calendar`
+    )
   }
 
   /**
@@ -63,10 +65,13 @@ export class NitteiCalendarClient extends NitteiBaseClient {
    * @param key - key of the calendar to find
    * @returns list of found calendars, but as key is unique, it will be at most one
    */
-  public findByUserAndKey(userId: ID, key: string) {
-    return this.get<GetCalendarsByUserAPIResponse>(`/user/${userId}/calendar`, {
-      key,
-    })
+  public async findByUserAndKey(userId: ID, key: string) {
+    return await this.get<GetCalendarsByUserAPIResponse>(
+      `/user/${userId}/calendar`,
+      {
+        key,
+      }
+    )
   }
 
   /**
@@ -76,7 +81,7 @@ export class NitteiCalendarClient extends NitteiBaseClient {
    * @param limit - number of calendars to return
    * @returns CalendarResponse - found calendars
    */
-  public findByMeta(
+  public async findByMeta(
     meta: {
       key: string
       value: string
@@ -84,7 +89,7 @@ export class NitteiCalendarClient extends NitteiBaseClient {
     skip: number,
     limit: number
   ) {
-    return this.get<{ calendars: CalendarDTO[] }>('/calendar/meta', {
+    return await this.get<{ calendars: CalendarDTO[] }>('/calendar/meta', {
       skip: skip,
       limit: limit,
       key: meta.key,
@@ -98,8 +103,8 @@ export class NitteiCalendarClient extends NitteiBaseClient {
    * @param minAccessRole - minimum access role required
    * @returns - found Google calendars
    */
-  async findGoogle(userId: ID, minAccessRole: GoogleCalendarAccessRole) {
-    return this.get<{ calendars: GoogleCalendarListEntry[] }>(
+  public async findGoogle(userId: ID, minAccessRole: GoogleCalendarAccessRole) {
+    return await this.get<{ calendars: GoogleCalendarListEntry[] }>(
       `/user/${userId}/calendar/provider/google`,
       {
         minAccessRole,
@@ -113,8 +118,11 @@ export class NitteiCalendarClient extends NitteiBaseClient {
    * @param minAccessRole - minimum access role required
    * @returns - found Outlook calendars
    */
-  async findOutlook(userId: ID, minAccessRole: OutlookCalendarAccessRole) {
-    return this.get<{ calendars: OutlookCalendar[] }>(
+  public async findOutlook(
+    userId: ID,
+    minAccessRole: OutlookCalendarAccessRole
+  ) {
+    return await this.get<{ calendars: OutlookCalendar[] }>(
       `/user/${userId}/calendar/provider/outlook`,
       { minAccessRole }
     )
@@ -135,8 +143,8 @@ export class NitteiCalendarClient extends NitteiBaseClient {
    * @param data - data to update the calendar with
    * @returns CalendarResponse - updated calendar
    */
-  public update(calendarId: ID, data: UpdateCalendarRequest) {
-    return this.put<CalendarResponse>(`/user/calendar/${calendarId}`, {
+  public async update(calendarId: ID, data: UpdateCalendarRequest) {
+    return await this.put<CalendarResponse>(`/user/calendar/${calendarId}`, {
       settings: {
         timezone: data.timezone,
         weekStart: data.weekStart,
@@ -156,7 +164,7 @@ export class NitteiCalendarClient extends NitteiBaseClient {
     calendarId: ID,
     startTime: Date,
     endTime: Date
-  ): Promise<APIResponse<GetCalendarEventsAPIResponse>> {
+  ): Promise<GetCalendarEventsAPIResponse> {
     const res = await this.get<GetCalendarEventsAPIResponse>(
       `/user/calendar/${calendarId}/events`,
       {
@@ -165,20 +173,12 @@ export class NitteiCalendarClient extends NitteiBaseClient {
       }
     )
 
-    if (!res?.data) {
-      return res
-    }
-
     return {
-      res: res.res,
-      status: res.status,
-      data: {
-        calendar: res.data.calendar,
-        events: res.data.events?.map(event => ({
-          event: convertEventDates(event.event),
-          instances: event.instances?.map(convertInstanceDates),
-        })),
-      },
+      calendar: res.calendar,
+      events: res.events?.map(event => ({
+        event: convertEventDates(event.event),
+        instances: event.instances?.map(convertInstanceDates),
+      })),
     }
   }
 
@@ -187,7 +187,7 @@ export class NitteiCalendarClient extends NitteiBaseClient {
    * @param input - data for syncing the calendar
    * @returns - void
    */
-  public syncCalendar(
+  public async syncCalendar(
     input: AddSyncCalendarRequestBody & AddSyncCalendarPathParams
   ) {
     const body = {
@@ -195,7 +195,7 @@ export class NitteiCalendarClient extends NitteiBaseClient {
       extCalendarId: input.extCalendarId,
       provider: input.provider,
     }
-    return this.put(`user/${input.userId}/calendar/sync`, body)
+    return await this.put(`user/${input.userId}/calendar/sync`, body)
   }
 
   /**
@@ -203,7 +203,7 @@ export class NitteiCalendarClient extends NitteiBaseClient {
    * @param input - data for stopping the calendar sync
    * @returns - void
    */
-  public stopCalendarSync(
+  public async stopCalendarSync(
     input: RemoveSyncCalendarRequestBody & RemoveSyncCalendarPathParams
   ) {
     const body = {
@@ -211,7 +211,7 @@ export class NitteiCalendarClient extends NitteiBaseClient {
       extCalendarId: input.extCalendarId,
       provider: input.provider,
     }
-    return this.deleteWithBody(`user/${input.userId}/calendar/sync`, body)
+    return await this.deleteWithBody(`user/${input.userId}/calendar/sync`, body)
   }
 }
 
@@ -220,20 +220,20 @@ export class NitteiCalendarClient extends NitteiBaseClient {
  * This is an end user client (usually frontend)
  */
 export class NitteiCalendarUserClient extends NitteiBaseClient {
-  public create(data: CreateCalendarRequestBody) {
-    return this.post<CalendarResponse>('/calendar', data)
+  public async create(data: CreateCalendarRequestBody) {
+    return await this.post<CalendarResponse>('/calendar', data)
   }
 
-  public findById(calendarId: ID) {
-    return this.get<CalendarResponse>(`/calendar/${calendarId}`)
+  public async findById(calendarId: ID) {
+    return await this.get<CalendarResponse>(`/calendar/${calendarId}`)
   }
 
-  public list() {
-    return this.get<GetCalendarsByUserAPIResponse>('/calendar')
+  public async list() {
+    return await this.get<GetCalendarsByUserAPIResponse>('/calendar')
   }
 
-  async findGoogle(minAccessRole: GoogleCalendarAccessRole) {
-    return this.get<{ calendars: GoogleCalendarListEntry[] }>(
+  public async findGoogle(minAccessRole: GoogleCalendarAccessRole) {
+    return await this.get<{ calendars: GoogleCalendarListEntry[] }>(
       '/calendar/provider/google',
       {
         minAccessRole,
@@ -241,8 +241,8 @@ export class NitteiCalendarUserClient extends NitteiBaseClient {
     )
   }
 
-  async findOutlook(minAccessRole: OutlookCalendarAccessRole) {
-    return this.get<{ calendars: OutlookCalendar[] }>(
+  public async findOutlook(minAccessRole: OutlookCalendarAccessRole) {
+    return await this.get<{ calendars: OutlookCalendar[] }>(
       '/calendar/provider/outlook',
       {
         minAccessRole,
@@ -250,18 +250,18 @@ export class NitteiCalendarUserClient extends NitteiBaseClient {
     )
   }
 
-  public remove(calendarId: ID) {
-    return this.delete<CalendarResponse>(`/calendar/${calendarId}`)
+  public async remove(calendarId: ID) {
+    return await this.delete<CalendarResponse>(`/calendar/${calendarId}`)
   }
 
-  public update(calendarId: ID, data: UpdateCalendarRequest) {
-    return this.put<CalendarResponse>(`/calendar/${calendarId}`, data)
+  public async update(calendarId: ID, data: UpdateCalendarRequest) {
+    return await this.put<CalendarResponse>(`/calendar/${calendarId}`, data)
   }
 
   public async getEvents(
     calendarId: ID,
     timespan: Timespan
-  ): Promise<APIResponse<GetCalendarEventsAPIResponse>> {
+  ): Promise<GetCalendarEventsAPIResponse> {
     const res = await this.get<GetCalendarEventsAPIResponse>(
       `/user/calendar/${calendarId}/events`,
       {
@@ -270,20 +270,12 @@ export class NitteiCalendarUserClient extends NitteiBaseClient {
       }
     )
 
-    if (!res?.data) {
-      return res
-    }
-
     return {
-      res: res.res,
-      status: res.status,
-      data: {
-        calendar: res.data.calendar,
-        events: res.data.events.map(event => ({
-          event: convertEventDates(event.event),
-          instances: event.instances.map(convertInstanceDates),
-        })),
-      },
+      calendar: res.calendar,
+      events: res.events.map(event => ({
+        event: convertEventDates(event.event),
+        instances: event.instances.map(convertInstanceDates),
+      })),
     }
   }
 }

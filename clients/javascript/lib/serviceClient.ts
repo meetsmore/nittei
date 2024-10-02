@@ -13,42 +13,47 @@ import { ServiceWithUsersDTO } from './gen_types/ServiceWithUsersDTO'
 import { UpdateServiceRequestBody } from './gen_types/UpdateServiceRequestBody'
 
 export class NitteiServiceClient extends NitteiBaseClient {
-  public create(data?: CreateServiceRequestBody) {
-    return this.post<ServiceResponse>('/service', data ?? {})
+  public async create(data?: CreateServiceRequestBody) {
+    return await this.post<ServiceResponse>('/service', data ?? {})
   }
 
-  public update(serviceId: ID, data?: UpdateServiceRequestBody) {
-    return this.put<ServiceResponse>(`/service/${serviceId}`, data ?? {})
+  public async update(serviceId: ID, data?: UpdateServiceRequestBody) {
+    return await this.put<ServiceResponse>(`/service/${serviceId}`, data ?? {})
   }
 
-  public find(serviceId: ID) {
-    return this.get<ServiceWithUsersDTO>(`/service/${serviceId}`)
+  public async find(serviceId: ID) {
+    return await this.get<ServiceWithUsersDTO>(`/service/${serviceId}`)
   }
 
-  public remove(serviceId: ID) {
-    return this.delete<ServiceResponse>(`/service/${serviceId}`)
+  public async remove(serviceId: ID) {
+    return await this.delete<ServiceResponse>(`/service/${serviceId}`)
   }
 
-  public addUser(serviceId: ID, data: AddUserToServiceRequestBody) {
-    return this.post<ServiceResponse>(`/service/${serviceId}/users`, data)
+  public async addUser(serviceId: ID, data: AddUserToServiceRequestBody) {
+    return await this.post<ServiceResponse>(`/service/${serviceId}/users`, data)
   }
 
-  public removeUser(serviceId: ID, userId: ID) {
-    return this.delete<ServiceResponse>(`/service/${serviceId}/users/${userId}`)
+  public async removeUser(serviceId: ID, userId: ID) {
+    return await this.delete<ServiceResponse>(
+      `/service/${serviceId}/users/${userId}`
+    )
   }
 
-  public updateUserInService(serviceId: ID, data: AddUserToServiceRequestBody) {
-    return this.put<ServiceResponse>(
+  public async updateUserInService(
+    serviceId: ID,
+    data: AddUserToServiceRequestBody
+  ) {
+    return await this.put<ServiceResponse>(
       `/service/${serviceId}/users/${data.userId}`,
       data
     )
   }
 
-  public getBookingslots(
+  public async getBookingslots(
     serviceId: ID,
     req: GetServiceBookingSlotsQueryParams
   ) {
-    return this.get<GetServiceBookingSlotsAPIResponse>(
+    return await this.get<GetServiceBookingSlotsAPIResponse>(
       `/service/${serviceId}/booking`,
       {
         startDate: req.startDate,
@@ -61,10 +66,10 @@ export class NitteiServiceClient extends NitteiBaseClient {
     )
   }
 
-  public addBusyCalendar(
+  public async addBusyCalendar(
     input: AddBusyCalendarRequestBody & AddBusyCalendarPathParams
   ) {
-    return this.put<string>(
+    return await this.put<string>(
       `/service/${input.serviceId}/users/${input.userId}/busy`,
       {
         busy: input.busy,
@@ -72,10 +77,10 @@ export class NitteiServiceClient extends NitteiBaseClient {
     )
   }
 
-  public removeBusyCalendar(
+  public async removeBusyCalendar(
     input: RemoveBusyCalendarRequestBody & RemoveBusyCalendarPathParams
   ) {
-    return this.deleteWithBody<string>(
+    return await this.deleteWithBody<string>(
       `/service/${input.serviceId}/users/${input.userId}/busy`,
       {
         busy: input.busy,
@@ -85,11 +90,11 @@ export class NitteiServiceClient extends NitteiBaseClient {
 }
 
 export class NitteiServiceUserClient extends NitteiBaseClient {
-  public getBookingslots(
+  public async getBookingslots(
     serviceId: ID,
     req: GetServiceBookingSlotsQueryParams
   ) {
-    return this.get<GetServiceBookingSlotsAPIResponse>(
+    return await this.get<GetServiceBookingSlotsAPIResponse>(
       `/service/${serviceId}/booking`,
       {
         startDate: req.startDate,

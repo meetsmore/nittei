@@ -8,15 +8,15 @@ export const CREATE_ACCOUNT_CODE =
 export const setupAccount = async () => {
   const client = await NitteiClient()
   const account = await client.account.create({ code: CREATE_ACCOUNT_CODE })
-  const accountId = account.data?.account.id
+  const accountId = account.account.id
   if (!accountId) {
     throw new Error('Account not created')
   }
   return {
     client: await NitteiClient({
-      apiKey: account.data?.secretApiKey,
+      apiKey: account.secretApiKey,
     }),
-    accountId: account.data?.account.id,
+    accountId: account.account.id,
   }
 }
 
@@ -26,10 +26,7 @@ export const setupUserClient = async () => {
   await client.account.setPublicSigningKey(publicKey)
   const privateKey = await readPrivateKey()
   const userRes = await client.user.create()
-  const user = userRes.data?.user
-  if (!user) {
-    throw new Error('User not created')
-  }
+  const user = userRes.user
   const { client: userClient } = setupUserClientForAccount(
     privateKey,
     user?.id,

@@ -1,4 +1,4 @@
-import { APIResponse, NitteiBaseClient } from './baseClient'
+import { NitteiBaseClient } from './baseClient'
 import {
   convertEventDates,
   convertInstanceDates,
@@ -26,19 +26,19 @@ export class NitteiUserClient extends NitteiBaseClient {
    * @param data - data for creating the user
    * @returns UserResponse - created user
    */
-  public create(data?: CreateUserRequestBody) {
-    return this.post<UserResponse>('/user', data ?? {})
+  public async create(data?: CreateUserRequestBody) {
+    return await this.post<UserResponse>('/user', data ?? {})
   }
 
-  public find(userId: ID) {
-    return this.get<UserResponse>(`/user/${userId}`)
+  public async find(userId: ID) {
+    return await this.get<UserResponse>(`/user/${userId}`)
   }
 
-  public update(userId: ID, data: UpdateUserRequestBody) {
-    return this.put<UserResponse>(`/user/${userId}`, data)
+  public async update(userId: ID, data: UpdateUserRequestBody) {
+    return await this.put<UserResponse>(`/user/${userId}`, data)
   }
 
-  public findByMeta(
+  public async findByMeta(
     meta: {
       key: string
       value: string
@@ -46,7 +46,7 @@ export class NitteiUserClient extends NitteiBaseClient {
     skip: number,
     limit: number
   ) {
-    return this.get<UserDTO[]>('/user/meta', {
+    return await this.get<UserDTO[]>('/user/meta', {
       skip,
       limit,
       key: meta.key,
@@ -54,14 +54,14 @@ export class NitteiUserClient extends NitteiBaseClient {
     })
   }
 
-  public remove(userId: ID) {
-    return this.delete<UserResponse>(`/user/${userId}`)
+  public async remove(userId: ID) {
+    return await this.delete<UserResponse>(`/user/${userId}`)
   }
 
   public async getEventsOfMultipleCalendars(
     userId: ID,
     req: GetEventsByCalendarsQueryParams
-  ): Promise<APIResponse<GetEventsByCalendarsAPIResponse>> {
+  ): Promise<GetEventsByCalendarsAPIResponse> {
     const res = await this.get<GetEventsByCalendarsAPIResponse>(
       `/user/${userId}/events`,
       {
@@ -71,28 +71,20 @@ export class NitteiUserClient extends NitteiBaseClient {
       }
     )
 
-    if (!res.data) {
-      return res
-    }
-
     return {
-      res: res.res,
-      status: res.status,
-      data: {
-        events: res.data.events.map(event => {
-          return {
-            event: convertEventDates(event.event),
-            instances: event.instances.map(convertInstanceDates),
-          }
-        }),
-      },
+      events: res.events.map(event => {
+        return {
+          event: convertEventDates(event.event),
+          instances: event.instances.map(convertInstanceDates),
+        }
+      }),
     }
   }
 
   public async freebusy(
     userId: ID,
     req: GetUserFreeBusyQueryParams
-  ): Promise<APIResponse<GetUserFreeBusyAPIResponse>> {
+  ): Promise<GetUserFreeBusyAPIResponse> {
     const res = await this.get<GetUserFreeBusyAPIResponse>(
       `/user/${userId}/freebusy`,
       {
@@ -102,53 +94,37 @@ export class NitteiUserClient extends NitteiBaseClient {
       }
     )
 
-    if (!res.data) {
-      return res
-    }
-
     return {
-      res: res.res,
-      status: res.status,
-      data: {
-        userId: res.data.userId,
-        busy: res.data.busy.map(convertInstanceDates),
-      },
+      userId: res.userId,
+      busy: res.busy.map(convertInstanceDates),
     }
   }
 
   public async freebusyMultipleUsers(
     req: MultipleFreeBusyRequestBody
-  ): Promise<APIResponse<MultipleFreeBusyAPIResponse>> {
+  ): Promise<MultipleFreeBusyAPIResponse> {
     const res = await this.post<MultipleFreeBusyAPIResponse>('/user/freebusy', {
       userIds: req.userIds,
       startTime: req.startTime.toISOString(),
       endTime: req.endTime.toISOString(),
     })
 
-    if (!res.data) {
-      return res
-    }
-
-    return {
-      res: res.res,
-      status: res.status,
-      data: Object.keys(res.data).reduce((acc, key) => {
-        if (!res?.data?.[key]) {
-          return acc
-        }
-        acc[key] = res.data[key].map(convertInstanceDates)
+    return Object.keys(res).reduce((acc, key) => {
+      if (!res?.[key]) {
         return acc
-      }, {} as MultipleFreeBusyAPIResponse),
-    }
+      }
+      acc[key] = res[key].map(convertInstanceDates)
+      return acc
+    }, {} as MultipleFreeBusyAPIResponse)
   }
 
-  public oauth(userId: ID, code: string, provider: IntegrationProvider) {
+  public async oauth(userId: ID, code: string, provider: IntegrationProvider) {
     const body = { code, provider }
-    return this.post(`user/${userId}/oauth`, body)
+    return await this.post(`user/${userId}/oauth`, body)
   }
 
-  public removeIntegration(userId: ID, provider: IntegrationProvider) {
-    return this.delete(`user/${userId}/oauth/${provider}`)
+  public async removeIntegration(userId: ID, provider: IntegrationProvider) {
+    return await this.delete(`user/${userId}/oauth/${provider}`)
   }
 }
 
@@ -157,7 +133,7 @@ export class NitteiUserClient extends NitteiBaseClient {
  * This is an end user client (usually frontend)
  */
 export class NitteiUserUserClient extends NitteiBaseClient {
-  public me() {
-    return this.get<UserResponse>('/me')
+  public async me() {
+    return await this.get<UserResponse>('/me')
   }
 }

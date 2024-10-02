@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "The Nittei Javascript library provides convenient access to the Nittei API from server-side JavaScript applications or web applications",
   "main": "dist/index.js",
+  "packageManager": "pnpm@9.2.0",
   "scripts": {
     "build": "tsc --p ./tsconfig.release.json",
     "deploy": "pnpm run build && pnpm publish --no-git-checks",

@@ -11,70 +11,58 @@ describe('Account API', () => {
 
   it('should create account', async () => {
     client = await NitteiClient({})
-    const { status, data } = await client.account.create({
+    const accountRes = await client.account.create({
       code: CREATE_ACCOUNT_CODE,
     })
-    expect(status).toBe(201)
-    expect(data).toBeDefined()
+    expect(accountRes).toBeDefined()
   })
 
   it('should find account', async () => {
-    const { status, data } = await client.account.create({
+    const accountRes = await client.account.create({
       code: CREATE_ACCOUNT_CODE,
     })
-    if (!data) {
-      throw new Error('Account not created')
-    }
     const accountClient = await NitteiClient({
-      apiKey: data.secretApiKey,
+      apiKey: accountRes.secretApiKey,
     })
     const res = await accountClient.account.me()
-    expect(res.status).toBe(200)
-    if (!res.data) {
-      throw new Error('Account not found')
-    }
-    expect(res.data.account.id).toBe(data.account.id)
+    expect(res.account.id).toBe(accountRes.account.id)
   })
 
   it('should not find account when not signed in', async () => {
-    const res = await client.account.me()
-    expect(res.status).toBe(401)
+    await expect(() => client.account.me()).rejects.toThrow()
   })
 
   it('should upload account public key and be able to remove it', async () => {
     const { client } = await setupAccount()
     const publicKey = await readPublicKey()
     await client.account.setPublicSigningKey(publicKey)
+
     let res = await client.account.me()
-    if (!res.data) {
-      throw new Error('Account not found')
-    }
-    expect(res.data.account.publicJwtKey).toBe(publicKey)
+    expect(res.account.publicJwtKey).toBe(publicKey)
+
     const userRes = await client.user.create()
-    if (!userRes.data) {
-      throw new Error('User not created')
-    }
-    const user = userRes.data.user
+
+    const user = userRes.user
     // validate that a user can now use token to interact with api
     const privateKey = await readPrivateKey()
     const { client: userClient } = setupUserClientForAccount(
       privateKey,
       user.id,
-      res.data.account.id
+      res.account.id
     )
-    const { status } = await userClient.calendar.create({ timezone: 'UTC' })
-    expect(status).toBe(201)
+    const calendarRes = await userClient.calendar.create({ timezone: 'UTC' })
+    expect(calendarRes).toBeDefined()
+    expect(calendarRes.calendar.userId).toBe(user.id)
     // now disable public key and dont allow jwt token anymore
     await client.account.removePublicSigningKey()
-    res = await client.account.me()
-    if (!res.data) {
-      throw new Error('Account not found')
-    }
-    expect(res.data.account.publicJwtKey).toBeNull()
 
-    const { status: status2 } = await userClient.calendar.create({
-      timezone: 'UTC',
-    })
-    expect(status2).toBe(401)
+    res = await client.account.me()
+    expect(res.account.publicJwtKey).toBeNull()
+
+    await expect(() =>
+      userClient.calendar.create({
+        timezone: 'UTC',
+      })
+    ).rejects.toThrow()
   })
 })
