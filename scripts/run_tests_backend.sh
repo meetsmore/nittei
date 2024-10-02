@@ -92,7 +92,25 @@ else
   cargo-pretty-test --workspace $1
 fi
 
+# Store result
+RESULT=$?
+
 # Format TS code
 pnpm run format
+
+if [ $RESULT -ne 0 ]; then
+  echo ""
+  echo "#################"
+  echo "Some tests failed!"
+  echo "#################"
+  echo ""
+  exit $RESULT
+fi
+
+echo ""
+echo "#################"
+echo "All tests passed!"
+echo "#################"
+echo ""
 
 # The cleanup function will be called automatically
