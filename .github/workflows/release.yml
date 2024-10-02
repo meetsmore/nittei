@@ -84,7 +84,7 @@ jobs:
           platforms: ${{ matrix.platform }}
           # This is for the Alpine image
           build-args: |
-            ARCH=${{ matrix.platform == 'linux/amd64' && 'ARCH=x86_64' || 'aarch64' }}
+            ARCH=${{ matrix.platform == 'linux/amd64' && 'x86_64' || 'aarch64' }}
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
 
