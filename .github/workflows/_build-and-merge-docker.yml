@@ -116,8 +116,8 @@ jobs:
           images: ${{ env.REGISTRY_IMAGE }}
           # For debian: latest, debian, 1.0.0
           # For alpine: alpine, alpine-1.0.0
-          # tags: ${{ inputs.distro == 'debian' && format('latest, debian, {0}', env.version) || format('alpine, alpine-{0}', env.version) }}
-          tags: ${{ inputs.distro == 'debian' && env.version || format('alpine-{0}', env.version) }}
+          # tags: ${{ inputs.distro == 'debian' && format('latest, debian, {0}', env.VERSION) || format('alpine, alpine-{0}', env.VERSION) }}
+          tags: ${{ inputs.distro == 'debian' && env.VERSION || format('alpine-{0}', env.VERSION) }}
 
       - name: Create manifest list and push
         working-directory: /tmp/digests
