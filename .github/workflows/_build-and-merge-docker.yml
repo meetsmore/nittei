@@ -33,12 +33,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set version env
-        run: |
-          # v1.0.0 --> 1.0.0
-          VERSION=${GITHUB_REF#refs/*/}
-          echo "VERSION=${VERSION:1}" >> $GITHUB_ENV
-
       - uses: actions/cache@v4
         with:
           path: |
@@ -48,16 +42,6 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY_IMAGE }}
-          # For debian: latest, debian, 1.0.0
-          # For alpine: alpine, alpine-1.0.0
-          # tags: ${{ inputs.distro == 'debian' && format('latest, debian, {0}', env.version) || format('alpine, alpine-{0}', env.version) }}
-          tags: ${{ inputs.distro == 'debian' && format('{0}', env.version) || format('alpine-{0}', env.version) }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -118,6 +102,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Set version env
+        run: |
+          # # v1.0.0 --> 1.0.0
+          # VERSION=${GITHUB_REF#refs/*/}
+          # echo "VERSION=${VERSION:1}" >> $GITHUB_ENV
+          echo "VERSION=${{ github.sha }}" >> $GITHUB_ENV
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
@@ -126,7 +117,7 @@ jobs:
           # For debian: latest, debian, 1.0.0
           # For alpine: alpine, alpine-1.0.0
           # tags: ${{ inputs.distro == 'debian' && format('latest, debian, {0}', env.version) || format('alpine, alpine-{0}', env.version) }}
-          tags: ${{ inputs.distro == 'debian' && format('{0}', env.version) || format('alpine-{0}', env.version) }}
+          tags: ${{ inputs.distro == 'debian' && env.version || format('alpine-{0}', env.version) }}
 
       - name: Create manifest list and push
         working-directory: /tmp/digests
