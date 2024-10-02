@@ -42,7 +42,7 @@ pub struct GetMultipleFreeBusyUseCase {
 }
 
 #[derive(Debug)]
-pub struct GetMultipleFreeBusyResponse(pub HashMap<ID, VecDeque<EventInstance>>);
+pub struct GetMultipleFreeBusyResponse(pub HashMap<ID, Vec<EventInstance>>);
 
 #[derive(Debug)]
 pub enum UseCaseError {
@@ -123,7 +123,7 @@ impl GetMultipleFreeBusyUseCase {
         timespan: &TimeSpan,
         ctx: &NitteiContext,
         calendars: Vec<Calendar>,
-    ) -> Result<HashMap<ID, VecDeque<EventInstance>>, UseCaseError> {
+    ) -> Result<HashMap<ID, Vec<EventInstance>>, UseCaseError> {
         // For quick lookup by calendar id
         let calendars_lookup = calendars
             .iter()
@@ -131,7 +131,7 @@ impl GetMultipleFreeBusyUseCase {
             .collect::<HashMap<_, _>>();
 
         // End result
-        let mut events_per_user = HashMap::new();
+        let mut events_per_user: HashMap<ID, Vec<EventInstance>> = HashMap::new();
 
         // Fetch all events for all calendars
         // This is not executed yet (lazy)
@@ -157,7 +157,7 @@ impl GetMultipleFreeBusyUseCase {
                     Ok((user_id, events)) => {
                         let expanded_events =
                             self.expand_events(events, timespan, &calendars_lookup)?;
-                        events_per_user.insert(user_id, expanded_events);
+                        events_per_user.insert(user_id, expanded_events.into());
                     }
                     Err(e) => return Err(e),
                 }
@@ -202,7 +202,7 @@ mod test {
         ctx.repos.accounts.insert(&account).await.unwrap();
         let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.unwrap();
-        let calendar = Calendar::new(&user.id(), &user.account_id);
+        let calendar = Calendar::new(&user.id(), &user.account_id, None, None);
         ctx.repos.calendars.insert(&calendar).await.unwrap();
         let one_hour = 1000 * 60 * 60;
         let mut e1 = CalendarEvent {

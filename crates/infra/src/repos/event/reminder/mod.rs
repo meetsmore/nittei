@@ -26,7 +26,7 @@ mod tests {
         ctx.repos.accounts.insert(&account).await.unwrap();
         let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.unwrap();
-        let calendar = Calendar::new(&user.id, &account.id);
+        let calendar = Calendar::new(&user.id, &account.id, None, None);
         ctx.repos.calendars.insert(&calendar).await.unwrap();
         let event = CalendarEvent {
             account_id: account.id.clone(),

@@ -1,9 +1,12 @@
 import dayjs from 'dayjs'
-import type { Calendar, INitteiClient, User, CalendarEvent } from '../../lib'
 import { setupAccount } from '../helpers/fixtures'
 import { v4 } from 'uuid'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
+import { INitteiClient } from '../../lib'
+import { UserDTO } from '../../lib/gen_types/UserDTO'
+import { CalendarDTO } from '../../lib/gen_types/CalendarDTO'
+import { CalendarEventDTO } from '../../lib/gen_types/CalendarEventDTO'
 
 dayjs.extend(utc)
 dayjs.extend(timezone)
@@ -21,11 +24,11 @@ const TIMESTAMP_FIRST_JANUARY_2024 = 1704067200000 // 2024-01-01 00:00:00 UTC
  */
 async function create300Events(
   client: INitteiClient,
-  user: User,
-  calendar: Calendar
-): Promise<CalendarEvent[]> {
+  user: UserDTO,
+  calendar: CalendarDTO
+): Promise<CalendarEventDTO[]> {
   // Should create 300 events, 100 events per day
-  const events: CalendarEvent[] = []
+  const events: CalendarEventDTO[] = []
   let dayCount = 0
   for (let i = 0; i < 300; i++) {
     // Event index for 10 events per day, each spaced within the range of 9 AM to 6 PM
@@ -67,8 +70,8 @@ describe('Load tests', () => {
   })
 
   describe('Single user', () => {
-    let user1: User | undefined
-    let user1Calendar1: Calendar | undefined
+    let user1: UserDTO | undefined
+    let user1Calendar1: CalendarDTO | undefined
 
     beforeAll(async () => {
       const userUuid = v4()

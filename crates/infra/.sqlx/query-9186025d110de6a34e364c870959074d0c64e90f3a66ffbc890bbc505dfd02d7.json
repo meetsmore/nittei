@@ -25,6 +25,16 @@
       },
       {
         "ordinal": 4,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "key",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
         "name": "account_uid",
         "type_info": "Uuid"
       }
@@ -39,6 +49,8 @@
       false,
       false,
       false,
+      true,
+      true,
       false
     ]
   },

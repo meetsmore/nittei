@@ -67,7 +67,7 @@ mod tests {
                 .expect("To insert user integration");
         }
 
-        let calendar = Calendar::new(&user.id, &account.id);
+        let calendar = Calendar::new(&user.id, &account.id, None, None);
         ctx.repos
             .calendars
             .insert(&calendar)

@@ -1,63 +1,8 @@
-import type { Account } from './domain/account'
 import { NitteiBaseClient } from './baseClient'
-
-/**
- * Response when getting an account
- */
-type AccountResponse = {
-  /**
-   * Account object
-   */
-  account: Account
-}
-
-/**
- * Response when creating an account
- */
-type CreateAccountResponse = {
-  /**
-   * Account object
-   */
-  account: Account
-  /**
-   * Secret api key for this account
-   * This key is used to authenticate the account when making requests to the API
-   */
-  secretApiKey: string
-}
-
-/**
- * Request to create an account
- */
-type CreateAccountRequest = {
-  /**
-   * Code to use for creating the account
-   * This code is unique on the backend and is required for "admin" requests such as this one
-   * If not provided at startup via "CREATE_ACCOUNT_SECRET_CODE" environment variable
-   * Then the backend will generate one for you and log it
-   * @example "jXtS54fVjZlvJsRA" (auto-generated)
-   * @format No particular format
-   */
-  code: string
-}
-
-/**
- * Request to connect Google integration
- */
-type GoogleIntegration = {
-  /**
-   * Google client id
-   */
-  clientId: string
-  /**
-   * Google client secret
-   */
-  clientSecret: string
-  /**
-   * Redirect uri for the Google integration
-   */
-  redirectUri: string
-}
+import { AccountResponse } from './gen_types/AccountResponse'
+import { AddAccountIntegrationRequestBody } from './gen_types/AddAccountIntegrationRequestBody'
+import { CreateAccountRequestBody } from './gen_types/CreateAccountRequestBody'
+import { CreateAccountResponseBody } from './gen_types/CreateAccountResponseBody'
 
 /**
  * Client for the account endpoints
@@ -69,8 +14,8 @@ export class NitteiAccountClient extends NitteiBaseClient {
    * @param data - data for creating the account
    * @returns CreateAccountResponse - created account
    */
-  public create(data: CreateAccountRequest) {
-    return this.post<CreateAccountResponse>('/account', data)
+  public create(data: CreateAccountRequestBody) {
+    return this.post<CreateAccountResponseBody>('/account', data)
   }
 
   /**
@@ -108,7 +53,7 @@ export class NitteiAccountClient extends NitteiBaseClient {
    * @param data - data for connecting Google integration
    * @returns AccountResponse - updated account
    */
-  public connectGoogle(data: GoogleIntegration) {
+  public connectGoogle(data: AddAccountIntegrationRequestBody) {
     return this.put<AccountResponse>('/account/integration/google', data)
   }
 

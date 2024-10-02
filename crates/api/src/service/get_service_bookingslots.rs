@@ -14,7 +14,7 @@ use nittei_domain::{
         UserFreeEvents,
     },
     get_free_busy,
-    BusyCalendar,
+    BusyCalendarProvider,
     Calendar,
     CompatibleInstances,
     EventInstance,
@@ -286,7 +286,7 @@ impl GetServiceBookingSlotsUseCase {
         let nittei_busy_calendar_ids = busy_calendars
             .iter()
             .filter_map(|bc| match bc {
-                BusyCalendar::Nittei(id) => Some(id),
+                BusyCalendarProvider::Nittei(id) => Some(id),
                 _ => None,
             })
             .collect::<Vec<_>>();
@@ -297,14 +297,14 @@ impl GetServiceBookingSlotsUseCase {
         let google_busy_calendar_ids = busy_calendars
             .iter()
             .filter_map(|bc| match bc {
-                BusyCalendar::Google(id) => Some(id.clone()),
+                BusyCalendarProvider::Google(id) => Some(id.clone()),
                 _ => None,
             })
             .collect::<Vec<_>>();
         let outlook_busy_calendar_ids = busy_calendars
             .iter()
             .filter_map(|bc| match bc {
-                BusyCalendar::Outlook(id) => Some(id.clone()),
+                BusyCalendarProvider::Outlook(id) => Some(id.clone()),
                 _ => None,
             })
             .collect::<Vec<_>>();
@@ -586,9 +586,9 @@ mod test {
             furthest_booking_time: None,
         };
 
-        let calendar_user_1 = Calendar::new(&resource1.user_id, account_id);
+        let calendar_user_1 = Calendar::new(&resource1.user_id, account_id, None, None);
         resource1.availability = TimePlan::Calendar(calendar_user_1.id.clone());
-        let calendar_user_2 = Calendar::new(&resource2.user_id, account_id);
+        let calendar_user_2 = Calendar::new(&resource2.user_id, account_id, None, None);
         resource2.availability = TimePlan::Calendar(calendar_user_2.id.clone());
 
         ctx.repos.calendars.insert(&calendar_user_1).await.unwrap();

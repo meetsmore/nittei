@@ -1,9 +1,12 @@
 import dayjs from 'dayjs'
-import type { Calendar, INitteiClient, User, CalendarEvent } from '../../lib'
 import { setupAccount } from '../helpers/fixtures'
 import { v4 } from 'uuid'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
+import { INitteiClient } from '../../lib'
+import { UserDTO } from '../../lib/gen_types/UserDTO'
+import { CalendarDTO } from '../../lib/gen_types/CalendarDTO'
+import { CalendarEventDTO } from '../../lib/gen_types/CalendarEventDTO'
 
 dayjs.extend(utc)
 dayjs.extend(timezone)
@@ -23,8 +26,8 @@ describe('Requirements', () => {
 
   describe('Product requirements', () => {
     describe('A user can have its own calendar', () => {
-      let user1: User | undefined
-      let user1Calendar1: Calendar | undefined
+      let user1: UserDTO | undefined
+      let user1Calendar1: CalendarDTO | undefined
 
       it('should create a user', async () => {
         const userUuid = v4()
@@ -69,9 +72,9 @@ describe('Requirements', () => {
     })
 
     describe('A user can have multiple calendars', () => {
-      let user1: User | undefined
-      let user1Calendar1: Calendar | undefined
-      let user1Calendar2: Calendar | undefined
+      let user1: UserDTO | undefined
+      let user1Calendar1: CalendarDTO | undefined
+      let user1Calendar2: CalendarDTO | undefined
 
       beforeAll(async () => {
         const userUuid = v4()
@@ -106,6 +109,7 @@ describe('Requirements', () => {
         }
         const res = await client?.calendar.create(user1.id, {
           timezone: 'Asia/Tokyo',
+          key: 'second-calendar',
         })
         expect(res?.status).toBe(201)
 
@@ -131,13 +135,34 @@ describe('Requirements', () => {
         expect(res2?.data).toBeDefined()
         expect(res2?.data?.calendar.id).toEqual(user1Calendar2.id)
         expect(res2?.data?.calendar.userId).toEqual(user1?.id)
+
+        const res3 = await client?.calendar.findByUser(user1Calendar1.userId)
+        expect(res3?.status).toBe(200)
+        expect(res3?.data).toBeDefined()
+        expect(res3?.data?.calendars.length).toBe(2)
+        expect(res3?.data?.calendars).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({ id: user1Calendar1.id }),
+            expect.objectContaining({ id: user1Calendar2.id }),
+          ])
+        )
+
+        const res4 = await client?.calendar.findByUserAndKey(
+          user1Calendar1.userId,
+          'second-calendar'
+        )
+        expect(res4?.status).toBe(200)
+        expect(res4?.data).toBeDefined()
+        expect(res4?.data?.calendars.length).toBe(1)
+        expect(res4?.data?.calendars[0]?.id).toEqual(user1Calendar2.id)
+        expect(res4?.data?.calendars[0]?.key).toEqual('second-calendar')
       })
     })
 
     describe('A user can create an event in a calendar', () => {
-      let user1: User | undefined
-      let user1Calendar1: Calendar | undefined
-      let user1Calendar1Event1: CalendarEvent | undefined
+      let user1: UserDTO | undefined
+      let user1Calendar1: CalendarDTO | undefined
+      let user1Calendar1Event1: CalendarEventDTO | undefined
 
       beforeAll(async () => {
         const res = await client?.user.create()
@@ -203,9 +228,9 @@ describe('Requirements', () => {
     })
 
     describe('A user can update an event in his calendar', () => {
-      let user1: User | undefined
-      let user1Calendar1: Calendar | undefined
-      let user1Calendar1Event1: CalendarEvent | undefined
+      let user1: UserDTO | undefined
+      let user1Calendar1: CalendarDTO | undefined
+      let user1Calendar1Event1: CalendarEventDTO | undefined
 
       beforeAll(async () => {
         const res = await client?.user.create()
@@ -262,9 +287,9 @@ describe('Requirements', () => {
     })
 
     describe('A user can delete an event in his calendar', () => {
-      let user1: User | undefined
-      let user1Calendar1: Calendar | undefined
-      let user1Calendar1Event1: CalendarEvent | undefined
+      let user1: UserDTO | undefined
+      let user1Calendar1: CalendarDTO | undefined
+      let user1Calendar1Event1: CalendarEventDTO | undefined
 
       beforeAll(async () => {
         const res = await client?.user.create()
@@ -332,11 +357,11 @@ describe('Requirements', () => {
     })
 
     describe('A user can see the events during a timespan of all his calendars', () => {
-      let user1: User | undefined
-      let user1Calendar1: Calendar | undefined
-      let user1Calendar2: Calendar | undefined
-      let user1Calendar1Event1: CalendarEvent | undefined
-      let user1Calendar2Event1: CalendarEvent | undefined
+      let user1: UserDTO | undefined
+      let user1Calendar1: CalendarDTO | undefined
+      let user1Calendar2: CalendarDTO | undefined
+      let user1Calendar1Event1: CalendarEventDTO | undefined
+      let user1Calendar2Event1: CalendarEventDTO | undefined
 
       beforeAll(async () => {
         const res = await client?.user.create()
@@ -398,15 +423,27 @@ describe('Requirements', () => {
         expect(res?.status).toBe(200)
         expect(res?.data).toBeDefined()
         expect(res?.data?.events.length).toBe(2)
-        expect(res?.data?.events[0].event.id).toEqual(user1Calendar1Event1?.id)
-        expect(res?.data?.events[1].event.id).toEqual(user1Calendar2Event1?.id)
+        expect(res?.data?.events).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              event: expect.objectContaining({
+                id: user1Calendar1Event1?.id,
+              }),
+            }),
+            expect.objectContaining({
+              event: expect.objectContaining({
+                id: user1Calendar2Event1?.id,
+              }),
+            }),
+          ])
+        )
       })
     })
 
     describe('A user calendar can be queried for availability (freebusy)', () => {
-      let user1: User | undefined
-      let user1Calendar1: Calendar | undefined
-      let user1Calendar1Event1: CalendarEvent | undefined
+      let user1: UserDTO | undefined
+      let user1Calendar1: CalendarDTO | undefined
+      let user1Calendar1Event1: CalendarEventDTO | undefined
 
       beforeAll(async () => {
         const res = await client?.user.create()
@@ -455,12 +492,12 @@ describe('Requirements', () => {
     })
 
     describe('Multiple calendars of the same user can be queried at once (freebusy)', () => {
-      let user1: User | undefined
-      let user1Calendar1: Calendar | undefined
-      let user1Calendar1Event1: CalendarEvent | undefined
-      let user1Calendar2: Calendar | undefined
-      let user1Calendar2Event1: CalendarEvent | undefined
-      let user1Calendar2Event2: CalendarEvent | undefined
+      let user1: UserDTO | undefined
+      let user1Calendar1: CalendarDTO | undefined
+      let user1Calendar1Event1: CalendarEventDTO | undefined
+      let user1Calendar2: CalendarDTO | undefined
+      let user1Calendar2Event1: CalendarEventDTO | undefined
+      let user1Calendar2Event2: CalendarEventDTO | undefined
 
       beforeAll(async () => {
         const res = await client?.user.create()
@@ -611,8 +648,8 @@ describe('Requirements', () => {
     })
 
     describe('Multiple calendars of different users can be queried at once', () => {
-      let user1: User | undefined
-      let user2: User | undefined
+      let user1: UserDTO | undefined
+      let user2: UserDTO | undefined
       beforeAll(async () => {
         const resUser1 = await client?.user.create()
         if (!resUser1?.data) {
@@ -675,17 +712,17 @@ describe('Requirements', () => {
         if (!res?.data) {
           throw new Error('Freebusy not found')
         }
-        expect(res.data[user1.id].length).toBe(1)
-        expect(res.data[user2.id].length).toBe(1)
+        expect(res.data[user1.id]?.length).toBe(1)
+        expect(res.data[user2.id]?.length).toBe(1)
       })
     })
 
     // TODO: we need to add a state or pending field to the event
     describe.skip('A booking can be either pending or confirmed', () => {
-      let user1: User | undefined
-      let user1Calendar1: Calendar | undefined
-      let user1Calendar1Event1: CalendarEvent | undefined
-      let user1Calendar1Event2: CalendarEvent | undefined
+      let user1: UserDTO | undefined
+      let user1Calendar1: CalendarDTO | undefined
+      let user1Calendar1Event1: CalendarEventDTO | undefined
+      let user1Calendar1Event2: CalendarEventDTO | undefined
 
       beforeAll(async () => {
         const res = await client?.user.create()
@@ -775,9 +812,9 @@ describe('Requirements', () => {
 
   describe('Technical requirements', () => {
     describe('Japanese must be supported', () => {
-      let user1: User | undefined
-      let user1Calendar1: Calendar | undefined
-      let user1Calendar1Event1: CalendarEvent | undefined
+      let user1: UserDTO | undefined
+      let user1Calendar1: CalendarDTO | undefined
+      let user1Calendar1Event1: CalendarEventDTO | undefined
 
       beforeAll(async () => {
         const res = await client?.user.create()
@@ -828,8 +865,8 @@ describe('Requirements', () => {
     })
 
     describe('Multiple timezones are supported', () => {
-      let user1: User | undefined
-      let user1Calendar1: Calendar | undefined
+      let user1: UserDTO | undefined
+      let user1Calendar1: CalendarDTO | undefined
 
       let date1 = dayjs.tz('2024-01-01T00:00:00', 'Asia/Tokyo') // 1st January 2024 at 0h00 in JST
       let date2 = dayjs.tz('2024-01-01T00:00:00', 'UTC') // 1st January 2024 at 0h00 in UTC
@@ -932,7 +969,7 @@ describe('Requirements', () => {
     })
 
     describe('Calendars can be filtered out by metadata', () => {
-      let user1: User | undefined
+      let user1: UserDTO | undefined
 
       beforeAll(async () => {
         const resUser1 = await client?.user.create()

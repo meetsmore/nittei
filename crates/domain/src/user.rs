@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use crate::{
     shared::entity::{Entity, ID},
@@ -38,7 +39,8 @@ impl Meta<ID> for User {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct UserIntegration {
     pub user_id: ID,
     pub account_id: ID,
@@ -48,8 +50,9 @@ pub struct UserIntegration {
     pub access_token_expires_ts: i64,
 }
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub enum IntegrationProvider {
     #[default]
     Google,

@@ -32,6 +32,7 @@ pub async fn update_calendar_admin_controller(
     let usecase = UpdateCalendarUseCase {
         user,
         calendar_id: cal.id,
+        name: body.0.name.clone(),
         week_start: body.0.settings.week_start,
         timezone: body.0.settings.timezone,
         metadata: body.0.metadata,
@@ -54,6 +55,7 @@ pub async fn update_calendar_controller(
     let usecase = UpdateCalendarUseCase {
         user,
         calendar_id: std::mem::take(&mut path.calendar_id),
+        name: body.0.name.clone(),
         week_start: body.0.settings.week_start,
         timezone: body.0.settings.timezone,
         metadata: body.0.metadata,
@@ -69,6 +71,7 @@ pub async fn update_calendar_controller(
 struct UpdateCalendarUseCase {
     pub user: User,
     pub calendar_id: ID,
+    pub name: Option<String>,
     pub week_start: Option<Weekday>,
     pub timezone: Option<Tz>,
     pub metadata: Option<Metadata>,
@@ -121,6 +124,10 @@ impl UseCase for UpdateCalendarUseCase {
             calendar.metadata = metadata.clone();
         }
 
+        if let Some(name) = &self.name {
+            calendar.name = Some(name.clone());
+        }
+
         ctx.repos
             .calendars
             .save(&calendar)
@@ -151,7 +158,7 @@ mod test {
         ctx.repos.accounts.insert(&account).await.unwrap();
         let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.unwrap();
-        let calendar = Calendar::new(&user.id, &account.id);
+        let calendar = Calendar::new(&user.id, &account.id, None, None);
         ctx.repos.calendars.insert(&calendar).await.unwrap();
 
         assert_eq!(calendar.settings.week_start, Weekday::Mon);
@@ -159,6 +166,7 @@ mod test {
         let mut usecase = UpdateCalendarUseCase {
             user,
             calendar_id: calendar.id.clone(),
+            name: None,
             week_start: Some(new_wkst),
             timezone: None,
             metadata: Some(Metadata::new()),

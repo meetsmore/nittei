@@ -216,7 +216,7 @@ mod tests {
 
         let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.unwrap();
-        let mut calendar = Calendar::new(&user.id, &account.id);
+        let mut calendar = Calendar::new(&user.id, &account.id, None, None);
         calendar.settings.timezone = chrono_tz::Europe::Oslo;
         ctx.repos.calendars.insert(&calendar).await.unwrap();
         (user, calendar)

@@ -1,6 +1,6 @@
 mod postgres;
 
-use nittei_domain::{BusyCalendar, IntegrationProvider, ID};
+use nittei_domain::{BusyCalendarProvider, IntegrationProvider, ID};
 pub use postgres::PostgresServiceUseBusyCalendarRepo;
 
 #[derive(Debug, Clone)]
@@ -26,7 +26,11 @@ pub trait IServiceUserBusyCalendarRepo: Send + Sync {
     async fn insert_ext(&self, input: ExternalBusyCalendarIdentifier) -> anyhow::Result<()>;
     async fn delete(&self, input: BusyCalendarIdentifier) -> anyhow::Result<()>;
     async fn delete_ext(&self, input: ExternalBusyCalendarIdentifier) -> anyhow::Result<()>;
-    async fn find(&self, service_id: &ID, user_id: &ID) -> anyhow::Result<Vec<BusyCalendar>>;
+    async fn find(
+        &self,
+        service_id: &ID,
+        user_id: &ID,
+    ) -> anyhow::Result<Vec<BusyCalendarProvider>>;
 }
 
 #[cfg(test)]
@@ -94,7 +98,7 @@ mod tests {
                 .is_ok());
         }
 
-        let calendar = Calendar::new(&user.id, &account.id);
+        let calendar = Calendar::new(&user.id, &account.id, None, None);
         assert!(ctx.repos.calendars.insert(&calendar).await.is_ok());
 
         // Insert nittei busy calendar

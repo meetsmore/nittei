@@ -3,6 +3,7 @@ use std::convert::TryFrom;
 use chrono::{prelude::*, Duration, TimeDelta};
 use rrule::RRuleSet;
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 use crate::{
     calendar::CalendarSettings,
@@ -17,8 +18,9 @@ use crate::{
     Meta,
 };
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub enum CalendarEventStatus {
     #[default]
     Tentative,
@@ -49,6 +51,7 @@ impl TryFrom<String> for CalendarEventStatus {
 }
 
 #[derive(Debug, Clone, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CalendarEvent {
     pub id: ID,
     pub parent_id: Option<String>,
@@ -98,8 +101,9 @@ impl Meta<ID> for CalendarEvent {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct CalendarEventReminder {
     pub delta: i64, // In minutes
     pub identifier: String,
@@ -244,7 +248,7 @@ mod test {
     use chrono_tz::UTC;
 
     use super::*;
-    use crate::{shared::recurrence::WeekDay, RRuleFrequency};
+    use crate::{shared::recurrence::WeekDayRecurrence, RRuleFrequency};
 
     #[test]
     fn daily_calendar_event() {
@@ -348,11 +352,11 @@ mod test {
             ..Default::default()
         });
         valid_rrules.push(RRuleOptions {
-            byweekday: Some(vec![WeekDay::new(Weekday::Tue).unwrap()]),
+            byweekday: Some(vec![WeekDayRecurrence::new(Weekday::Tue).unwrap()]),
             ..Default::default()
         });
         valid_rrules.push(RRuleOptions {
-            byweekday: Some(vec![WeekDay::new_nth(Weekday::Tue, 1).unwrap()]),
+            byweekday: Some(vec![WeekDayRecurrence::new_nth(Weekday::Tue, 1).unwrap()]),
             freq: RRuleFrequency::Monthly,
             ..Default::default()
         });

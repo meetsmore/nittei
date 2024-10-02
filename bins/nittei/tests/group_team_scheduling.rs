@@ -5,7 +5,7 @@ use helpers::{
     setup::spawn_app,
     utils::{assert_equal_user_lists, format_datetime},
 };
-use nittei_domain::{BusyCalendar, ServiceMultiPersonOptions, TimePlan, ID};
+use nittei_domain::{BusyCalendarProvider, ServiceMultiPersonOptions, TimePlan, ID};
 use nittei_sdk::{
     AddBusyCalendar,
     AddServiceUserInput,
@@ -53,6 +53,8 @@ async fn create_default_service_host(
     let input = CreateCalendarInput {
         metadata: None,
         timezone: chrono_tz::UTC,
+        name: None,
+        key: None,
         user_id: host.id.clone(),
         week_start: Weekday::Mon,
     };
@@ -80,7 +82,7 @@ async fn create_default_service_host(
     let input = AddBusyCalendar {
         user_id: host.id.clone(),
         service_id: service_id.clone(),
-        calendar: BusyCalendar::Nittei(busy_calendar.id.clone()),
+        calendar: BusyCalendarProvider::Nittei(busy_calendar.id.clone()),
     };
     admin_client
         .service
@@ -407,6 +409,8 @@ async fn test_group_team_scheduling_increase_max_count() {
         let input = CreateCalendarInput {
             metadata: None,
             timezone: chrono_tz::UTC,
+            name: None,
+            key: None,
             user_id: host.id.clone(),
             week_start: Weekday::Mon,
         };
@@ -434,7 +438,7 @@ async fn test_group_team_scheduling_increase_max_count() {
         let input = AddBusyCalendar {
             user_id: host.id.clone(),
             service_id: service.id.clone(),
-            calendar: BusyCalendar::Nittei(busy_calendar.id.clone()),
+            calendar: BusyCalendarProvider::Nittei(busy_calendar.id.clone()),
         };
         admin_client
             .service
@@ -642,6 +646,8 @@ async fn test_group_team_scheduling_increase_max_count() {
         let input = CreateCalendarInput {
             metadata: None,
             timezone: chrono_tz::UTC,
+            name: None,
+            key: None,
             user_id: host.id.clone(),
             week_start: Weekday::Mon,
         };
@@ -669,7 +675,7 @@ async fn test_group_team_scheduling_increase_max_count() {
         let input = AddBusyCalendar {
             user_id: host.id.clone(),
             service_id: service.id.clone(),
-            calendar: BusyCalendar::Nittei(busy_calendar.id.clone()),
+            calendar: BusyCalendarProvider::Nittei(busy_calendar.id.clone()),
         };
         admin_client
             .service
@@ -830,6 +836,8 @@ async fn test_group_team_scheduling_decrease_max_count() {
         let input = CreateCalendarInput {
             metadata: None,
             timezone: chrono_tz::UTC,
+            name: None,
+            key: None,
             user_id: host.id.clone(),
             week_start: Weekday::Mon,
         };
@@ -857,7 +865,7 @@ async fn test_group_team_scheduling_decrease_max_count() {
         let input = AddBusyCalendar {
             user_id: host.id.clone(),
             service_id: service.id.clone(),
-            calendar: BusyCalendar::Nittei(busy_calendar.id.clone()),
+            calendar: BusyCalendarProvider::Nittei(busy_calendar.id.clone()),
         };
         admin_client
             .service
@@ -1056,6 +1064,8 @@ async fn test_combination_of_services() {
     let input = CreateCalendarInput {
         metadata: None,
         timezone: chrono_tz::UTC,
+        name: None,
+        key: None,
         user_id: host.id.clone(),
         week_start: Weekday::Mon,
     };
@@ -1085,7 +1095,7 @@ async fn test_combination_of_services() {
         let input = AddBusyCalendar {
             user_id: host.id.clone(),
             service_id,
-            calendar: BusyCalendar::Nittei(busy_calendar.id.clone()),
+            calendar: BusyCalendarProvider::Nittei(busy_calendar.id.clone()),
         };
         admin_client
             .service

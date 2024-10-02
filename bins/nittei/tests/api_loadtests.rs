@@ -54,6 +54,8 @@ async fn create_calendar(admin_client: &NitteiSDK, user_id: ID) -> CalendarDTO {
         .create(CreateCalendarInput {
             user_id,
             timezone: chrono_tz::UTC,
+            name: None,
+            key: None,
             week_start: Weekday::Mon,
             metadata: None,
         })

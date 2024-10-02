@@ -208,7 +208,7 @@ async fn test_crud_schedule() {
         .expect("Expected to create schedule")
         .schedule;
     assert_eq!(schedule.user_id, create_user_res.user.id);
-    assert_eq!(schedule.timezone, chrono_tz::UTC);
+    assert_eq!(schedule.timezone, chrono_tz::UTC.to_string());
     assert_eq!(schedule.rules.len(), 7);
 
     let schedule = admin_client
@@ -231,7 +231,7 @@ async fn test_crud_schedule() {
         .schedule;
 
     assert_eq!(get_schedule.rules.len(), 0);
-    assert_eq!(get_schedule.timezone, chrono_tz::Europe::Oslo);
+    assert_eq!(get_schedule.timezone, chrono_tz::Europe::Oslo.to_string());
 
     assert!(admin_client
         .schedule
@@ -363,6 +363,8 @@ async fn test_crud_calendars() {
         .create(CreateCalendarInput {
             user_id: user.id.clone(),
             timezone: chrono_tz::UTC,
+            name: Some("My calendar".to_string()),
+            key: Some("my_calendar".to_string()),
             week_start: Weekday::Mon,
             metadata: None,
         })
@@ -378,6 +380,28 @@ async fn test_crud_calendars() {
         .calendar;
 
     assert_eq!(calendar_get_res.id, calendar.id);
+
+    let calendars = admin_client
+        .calendar
+        .get_by_user(user.id.clone(), None)
+        .await
+        .unwrap();
+
+    assert_eq!(calendars.calendars.len(), 1);
+    assert_eq!(calendars.calendars[0].id, calendar.id);
+
+    let calendars_by_key = admin_client
+        .calendar
+        .get_by_user(user.id.clone(), Some("my_calendar".to_string()))
+        .await
+        .unwrap();
+
+    assert_eq!(calendars_by_key.calendars.len(), 1);
+    assert_eq!(calendars_by_key.calendars[0].id, calendar.id);
+    assert_eq!(
+        calendars_by_key.calendars[0].key,
+        Some("my_calendar".to_string())
+    );
 
     let events = admin_client
         .calendar
@@ -397,6 +421,7 @@ async fn test_crud_calendars() {
         .update(UpdateCalendarInput {
             calendar_id: calendar.id.clone(),
             timezone: None,
+            name: None,
             week_start: Some(week_start),
             metadata: None,
         })
@@ -445,6 +470,8 @@ async fn test_crud_events() {
         .create(CreateCalendarInput {
             user_id: user.id.clone(),
             timezone: chrono_tz::UTC,
+            name: None,
+            key: None,
             week_start: Weekday::Mon,
             metadata: None,
         })
@@ -693,6 +720,8 @@ async fn test_freebusy_multiple() {
         .create(CreateCalendarInput {
             user_id: user1.id.clone(),
             timezone: chrono_tz::UTC,
+            name: None,
+            key: None,
             week_start: Weekday::Mon,
             metadata: None,
         })
@@ -704,6 +733,8 @@ async fn test_freebusy_multiple() {
         .create(CreateCalendarInput {
             user_id: user2.id.clone(),
             timezone: chrono_tz::UTC,
+            name: None,
+            key: None,
             week_start: Weekday::Mon,
             metadata: None,
         })
@@ -778,20 +809,20 @@ async fn test_freebusy_multiple() {
     let user2_free_busy = multiple_free_busy_res.0.get(&user2.id).unwrap();
 
     assert_eq!(
-        user1_free_busy.front().unwrap().start_time,
+        user1_free_busy.first().unwrap().start_time,
         DateTime::from_timestamp_millis(0).unwrap(),
     );
     assert_eq!(
-        user1_free_busy.front().unwrap().end_time,
+        user1_free_busy.first().unwrap().end_time,
         DateTime::from_timestamp_millis(1000 * 60 * 60).unwrap(),
     );
 
     assert_eq!(
-        user2_free_busy.front().unwrap().start_time,
+        user2_free_busy.first().unwrap().start_time,
         DateTime::from_timestamp_millis(1000 * 60 * 60).unwrap(),
     );
     assert_eq!(
-        user2_free_busy.front().unwrap().end_time,
+        user2_free_busy.first().unwrap().end_time,
         DateTime::from_timestamp_millis(1000 * 60 * 60 * 2).unwrap(),
     );
 }
