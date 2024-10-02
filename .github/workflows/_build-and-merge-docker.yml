@@ -10,6 +10,7 @@ on:
         required: true
         type: string
 
+# Taken from https://docs.docker.com/build/ci/github-actions/multi-platform/#distribute-build-across-multiple-runners
 jobs:
   build-docker:
     # We use a custom runner for ARM64 builds (Buildjet)

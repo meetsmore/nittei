@@ -12,6 +12,7 @@ on:
     # tags:
     #   - "v[0-9]+.[0-9]+.[0-9]+-?[a-zA-Z0-9]*"
 
+# Taken from https://docs.docker.com/build/ci/github-actions/multi-platform/#distribute-build-across-multiple-runners
 jobs:
   debian-build-and-merge-docker:
     uses: ./.github/workflows/_build-and-merge-docker.yml
@@ -161,90 +162,90 @@ jobs:
   #     message: |
   #       Autopublish: Update cargo workspace deps on release
 
-  # javascript-client-release:
-  #   runs-on: ubuntu-latest
-  #   needs:
-  # - debian-build-and-merge-docker
-  # - alpine-build-and-merge-docker
-  #   permissions:
-  #     contents: read
-  #     packages: write
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
-  #     - name: Set version env
-  #       run: |
-  #         # v1.0.0 --> 1.0.0
-  #         VERSION=${GITHUB_REF#refs/*/}
-  #         echo "VERSION=${VERSION:1}" >> $GITHUB_ENV
-  #     - name: Setup Node.js 20
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: 20
-  #         registry-url: "https://npm.pkg.github.com"
-  #         scope: "@meetsmore"
+  javascript-client-release:
+    runs-on: ubuntu-latest
+    needs:
+      - debian-build-and-merge-docker
+      - alpine-build-and-merge-docker
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set version env
+        run: |
+          # v1.0.0 --> 1.0.0
+          VERSION=${GITHUB_REF#refs/*/}
+          echo "VERSION=${VERSION:1}" >> $GITHUB_ENV
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@meetsmore"
 
-  #     - name: Setup pnpm
-  #       uses: pnpm/action-setup@v4
-  #       with:
-  #         version: 9
-  #     - name: Install deps
-  #       run: |
-  #         cd clients/javascript
-  #         pnpm install
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - name: Install deps
+        run: |
+          cd clients/javascript
+          pnpm install
 
-  #     - name: Set version number
-  #       run: |
-  #         cd clients/javascript
-  #         pnpm version $VERSION
+      - name: Set version number
+        run: |
+          cd clients/javascript
+          pnpm version $VERSION
 
-  #     - name: Publish package
-  #       run: |
-  #         cd clients/javascript
-  #         pnpm run deploy
-  #       env:
-  #         NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish package
+        run: |
+          cd clients/javascript
+          pnpm run deploy
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # helm-chart-release:
-  #   needs: javascript-client-release
-  #   permissions:
-  #     contents: write
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 0
+  helm-chart-release:
+    needs: javascript-client-release
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-  #     - name: Configure Git
-  #       run: |
-  #         git config user.name "$GITHUB_ACTOR"
-  #         git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
-  #     - name: Install Helm
-  #       uses: azure/setup-helm@v4
-  #       env:
-  #         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
-  #     - name: Set version env
-  #       run: |
-  #         # v1.0.0 --> 1.0.0
-  #         VERSION=${GITHUB_REF#refs/*/}
-  #         echo "VERSION=${VERSION:1}" >> $GITHUB_ENV
+      - name: Set version env
+        run: |
+          # v1.0.0 --> 1.0.0
+          VERSION=${GITHUB_REF#refs/*/}
+          echo "VERSION=${VERSION:1}" >> $GITHUB_ENV
 
-  #     - name: Set Chart to tag version
-  #       run: |
-  #         sed -i "s/\$VERSION_REPLACED_IN_CI/$VERSION/g" charts/nittei/Chart.yaml
-  #         sed -i "s/\$VERSION_REPLACED_IN_CI/$VERSION/g" charts/nittei/values.yaml
+      - name: Set Chart to tag version
+        run: |
+          sed -i "s/\$VERSION_REPLACED_IN_CI/$VERSION/g" charts/nittei/Chart.yaml
+          sed -i "s/\$VERSION_REPLACED_IN_CI/$VERSION/g" charts/nittei/values.yaml
 
-  #     - name: Debug mark as latest
-  #       run: |
-  #         echo "github.event.release: ${{ github.event.release }}"
-  #         echo "github.event.release.prerelease: ${{ github.event.release.prerelease }}"
-  #         echo "mark_as_latest: ${{ !github.event.release.prerelease }}"
+      - name: Debug mark as latest
+        run: |
+          echo "github.event.release: ${{ github.event.release }}"
+          echo "github.event.release.prerelease: ${{ github.event.release.prerelease }}"
+          echo "mark_as_latest: ${{ !github.event.release.prerelease }}"
 
-  #     - name: Run chart-releaser
-  #       uses: helm/chart-releaser-action@v1.6.0
-  #       env:
-  #         CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-  #         mark_as_latest: "${{ !github.event.release.prerelease }}"
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.6.0
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          mark_as_latest: "${{ !github.event.release.prerelease }}"
