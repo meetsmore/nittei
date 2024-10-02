@@ -4,5 +4,8 @@ ALTER TABLE
 ADD
   COLUMN external_id TEXT;
 
--- Add index on 'external_id' column
-CREATE INDEX IF NOT EXISTS users_external_id ON users (external_id);
+-- Add a unique constraint on `external_id` columns
+ALTER TABLE
+  users
+ADD
+  CONSTRAINT users__external_id__unique UNIQUE (external_id);
