@@ -29,6 +29,7 @@ async fn create_default_service_host(
 ) -> (User, Calendar) {
     let input = CreateUserInput {
         metadata: None,
+        external_id: None,
         user_id: None,
     };
     let host = admin_client

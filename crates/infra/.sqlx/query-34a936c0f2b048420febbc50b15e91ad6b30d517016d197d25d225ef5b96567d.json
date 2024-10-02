@@ -17,6 +17,11 @@
         "ordinal": 2,
         "name": "metadata",
         "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 3,
+        "name": "external_id",
+        "type_info": "Text"
       }
     ],
     "parameters": {
@@ -30,7 +35,8 @@
     "nullable": [
       false,
       false,
-      false
+      false,
+      true
     ]
   },
   "hash": "34a936c0f2b048420febbc50b15e91ad6b30d517016d197d25d225ef5b96567d"

@@ -27,6 +27,7 @@ impl PostgresUserRepo {
 struct UserRaw {
     user_uid: Uuid,
     account_uid: Uuid,
+    external_id: Option<String>,
     metadata: Value,
 }
 
@@ -36,6 +37,7 @@ impl TryFrom<UserRaw> for User {
         Ok(Self {
             id: e.user_uid.into(),
             account_id: e.account_uid.into(),
+            external_id: e.external_id,
             metadata: serde_json::from_value(e.metadata)?,
         })
     }
@@ -47,11 +49,12 @@ impl IUserRepo for PostgresUserRepo {
     async fn insert(&self, user: &User) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
-            INSERT INTO users(user_uid, account_uid, metadata)
-            VALUES($1, $2, $3)
+            INSERT INTO users(user_uid, account_uid, external_id, metadata)
+            VALUES($1, $2, $3, $4)
             "#,
             user.id.as_ref(),
             user.account_id.as_ref(),
+            user.external_id.as_ref(),
             Json(&user.metadata) as _,
         )
         .execute(&self.pool)
@@ -72,11 +75,13 @@ impl IUserRepo for PostgresUserRepo {
             r#"
             UPDATE users
             SET account_uid = $2,
-            metadata = $3
+            external_id = $3,
+            metadata = $4
             WHERE user_uid = $1
             "#,
             user.id.as_ref(),
             user.account_id.as_ref(),
+            user.external_id.as_ref(),
             Json(&user.metadata) as _,
         )
         .execute(&self.pool)
@@ -181,6 +186,28 @@ impl IUserRepo for PostgresUserRepo {
             error!(
                 "Find user with user_id: {} failed. DB returned error: {:?}",
                 user_id, e
+            );
+        })?;
+
+        res.map(|user| user.try_into()).transpose()
+    }
+
+    #[instrument]
+    async fn get_by_external_id(&self, external_id: &String) -> anyhow::Result<Option<User>> {
+        let res = sqlx::query_as!(
+            UserRaw,
+            r#"
+            SELECT * FROM users AS u
+            WHERE u.external_id = $1
+            "#,
+            external_id.as_str()
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .inspect_err(|e| {
+            error!(
+                "Find user with external_id: {} failed. DB returned error: {:?}",
+                external_id, e
             );
         })?;
 

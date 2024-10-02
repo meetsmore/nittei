@@ -36,6 +36,7 @@ async fn create_account_and_admin_client() -> (NitteiSDK, ID) {
 async fn create_user(admin_client: &NitteiSDK) -> ID {
     let input = CreateUserInput {
         metadata: None,
+        external_id: None,
         user_id: None,
     };
     admin_client

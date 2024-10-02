@@ -17,6 +17,7 @@ pub trait IUserRepo: Send + Sync {
         user_id: &ID,
         account_id: &ID,
     ) -> anyhow::Result<Option<User>>;
+    async fn get_by_external_id(&self, external_id: &String) -> anyhow::Result<Option<User>>;
     async fn find_by_metadata(&self, query: MetadataFindQuery) -> anyhow::Result<Vec<User>>;
 }
 

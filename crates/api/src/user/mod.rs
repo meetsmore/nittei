@@ -3,6 +3,7 @@ mod delete_user;
 mod get_me;
 mod get_multiple_users_freebusy;
 mod get_user;
+mod get_user_by_external_id;
 mod get_user_freebusy;
 mod get_users_by_meta;
 mod oauth_integration;
@@ -15,6 +16,7 @@ use delete_user::delete_user_controller;
 use get_me::get_me_controller;
 use get_multiple_users_freebusy::get_multiple_freebusy_controller;
 use get_user::get_user_controller;
+use get_user_by_external_id::get_user_by_external_id_controller;
 use get_user_freebusy::get_freebusy_controller;
 pub use get_user_freebusy::parse_vec_query_value;
 use get_users_by_meta::get_users_by_meta_controller;
@@ -32,6 +34,12 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
 
     // Get users by metadata
     cfg.route("/user/meta", web::get().to(get_users_by_meta_controller));
+
+    // Get users by metadata
+    cfg.route(
+        "/user/external_id/{external_id}",
+        web::get().to(get_user_by_external_id_controller),
+    );
 
     // Get freebusy for multiple users
     // This is a POST route !
