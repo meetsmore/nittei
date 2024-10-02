@@ -79,7 +79,7 @@ just dev
 There are a few environment variables that can be used to control the server
 
 - `DATABASE_URL` allows to specify the database the server should use
-- `PORT` allows to specify the port to be used by the server
+- `NITTEI_PORT` allows to specify the port to be used by the server
 - `ACCOUNT_API_KEY` is going to create an `Account` (if it does not already exist) during
   server startup with the given key. `Account`s act as tenants in the server, and it is possible to create multiple `Account`s by using the `CREATE_ACCOUNT_SECRET_CODE` which you can provide as an environment variable.
 
@@ -96,6 +96,29 @@ curl -H "x-api-key: $SECRET_API_KEY" "http://localhost:5000/api/v1/user/meta?key
 ```
 
 Please see below for links to more examples.
+
+### Running the tests
+
+For running the tests for the server (Rust) and the Rust client SDK, you can simply run:
+
+```sh
+just test
+```
+
+> This launches an ephemeral PostgreSQL container used by the tests. The script tries to remove the container at the end.
+
+For running the tests for the JS client SDK, you first need to have the server running. As a reminder, this is the command:
+
+```sh
+just dev
+```
+
+Once it's running, the tests can be run by doing the following:
+
+```sh
+cd clients/javascript/
+pnpm run test
+```
 
 ### Additional tools
 
