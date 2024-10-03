@@ -489,6 +489,7 @@ async fn test_crud_events() {
         .event
         .create(CreateEventInput {
             parent_id: None,
+            external_id: None,
             title: None,
             description: None,
             location: None,
@@ -537,6 +538,7 @@ async fn test_crud_events() {
             status: None,
             all_day: None,
             parent_id: None,
+            external_id: None,
             exdates: Some(vec![DateTime::from_timestamp_millis(0).unwrap()]),
             busy: None,
             duration: None,
@@ -761,6 +763,7 @@ async fn test_freebusy_multiple() {
         .event
         .create(CreateEventInput {
             parent_id: None,
+            external_id: None,
             title: None,
             description: None,
             location: None,
@@ -783,6 +786,7 @@ async fn test_freebusy_multiple() {
         .event
         .create(CreateEventInput {
             parent_id: None,
+            external_id: None,
             title: None,
             description: None,
             location: None,

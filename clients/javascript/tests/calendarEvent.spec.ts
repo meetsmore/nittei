@@ -3,7 +3,7 @@ import {
   NitteiClient,
   type INitteiUserClient,
 } from '../lib'
-import { setupUserClient } from './helpers/fixtures'
+import { setupAccount, setupUserClient } from './helpers/fixtures'
 
 describe('CalendarEvent API', () => {
   let calendarId: string
@@ -154,5 +154,39 @@ describe('CalendarEvent API', () => {
     )
 
     expect(eventUpdated.event.title).toBe('new title')
+  })
+
+  describe('Admin API', () => {
+    let calendarId: string
+    let userId: string
+    let adminClient: INitteiClient
+    beforeAll(async () => {
+      const data = await setupAccount()
+      adminClient = data.client
+      const userRes = await adminClient.user.create()
+      userId = userRes.user.id
+      const calendarRes = await adminClient.calendar.create(userId, {
+        timezone: 'UTC',
+      })
+      calendarId = calendarRes.calendar.id
+    })
+
+    it('should be able to query on external ID', async () => {
+      // Random
+      const externalId = crypto.randomUUID()
+      const res = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+        externalId: externalId,
+      })
+      const eventId = res.event.id
+      const res2 = await adminClient.events.getByExternalId(externalId)
+      expect(res2.event.id).toBe(eventId)
+    })
+
+    afterAll(async () => {
+      await adminClient.user.remove(userId)
+    })
   })
 })

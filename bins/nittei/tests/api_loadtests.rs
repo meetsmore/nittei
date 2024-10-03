@@ -96,6 +96,7 @@ async fn create_300_events_1_month(
                 user_id: user_id.clone(),
                 calendar_id: calendar_id.clone(),
                 parent_id: None,
+                external_id: None,
                 title: None,
                 description: None,
                 location: None,

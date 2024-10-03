@@ -34,6 +34,7 @@ pub async fn create_event_admin_controller(
     let body = body.0;
     let usecase = CreateEventUseCase {
         parent_id: body.parent_id,
+        external_id: body.external_id,
         title: body.title,
         description: body.description,
         location: body.location,
@@ -66,6 +67,7 @@ pub async fn create_event_controller(
     let body = body.0;
     let usecase = CreateEventUseCase {
         parent_id: body.parent_id,
+        external_id: body.external_id,
         title: body.title,
         description: body.description,
         location: body.location,
@@ -95,6 +97,7 @@ pub struct CreateEventUseCase {
     pub title: Option<String>,
     pub description: Option<String>,
     pub parent_id: Option<String>,
+    pub external_id: Option<String>,
     pub location: Option<String>,
     pub status: CalendarEventStatus,
     pub all_day: bool,
@@ -162,6 +165,7 @@ impl UseCase for CreateEventUseCase {
         let mut e = CalendarEvent {
             id: Default::default(),
             parent_id: self.parent_id.clone(),
+            external_id: self.external_id.clone(),
             title: self.title.clone(),
             description: self.description.clone(),
             location: self.location.clone(),
