@@ -1,6 +1,7 @@
 use nittei_domain::{User, ID};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
+use validator::Validate;
 
 use crate::dtos::UserDTO;
 
@@ -57,12 +58,14 @@ pub mod oauth_integration {
     use super::*;
 
     /// Request body for creating an OAuth integration
-    #[derive(Debug, Deserialize, Serialize, TS)]
+    #[derive(Debug, Deserialize, Serialize, Validate, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "OAuthIntegrationRequestBody")]
     pub struct RequestBody {
         /// OAuth code
+        #[validate(length(min = 1))]
         pub code: String,
+
         /// Integration provider
         /// E.g. "Google", "Outlook"
         pub provider: IntegrationProvider,

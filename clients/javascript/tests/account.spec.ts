@@ -17,6 +17,22 @@ describe('Account API', () => {
     expect(accountRes).toBeDefined()
   })
 
+  it('should fail to create an account with an empty code', async () => {
+    await expect(() =>
+      client.account.create({
+        code: '',
+      })
+    ).rejects.toThrow('Bad request')
+  })
+
+  it('should fail to create an account with an invalid code', async () => {
+    await expect(() =>
+      client.account.create({
+        code: 'invalid-code',
+      })
+    ).rejects.toThrow('Unauthorized')
+  })
+
   it('should find account', async () => {
     const accountRes = await client.account.create({
       code: CREATE_ACCOUNT_CODE,

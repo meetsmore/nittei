@@ -14,7 +14,7 @@ use crate::{
 pub async fn set_account_pub_key_controller(
     http_req: HttpRequest,
     ctx: web::Data<NitteiContext>,
-    body: web::Json<RequestBody>,
+    body: actix_web_validator::Json<RequestBody>,
 ) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
 

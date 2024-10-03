@@ -17,6 +17,8 @@ serde = { version = "1.0", features = ["derive"] }
 futures = "0.3"
 actix-web = "4.8"
 actix-cors = "0.7"
+actix-web-validator = "6.0.0"
+validator = { version = "0.18", features = ["derive"] }
 awc = "3.5"
 async-trait = "0.1.83"
 rrule = "0.12.0"

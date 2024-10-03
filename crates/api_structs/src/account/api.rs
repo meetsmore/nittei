@@ -1,6 +1,7 @@
 use nittei_domain::Account;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
+use validator::Validate;
 
 use crate::dtos::AccountDTO;
 
@@ -25,12 +26,13 @@ pub mod create_account {
     use super::*;
 
     /// Request body for creating an account
-    #[derive(Deserialize, Serialize, TS)]
+    #[derive(Deserialize, Serialize, Validate, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "CreateAccountRequestBody")]
     pub struct RequestBody {
         /// Code used for authentifying the request
         /// Creating accounts is an admin operation, so it requires a specific code
+        #[validate(length(min = 1))]
         pub code: String,
     }
 
@@ -65,11 +67,12 @@ pub mod set_account_pub_key {
     use super::*;
 
     /// Request body for setting the public JWT key of an account
-    #[derive(Debug, Deserialize, Serialize, TS)]
+    #[derive(Debug, Deserialize, Serialize, Validate, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "SetAccountPubKeyRequestBody")]
     pub struct RequestBody {
         /// Public JWT key
+        #[validate(length(min = 1))]
         pub public_jwt_key: Option<String>,
     }
 
@@ -81,11 +84,12 @@ pub mod set_account_webhook {
     use super::*;
 
     /// Request body for setting the webhook of an account
-    #[derive(Debug, Deserialize, Serialize, TS)]
+    #[derive(Debug, Deserialize, Serialize, Validate, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "SetAccountWebhookRequestBody")]
     pub struct RequestBody {
         /// Webhook URL
+        #[validate(url)]
         pub webhook_url: String,
     }
 
@@ -104,16 +108,22 @@ pub mod add_account_integration {
     use super::*;
 
     /// Request body for adding an integration to an account
-    #[derive(Debug, Deserialize, Serialize, TS)]
+    #[derive(Debug, Deserialize, Serialize, Validate, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "AddAccountIntegrationRequestBody")]
     pub struct RequestBody {
         /// Client ID of the integration
+        #[validate(length(min = 1))]
         pub client_id: String,
+
         // Client secret of the integration
+        #[validate(length(min = 1))]
         pub client_secret: String,
+
         // Redirect URI of the integration
+        #[validate(url)]
         pub redirect_uri: String,
+
         /// Provider of the integration
         /// This is used to know which integration to use
         /// E.g. Google, Outlook, etc.

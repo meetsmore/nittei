@@ -13,7 +13,16 @@ export type CreateCalendarRequestBody = {
    * Default is Monday
    */
   weekStart?: string
+  /**
+   * Optional name for the calendar
+   */
   name?: string
+  /**
+   * Optional key for the calendar
+   *
+   * This allows to have 1 specific "type" of calendar per user
+   * And therefore, to target it more easily without listing all calendars
+   */
   key?: string
   /**
    * Optional metadata (e.g. {"key": "value"})

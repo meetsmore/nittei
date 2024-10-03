@@ -1,6 +1,7 @@
 use nittei_domain::{Calendar, EventInstance, Tz, Weekday, ID};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
+use validator::Validate;
 
 use crate::{
     dtos::{CalendarDTO, EventWithInstancesDTO},
@@ -27,8 +28,9 @@ impl CalendarResponse {
 pub mod get_calendars_by_user {
     use super::*;
 
-    #[derive(Deserialize)]
+    #[derive(Deserialize, Validate)]
     pub struct QueryParams {
+        #[validate(length(min = 1))]
         pub key: Option<String>,
     }
 
@@ -66,7 +68,7 @@ pub mod create_calendar {
     }
 
     /// Request body for creating a calendar
-    #[derive(Deserialize, Serialize, TS)]
+    #[derive(Deserialize, Serialize, Validate, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "CreateCalendarRequestBody")]
     pub struct RequestBody {
@@ -78,10 +80,20 @@ pub mod create_calendar {
         #[serde(default = "default_weekday")]
         #[ts(optional, as = "Option<_>")]
         pub week_start: Weekday,
+
+        /// Optional name for the calendar
         #[ts(optional)]
+        #[validate(length(min = 1))]
         pub name: Option<String>,
+
+        /// Optional key for the calendar
+        ///
+        /// This allows to have 1 specific "type" of calendar per user
+        /// And therefore, to target it more easily without listing all calendars
         #[ts(optional)]
+        #[validate(length(min = 1))]
         pub key: Option<String>,
+
         /// Optional metadata (e.g. {"key": "value"})
         #[ts(optional, type = "Record<string, string>")]
         pub metadata: Option<Metadata>,
@@ -107,16 +119,19 @@ pub mod add_sync_calendar {
     }
 
     /// Request body for adding a sync calendar
-    #[derive(Deserialize, Serialize, TS)]
+    #[derive(Deserialize, Serialize, Validate, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "AddSyncCalendarRequestBody")]
     pub struct RequestBody {
         /// Integration provider
         /// E.g. Google, Outlook, etc.
         pub provider: IntegrationProvider,
+
         /// Calendar UUID to sync to
         pub calendar_id: ID,
+
         /// External calendar ID
+        #[validate(length(min = 1))]
         pub ext_calendar_id: String,
     }
 
@@ -136,16 +151,19 @@ pub mod remove_sync_calendar {
     }
 
     /// Request body for removing a sync calendar
-    #[derive(Deserialize, Serialize, TS)]
+    #[derive(Deserialize, Serialize, Validate, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "RemoveSyncCalendarRequestBody")]
     pub struct RequestBody {
         /// Integration provider
         /// E.g. Google, Outlook, etc.
         pub provider: IntegrationProvider,
+
         /// Calendar UUID to stop syncing to
         pub calendar_id: ID,
+
         /// External calendar ID
+        #[validate(length(min = 1))]
         pub ext_calendar_id: String,
     }
 
@@ -363,9 +381,11 @@ pub mod multiple_freebusy {
         /// List of user UUIDs to query
         #[serde(default)]
         pub user_ids: Vec<ID>,
+
         /// Start time for the query (UTC)
         #[ts(type = "Date")]
         pub start_time: DateTime<Utc>,
+
         /// End time for the query (UTC)
         #[ts(type = "Date")]
         pub end_time: DateTime<Utc>,
@@ -397,20 +417,25 @@ pub mod update_calendar {
         #[serde(default)]
         #[ts(optional)]
         pub week_start: Option<Weekday>,
+
         /// Optional timezone for the calendar (e.g. "America/New_York")
         #[ts(type = "string", optional)]
         pub timezone: Option<Tz>,
     }
 
     /// Request body for updating a calendar
-    #[derive(Deserialize, Serialize, TS)]
+    #[derive(Deserialize, Serialize, Validate, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "UpdateCalendarRequestBody")]
     pub struct RequestBody {
         /// Calendar settings
         pub settings: CalendarSettings,
-        // Name of the calendar
+
+        /// Name of the calendar
+        #[ts(optional)]
+        #[validate(length(min = 1))]
         pub name: Option<String>,
+
         /// Optional metadata (e.g. {"key": "value"})
         #[serde(default)]
         #[ts(optional, type = "Record<string, string>")]

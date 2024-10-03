@@ -49,43 +49,21 @@ describe('Calendar API', () => {
     await expect(() => client.calendar.remove(calendarId)).rejects.toThrow()
   })
 
-  describe('Admin endpoints', () => {
-    let userId: string
-    let calendarId: string
-    beforeAll(async () => {
-      // Create user
-      const userRes = await adminClient.user.create()
-      userId = userRes.user.id
-    })
-
-    it('should create calendar for user', async () => {
-      const res = await adminClient.calendar.create(userId, {
-        timezone: 'UTC',
-        key: 'my_calendar',
+  it('should fail to create calendar with invalid timezone', async () => {
+    await expect(() =>
+      client.calendar.create({
+        timezone: 'invalid',
       })
-      expect(res.calendar.id).toBeDefined()
-      calendarId = res.calendar.id
-    })
+    ).rejects.toThrow('Bad request')
+  })
 
-    it('should get calendars for user', async () => {
-      const res = await adminClient.calendar.findByUserId(userId)
-      expect(res.calendars.length).toBe(1)
-      expect(res.calendars[0].id).toBe(calendarId)
-    })
-
-    it('should get calendar by id', async () => {
-      const res = await adminClient.calendar.getById(calendarId)
-      expect(res.calendar.id).toBe(calendarId)
-    })
-
-    it('should get calendar by user and key', async () => {
-      const res = await adminClient.calendar.findByUserIdAndKey(
-        userId,
-        'my_calendar'
-      )
-      expect(res.calendars.length).toBe(1)
-      expect(res.calendars[0].id).toBe(calendarId)
-    })
+  it('should fail to create calendar with an empty key', async () => {
+    await expect(() =>
+      client.calendar.create({
+        timezone: 'UTC',
+        key: '',
+      })
+    ).rejects.toThrow('Bad request')
   })
 
   describe('Admin endpoints', () => {
@@ -94,9 +72,6 @@ describe('Calendar API', () => {
     beforeAll(async () => {
       // Create user
       const userRes = await adminClient.user.create()
-      if (!userRes) {
-        throw new Error('User not created')
-      }
       userId = userRes.user.id
     })
 
@@ -107,6 +82,23 @@ describe('Calendar API', () => {
       })
       expect(res.calendar.id).toBeDefined()
       calendarId = res.calendar.id
+    })
+
+    it('should fail to create calendar with invalid timezone for user', async () => {
+      await expect(() =>
+        adminClient.calendar.create(userId, {
+          timezone: 'invalid',
+        })
+      ).rejects.toThrow('Bad request')
+    })
+
+    it('should fail to create calendar with an empty key for user', async () => {
+      await expect(() =>
+        adminClient.calendar.create(userId, {
+          timezone: 'UTC',
+          key: '',
+        })
+      ).rejects.toThrow('Bad request')
     })
 
     it('should get calendars for user', async () => {

@@ -1,6 +1,7 @@
 use nittei_domain::{CalendarEvent, CalendarEventReminder, EventInstance, RRuleOptions, ID};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
+use validator::Validate;
 
 use crate::dtos::CalendarEventDTO;
 
@@ -33,7 +34,7 @@ pub mod create_event {
     }
 
     /// Request body for creating an event
-    #[derive(Serialize, Deserialize, TS)]
+    #[derive(Serialize, Deserialize, Validate, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "CreateEventRequestBody")]
     pub struct RequestBody {
@@ -43,22 +44,26 @@ pub mod create_event {
         /// Optional title of the event
         #[serde(default)]
         #[ts(optional)]
+        #[validate(length(min = 1))]
         pub title: Option<String>,
 
         /// Optional description of the event
         #[serde(default)]
         #[ts(optional)]
+        #[validate(length(min = 1))]
         pub description: Option<String>,
 
         /// Optional parent event ID
         /// This is useful for external applications that need to link Nittei's events to their own data models
         #[serde(default)]
         #[ts(optional)]
+        #[validate(length(min = 1))]
         pub parent_id: Option<String>,
 
         /// Optional location of the event
         #[serde(default)]
         #[ts(optional)]
+        #[validate(length(min = 1))]
         pub location: Option<String>,
 
         /// Optional status of the event
