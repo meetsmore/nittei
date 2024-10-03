@@ -3,8 +3,14 @@
   "version": "0.0.1",
   "description": "",
   "main": "index.js",
+  "packageManager": "pnpm@9.2.0",
+  "engines": {
+    "node": ">=20.13.0",
+    "pnpm": ">=9.0.0"
+  },
   "scripts": {
-    "format": "cd clients/javascript && pnpm run format"
+    "format": "cd clients/javascript && pnpm run format",
+    "test": "cd clients/javascript && pnpm run test"
   },
   "author": "",
   "license": "MIT",

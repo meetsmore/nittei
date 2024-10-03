@@ -35,11 +35,19 @@ prepare_sqlx:
 
 # Run the tests on a temporary DB container
 test test_name="":
-	bash ./scripts/run_tests.sh {{test_name}}
+	bash ./scripts/run_tests_backend.sh {{test_name}}
+
+# Run only the JS tests - this assumes that the backend is running
+test-js:
+	cd clients/javascript && pnpm run test
 
 # Run the load tests on a temporary DB container
 loadtest:
-	INCLUDE_LOAD_TESTS=true bash ./scripts/run_tests.sh loadtests
+	INCLUDE_LOAD_TESTS=true bash ./scripts/run_tests_backend.sh loadtests
+
+# Run all tests (backend + frontend)
+test-all:
+	bash ./scripts/run_tests.sh
 
 # Lint
 lint: _setup_db

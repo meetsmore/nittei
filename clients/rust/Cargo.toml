@@ -12,7 +12,11 @@ workspace = true
 [dependencies]
 nittei_api_structs = { path = "../../crates/api_structs", version = "0.3.1" }
 nittei_domain = { path = "../../crates/domain", version = "0.2.1" }
-reqwest = { version = "0.12", features = ["json"] }
+reqwest = { version = "0.12", default-features = false, features = [
+  "http2",
+  "json",
+  "rustls-tls",
+] }
 serde = "1"
 chrono = { version = "0.4.19", features = ["serde"] }
 chrono-tz = { version = "0.8.1", features = ["serde"] }
