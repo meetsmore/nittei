@@ -212,7 +212,7 @@ pub mod create_service {
     #[ts(export, rename = "CreateServiceRequestBody")]
     pub struct RequestBody {
         #[serde(default)]
-        #[ts(type = "Record<string, string>")]
+        #[ts(type = "Record<string, string | number | boolean>")]
         pub metadata: Option<Metadata>,
         #[serde(default)]
         pub multi_person: Option<ServiceMultiPersonOptions>,
@@ -231,7 +231,7 @@ pub mod update_service {
     #[ts(export, rename = "UpdateServiceRequestBody")]
     pub struct RequestBody {
         #[serde(default)]
-        #[ts(type = "Record<string, string>")]
+        #[ts(type = "Record<string, string | number | boolean>")]
         pub metadata: Option<Metadata>,
         #[serde(default)]
         pub multi_person: Option<ServiceMultiPersonOptions>,

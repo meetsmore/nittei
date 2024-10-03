@@ -48,7 +48,7 @@ pub struct ServiceDTO {
     /// UUID of the service
     pub id: ID,
     /// Metadata (e.g. {"key": "value"})
-    #[ts(type = "Record<string, string>")]
+    #[ts(type = "Record<string, string | number | boolean>")]
     pub metadata: Metadata,
 }
 
@@ -67,7 +67,7 @@ impl ServiceDTO {
 pub struct ServiceWithUsersDTO {
     pub id: ID,
     pub users: Vec<ServiceResourceDTO>,
-    #[ts(type = "Record<string, string>")]
+    #[ts(type = "Record<string, string | number | boolean>")]
     pub metadata: Metadata,
 }
 

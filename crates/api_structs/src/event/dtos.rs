@@ -69,9 +69,9 @@ pub struct CalendarEventDTO {
 
     /// List of reminders
     pub reminders: Vec<CalendarEventReminder>,
-    #[ts(type = "Record<string, string>")]
 
     /// Metadata (e.g. {"key": "value"})
+    #[ts(type = "Record<string, string | number | boolean>")]
     pub metadata: Metadata,
 }
 

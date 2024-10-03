@@ -86,11 +86,7 @@ async fn test_crud_user() {
         .expect("Expected to create user");
 
     assert_eq!(
-        res.user.metadata.inner.get("key").unwrap().clone(),
-        "group_id".to_string()
-    );
-    assert_eq!(
-        res.user.metadata.inner.get("value").unwrap().clone(),
+        res.user.metadata.inner.get("group_id").unwrap().clone(),
         "123".to_string()
     );
 

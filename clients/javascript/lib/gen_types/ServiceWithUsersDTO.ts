@@ -5,5 +5,5 @@ import type { ServiceResourceDTO } from './ServiceResourceDTO'
 export type ServiceWithUsersDTO = {
   id: ID
   users: Array<ServiceResourceDTO>
-  metadata: Record<string, string>
+  metadata: Record<string, string | number | boolean>
 }

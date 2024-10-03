@@ -2,6 +2,6 @@
 import type { ServiceMultiPersonOptions } from './ServiceMultiPersonOptions'
 
 export type CreateServiceRequestBody = {
-  metadata: Record<string, string>
+  metadata: Record<string, string | number | boolean>
   multiPerson: ServiceMultiPersonOptions | null
 }
