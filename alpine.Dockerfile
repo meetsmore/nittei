@@ -16,7 +16,7 @@ RUN cargo build --release --target ${ARCH}-unknown-linux-musl && \
   cp ./target/${ARCH}-unknown-linux-musl/release/${APP_NAME} /${APP_NAME}
 
 #Create a new stage with a minimal image
-FROM busybox:musl
+FROM alpine:3.20.3
 
 ARG APP_NAME=nittei
 ENV APP_NAME=${APP_NAME}
