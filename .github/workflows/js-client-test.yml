@@ -36,6 +36,9 @@ jobs:
 
       - uses: pnpm/action-setup@v4
 
+      # Setup Rust as we need to run the server
+      - uses: dtolnay/rust-toolchain@stable
+
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
