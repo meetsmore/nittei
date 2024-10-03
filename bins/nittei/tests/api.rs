@@ -525,6 +525,12 @@ async fn test_crud_events() {
         .event
         .update(UpdateEventInput {
             event_id: event.id.clone(),
+            title: None,
+            description: None,
+            location: None,
+            status: None,
+            all_day: None,
+            parent_id: None,
             exdates: Some(vec![DateTime::from_timestamp_millis(0).unwrap()]),
             busy: None,
             duration: None,

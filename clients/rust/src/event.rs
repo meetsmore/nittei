@@ -60,6 +60,12 @@ pub struct GetEventsInstancesInput {
 
 pub struct UpdateEventInput {
     pub event_id: ID,
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub parent_id: Option<String>,
+    pub location: Option<String>,
+    pub status: Option<CalendarEventStatus>,
+    pub all_day: Option<bool>,
     pub start_time: Option<DateTime<Utc>>,
     pub duration: Option<i64>,
     pub busy: Option<bool>,
@@ -147,6 +153,12 @@ impl CalendarEventClient {
     pub async fn update(&self, input: UpdateEventInput) -> APIResponse<update_event::APIResponse> {
         let event_id = input.event_id.clone();
         let body = update_event::RequestBody {
+            title: input.title,
+            description: input.description,
+            location: input.location,
+            all_day: input.all_day,
+            status: input.status,
+            parent_id: input.parent_id,
             busy: input.busy,
             duration: input.duration,
             exdates: input.exdates,

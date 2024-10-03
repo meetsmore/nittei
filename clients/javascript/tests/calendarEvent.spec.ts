@@ -143,13 +143,16 @@ describe('CalendarEvent API', () => {
     expect(instancesAfterException.length).toBe(
       instancesBeforeException.length - 1
     )
-    await client.events.update(eventId, {
+    const eventUpdated = await client.events.update(eventId, {
       recurrence: event.recurrence,
       startTime: new Date(event.startTime.getTime() + 24 * 60 * 60 * 1000),
+      title: 'new title',
     })
     const instancesAfterExceptionDeleted = await getInstances()
     expect(instancesAfterExceptionDeleted.length).toBe(
       instancesBeforeException.length
     )
+
+    expect(eventUpdated.event.title).toBe('new title')
   })
 })
