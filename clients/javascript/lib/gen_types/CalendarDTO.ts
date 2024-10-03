@@ -14,7 +14,14 @@ export type CalendarDTO = {
    * UUID of the user that owns the calendar
    */
   userId: ID
+  /**
+   * Name of the calendar (optional)
+   */
   name: string | null
+  /**
+   * Key of the calendar (optional)
+   * When defined, this is unique per user
+   */
   key: string | null
   /**
    * Calendar settings
