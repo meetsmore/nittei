@@ -114,7 +114,7 @@ export const NitteiClient = async (
 }
 
 // Errors
-export { 
+export {
   BadRequestError,
   NotFoundError,
   UnauthorizedError,

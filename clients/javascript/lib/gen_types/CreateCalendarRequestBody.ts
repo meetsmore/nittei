@@ -13,6 +13,8 @@ export type CreateCalendarRequestBody = {
    * Default is Monday
    */
   weekStart?: string
+  name?: string
+  key?: string
   /**
    * Optional name for the calendar
    */

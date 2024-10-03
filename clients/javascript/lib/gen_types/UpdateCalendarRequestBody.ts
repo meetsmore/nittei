@@ -9,6 +9,7 @@ export type UpdateCalendarRequestBody = {
    * Calendar settings
    */
   settings: UpdateCalendarSettings
+  name: string | null
   /**
    * Name of the calendar
    */

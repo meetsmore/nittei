@@ -28,14 +28,14 @@ jobs:
         ports:
           - 5432:5432
     env:
-      PORT: 5000
+      NITTEI_PORT: 5000
       DATABASE_URL: postgresql://postgres:postgres@localhost/nittei
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
+
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
@@ -51,9 +51,7 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Start server and run JS client tests
-        env:
-          PORT: 5000
+      - name: Start server
         run: |
           # run the migrations first
           cargo install sqlx-cli --no-default-features --features postgres || true
@@ -67,9 +65,22 @@ jobs:
 
           sleep 10
 
-      - name: Run JavaScript client tests
+      - name: Install JS modules
         run: |
           cd clients/javascript
           pnpm i
 
+      - name: Build JS
+        run: |
+          cd clients/javascript
+          pnpm run build
+
+      - name: Run tests
+        run: |
+          cd clients/javascript
           pnpm run test
+
+      - name: Stop server
+        run: |
+          kill $(lsof -t -i:5000) || true
+          echo "Stopped server"
