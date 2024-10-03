@@ -21,6 +21,7 @@ pub async fn update_user_controller(
 
     let usecase = UpdateUserUseCase {
         account_id: account.id,
+        external_id: body.0.external_id,
         user_id: std::mem::take(&mut path.user_id),
         metadata: body.0.metadata,
     };
@@ -34,6 +35,7 @@ pub async fn update_user_controller(
 #[derive(Debug)]
 pub struct UpdateUserUseCase {
     pub account_id: ID,
+    pub external_id: Option<String>,
     pub user_id: ID,
     pub metadata: Option<Metadata>,
 }
@@ -81,6 +83,10 @@ impl UseCase for UpdateUserUseCase {
 
         if let Some(metadata) = &self.metadata {
             user.metadata = metadata.clone();
+        }
+
+        if let Some(external_id) = &self.external_id {
+            user.external_id = Some(external_id.clone());
         }
 
         ctx.repos
