@@ -4,11 +4,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::{Entity, ID};
 
-/// Metadata - a key-value pair for storing additional information
+/// Metadata - key-value pairs for storing additional information
 #[derive(Serialize, Deserialize, Default, Debug, Clone)]
 pub struct Metadata {
     #[serde(flatten)]
-    pub inner: HashMap<String, String>,
+    pub inner: HashMap<String, serde_json::Value>,
 }
 
 impl Metadata {
@@ -20,14 +20,13 @@ impl Metadata {
 
     pub fn new_kv(key: String, value: String) -> Self {
         let mut inner = HashMap::new();
-        inner.insert(String::from("key"), key);
-        inner.insert(String::from("value"), value);
+        inner.insert(key, serde_json::Value::String(value));
         Self::from(inner)
     }
 }
 
-impl From<HashMap<String, String>> for Metadata {
-    fn from(inner: HashMap<String, String>) -> Self {
+impl From<HashMap<String, serde_json::Value>> for Metadata {
+    fn from(inner: HashMap<String, serde_json::Value>) -> Self {
         Self { inner }
     }
 }

@@ -154,7 +154,10 @@ async fn test_user_provide_id() {
     let admin_client = NitteiSDK::new(address, res.secret_api_key);
 
     let mut metadata = HashMap::new();
-    metadata.insert("group_id".to_string(), "123".to_string());
+    metadata.insert(
+        "group_id".to_string(),
+        serde_json::Value::String("123".to_string()),
+    );
 
     let user_id = ID::default();
 

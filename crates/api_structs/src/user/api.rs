@@ -40,7 +40,7 @@ pub mod create_user {
     pub struct RequestBody {
         /// Optional metadata (e.g. {"key": "value"})
         #[serde(default)]
-        #[ts(optional, type = "Record<string, string>")]
+        #[ts(optional, type = "Record<string, string | number | boolean>")]
         pub metadata: Option<Metadata>,
 
         /// Optional user ID
@@ -123,7 +123,7 @@ pub mod update_user {
     pub struct RequestBody {
         /// Optional metadata (e.g. {"key": "value"})
         #[serde(default)]
-        #[ts(optional, type = "Record<string, string>")]
+        #[ts(optional, type = "Record<string, string | number | boolean>")]
         pub metadata: Option<Metadata>,
     }
 
