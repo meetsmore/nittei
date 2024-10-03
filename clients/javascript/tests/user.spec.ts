@@ -59,19 +59,19 @@ describe('User API', () => {
   })
 
   it('should create a 3nd user, and provide an external ID', async () => {
-    const userId = v4()
+    const externalId = v4()
     let res = await accountClient.user.create({
-      externalId: userId,
+      externalId: externalId,
     })
     const { user } = res
 
-    expect(user.id).toBe(userId)
+    expect(user.externalId).toBe(externalId)
 
-    res = await accountClient.user.getByExternalId(userId)
-    expect(res.user.id).toBe(userId)
+    res = await accountClient.user.getByExternalId(externalId)
+    expect(res.user.externalId).toBe(externalId)
 
     res = await accountClient.user.remove(res.user.id)
-    expect(res.user.id).toBe(userId)
+    expect(res.user.externalId).toBe(externalId)
 
     await expect(() =>
       accountClient.user.getByExternalId(res.user.externalId ?? '')
