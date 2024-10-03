@@ -13,11 +13,11 @@ pub struct CalendarDTO {
     /// UUID of the user that owns the calendar
     pub user_id: ID,
 
-    // Name of the calendar (optional)
+    /// Name of the calendar (optional)
     pub name: Option<String>,
 
-    // Key of the calendar (optional)
-    // When defined, this is unique per user
+    /// Key of the calendar (optional)
+    /// When defined, this is unique per user
     pub key: Option<String>,
 
     /// Calendar settings
