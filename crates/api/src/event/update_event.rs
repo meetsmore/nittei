@@ -191,7 +191,9 @@ impl UseCase for UpdateEventUseCase {
             }
         };
 
-        e.service_id.clone_from(service_id);
+        if service_id.is_some() {
+            e.service_id.clone_from(service_id);
+        }
 
         if let Some(exdates) = exdates {
             e.exdates.clone_from(exdates);
@@ -258,18 +260,28 @@ impl UseCase for UpdateEventUseCase {
             return Err(UseCaseError::InvalidRecurrenceRule);
         };
 
-        e.title.clone_from(title);
+        if title.is_some() {
+            e.title.clone_from(title);
+        }
 
-        e.description.clone_from(description);
+        if description.is_some() {
+            e.description.clone_from(description);
+        }
 
-        e.parent_id.clone_from(parent_id);
+        if parent_id.is_some() {
+            e.parent_id.clone_from(parent_id);
+        }
 
-        e.external_id.clone_from(external_id);
+        if external_id.is_some() {
+            e.external_id.clone_from(external_id);
+        }
 
-        e.location.clone_from(location);
+        if location.is_some() {
+            e.location.clone_from(location);
+        }
 
         if let Some(status) = status {
-            e.status.clone_from(status);
+            e.status = status.clone();
         }
 
         if let Some(all_day) = all_day {
