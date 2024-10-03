@@ -171,23 +171,38 @@ impl IEventRepo for PostgresEventRepo {
 
     #[instrument]
     async fn save(&self, e: &CalendarEvent) -> anyhow::Result<()> {
+        let status: String = e.status.clone().into();
         sqlx::query!(
             r#"
             UPDATE calendar_events SET
-                start_time = $2,
-                duration = $3,
-                end_time = $4,
-                busy = $5,
-                created = $6,
-                updated = $7,
-                recurrence = $8,
-                exdates = $9,
-                reminders = $10,
-                service_uid = $11,
-                metadata = $12
+                parent_id = $2,
+                external_id = $3,
+                title = $4,
+                description = $5,
+                location = $6,
+                status = $7,
+                all_day = $8,
+                start_time = $9,
+                duration = $10,
+                end_time = $11,
+                busy = $12,
+                created = $13,
+                updated = $14,
+                recurrence = $15,
+                exdates = $16,
+                reminders = $17,
+                service_uid = $18,
+                metadata = $19
             WHERE event_uid = $1
             "#,
             e.id.as_ref(),
+            e.parent_id,
+            e.external_id,
+            e.title,
+            e.description,
+            e.location,
+            status,
+            e.all_day,
             e.start_time,
             e.duration,
             e.end_time,
