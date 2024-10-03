@@ -62,6 +62,8 @@ pub mod create_user {
         /// Optional user ID
         /// If not provided, a new UUID will be generated
         /// This is useful for external applications that need to link Nittei's users to their own data models
+        #[serde(default)]
+        #[ts(optional)]
         pub user_id: Option<ID>,
     }
 

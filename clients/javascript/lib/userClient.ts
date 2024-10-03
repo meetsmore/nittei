@@ -40,6 +40,15 @@ export class NitteiUserClient extends NitteiBaseClient {
   }
 
   /**
+   * Get a user by external ID
+   * @param externalId - ID of the user in an outside system
+   * @returns UserResponse - found user, if any
+   */
+  public async getByExternalId(externalId: string) {
+    return await this.get<UserResponse>(`/user/external_id/${externalId}`)
+  }
+
+  /**
    * Update a user
    * @param userId - ID of the user to update
    * @param data - data for updating the user

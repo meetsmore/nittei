@@ -58,6 +58,26 @@ describe('User API', () => {
     await expect(() => accountClient.user.getById(userId)).rejects.toThrow()
   })
 
+  it('should create a 3nd user, and provide an external ID', async () => {
+    const userId = v4()
+    let res = await accountClient.user.create({
+      externalId: userId,
+    })
+    const { user } = res
+
+    expect(user.id).toBe(userId)
+
+    res = await accountClient.user.getByExternalId(userId)
+    expect(res.user.id).toBe(userId)
+
+    res = await accountClient.user.remove(res.user.id)
+    expect(res.user.id).toBe(userId)
+
+    await expect(() =>
+      accountClient.user.getByExternalId(res.user.externalId ?? '')
+    ).rejects.toThrow()
+  })
+
   it('should not show any freebusy with no events', async () => {
     const res = await accountClient.user.freebusy(userId, {
       endTime: new Date(1000 * 60 * 60 * 24 * 4),

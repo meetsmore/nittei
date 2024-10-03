@@ -18,5 +18,5 @@ export type CreateUserRequestBody = {
    * If not provided, a new UUID will be generated
    * This is useful for external applications that need to link Nittei's users to their own data models
    */
-  userId: ID | null
+  userId?: ID
 }

@@ -193,14 +193,14 @@ impl IUserRepo for PostgresUserRepo {
     }
 
     #[instrument]
-    async fn get_by_external_id(&self, external_id: &String) -> anyhow::Result<Option<User>> {
+    async fn get_by_external_id(&self, external_id: &str) -> anyhow::Result<Option<User>> {
         let res = sqlx::query_as!(
             UserRaw,
             r#"
             SELECT * FROM users AS u
             WHERE u.external_id = $1
             "#,
-            external_id.as_str()
+            external_id,
         )
         .fetch_optional(&self.pool)
         .await

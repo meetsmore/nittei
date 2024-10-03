@@ -1,6 +1,6 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use nittei_api_structs::get_user_by_external_id::*;
-use nittei_domain::{Account, User, ID};
+use nittei_domain::{Account, User};
 use nittei_infra::NitteiContext;
 
 use crate::{
