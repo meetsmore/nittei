@@ -68,18 +68,18 @@ describe('Calendar API', () => {
     })
 
     it('should get calendars for user', async () => {
-      const res = await adminClient.calendar.findByUser(userId)
+      const res = await adminClient.calendar.findByUserId(userId)
       expect(res.calendars.length).toBe(1)
       expect(res.calendars[0].id).toBe(calendarId)
     })
 
     it('should get calendar by id', async () => {
-      const res = await adminClient.calendar.findById(calendarId)
+      const res = await adminClient.calendar.getById(calendarId)
       expect(res.calendar.id).toBe(calendarId)
     })
 
     it('should get calendar by user and key', async () => {
-      const res = await adminClient.calendar.findByUserAndKey(
+      const res = await adminClient.calendar.findByUserIdAndKey(
         userId,
         'my_calendar'
       )
@@ -110,18 +110,18 @@ describe('Calendar API', () => {
     })
 
     it('should get calendars for user', async () => {
-      const res = await adminClient.calendar.findByUser(userId)
+      const res = await adminClient.calendar.findByUserId(userId)
       expect(res.calendars.length).toBe(1)
       expect(res.calendars[0].id).toBe(calendarId)
     })
 
     it('should get calendar by id', async () => {
-      const res = await adminClient.calendar.findById(calendarId)
+      const res = await adminClient.calendar.getById(calendarId)
       expect(res.calendar.id).toBe(calendarId)
     })
 
     it('should get calendar by user and key', async () => {
-      const res = await adminClient.calendar.findByUserAndKey(
+      const res = await adminClient.calendar.findByUserIdAndKey(
         userId,
         'my_calendar'
       )

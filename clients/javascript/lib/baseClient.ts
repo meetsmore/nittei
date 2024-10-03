@@ -4,7 +4,11 @@ import axios, {
   type AxiosResponse,
 } from 'axios'
 import { ICredentials } from './helpers/credentials'
-import { BadRequestError } from './helpers/errors'
+import {
+  BadRequestError,
+  NotFoundError,
+  UnauthorizedError,
+} from './helpers/errors'
 
 /**
  * Base client for the API
@@ -16,6 +20,14 @@ export abstract class NitteiBaseClient {
     this.axiosClient = axiosClient
   }
 
+  /**
+   * Make a GET request to the API
+   * @private
+   * @param path - path to the endpoint
+   * @param params - query parameters
+   * @throws Error if the status code is 400 or higher
+   * @returns response's data
+   */
   protected async get<T>(
     path: string,
     params: Record<string, unknown> = {}
@@ -29,6 +41,14 @@ export abstract class NitteiBaseClient {
     return res.data
   }
 
+  /**
+   * Make a POST request to the API
+   * @private
+   * @param path - path to the endpoint
+   * @param data - data to send to the server
+   * @throws Error if the status code is 400 or higher
+   * @returns response's data
+   */
   protected async post<T>(path: string, data: unknown): Promise<T> {
     const res = await this.axiosClient.post<T>(path, data)
 
@@ -37,6 +57,14 @@ export abstract class NitteiBaseClient {
     return res.data
   }
 
+  /**
+   * Make a PUT request to the API
+   * @private
+   * @param path - path to the endpoint
+   * @param data - data to send to the server
+   * @throws Error if the status code is 400 or higher
+   * @returns response's data
+   */
   protected async put<T>(path: string, data: unknown): Promise<T> {
     const res = await this.axiosClient.put<T>(path, data)
 
@@ -45,6 +73,14 @@ export abstract class NitteiBaseClient {
     return res.data
   }
 
+  /**
+   * Make a DELETE request to the API
+   * Note: this one doesn't have a body
+   * @private
+   * @param path - path to the endpoint
+   * @throws Error if the status code is 400 or higher
+   * @returns response's data
+   */
   protected async delete<T>(path: string): Promise<T> {
     const res = await this.axiosClient.delete<T>(path)
 
@@ -53,6 +89,14 @@ export abstract class NitteiBaseClient {
     return res.data
   }
 
+  /**
+   * Make a DELETE request to the API with a body
+   * @private
+   * @param path - path to the endpoint
+   * @param data - data to send to the server
+   * @throws Error if the status code is 400 or higher
+   * @returns response's data
+   */
   protected async deleteWithBody<T>(path: string, data: unknown): Promise<T> {
     const res = await this.axiosClient<T>({
       method: 'DELETE',
@@ -78,6 +122,10 @@ export abstract class NitteiBaseClient {
     if (res.status >= 400) {
       if (res.status === 400) {
         throw new BadRequestError(res.data)
+      } else if (res.status === 401 || res.status === 403) {
+        throw new UnauthorizedError(res.data)
+      } else if (res.status === 404) {
+        throw new NotFoundError(res.data)
       } else {
         throw new Error(`Request failed with status code ${res.status}`)
       }

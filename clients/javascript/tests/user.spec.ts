@@ -31,13 +31,13 @@ describe('User API', () => {
     const { user } = res
     const userId = user.id
 
-    res = await accountClient.user.find(userId)
+    res = await accountClient.user.getById(userId)
     expect(res.user.id).toBe(userId)
 
     res = await accountClient.user.remove(userId)
     expect(res.user.id).toBe(userId)
 
-    await expect(() => accountClient.user.find(userId)).rejects.toThrow()
+    await expect(() => accountClient.user.getById(userId)).rejects.toThrow()
   })
 
   it('should create a 2nd user, and provide the ID', async () => {
@@ -49,13 +49,13 @@ describe('User API', () => {
 
     expect(user.id).toBe(userId)
 
-    res = await accountClient.user.find(userId)
+    res = await accountClient.user.getById(userId)
     expect(res.user.id).toBe(userId)
 
     res = await accountClient.user.remove(userId)
     expect(res.user.id).toBe(userId)
 
-    await expect(() => accountClient.user.find(userId)).rejects.toThrow()
+    await expect(() => accountClient.user.getById(userId)).rejects.toThrow()
   })
 
   it('should not show any freebusy with no events', async () => {

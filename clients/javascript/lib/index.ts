@@ -113,6 +113,13 @@ export const NitteiClient = async (
   })
 }
 
+// Errors
+export {
+  BadRequestError,
+  NotFoundError,
+  UnauthorizedError,
+} from './helpers/errors'
+
 // Enums
 export { RRuleFrequency } from './gen_types/RRuleFrequency'
 export { ScheduleRuleVariant } from './types/ScheduleRuleVariant'

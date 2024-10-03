@@ -60,7 +60,7 @@ describe('Requirements', () => {
         if (!user1Calendar1) {
           throw new Error('No calendar')
         }
-        const res = await client?.calendar.findById(user1Calendar1.id)
+        const res = await client?.calendar.getById(user1Calendar1.id)
         expect(res?.calendar.id).toEqual(user1Calendar1.id)
         expect(res?.calendar.userId).toEqual(user1?.id)
       })
@@ -113,15 +113,15 @@ describe('Requirements', () => {
         if (!user1Calendar1 || !user1Calendar2) {
           throw new Error('One or both calendars are missing')
         }
-        const res = await client?.calendar.findById(user1Calendar1.id)
+        const res = await client?.calendar.getById(user1Calendar1.id)
         expect(res?.calendar.id).toEqual(user1Calendar1.id)
         expect(res?.calendar.userId).toEqual(user1?.id)
 
-        const res2 = await client?.calendar.findById(user1Calendar2.id)
+        const res2 = await client?.calendar.getById(user1Calendar2.id)
         expect(res2?.calendar.id).toEqual(user1Calendar2.id)
         expect(res2?.calendar.userId).toEqual(user1?.id)
 
-        const res3 = await client?.calendar.findByUser(user1Calendar1.userId)
+        const res3 = await client?.calendar.findByUserId(user1Calendar1.userId)
         expect(res3?.calendars.length).toBe(2)
         expect(res3?.calendars).toEqual(
           expect.arrayContaining([
@@ -130,7 +130,7 @@ describe('Requirements', () => {
           ])
         )
 
-        const res4 = await client?.calendar.findByUserAndKey(
+        const res4 = await client?.calendar.findByUserIdAndKey(
           user1Calendar1.userId,
           'second-calendar'
         )
@@ -179,7 +179,7 @@ describe('Requirements', () => {
         if (!user1Calendar1Event1) {
           throw new Error('No event')
         }
-        const res = await client?.events.findById(user1Calendar1Event1.id)
+        const res = await client?.events.getById(user1Calendar1Event1.id)
         expect(res?.event.id).toEqual(user1Calendar1Event1.id)
       })
 
@@ -247,7 +247,7 @@ describe('Requirements', () => {
         if (!user1Calendar1Event1) {
           throw new Error('No event')
         }
-        const res = await client?.events.findById(user1Calendar1Event1.id)
+        const res = await client?.events.getById(user1Calendar1Event1.id)
         expect(res?.event.id).toEqual(user1Calendar1Event1.id)
         expect(res?.event.duration).toEqual(1000 * 60 * 60 * 2)
         expect(res?.event.startTime).toEqual(new Date(1000 * 60 * 60))
@@ -299,7 +299,7 @@ describe('Requirements', () => {
           if (!user1Calendar1Event1) {
             throw new Error('No event')
           }
-          return client?.events.findById(user1Calendar1Event1.id)
+          return client?.events.getById(user1Calendar1Event1.id)
         }).rejects.toThrow()
       })
 
@@ -787,7 +787,7 @@ describe('Requirements', () => {
         if (!user1Calendar1Event1) {
           throw new Error('No event')
         }
-        const res = await client?.events.findById(user1Calendar1Event1.id)
+        const res = await client?.events.getById(user1Calendar1Event1.id)
         expect(res?.event.id).toEqual(user1Calendar1Event1.id)
         expect(res?.event.metadata.name).toEqual('日本語のイベント')
       })
