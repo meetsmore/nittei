@@ -55,6 +55,7 @@ impl TryFrom<String> for CalendarEventStatus {
 pub struct CalendarEvent {
     pub id: ID,
     pub parent_id: Option<String>,
+    pub external_id: Option<String>,
     pub title: Option<String>,
     pub description: Option<String>,
     pub location: Option<String>,

@@ -169,6 +169,7 @@ async fn test_collective_team_scheduling() {
         for (host, calendar) in hosts_with_calendar {
             let service_event = CreateEventInput {
                 parent_id: None,
+                external_id: None,
                 title: None,
                 description: None,
                 location: None,

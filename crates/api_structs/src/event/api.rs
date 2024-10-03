@@ -54,11 +54,18 @@ pub mod create_event {
         pub description: Option<String>,
 
         /// Optional parent event ID
-        /// This is useful for external applications that need to link Nittei's events to their own data models
+        /// This is useful for external applications that need to link Nittei's events to a wider data model (e.g. a project, an order, etc.)
         #[serde(default)]
         #[ts(optional)]
         #[validate(length(min = 1))]
         pub parent_id: Option<String>,
+
+        /// Optional external event ID
+        /// This is useful for external applications that need to link Nittei's events to their own data models
+        #[serde(default)]
+        #[ts(optional)]
+        #[validate(length(min = 1))]
+        pub external_id: Option<String>,
 
         /// Optional location of the event
         #[serde(default)]
@@ -177,6 +184,17 @@ pub mod get_event {
     pub type APIResponse = CalendarEventResponse;
 }
 
+pub mod get_event_by_external_id {
+    use super::*;
+
+    #[derive(Deserialize)]
+    pub struct PathParams {
+        pub external_id: String,
+    }
+
+    pub type APIResponse = CalendarEventResponse;
+}
+
 pub mod get_events_by_calendars {
     use chrono::{DateTime, Utc};
     use nittei_domain::EventWithInstances;
@@ -287,11 +305,19 @@ pub mod update_event {
         pub description: Option<String>,
 
         /// Optional parent event ID
-        /// This is useful for external applications that need to link Nittei's events to their own data models
+        /// This is useful for external applications that need to link Nittei's events to a wider data model (e.g. a project, an order, etc.)
         #[serde(default)]
         #[ts(optional)]
         #[validate(length(min = 1))]
         pub parent_id: Option<String>,
+
+        /// Optional external event ID
+        /// This is useful for external applications that need to link Nittei's events to their own data models
+        /// Default is None
+        #[serde(default)]
+        #[ts(optional)]
+        #[validate(length(min = 1))]
+        pub external_id: Option<String>,
 
         /// Optional location of the event
         #[serde(default)]

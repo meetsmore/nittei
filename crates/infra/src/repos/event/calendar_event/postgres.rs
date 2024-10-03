@@ -46,6 +46,7 @@ struct EventRaw {
     user_uid: Uuid,
     account_uid: Uuid,
     parent_id: Option<String>,
+    external_id: Option<String>,
     title: Option<String>,
     description: Option<String>,
     location: Option<String>,
@@ -83,6 +84,7 @@ impl TryFrom<EventRaw> for CalendarEvent {
             account_id: e.account_uid.into(),
             calendar_id: e.calendar_uid.into(),
             parent_id: e.parent_id,
+            external_id: e.external_id,
             title: e.title,
             description: e.description,
             location: e.location,
@@ -114,6 +116,7 @@ impl IEventRepo for PostgresEventRepo {
                 event_uid,
                 calendar_uid,
                 parent_id,
+                external_id,
                 title,
                 description,
                 location,
@@ -131,11 +134,12 @@ impl IEventRepo for PostgresEventRepo {
                 service_uid,
                 metadata
             )
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
             "#,
             e.id.as_ref(),
             e.calendar_id.as_ref(),
             e.parent_id,
+            e.external_id,
             e.title,
             e.description,
             e.location,
@@ -228,6 +232,32 @@ impl IEventRepo for PostgresEventRepo {
             error!(
                 "Find calendar event with id: {:?} failed. DB returned error: {:?}",
                 event_id, err
+            );
+        })?
+        .map(|e| e.try_into())
+        .transpose()
+    }
+
+    #[instrument]
+    async fn get_by_external_id(&self, external_id: &str) -> anyhow::Result<Option<CalendarEvent>> {
+        sqlx::query_as!(
+            EventRaw,
+            r#"
+            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+            INNER JOIN calendars AS c
+                ON c.calendar_uid = e.calendar_uid
+            INNER JOIN users AS u
+                ON u.user_uid = c.user_uid
+            WHERE e.external_id = $1
+            "#,
+            external_id,
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .inspect_err(|err| {
+            error!(
+                "Find calendar event with external_id: {:?} failed. DB returned error: {:?}",
+                external_id, err
             );
         })?
         .map(|e| e.try_into())
