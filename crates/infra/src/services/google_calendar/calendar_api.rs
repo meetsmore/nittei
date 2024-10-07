@@ -54,13 +54,13 @@ impl From<CalendarEvent> for GoogleCalendarEventAttributes {
             .metadata
             .inner
             .get("google.summary")
-            .unwrap_or(&empty)
+            .unwrap_or(&serde_json::Value::String(empty.clone()))
             .clone();
         let description = e
             .metadata
             .inner
             .get("google.description")
-            .unwrap_or(&empty)
+            .unwrap_or(&serde_json::Value::String(empty.clone()))
             .clone();
         let transparency = if e.busy {
             "opaque".to_string()
@@ -68,8 +68,8 @@ impl From<CalendarEvent> for GoogleCalendarEventAttributes {
             "transparent".to_string()
         };
         Self {
-            description,
-            summary,
+            description: description.to_string(),
+            summary: summary.to_string(),
             start: GoogleCalendarEventDateTime::new(e.start_time.timestamp_millis()),
             // Recurrence sync not supported yet, so e.end_ts will not be correct if used
             end: GoogleCalendarEventDateTime::new(e.start_time.timestamp_millis() + e.duration),

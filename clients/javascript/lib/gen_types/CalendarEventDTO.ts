@@ -83,5 +83,5 @@ export type CalendarEventDTO = {
   /**
    * Metadata (e.g. {"key": "value"})
    */
-  metadata: Record<string, string>
+  metadata: Record<string, string | number | boolean>
 }

@@ -14,7 +14,7 @@ pub struct UserDTO {
     pub external_id: Option<String>,
 
     /// Metadata (e.g. {"key": "value"})
-    #[ts(type = "Record<string, string>")]
+    #[ts(type = "Record<string, string | number | boolean>")]
     pub metadata: Metadata,
 }
 

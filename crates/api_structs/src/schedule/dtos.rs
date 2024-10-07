@@ -16,7 +16,7 @@ pub struct ScheduleDTO {
     /// Timezone (e.g. "America/New_York")
     pub timezone: String,
     /// Metadata (e.g. {"key": "value"})
-    #[ts(type = "Record<string, string>")]
+    #[ts(type = "Record<string, string | number | boolean>")]
     pub metadata: Metadata,
 }
 

@@ -24,7 +24,7 @@ pub struct CalendarDTO {
     pub settings: CalendarSettingsDTO,
 
     /// Metadata (e.g. {"key": "value"})
-    #[ts(type = "Record<string, string>")]
+    #[ts(type = "Record<string, string | number | boolean>")]
     pub metadata: Metadata,
 }
 

@@ -48,13 +48,13 @@ impl From<CalendarEvent> for OutlookCalendarEventAttributes {
             .metadata
             .inner
             .get("outlook.subject")
-            .unwrap_or(&empty)
+            .unwrap_or(&serde_json::Value::String(empty.clone()))
             .clone();
         let content = e
             .metadata
             .inner
             .get("outlook.content")
-            .unwrap_or(&empty)
+            .unwrap_or(&serde_json::Value::String(empty.clone()))
             .clone();
         OutlookCalendarEventAttributes {
             start: OutlookCalendarEventTime {
@@ -68,11 +68,11 @@ impl From<CalendarEvent> for OutlookCalendarEventAttributes {
             is_online_meeting: false,
             body: OutlookCalendarEventBody {
                 content_type: OutlookCalendarEventBodyContentType::HTML,
-                content,
+                content: content.to_string(),
             },
             online_meeting_provider: None,
             online_meeting: None,
-            subject,
+            subject: subject.to_string(),
             show_as,
         }
     }

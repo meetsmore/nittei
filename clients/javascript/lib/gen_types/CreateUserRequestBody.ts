@@ -8,7 +8,7 @@ export type CreateUserRequestBody = {
   /**
    * Optional metadata (e.g. {"key": "value"})
    */
-  metadata?: Record<string, string>
+  metadata?: Record<string, string | number | boolean>
   /**
    * Optional external ID (e.g. the ID of the user in an external system)
    */

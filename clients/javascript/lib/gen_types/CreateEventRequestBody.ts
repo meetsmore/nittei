@@ -73,5 +73,5 @@ export type CreateEventRequestBody = {
   /**
    * Optional metadata (e.g. {"key": "value"})
    */
-  metadata?: Record<string, string>
+  metadata?: Record<string, string | number | boolean>
 }

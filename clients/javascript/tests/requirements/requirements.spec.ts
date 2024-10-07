@@ -897,13 +897,13 @@ describe('Requirements', () => {
 
         const resCal1 = await client?.calendar.create(user1.id, {
           timezone: 'Asia/Tokyo',
-          metadata: { key: 'group', value: 'A' },
+          metadata: { group: 'A' },
         })
         expect(resCal1?.calendar.userId).toEqual(user1.id)
 
         const resCal2 = await client?.calendar.create(user1.id, {
           timezone: 'Asia/Tokyo',
-          metadata: { key: 'group', value: 'B' },
+          metadata: { group: 'B' },
         })
         expect(resCal2?.calendar.userId).toEqual(user1.id)
       })
@@ -916,8 +916,7 @@ describe('Requirements', () => {
         )
         expect(res?.calendars.length).toBe(1)
         expect(res?.calendars[0].metadata).toEqual({
-          key: 'group',
-          value: 'A',
+          group: 'A',
         })
       })
 
@@ -929,8 +928,7 @@ describe('Requirements', () => {
         )
         expect(res?.calendars.length).toBe(1)
         expect(res?.calendars[0].metadata).toEqual({
-          key: 'group',
-          value: 'B',
+          group: 'B',
         })
       })
     })

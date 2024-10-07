@@ -52,7 +52,10 @@ mod tests {
         assert!(ctx.repos.service_users.insert(&resource).await.is_ok());
 
         let mut metadata = Metadata::new();
-        metadata.inner.insert("foo".to_string(), "bar".to_string());
+        metadata.inner.insert(
+            "foo".to_string(),
+            serde_json::Value::String("bar".to_string()),
+        );
         service.metadata = metadata;
         ctx.repos
             .services

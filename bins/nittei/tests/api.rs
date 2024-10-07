@@ -87,11 +87,7 @@ async fn test_crud_user() {
         .expect("Expected to create user");
 
     assert_eq!(
-        res.user.metadata.inner.get("key").unwrap().clone(),
-        "group_id".to_string()
-    );
-    assert_eq!(
-        res.user.metadata.inner.get("value").unwrap().clone(),
+        res.user.metadata.inner.get("group_id").unwrap().clone(),
         "123".to_string()
     );
 
@@ -155,7 +151,10 @@ async fn test_user_provide_id() {
     let admin_client = NitteiSDK::new(address, res.secret_api_key);
 
     let mut metadata = HashMap::new();
-    metadata.insert("group_id".to_string(), "123".to_string());
+    metadata.insert(
+        "group_id".to_string(),
+        serde_json::Value::String("123".to_string()),
+    );
 
     let user_id = ID::default();
 
