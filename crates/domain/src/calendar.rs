@@ -2,10 +2,7 @@ use chrono_tz::{Tz, UTC};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    shared::{
-        entity::{Entity, ID},
-        metadata::Metadata,
-    },
+    shared::entity::{Entity, ID},
     IntegrationProvider,
     Meta,
     Weekday,
@@ -19,13 +16,10 @@ pub struct Calendar {
     pub name: Option<String>,
     pub key: Option<String>,
     pub settings: CalendarSettings,
-    pub metadata: Metadata,
+    pub metadata: Option<serde_json::Value>,
 }
 
 impl Meta<ID> for Calendar {
-    fn metadata(&self) -> &Metadata {
-        &self.metadata
-    }
     fn account_id(&self) -> &ID {
         &self.account_id
     }

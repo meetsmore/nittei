@@ -1,7 +1,5 @@
 mod helpers;
 
-use std::collections::HashMap;
-
 use chrono::DateTime;
 use helpers::setup::spawn_app;
 use nittei_domain::{PEMKey, Weekday};
@@ -17,7 +15,6 @@ use nittei_sdk::{
     GetServiceBookingSlotsInput,
     GetUserFreeBusyInput,
     KVMetadata,
-    Metadata,
     MetadataFindInput,
     MultipleFreeBusyRequestBody,
     NitteiSDK,
@@ -74,7 +71,7 @@ async fn test_crud_user() {
 
     let admin_client = NitteiSDK::new(address, res.secret_api_key);
 
-    let metadata = Metadata::new_kv("group_id".to_string(), "123".to_string());
+    let metadata = serde_json::json!({ "group_id": "123" });
 
     let res = admin_client
         .user
@@ -86,7 +83,7 @@ async fn test_crud_user() {
         .expect("Expected to create user");
 
     assert_eq!(
-        res.user.metadata.inner.get("group_id").unwrap().clone(),
+        res.user.metadata.unwrap().get("group_id").unwrap().clone(),
         "123".to_string()
     );
 
@@ -149,24 +146,22 @@ async fn test_user_provide_id() {
 
     let admin_client = NitteiSDK::new(address, res.secret_api_key);
 
-    let mut metadata = HashMap::new();
-    metadata.insert(
-        "group_id".to_string(),
-        serde_json::Value::String("123".to_string()),
-    );
+    let metadata = serde_json::json!({
+            "group_id": "123",
+    });
 
     let user_id = ID::default();
 
     let res = admin_client
         .user
         .create(CreateUserInput {
-            metadata: Some(metadata.into()),
+            metadata: Some(metadata),
             user_id: Some(user_id.clone()),
         })
         .await
         .expect("Expected to create user");
     assert_eq!(
-        res.user.metadata.inner.get("group_id").unwrap().clone(),
+        res.user.metadata.unwrap().get("group_id").unwrap().clone(),
         "123".to_string()
     );
     assert_eq!(

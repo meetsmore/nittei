@@ -2,6 +2,7 @@
 import type { CalendarEventReminder } from './CalendarEventReminder'
 import type { CalendarEventStatus } from './CalendarEventStatus'
 import type { ID } from './ID'
+import type { JsonValue } from './serde_json/JsonValue'
 import type { RRuleOptions } from './RRuleOptions'
 
 /**
@@ -68,5 +69,5 @@ export type CreateEventRequestBody = {
   /**
    * Optional metadata (e.g. {"key": "value"})
    */
-  metadata?: Record<string, string | number | boolean>
+  metadata?: JsonValue
 }

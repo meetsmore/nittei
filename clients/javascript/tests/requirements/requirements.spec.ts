@@ -780,7 +780,7 @@ describe('Requirements', () => {
           },
         })
         user1Calendar1Event1 = res?.event
-        expect(res?.event.metadata.name).toEqual('日本語のイベント')
+        expect((res?.event.metadata as { name: string })?.name).toEqual('日本語のイベント')
       })
 
       it('should fetch the event', async () => {
@@ -789,7 +789,7 @@ describe('Requirements', () => {
         }
         const res = await client?.events.getById(user1Calendar1Event1.id)
         expect(res?.event.id).toEqual(user1Calendar1Event1.id)
-        expect(res?.event.metadata.name).toEqual('日本語のイベント')
+        expect((res?.event.metadata as { name: string })?.name).toEqual('日本語のイベント')
       })
     })
 

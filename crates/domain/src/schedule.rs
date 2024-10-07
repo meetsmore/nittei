@@ -12,7 +12,6 @@ use crate::{
     timespan::TimeSpan,
     CompatibleInstances,
     Meta,
-    Metadata,
 };
 
 #[derive(Debug, Clone)]
@@ -22,14 +21,10 @@ pub struct Schedule {
     pub account_id: ID,
     pub rules: Vec<ScheduleRule>,
     pub timezone: Tz,
-    pub metadata: Metadata,
+    pub metadata: Option<serde_json::Value>,
 }
 
 impl Meta<ID> for Schedule {
-    fn metadata(&self) -> &Metadata {
-        &self.metadata
-    }
-
     fn account_id(&self) -> &ID {
         &self.account_id
     }

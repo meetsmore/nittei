@@ -7,7 +7,7 @@ pub use multiple_freebusy::{
     RequestBody as MultipleFreeBusyRequestBody,
 };
 use nittei_api_structs::*;
-use nittei_domain::{IntegrationProvider, Metadata};
+use nittei_domain::IntegrationProvider;
 use reqwest::StatusCode;
 
 use crate::{shared::MetadataFindInput, APIResponse, BaseClient, ID};
@@ -18,7 +18,7 @@ pub struct UserClient {
 }
 pub struct UpdateUserInput {
     pub user_id: ID,
-    pub metadata: Option<Metadata>,
+    pub metadata: Option<serde_json::Value>,
 }
 
 pub type CreateUserInput = create_user::RequestBody;

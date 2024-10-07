@@ -1,4 +1,4 @@
-use nittei_domain::{Metadata, Schedule, ScheduleRule, ID};
+use nittei_domain::{Schedule, ScheduleRule, ID};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
@@ -16,8 +16,8 @@ pub struct ScheduleDTO {
     /// Timezone (e.g. "America/New_York")
     pub timezone: String,
     /// Metadata (e.g. {"key": "value"})
-    #[ts(type = "Record<string, string | number | boolean>")]
-    pub metadata: Metadata,
+    #[ts(optional)]
+    pub metadata: Option<serde_json::Value>,
 }
 
 impl ScheduleDTO {

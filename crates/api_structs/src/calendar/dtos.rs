@@ -1,4 +1,4 @@
-use nittei_domain::{Calendar, CalendarSettings, Metadata, Weekday, ID};
+use nittei_domain::{Calendar, CalendarSettings, Weekday, ID};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
@@ -24,8 +24,8 @@ pub struct CalendarDTO {
     pub settings: CalendarSettingsDTO,
 
     /// Metadata (e.g. {"key": "value"})
-    #[ts(type = "Record<string, string | number | boolean>")]
-    pub metadata: Metadata,
+    #[ts(optional)]
+    pub metadata: Option<serde_json::Value>,
 }
 
 /// Calendar settings

@@ -2,7 +2,7 @@ use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::Weekday;
 use chrono_tz::Tz;
 use nittei_api_structs::create_calendar::{APIResponse, PathParams, RequestBody};
-use nittei_domain::{Calendar, CalendarSettings, Metadata, ID};
+use nittei_domain::{Calendar, CalendarSettings, ID};
 use nittei_infra::NitteiContext;
 
 use crate::{
@@ -29,7 +29,7 @@ pub async fn create_calendar_admin_controller(
         name: body.0.name.clone(),
         key: body.0.key.clone(),
         timezone: body.0.timezone,
-        metadata: body.0.metadata.unwrap_or_default(),
+        metadata: body.0.metadata,
     };
 
     execute(usecase, &ctx)
@@ -52,7 +52,7 @@ pub async fn create_calendar_controller(
         name: body.0.name.clone(),
         key: body.0.key.clone(),
         timezone: body.0.timezone,
-        metadata: body.0.metadata.unwrap_or_default(),
+        metadata: body.0.metadata,
     };
 
     execute_with_policy(usecase, &policy, &ctx)
@@ -69,7 +69,7 @@ struct CreateCalendarUseCase {
     pub name: Option<String>,
     pub key: Option<String>,
     pub timezone: Tz,
-    pub metadata: Metadata,
+    pub metadata: Option<serde_json::Value>,
 }
 
 #[derive(Debug)]

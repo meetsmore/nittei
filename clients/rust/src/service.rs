@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use chrono::{DateTime, Utc};
 use nittei_api_structs::*;
-use nittei_domain::{BusyCalendarProvider, Metadata, ServiceMultiPersonOptions};
+use nittei_domain::{BusyCalendarProvider, ServiceMultiPersonOptions};
 use reqwest::StatusCode;
 
 use crate::{shared::MetadataFindInput, APIResponse, BaseClient, TimePlan, Tz, ID};
@@ -75,12 +75,12 @@ pub struct GetServiceBookingSlotsInput {
 
 pub struct UpdateServiceInput {
     pub service_id: ID,
-    pub metadata: Option<Metadata>,
+    pub metadata: Option<serde_json::Value>,
     pub multi_person: Option<ServiceMultiPersonOptions>,
 }
 
 pub struct CreateServiceInput {
-    pub metadata: Option<Metadata>,
+    pub metadata: Option<serde_json::Value>,
     pub multi_person: Option<ServiceMultiPersonOptions>,
 }
 

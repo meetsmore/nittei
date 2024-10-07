@@ -203,7 +203,7 @@ pub mod create_service_event_intend {
 }
 
 pub mod create_service {
-    use nittei_domain::{Metadata, ServiceMultiPersonOptions};
+    use nittei_domain::ServiceMultiPersonOptions;
 
     use super::*;
 
@@ -212,8 +212,8 @@ pub mod create_service {
     #[ts(export, rename = "CreateServiceRequestBody")]
     pub struct RequestBody {
         #[serde(default)]
-        #[ts(type = "Record<string, string | number | boolean>")]
-        pub metadata: Option<Metadata>,
+        #[ts(optional)]
+        pub metadata: Option<serde_json::Value>,
         #[serde(default)]
         pub multi_person: Option<ServiceMultiPersonOptions>,
     }
@@ -222,7 +222,7 @@ pub mod create_service {
 }
 
 pub mod update_service {
-    use nittei_domain::{Metadata, ServiceMultiPersonOptions};
+    use nittei_domain::ServiceMultiPersonOptions;
 
     use super::*;
 
@@ -231,8 +231,8 @@ pub mod update_service {
     #[ts(export, rename = "UpdateServiceRequestBody")]
     pub struct RequestBody {
         #[serde(default)]
-        #[ts(type = "Record<string, string | number | boolean>")]
-        pub metadata: Option<Metadata>,
+        #[ts(optional)]
+        pub metadata: Option<serde_json::Value>,
         #[serde(default)]
         pub multi_person: Option<ServiceMultiPersonOptions>,
     }

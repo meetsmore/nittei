@@ -24,7 +24,7 @@ impl CalendarEventResponse {
 
 pub mod create_event {
     use chrono::{DateTime, Utc};
-    use nittei_domain::{CalendarEventStatus, Metadata};
+    use nittei_domain::CalendarEventStatus;
 
     use super::*;
 
@@ -110,8 +110,8 @@ pub mod create_event {
 
         /// Optional metadata (e.g. {"key": "value"})
         #[serde(default)]
-        #[ts(optional, type = "Record<string, string | number | boolean>")]
-        pub metadata: Option<Metadata>,
+        #[ts(optional)]
+        pub metadata: Option<serde_json::Value>,
     }
 
     pub type APIResponse = CalendarEventResponse;
@@ -260,7 +260,7 @@ pub mod get_events_by_meta {
 
 pub mod update_event {
     use chrono::{DateTime, Utc};
-    use nittei_domain::{CalendarEventStatus, Metadata};
+    use nittei_domain::CalendarEventStatus;
 
     use super::*;
 
@@ -344,7 +344,7 @@ pub mod update_event {
         /// Optional metadata (e.g. {"key": "value"})
         #[serde(default)]
         #[ts(optional, type = "Record<string, string | number | boolean>")]
-        pub metadata: Option<Metadata>,
+        pub metadata: Option<serde_json::Value>,
     }
 
     #[derive(Deserialize)]

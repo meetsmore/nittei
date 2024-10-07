@@ -4,14 +4,13 @@ use ts_rs::TS;
 use crate::{
     shared::entity::{Entity, ID},
     Meta,
-    Metadata,
 };
 
 #[derive(Debug, Clone, Default)]
 pub struct User {
     pub id: ID,
     pub account_id: ID,
-    pub metadata: Metadata,
+    pub metadata: Option<serde_json::Value>,
 }
 
 impl User {
@@ -31,9 +30,6 @@ impl Entity<ID> for User {
 }
 
 impl Meta<ID> for User {
-    fn metadata(&self) -> &Metadata {
-        &self.metadata
-    }
     fn account_id(&self) -> &ID {
         &self.account_id
     }

@@ -17,7 +17,7 @@ pub trait IServiceRepo: Send + Sync {
 
 #[cfg(test)]
 mod tests {
-    use nittei_domain::{Account, Metadata, Service, ServiceResource, TimePlan, User};
+    use nittei_domain::{Account, Service, ServiceResource, TimePlan, User};
 
     use crate::setup_context;
 
@@ -51,12 +51,10 @@ mod tests {
         let resource = ServiceResource::new(user.id.clone(), service.id.clone(), timeplan);
         assert!(ctx.repos.service_users.insert(&resource).await.is_ok());
 
-        let mut metadata = Metadata::new();
-        metadata.inner.insert(
-            "foo".to_string(),
-            serde_json::Value::String("bar".to_string()),
-        );
-        service.metadata = metadata;
+        let metadata = serde_json::json!({
+                "foo": "bar"
+        });
+        service.metadata = Some(metadata);
         ctx.repos
             .services
             .save(&service)
@@ -71,7 +69,7 @@ mod tests {
             .unwrap()
             .expect("To get service");
         assert_eq!(
-            *service.metadata.inner.get("foo").unwrap(),
+            *service.metadata.unwrap().get("foo").unwrap(),
             "bar".to_string()
         );
         assert_eq!(service.users.len(), 1);

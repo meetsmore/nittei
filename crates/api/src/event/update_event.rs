@@ -6,7 +6,6 @@ use nittei_domain::{
     CalendarEvent,
     CalendarEventReminder,
     CalendarEventStatus,
-    Metadata,
     RRuleOptions,
     User,
     ID,
@@ -116,7 +115,7 @@ pub struct UpdateEventUseCase {
     pub recurrence: Option<RRuleOptions>,
     pub service_id: Option<ID>,
     pub exdates: Option<Vec<DateTime<Utc>>>,
-    pub metadata: Option<Metadata>,
+    pub metadata: Option<serde_json::Value>,
 }
 
 #[derive(Debug)]
@@ -193,7 +192,7 @@ impl UseCase for UpdateEventUseCase {
             e.exdates.clone_from(exdates);
         }
         if let Some(metadata) = metadata {
-            e.metadata = metadata.clone();
+            e.metadata = Some(metadata.clone());
         }
 
         if let Some(reminders) = &reminders {

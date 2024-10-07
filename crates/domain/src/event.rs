@@ -10,7 +10,6 @@ use crate::{
     event_instance::EventInstance,
     shared::{
         entity::{Entity, ID},
-        metadata::Metadata,
         recurrence::RRuleOptions,
     },
     timespan::TimeSpan,
@@ -73,7 +72,7 @@ pub struct CalendarEvent {
     pub account_id: ID,
     pub reminders: Vec<CalendarEventReminder>,
     pub service_id: Option<ID>,
-    pub metadata: Metadata,
+    pub metadata: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -93,9 +92,6 @@ impl Entity<ID> for CalendarEvent {
 }
 
 impl Meta<ID> for CalendarEvent {
-    fn metadata(&self) -> &Metadata {
-        &self.metadata
-    }
     fn account_id(&self) -> &ID {
         &self.account_id
     }

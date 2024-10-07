@@ -1,6 +1,6 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use nittei_api_structs::create_service::*;
-use nittei_domain::{Account, Metadata, Service, ServiceMultiPersonOptions};
+use nittei_domain::{Account, Service, ServiceMultiPersonOptions};
 use nittei_infra::NitteiContext;
 
 use crate::{
@@ -21,7 +21,7 @@ pub async fn create_service_controller(
     let body = body.0;
     let usecase = CreateServiceUseCase {
         account,
-        metadata: body.metadata.unwrap_or_default(),
+        metadata: body.metadata,
         multi_person: body.multi_person.unwrap_or_default(),
     };
 
@@ -35,7 +35,7 @@ pub async fn create_service_controller(
 struct CreateServiceUseCase {
     account: Account,
     multi_person: ServiceMultiPersonOptions,
-    metadata: Metadata,
+    metadata: Option<serde_json::Value>,
 }
 #[derive(Debug)]
 struct UseCaseRes {

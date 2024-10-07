@@ -26,4 +26,8 @@ thiserror = "1.0"
 itertools = "0.11.0"
 rand = "0.8.4"
 tracing = "0.1.25"
-ts-rs = { version = "10.0", features = ["uuid-impl", "chrono-impl"] }
+ts-rs = { version = "10.0", features = [
+  "uuid-impl",
+  "chrono-impl",
+  "serde-json-impl",
+] }

@@ -179,7 +179,12 @@ describe('CalendarEvent API', () => {
         metadata: {
           string: 'string',
           number: 1,
-          boolean: true,
+          // boolean: true, // To be enabled once https://github.com/Aleph-Alpha/ts-rs/pull/358 is merged
+          object: {
+            string: 'string',
+            number: 1,
+            // boolean: true,
+          },
         },
       })
 
@@ -187,7 +192,12 @@ describe('CalendarEvent API', () => {
       expect(getRes.event.metadata).toEqual({
         string: 'string',
         number: 1,
-        boolean: true,
+        // boolean: true,
+        object: {
+          string: 'string',
+          number: 1,
+          // boolean: true,
+        },
       })
     })
 

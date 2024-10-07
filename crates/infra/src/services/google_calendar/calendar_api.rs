@@ -52,16 +52,21 @@ impl From<CalendarEvent> for GoogleCalendarEventAttributes {
         let empty = "".to_string();
         let summary = e
             .metadata
-            .inner
-            .get("google.summary")
-            .unwrap_or(&serde_json::Value::String(empty.clone()))
-            .clone();
+            .clone()
+            .map(|m| {
+                m.get("google.summary")
+                    .unwrap_or(&serde_json::Value::String(empty.clone()))
+                    .to_string()
+            })
+            .unwrap_or(empty.clone());
         let description = e
             .metadata
-            .inner
-            .get("google.description")
-            .unwrap_or(&serde_json::Value::String(empty.clone()))
-            .clone();
+            .map(|m| {
+                m.get("google.description")
+                    .unwrap_or(&serde_json::Value::String(empty.clone()))
+                    .to_string()
+            })
+            .unwrap_or(empty.clone());
         let transparency = if e.busy {
             "opaque".to_string()
         } else {
