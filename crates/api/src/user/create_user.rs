@@ -21,6 +21,7 @@ pub async fn create_user_controller(
     let usecase = CreateUserUseCase {
         account_id: account.id,
         metadata: body.0.metadata,
+        external_id: body.0.external_id,
         user_id: body.0.user_id,
     };
 
@@ -34,6 +35,7 @@ pub async fn create_user_controller(
 pub struct CreateUserUseCase {
     pub account_id: ID,
     pub metadata: Option<serde_json::Value>,
+    pub external_id: Option<String>,
     pub user_id: Option<ID>,
 }
 
@@ -68,6 +70,7 @@ impl UseCase for CreateUserUseCase {
     async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         let mut user = User::new(self.account_id.clone(), self.user_id.clone());
         user.metadata = self.metadata.clone();
+        user.external_id = self.external_id.clone();
 
         let existing_user = ctx
             .repos

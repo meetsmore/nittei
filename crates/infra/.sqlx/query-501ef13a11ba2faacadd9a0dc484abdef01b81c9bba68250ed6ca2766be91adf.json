@@ -97,6 +97,11 @@
         "ordinal": 18,
         "name": "metadata",
         "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 19,
+        "name": "external_id",
+        "type_info": "Text"
       }
     ],
     "parameters": {
@@ -123,7 +128,8 @@
       false,
       true,
       true,
-      false
+      false,
+      true
     ]
   },
   "hash": "501ef13a11ba2faacadd9a0dc484abdef01b81c9bba68250ed6ca2766be91adf"

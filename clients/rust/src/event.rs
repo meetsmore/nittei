@@ -32,14 +32,19 @@ pub struct CreateEventInput {
     #[serde(default)]
     pub parent_id: Option<String>,
     #[serde(default)]
+    pub external_id: Option<String>,
+    #[serde(default)]
     pub location: Option<String>,
     #[serde(default)]
     pub status: CalendarEventStatus,
 
     #[serde(default)]
     pub all_day: Option<bool>,
+
     pub start_time: DateTime<Utc>,
+
     pub duration: i64,
+
     #[serde(default)]
     pub busy: Option<bool>,
     #[serde(default)]
@@ -63,6 +68,7 @@ pub struct UpdateEventInput {
     pub title: Option<String>,
     pub description: Option<String>,
     pub parent_id: Option<String>,
+    pub external_id: Option<String>,
     pub location: Option<String>,
     pub status: Option<CalendarEventStatus>,
     pub all_day: Option<bool>,
@@ -113,6 +119,7 @@ impl CalendarEventClient {
         let user_id = input.user_id.clone();
         let body = create_event::RequestBody {
             parent_id: input.parent_id,
+            external_id: input.external_id,
             title: input.title,
             description: input.description,
             location: input.location,
@@ -159,6 +166,7 @@ impl CalendarEventClient {
             all_day: input.all_day,
             status: input.status,
             parent_id: input.parent_id,
+            external_id: input.external_id,
             busy: input.busy,
             duration: input.duration,
             exdates: input.exdates,

@@ -11,9 +11,13 @@ export type CreateUserRequestBody = {
    */
   metadata?: JsonValue
   /**
+   * Optional external ID (e.g. the ID of the user in an external system)
+   */
+  externalId?: string
+  /**
    * Optional user ID
    * If not provided, a new UUID will be generated
    * This is useful for external applications that need to link Nittei's users to their own data models
    */
-  userId: ID | null
+  userId?: ID
 }

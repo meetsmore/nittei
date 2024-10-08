@@ -36,6 +36,7 @@ async fn create_account_and_admin_client() -> (NitteiSDK, ID) {
 async fn create_user(admin_client: &NitteiSDK) -> ID {
     let input = CreateUserInput {
         metadata: None,
+        external_id: None,
         user_id: None,
     };
     admin_client
@@ -95,6 +96,7 @@ async fn create_300_events_1_month(
                 user_id: user_id.clone(),
                 calendar_id: calendar_id.clone(),
                 parent_id: None,
+                external_id: None,
                 title: None,
                 description: None,
                 location: None,

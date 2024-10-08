@@ -171,6 +171,72 @@ describe('CalendarEvent API', () => {
       calendarId = calendarRes.calendar.id
     })
 
+    it('should be able to query on external ID', async () => {
+      const externalId = crypto.randomUUID()
+      const res = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+        externalId: externalId,
+      })
+      const eventId = res.event.id
+      const res2 = await adminClient.events.getByExternalId(externalId)
+      expect(res2.event.id).toBe(eventId)
+    })
+
+    it('should update event (externalId and parentId)', async () => {
+      const externalId = crypto.randomUUID()
+      const parentId = crypto.randomUUID()
+      const res = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+        externalId: externalId,
+        parentId: parentId,
+      })
+      const eventId = res.event.id
+      expect(res.event.externalId).toBe(externalId)
+      expect(res.event.parentId).toBe(parentId)
+
+      const getRes = await adminClient.events.getByExternalId(externalId)
+      expect(getRes.event.externalId).toBe(externalId)
+      expect(getRes.event.parentId).toBe(parentId)
+
+      const externalId2 = crypto.randomUUID()
+      const parentId2 = crypto.randomUUID()
+      const res2 = await adminClient.events.update(eventId, {
+        parentId: parentId2,
+        externalId: externalId2,
+      })
+      expect(res2.event.externalId).toBe(externalId2)
+      expect(res2.event.parentId).toBe(parentId2)
+
+      const getRes2 = await adminClient.events.getByExternalId(externalId2)
+      expect(getRes2.event.externalId).toBe(externalId2)
+      expect(getRes2.event.parentId).toBe(parentId2)
+    })
+
+    it('should not overwrite externalId and parentId when updating event', async () => {
+      const externalId = crypto.randomUUID()
+      const parentId = crypto.randomUUID()
+      const res = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+        externalId: externalId,
+        parentId: parentId,
+      })
+      const eventId = res.event.id
+      expect(res.event.externalId).toBe(externalId)
+      expect(res.event.parentId).toBe(parentId)
+
+      const res2 = await adminClient.events.update(eventId, {
+        title: 'new title',
+      })
+      expect(res2.event.externalId).toBe(externalId)
+      expect(res2.event.parentId).toBe(parentId)
+    })
+
     it('should be able to add metadata to event', async () => {
       const res = await adminClient.events.create(userId, {
         calendarId,

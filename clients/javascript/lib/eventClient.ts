@@ -59,6 +59,18 @@ export class NitteiEventClient extends NitteiBaseClient {
     }
   }
 
+  public async getByExternalId(
+    externalId: String
+  ): Promise<CalendarEventResponse> {
+    const res = await this.get<CalendarEventResponse>(
+      `/user/events/external_id/${externalId}`
+    )
+
+    return {
+      event: convertEventDates(res.event),
+    }
+  }
+
   public async findByMeta(
     meta: {
       key: string

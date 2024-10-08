@@ -11,6 +11,7 @@ pub struct User {
     pub id: ID,
     pub account_id: ID,
     pub metadata: Option<serde_json::Value>,
+    pub external_id: Option<String>,
 }
 
 impl User {
