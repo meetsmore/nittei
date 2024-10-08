@@ -57,9 +57,9 @@ mod tests {
             .is_empty());
 
         // Now add metadata
-        let metadata = Metadata::new_kv("group_id".to_string(), "123".to_string());
+        let metadata = serde_json::json! ({ "group_id": "123" });
 
-        user.metadata = metadata;
+        user.metadata = Some(metadata);
         ctx.repos.users.save(&user).await.expect("To save user");
 
         let res = ctx

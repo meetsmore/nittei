@@ -2,7 +2,7 @@ use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::Weekday;
 use chrono_tz::Tz;
 use nittei_api_structs::update_calendar::{APIResponse, PathParams, RequestBody};
-use nittei_domain::{Calendar, Metadata, User, ID};
+use nittei_domain::{Calendar, User, ID};
 use nittei_infra::NitteiContext;
 
 use crate::{
@@ -74,7 +74,7 @@ struct UpdateCalendarUseCase {
     pub name: Option<String>,
     pub week_start: Option<Weekday>,
     pub timezone: Option<Tz>,
-    pub metadata: Option<Metadata>,
+    pub metadata: Option<serde_json::Value>,
 }
 
 #[derive(Debug)]
@@ -121,7 +121,7 @@ impl UseCase for UpdateCalendarUseCase {
         }
 
         if let Some(metadata) = &self.metadata {
-            calendar.metadata = metadata.clone();
+            calendar.metadata = Some(metadata.clone());
         }
 
         if let Some(name) = &self.name {
@@ -169,7 +169,7 @@ mod test {
             name: None,
             week_start: Some(new_wkst),
             timezone: None,
-            metadata: Some(Metadata::new()),
+            metadata: Some(serde_json::json!({})),
         };
         let res = usecase.execute(&ctx).await;
         assert!(res.is_ok());

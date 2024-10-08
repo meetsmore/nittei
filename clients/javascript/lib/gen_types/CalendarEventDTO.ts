@@ -2,6 +2,7 @@
 import type { CalendarEventReminder } from './CalendarEventReminder'
 import type { CalendarEventStatus } from './CalendarEventStatus'
 import type { ID } from './ID'
+import type { JsonValue } from './serde_json/JsonValue'
 import type { RRuleOptions } from './RRuleOptions'
 
 /**
@@ -83,5 +84,5 @@ export type CalendarEventDTO = {
   /**
    * Metadata (e.g. {"key": "value"})
    */
-  metadata: Record<string, string>
+  metadata?: JsonValue
 }

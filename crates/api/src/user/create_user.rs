@@ -1,6 +1,6 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use nittei_api_structs::create_user::*;
-use nittei_domain::{Metadata, User, ID};
+use nittei_domain::{User, ID};
 use nittei_infra::NitteiContext;
 
 use crate::{
@@ -20,8 +20,8 @@ pub async fn create_user_controller(
 
     let usecase = CreateUserUseCase {
         account_id: account.id,
+        metadata: body.0.metadata,
         external_id: body.0.external_id,
-        metadata: body.0.metadata.unwrap_or_default(),
         user_id: body.0.user_id,
     };
 
@@ -34,8 +34,8 @@ pub async fn create_user_controller(
 #[derive(Debug)]
 pub struct CreateUserUseCase {
     pub account_id: ID,
+    pub metadata: Option<serde_json::Value>,
     pub external_id: Option<String>,
-    pub metadata: Metadata,
     pub user_id: Option<ID>,
 }
 

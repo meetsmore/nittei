@@ -4,7 +4,6 @@ use nittei_domain::{
     CalendarEventReminder,
     CalendarEventStatus,
     EventInstance,
-    Metadata,
     RRuleOptions,
     ID,
 };
@@ -75,10 +74,10 @@ pub struct CalendarEventDTO {
 
     /// List of reminders
     pub reminders: Vec<CalendarEventReminder>,
-    #[ts(type = "Record<string, string>")]
 
     /// Metadata (e.g. {"key": "value"})
-    pub metadata: Metadata,
+    #[ts(optional)]
+    pub metadata: Option<serde_json::Value>,
 }
 
 impl CalendarEventDTO {

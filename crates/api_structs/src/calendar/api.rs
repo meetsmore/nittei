@@ -58,8 +58,6 @@ pub mod get_calendars_by_user {
 }
 
 pub mod create_calendar {
-    use nittei_domain::Metadata;
-
     use super::*;
 
     #[derive(Deserialize)]
@@ -95,8 +93,8 @@ pub mod create_calendar {
         pub key: Option<String>,
 
         /// Optional metadata (e.g. {"key": "value"})
-        #[ts(optional, type = "Record<string, string>")]
-        pub metadata: Option<Metadata>,
+        #[ts(optional)]
+        pub metadata: Option<serde_json::Value>,
     }
 
     pub type APIResponse = CalendarResponse;
@@ -399,7 +397,7 @@ pub mod multiple_freebusy {
 }
 
 pub mod update_calendar {
-    use nittei_domain::{Metadata, Weekday};
+    use nittei_domain::Weekday;
 
     use super::*;
 
@@ -438,8 +436,8 @@ pub mod update_calendar {
 
         /// Optional metadata (e.g. {"key": "value"})
         #[serde(default)]
-        #[ts(optional, type = "Record<string, string>")]
-        pub metadata: Option<Metadata>,
+        #[ts(optional, type = "Record<string, string | number | boolean>")]
+        pub metadata: Option<serde_json::Value>,
     }
 
     pub type APIResponse = CalendarResponse;

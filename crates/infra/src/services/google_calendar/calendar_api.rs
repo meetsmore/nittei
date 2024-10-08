@@ -52,24 +52,29 @@ impl From<CalendarEvent> for GoogleCalendarEventAttributes {
         let empty = "".to_string();
         let summary = e
             .metadata
-            .inner
-            .get("google.summary")
-            .unwrap_or(&empty)
-            .clone();
+            .clone()
+            .map(|m| {
+                m.get("google.summary")
+                    .unwrap_or(&serde_json::Value::String(empty.clone()))
+                    .to_string()
+            })
+            .unwrap_or(empty.clone());
         let description = e
             .metadata
-            .inner
-            .get("google.description")
-            .unwrap_or(&empty)
-            .clone();
+            .map(|m| {
+                m.get("google.description")
+                    .unwrap_or(&serde_json::Value::String(empty.clone()))
+                    .to_string()
+            })
+            .unwrap_or(empty.clone());
         let transparency = if e.busy {
             "opaque".to_string()
         } else {
             "transparent".to_string()
         };
         Self {
-            description,
-            summary,
+            description: description.to_string(),
+            summary: summary.to_string(),
             start: GoogleCalendarEventDateTime::new(e.start_time.timestamp_millis()),
             // Recurrence sync not supported yet, so e.end_ts will not be correct if used
             end: GoogleCalendarEventDateTime::new(e.start_time.timestamp_millis() + e.duration),

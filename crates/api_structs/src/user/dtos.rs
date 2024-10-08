@@ -1,4 +1,4 @@
-use nittei_domain::{Metadata, User, ID};
+use nittei_domain::{User, ID};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
@@ -14,8 +14,8 @@ pub struct UserDTO {
     pub external_id: Option<String>,
 
     /// Metadata (e.g. {"key": "value"})
-    #[ts(type = "Record<string, string>")]
-    pub metadata: Metadata,
+    #[ts(optional)]
+    pub metadata: Option<serde_json::Value>,
 }
 
 impl UserDTO {

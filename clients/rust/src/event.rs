@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use chrono::{DateTime, Utc};
 use nittei_api_structs::*;
-use nittei_domain::{CalendarEventStatus, Metadata};
+use nittei_domain::CalendarEventStatus;
 use reqwest::StatusCode;
 use serde::Serialize;
 
@@ -54,7 +54,7 @@ pub struct CreateEventInput {
     #[serde(default)]
     pub service_id: Option<ID>,
     #[serde(default)]
-    pub metadata: Option<Metadata>,
+    pub metadata: Option<serde_json::Value>,
 }
 
 pub struct GetEventsInstancesInput {
@@ -79,7 +79,7 @@ pub struct UpdateEventInput {
     pub rrule_options: Option<RRuleOptions>,
     pub service_id: Option<ID>,
     pub exdates: Option<Vec<DateTime<Utc>>>,
-    pub metadata: Option<Metadata>,
+    pub metadata: Option<serde_json::Value>,
 }
 
 impl CalendarEventClient {

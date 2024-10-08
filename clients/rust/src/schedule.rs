@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use nittei_api_structs::*;
-use nittei_domain::{Metadata, Tz};
+use nittei_domain::Tz;
 use reqwest::StatusCode;
 
 use crate::{APIResponse, BaseClient, ScheduleRule, ID};
@@ -15,14 +15,14 @@ pub struct CreateScheduleInput {
     pub timezone: Tz,
     pub rules: Option<Vec<ScheduleRule>>,
     pub user_id: ID,
-    pub metadata: Option<Metadata>,
+    pub metadata: Option<serde_json::Value>,
 }
 
 pub struct UpdateScheduleInput {
     pub timezone: Option<Tz>,
     pub rules: Option<Vec<ScheduleRule>>,
     pub schedule_id: ID,
-    pub metadata: Option<Metadata>,
+    pub metadata: Option<serde_json::Value>,
 }
 
 impl ScheduleClient {

@@ -1,6 +1,6 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use nittei_api_structs::update_user::*;
-use nittei_domain::{Metadata, User, ID};
+use nittei_domain::{User, ID};
 use nittei_infra::NitteiContext;
 
 use crate::{
@@ -37,7 +37,7 @@ pub struct UpdateUserUseCase {
     pub account_id: ID,
     pub external_id: Option<String>,
     pub user_id: ID,
-    pub metadata: Option<Metadata>,
+    pub metadata: Option<serde_json::Value>,
 }
 
 #[derive(Debug)]
@@ -82,7 +82,7 @@ impl UseCase for UpdateUserUseCase {
         };
 
         if let Some(metadata) = &self.metadata {
-            user.metadata = metadata.clone();
+            user.metadata = Some(metadata.clone());
         }
 
         if let Some(external_id) = &self.external_id {

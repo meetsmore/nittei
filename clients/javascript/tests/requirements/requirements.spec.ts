@@ -780,7 +780,9 @@ describe('Requirements', () => {
           },
         })
         user1Calendar1Event1 = res?.event
-        expect(res?.event.metadata.name).toEqual('日本語のイベント')
+        expect((res?.event.metadata as { name: string })?.name).toEqual(
+          '日本語のイベント'
+        )
       })
 
       it('should fetch the event', async () => {
@@ -789,7 +791,9 @@ describe('Requirements', () => {
         }
         const res = await client?.events.getById(user1Calendar1Event1.id)
         expect(res?.event.id).toEqual(user1Calendar1Event1.id)
-        expect(res?.event.metadata.name).toEqual('日本語のイベント')
+        expect((res?.event.metadata as { name: string })?.name).toEqual(
+          '日本語のイベント'
+        )
       })
     })
 
@@ -897,13 +901,13 @@ describe('Requirements', () => {
 
         const resCal1 = await client?.calendar.create(user1.id, {
           timezone: 'Asia/Tokyo',
-          metadata: { key: 'group', value: 'A' },
+          metadata: { group: 'A' },
         })
         expect(resCal1?.calendar.userId).toEqual(user1.id)
 
         const resCal2 = await client?.calendar.create(user1.id, {
           timezone: 'Asia/Tokyo',
-          metadata: { key: 'group', value: 'B' },
+          metadata: { group: 'B' },
         })
         expect(resCal2?.calendar.userId).toEqual(user1.id)
       })
@@ -916,8 +920,7 @@ describe('Requirements', () => {
         )
         expect(res?.calendars.length).toBe(1)
         expect(res?.calendars[0].metadata).toEqual({
-          key: 'group',
-          value: 'A',
+          group: 'A',
         })
       })
 
@@ -929,8 +932,7 @@ describe('Requirements', () => {
         )
         expect(res?.calendars.length).toBe(1)
         expect(res?.calendars[0].metadata).toEqual({
-          key: 'group',
-          value: 'B',
+          group: 'B',
         })
       })
     })

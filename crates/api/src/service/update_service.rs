@@ -1,6 +1,6 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use nittei_api_structs::update_service::*;
-use nittei_domain::{Metadata, Service, ServiceMultiPersonOptions, ID};
+use nittei_domain::{Service, ServiceMultiPersonOptions, ID};
 use nittei_infra::NitteiContext;
 
 use crate::{
@@ -37,7 +37,7 @@ pub async fn update_service_controller(
 struct UpdateServiceUseCase {
     account_id: ID,
     service_id: ID,
-    metadata: Option<Metadata>,
+    metadata: Option<serde_json::Value>,
     multi_person: Option<ServiceMultiPersonOptions>,
 }
 #[derive(Debug)]
@@ -77,8 +77,8 @@ impl UseCase for UpdateServiceUseCase {
             Err(_) => return Err(UseCaseError::StorageError),
         };
 
-        if let Some(metadata) = &self.metadata {
-            service.metadata = metadata.clone();
+        if self.metadata.is_some() {
+            service.metadata = self.metadata.clone();
         }
         if let Some(opts) = &self.multi_person {
             if let ServiceMultiPersonOptions::Group(new_count) = opts {

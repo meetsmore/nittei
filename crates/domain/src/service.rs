@@ -5,7 +5,6 @@ use crate::{
     scheduling::RoundRobinAlgorithm,
     shared::entity::{Entity, ID},
     Meta,
-    Metadata,
 };
 
 /// A type that describes a time plan and is either a `Calendar` or a `Schedule`
@@ -119,7 +118,7 @@ pub struct Service {
     pub account_id: ID,
     // interval: usize,
     pub multi_person: ServiceMultiPersonOptions,
-    pub metadata: Metadata,
+    pub metadata: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, TS)]
@@ -144,9 +143,6 @@ impl Entity<ID> for Service {
 }
 
 impl Meta<ID> for Service {
-    fn metadata(&self) -> &Metadata {
-        &self.metadata
-    }
     fn account_id(&self) -> &ID {
         &self.account_id
     }
@@ -169,7 +165,7 @@ pub struct ServiceWithUsers {
     pub account_id: ID,
     pub users: Vec<ServiceResource>,
     pub multi_person: ServiceMultiPersonOptions,
-    pub metadata: Metadata,
+    pub metadata: Option<serde_json::Value>,
 }
 
 /// Enum for the different provider for busy calendars

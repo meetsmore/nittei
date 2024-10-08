@@ -5,7 +5,6 @@ use nittei_domain::{
     CalendarEvent,
     CalendarEventReminder,
     CalendarEventStatus,
-    Metadata,
     RRuleOptions,
     User,
     ID,
@@ -48,7 +47,7 @@ pub async fn create_event_admin_controller(
         recurrence: body.recurrence,
         reminders: body.reminders,
         service_id: body.service_id,
-        metadata: body.metadata.unwrap_or_default(),
+        metadata: body.metadata,
     };
 
     execute(usecase, &ctx)
@@ -81,7 +80,7 @@ pub async fn create_event_controller(
         user,
         reminders: body.reminders,
         service_id: body.service_id,
-        metadata: body.metadata.unwrap_or_default(),
+        metadata: body.metadata,
     };
 
     execute_with_policy(usecase, &policy, &ctx)
@@ -107,7 +106,7 @@ pub struct CreateEventUseCase {
     pub recurrence: Option<RRuleOptions>,
     pub reminders: Vec<CalendarEventReminder>,
     pub service_id: Option<ID>,
-    pub metadata: Metadata,
+    pub metadata: Option<serde_json::Value>,
 }
 
 #[derive(Debug, PartialEq)]
