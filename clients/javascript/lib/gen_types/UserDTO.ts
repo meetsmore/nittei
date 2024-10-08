@@ -10,6 +10,10 @@ export type UserDTO = {
    */
   id: ID
   /**
+   * External id
+   */
+  externalId: string | null
+  /**
    * Metadata (e.g. {"key": "value"})
    */
   metadata: Record<string, string>

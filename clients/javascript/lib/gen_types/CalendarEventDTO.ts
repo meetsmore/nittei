@@ -33,6 +33,14 @@ export type CalendarEventDTO = {
    */
   status: CalendarEventStatus
   /**
+   * Optional parent event ID
+   */
+  parentId: string | null
+  /**
+   * Optional external ID
+   */
+  externalId: string | null
+  /**
    * Start time of the event (UTC)
    */
   startTime: Date

@@ -22,9 +22,14 @@ export type CreateEventRequestBody = {
   description?: string
   /**
    * Optional parent event ID
-   * This is useful for external applications that need to link Nittei's events to their own data models
+   * This is useful for external applications that need to link Nittei's events to a wider data model (e.g. a project, an order, etc.)
    */
   parentId?: string
+  /**
+   * Optional external event ID
+   * This is useful for external applications that need to link Nittei's events to their own data models
+   */
+  externalId?: string
   /**
    * Optional location of the event
    */

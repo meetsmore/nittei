@@ -29,6 +29,7 @@ async fn create_default_service_host(
 ) -> (User, Calendar) {
     let input = CreateUserInput {
         metadata: None,
+        external_id: None,
         user_id: None,
     };
     let host = admin_client
@@ -191,6 +192,7 @@ async fn test_round_robin_scheduling_simple_test() {
                 // Create service event
                 let service_event = CreateEventInput {
                     parent_id: None,
+                    external_id: None,
                     title: None,
                     description: None,
                     location: None,
@@ -309,6 +311,7 @@ async fn test_round_robin_equal_distribution_scheduling() {
                 // Create service event
                 let service_event = CreateEventInput {
                     parent_id: None,
+                    external_id: None,
                     title: None,
                     description: None,
                     location: None,
@@ -368,6 +371,7 @@ async fn test_round_robin_equal_distribution_scheduling() {
                 .expect("To find selected host");
             let service_event = CreateEventInput {
                 parent_id: None,
+                external_id: None,
                 title: None,
                 description: None,
                 location: None,
@@ -472,6 +476,7 @@ async fn test_round_robin_availability_scheduling() {
             // Create service event
             let service_event = CreateEventInput {
                 parent_id: None,
+                external_id: None,
                 title: None,
                 description: None,
                 location: None,
@@ -550,6 +555,7 @@ async fn test_round_robin_availability_scheduling() {
 
             let service_event = CreateEventInput {
                 parent_id: None,
+                external_id: None,
                 title: None,
                 description: None,
                 location: None,

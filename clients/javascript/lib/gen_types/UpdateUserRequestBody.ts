@@ -5,6 +5,10 @@
  */
 export type UpdateUserRequestBody = {
   /**
+   * Optional external ID (e.g. the ID of the user in an external system)
+   */
+  externalId?: string
+  /**
    * Optional metadata (e.g. {"key": "value"})
    */
   metadata?: Record<string, string>

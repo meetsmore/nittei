@@ -45,6 +45,7 @@ pub async fn update_event_admin_controller(
         title: body.title,
         description: body.description,
         parent_id: body.parent_id,
+        external_id: body.external_id,
         location: body.location,
         status: body.status,
         all_day: body.all_day,
@@ -79,6 +80,7 @@ pub async fn update_event_controller(
         title: body.title,
         description: body.description,
         parent_id: body.parent_id,
+        external_id: body.external_id,
         location: body.location,
         status: body.status,
         all_day: body.all_day,
@@ -106,6 +108,7 @@ pub struct UpdateEventUseCase {
     pub title: Option<String>,
     pub description: Option<String>,
     pub parent_id: Option<String>,
+    pub external_id: Option<String>,
     pub location: Option<String>,
     pub status: Option<CalendarEventStatus>,
     pub all_day: Option<bool>,
@@ -160,6 +163,7 @@ impl UseCase for UpdateEventUseCase {
             title,
             description,
             parent_id,
+            external_id,
             location,
             status,
             all_day,
@@ -187,7 +191,9 @@ impl UseCase for UpdateEventUseCase {
             }
         };
 
-        e.service_id.clone_from(service_id);
+        if service_id.is_some() {
+            e.service_id.clone_from(service_id);
+        }
 
         if let Some(exdates) = exdates {
             e.exdates.clone_from(exdates);
@@ -254,16 +260,28 @@ impl UseCase for UpdateEventUseCase {
             return Err(UseCaseError::InvalidRecurrenceRule);
         };
 
-        e.title.clone_from(title);
+        if title.is_some() {
+            e.title.clone_from(title);
+        }
 
-        e.description.clone_from(description);
+        if description.is_some() {
+            e.description.clone_from(description);
+        }
 
-        e.parent_id.clone_from(parent_id);
+        if parent_id.is_some() {
+            e.parent_id.clone_from(parent_id);
+        }
 
-        e.location.clone_from(location);
+        if external_id.is_some() {
+            e.external_id.clone_from(external_id);
+        }
+
+        if location.is_some() {
+            e.location.clone_from(location);
+        }
 
         if let Some(status) = status {
-            e.status.clone_from(status);
+            e.status = status.clone();
         }
 
         if let Some(all_day) = all_day {
