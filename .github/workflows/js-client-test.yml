@@ -87,5 +87,5 @@ jobs:
 
       - name: Stop server
         run: |
-          kill $(lsof -t -i:5000) || true
+          kill $(lsof -t -i:${NITTEI__HTTP_PORT}) || true
           echo "Stopped server"
