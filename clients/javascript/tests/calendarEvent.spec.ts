@@ -3,7 +3,7 @@ import {
   NitteiClient,
   type INitteiUserClient,
 } from '../lib'
-import { setupUserClient } from './helpers/fixtures'
+import { setupAccount, setupUserClient } from './helpers/fixtures'
 
 describe('CalendarEvent API', () => {
   let calendarId: string
@@ -154,5 +154,121 @@ describe('CalendarEvent API', () => {
     )
 
     expect(eventUpdated.event.title).toBe('new title')
+  })
+
+  describe('Admin API', () => {
+    let calendarId: string
+    let userId: string
+    let adminClient: INitteiClient
+    beforeAll(async () => {
+      const data = await setupAccount()
+      adminClient = data.client
+      const userRes = await adminClient.user.create()
+      userId = userRes.user.id
+      const calendarRes = await adminClient.calendar.create(userId, {
+        timezone: 'UTC',
+      })
+      calendarId = calendarRes.calendar.id
+    })
+
+    it('should be able to query on external ID', async () => {
+      const externalId = crypto.randomUUID()
+      const res = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+        externalId: externalId,
+      })
+      const eventId = res.event.id
+      const res2 = await adminClient.events.getByExternalId(externalId)
+      expect(res2.event.id).toBe(eventId)
+    })
+
+    it('should update event (externalId and parentId)', async () => {
+      const externalId = crypto.randomUUID()
+      const parentId = crypto.randomUUID()
+      const res = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+        externalId: externalId,
+        parentId: parentId,
+      })
+      const eventId = res.event.id
+      expect(res.event.externalId).toBe(externalId)
+      expect(res.event.parentId).toBe(parentId)
+
+      const getRes = await adminClient.events.getByExternalId(externalId)
+      expect(getRes.event.externalId).toBe(externalId)
+      expect(getRes.event.parentId).toBe(parentId)
+
+      const externalId2 = crypto.randomUUID()
+      const parentId2 = crypto.randomUUID()
+      const res2 = await adminClient.events.update(eventId, {
+        parentId: parentId2,
+        externalId: externalId2,
+      })
+      expect(res2.event.externalId).toBe(externalId2)
+      expect(res2.event.parentId).toBe(parentId2)
+
+      const getRes2 = await adminClient.events.getByExternalId(externalId2)
+      expect(getRes2.event.externalId).toBe(externalId2)
+      expect(getRes2.event.parentId).toBe(parentId2)
+    })
+
+    it('should not overwrite externalId and parentId when updating event', async () => {
+      const externalId = crypto.randomUUID()
+      const parentId = crypto.randomUUID()
+      const res = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+        externalId: externalId,
+        parentId: parentId,
+      })
+      const eventId = res.event.id
+      expect(res.event.externalId).toBe(externalId)
+      expect(res.event.parentId).toBe(parentId)
+
+      const res2 = await adminClient.events.update(eventId, {
+        title: 'new title',
+      })
+      expect(res2.event.externalId).toBe(externalId)
+      expect(res2.event.parentId).toBe(parentId)
+    })
+
+    it('should be able to add metadata to event', async () => {
+      const res = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+        metadata: {
+          string: 'string',
+          number: 1,
+          // boolean: true, // To be enabled once https://github.com/Aleph-Alpha/ts-rs/pull/358 is merged
+          object: {
+            string: 'string',
+            number: 1,
+            // boolean: true,
+          },
+        },
+      })
+
+      const getRes = await adminClient.events.getById(res.event.id)
+      expect(getRes.event.metadata).toEqual({
+        string: 'string',
+        number: 1,
+        // boolean: true,
+        object: {
+          string: 'string',
+          number: 1,
+          // boolean: true,
+        },
+      })
+    })
+
+    afterAll(async () => {
+      await adminClient.user.remove(userId)
+    })
   })
 })

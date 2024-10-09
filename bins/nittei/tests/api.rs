@@ -1,7 +1,5 @@
 mod helpers;
 
-use std::collections::HashMap;
-
 use chrono::DateTime;
 use helpers::setup::spawn_app;
 use nittei_domain::{PEMKey, Weekday};
@@ -17,7 +15,6 @@ use nittei_sdk::{
     GetServiceBookingSlotsInput,
     GetUserFreeBusyInput,
     KVMetadata,
-    Metadata,
     MetadataFindInput,
     MultipleFreeBusyRequestBody,
     NitteiSDK,
@@ -74,23 +71,20 @@ async fn test_crud_user() {
 
     let admin_client = NitteiSDK::new(address, res.secret_api_key);
 
-    let metadata = Metadata::new_kv("group_id".to_string(), "123".to_string());
+    let metadata = serde_json::json!({ "group_id": "123" });
 
     let res = admin_client
         .user
         .create(CreateUserInput {
             metadata: Some(metadata),
+            external_id: None,
             user_id: None,
         })
         .await
         .expect("Expected to create user");
 
     assert_eq!(
-        res.user.metadata.inner.get("key").unwrap().clone(),
-        "group_id".to_string()
-    );
-    assert_eq!(
-        res.user.metadata.inner.get("value").unwrap().clone(),
+        res.user.metadata.unwrap().get("group_id").unwrap().clone(),
         "123".to_string()
     );
 
@@ -153,21 +147,23 @@ async fn test_user_provide_id() {
 
     let admin_client = NitteiSDK::new(address, res.secret_api_key);
 
-    let mut metadata = HashMap::new();
-    metadata.insert("group_id".to_string(), "123".to_string());
+    let metadata = serde_json::json!({
+            "group_id": "123",
+    });
 
     let user_id = ID::default();
 
     let res = admin_client
         .user
         .create(CreateUserInput {
-            metadata: Some(metadata.into()),
+            metadata: Some(metadata),
+            external_id: None,
             user_id: Some(user_id.clone()),
         })
         .await
         .expect("Expected to create user");
     assert_eq!(
-        res.user.metadata.inner.get("group_id").unwrap().clone(),
+        res.user.metadata.unwrap().get("group_id").unwrap().clone(),
         "123".to_string()
     );
     assert_eq!(
@@ -191,6 +187,7 @@ async fn test_crud_schedule() {
         .user
         .create(CreateUserInput {
             metadata: None,
+            external_id: None,
             user_id: None,
         })
         .await
@@ -260,6 +257,7 @@ async fn test_create_user() {
         .user
         .create(CreateUserInput {
             metadata: None,
+            external_id: None,
             user_id: None,
         })
         .await
@@ -352,6 +350,7 @@ async fn test_crud_calendars() {
         .user
         .create(CreateUserInput {
             metadata: None,
+            external_id: None,
             user_id: None,
         })
         .await
@@ -459,6 +458,7 @@ async fn test_crud_events() {
         .user
         .create(CreateUserInput {
             metadata: None,
+            external_id: None,
             user_id: None,
         })
         .await
@@ -483,6 +483,7 @@ async fn test_crud_events() {
         .event
         .create(CreateEventInput {
             parent_id: None,
+            external_id: None,
             title: None,
             description: None,
             location: None,
@@ -531,6 +532,7 @@ async fn test_crud_events() {
             status: None,
             all_day: None,
             parent_id: None,
+            external_id: None,
             exdates: Some(vec![DateTime::from_timestamp_millis(0).unwrap()]),
             busy: None,
             duration: None,
@@ -579,6 +581,7 @@ async fn test_crud_service() {
         .user
         .create(CreateUserInput {
             metadata: None,
+            external_id: None,
             user_id: None,
         })
         .await
@@ -706,6 +709,7 @@ async fn test_freebusy_multiple() {
         .user
         .create(CreateUserInput {
             metadata: None,
+            external_id: None,
             user_id: None,
         })
         .await
@@ -715,6 +719,7 @@ async fn test_freebusy_multiple() {
         .user
         .create(CreateUserInput {
             metadata: None,
+            external_id: None,
             user_id: None,
         })
         .await
@@ -752,6 +757,7 @@ async fn test_freebusy_multiple() {
         .event
         .create(CreateEventInput {
             parent_id: None,
+            external_id: None,
             title: None,
             description: None,
             location: None,
@@ -774,6 +780,7 @@ async fn test_freebusy_multiple() {
         .event
         .create(CreateEventInput {
             parent_id: None,
+            external_id: None,
             title: None,
             description: None,
             location: None,

@@ -4,7 +4,6 @@ use nittei_domain::{
     CalendarEventReminder,
     CalendarEventStatus,
     EventInstance,
-    Metadata,
     RRuleOptions,
     ID,
 };
@@ -33,6 +32,12 @@ pub struct CalendarEventDTO {
 
     /// Status of the event, default is tentative
     pub status: CalendarEventStatus,
+
+    /// Optional parent event ID
+    pub parent_id: Option<String>,
+
+    /// Optional external ID
+    pub external_id: Option<String>,
 
     /// Start time of the event (UTC)
     #[ts(type = "Date")]
@@ -69,10 +74,10 @@ pub struct CalendarEventDTO {
 
     /// List of reminders
     pub reminders: Vec<CalendarEventReminder>,
-    #[ts(type = "Record<string, string>")]
 
     /// Metadata (e.g. {"key": "value"})
-    pub metadata: Metadata,
+    #[ts(optional)]
+    pub metadata: Option<serde_json::Value>,
 }
 
 impl CalendarEventDTO {
@@ -84,6 +89,8 @@ impl CalendarEventDTO {
             location: event.location,
             all_day: event.all_day,
             status: event.status,
+            parent_id: event.parent_id,
+            external_id: event.external_id,
             start_time: event.start_time,
             duration: event.duration,
             busy: event.busy,

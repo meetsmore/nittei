@@ -1,4 +1,4 @@
-use nittei_domain::{Metadata, Service, ServiceResource, ServiceWithUsers, TimePlan, ID};
+use nittei_domain::{Service, ServiceResource, ServiceWithUsers, TimePlan, ID};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
@@ -48,8 +48,8 @@ pub struct ServiceDTO {
     /// UUID of the service
     pub id: ID,
     /// Metadata (e.g. {"key": "value"})
-    #[ts(type = "Record<string, string>")]
-    pub metadata: Metadata,
+    #[ts(optional)]
+    pub metadata: Option<serde_json::Value>,
 }
 
 impl ServiceDTO {
@@ -67,8 +67,8 @@ impl ServiceDTO {
 pub struct ServiceWithUsersDTO {
     pub id: ID,
     pub users: Vec<ServiceResourceDTO>,
-    #[ts(type = "Record<string, string>")]
-    pub metadata: Metadata,
+    #[ts(optional)]
+    pub metadata: Option<serde_json::Value>,
 }
 
 impl ServiceWithUsersDTO {

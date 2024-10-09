@@ -18,7 +18,7 @@ impl ScheduleResponse {
 }
 
 pub mod create_schedule {
-    use nittei_domain::{Metadata, ScheduleRule};
+    use nittei_domain::ScheduleRule;
 
     use super::*;
 
@@ -32,7 +32,7 @@ pub mod create_schedule {
     pub struct RequestBody {
         pub timezone: Tz,
         pub rules: Option<Vec<ScheduleRule>>,
-        pub metadata: Option<Metadata>,
+        pub metadata: Option<serde_json::Value>,
     }
 
     pub type APIResponse = ScheduleResponse;
@@ -61,7 +61,7 @@ pub mod get_schedule {
 }
 
 pub mod update_schedule {
-    use nittei_domain::{Metadata, ScheduleRule};
+    use nittei_domain::ScheduleRule;
 
     use super::*;
 
@@ -75,7 +75,7 @@ pub mod update_schedule {
     pub struct RequestBody {
         pub timezone: Option<Tz>,
         pub rules: Option<Vec<ScheduleRule>>,
-        pub metadata: Option<Metadata>,
+        pub metadata: Option<serde_json::Value>,
     }
 
     pub type APIResponse = ScheduleResponse;

@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE users\n            SET account_uid = $2,\n            external_id = $3,\n            metadata = $4\n            WHERE user_uid = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8f0d808b715f3a971de0f31924868cec2b9255b46dc1600632a039bd4c51d245"
+}

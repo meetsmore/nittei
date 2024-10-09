@@ -1746,6 +1746,7 @@ dependencies = [
  "opentelemetry-datadog",
  "opentelemetry-otlp",
  "opentelemetry_sdk",
+ "serde_json",
  "test-log",
  "tikv-jemallocator",
  "tokio",
@@ -1773,6 +1774,7 @@ dependencies = [
  "nittei_infra",
  "rrule",
  "serde",
+ "serde_json",
  "serial_test",
  "thiserror",
  "tracing",
@@ -1789,6 +1791,7 @@ dependencies = [
  "chrono-tz",
  "nittei_domain",
  "serde",
+ "serde_json",
  "serde_urlencoded",
  "ts-rs",
  "uuid",
@@ -1808,6 +1811,7 @@ dependencies = [
  "rand",
  "rrule",
  "serde",
+ "serde_json",
  "thiserror",
  "tracing",
  "ts-rs",
@@ -1845,6 +1849,7 @@ dependencies = [
  "nittei_domain",
  "reqwest 0.12.4",
  "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -3730,6 +3735,7 @@ checksum = "3a2f31991cee3dce1ca4f929a8a04fdd11fd8801aac0f2030b0fa8a0a3fef6b9"
 dependencies = [
  "chrono",
  "lazy_static",
+ "serde_json",
  "thiserror",
  "ts-rs-macros",
  "uuid",

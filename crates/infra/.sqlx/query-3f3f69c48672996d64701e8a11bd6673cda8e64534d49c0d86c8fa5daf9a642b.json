@@ -1,0 +1,148 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e\n            INNER JOIN calendars AS c\n                ON c.calendar_uid = e.calendar_uid\n            INNER JOIN users AS u\n                ON u.user_uid = c.user_uid\n            WHERE e.external_id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "event_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "calendar_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "parent_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "location",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "all_day",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "start_time",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "duration",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 10,
+        "name": "end_time",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "busy",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 12,
+        "name": "created",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 13,
+        "name": "updated",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 14,
+        "name": "recurrence",
+        "type_info": "Json"
+      },
+      {
+        "ordinal": 15,
+        "name": "exdates",
+        "type_info": "TimestamptzArray"
+      },
+      {
+        "ordinal": 16,
+        "name": "reminders",
+        "type_info": "Json"
+      },
+      {
+        "ordinal": 17,
+        "name": "service_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 18,
+        "name": "metadata",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 19,
+        "name": "external_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 20,
+        "name": "user_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 21,
+        "name": "account_uid",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "3f3f69c48672996d64701e8a11bd6673cda8e64534d49c0d86c8fa5daf9a642b"
+}

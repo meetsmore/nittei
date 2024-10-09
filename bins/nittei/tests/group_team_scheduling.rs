@@ -29,6 +29,7 @@ async fn create_default_service_host(
 ) -> (User, Calendar) {
     let input = CreateUserInput {
         metadata: None,
+        external_id: None,
         user_id: None,
     };
     let host = admin_client
@@ -186,6 +187,7 @@ async fn test_group_team_scheduling() {
             for (host, calendar) in hosts_with_calendar {
                 let service_event = CreateEventInput {
                     parent_id: None,
+                    external_id: None,
                     title: None,
                     description: None,
                     location: None,
@@ -270,6 +272,7 @@ async fn test_group_team_scheduling_is_collective() {
 
     let input = CreateUserInput {
         metadata: None,
+        external_id: None,
         user_id: None,
     };
     let host1 = admin_client
@@ -280,6 +283,7 @@ async fn test_group_team_scheduling_is_collective() {
         .user;
     let input = CreateUserInput {
         metadata: None,
+        external_id: None,
         user_id: None,
     };
     let host2 = admin_client
@@ -385,6 +389,7 @@ async fn test_group_team_scheduling_increase_max_count() {
 
         let input = CreateUserInput {
             metadata: None,
+            external_id: None,
             user_id: None,
         };
         let host = admin_client
@@ -515,6 +520,7 @@ async fn test_group_team_scheduling_increase_max_count() {
         assert!(booking_intend.create_event_for_hosts);
         let service_event = CreateEventInput {
             parent_id: None,
+            external_id: None,
             title: None,
             description: None,
             location: None,
@@ -622,6 +628,7 @@ async fn test_group_team_scheduling_increase_max_count() {
 
         let input = CreateUserInput {
             metadata: None,
+            external_id: None,
             user_id: None,
         };
         let host = admin_client
@@ -812,6 +819,7 @@ async fn test_group_team_scheduling_decrease_max_count() {
 
         let input = CreateUserInput {
             metadata: None,
+            external_id: None,
             user_id: None,
         };
         let host = admin_client
@@ -942,6 +950,7 @@ async fn test_group_team_scheduling_decrease_max_count() {
         assert!(booking_intend.create_event_for_hosts);
         let service_event = CreateEventInput {
             parent_id: None,
+            external_id: None,
             title: None,
             description: None,
             location: None,
@@ -1040,6 +1049,7 @@ async fn test_combination_of_services() {
 
     let input = CreateUserInput {
         metadata: None,
+        external_id: None,
         user_id: None,
     };
     let host = admin_client
@@ -1152,6 +1162,7 @@ async fn test_combination_of_services() {
     // And then create service event which is not busy
     let service_event = CreateEventInput {
         parent_id: None,
+        external_id: None,
         title: None,
         description: None,
         location: None,

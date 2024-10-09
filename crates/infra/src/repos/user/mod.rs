@@ -17,6 +17,7 @@ pub trait IUserRepo: Send + Sync {
         user_id: &ID,
         account_id: &ID,
     ) -> anyhow::Result<Option<User>>;
+    async fn get_by_external_id(&self, external_id: &str) -> anyhow::Result<Option<User>>;
     async fn find_by_metadata(&self, query: MetadataFindQuery) -> anyhow::Result<Vec<User>>;
 }
 
@@ -56,9 +57,9 @@ mod tests {
             .is_empty());
 
         // Now add metadata
-        let metadata = Metadata::new_kv("group_id".to_string(), "123".to_string());
+        let metadata = serde_json::json! ({ "group_id": "123" });
 
-        user.metadata = metadata;
+        user.metadata = Some(metadata);
         ctx.repos.users.save(&user).await.expect("To save user");
 
         let res = ctx

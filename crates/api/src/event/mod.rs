@@ -1,6 +1,7 @@
 mod create_event;
 mod delete_event;
 mod get_event;
+mod get_event_by_external_id;
 mod get_event_instances;
 mod get_events_by_calendars;
 mod get_events_by_meta;
@@ -35,6 +36,12 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
 
     // Get events by metadata
     cfg.route("/events/meta", web::get().to(get_events_by_meta_controller));
+
+    // Get a specific event by external id
+    cfg.route(
+        "/user/events/external_id/{external_id}",
+        web::get().to(get_event_by_external_id::get_event_by_external_id_admin_controller),
+    );
 
     // Get a specific event by uid
     cfg.route("/events/{event_id}", web::get().to(get_event_controller));

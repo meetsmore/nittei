@@ -28,9 +28,18 @@ pub mod get_me {
     pub type APIResponse = UserResponse;
 }
 
-pub mod create_user {
-    use nittei_domain::Metadata;
+pub mod get_user_by_external_id {
+    use super::*;
 
+    #[derive(Deserialize)]
+    pub struct PathParams {
+        pub external_id: String,
+    }
+
+    pub type APIResponse = UserResponse;
+}
+
+pub mod create_user {
     use super::*;
 
     /// Request body for creating a user
@@ -40,12 +49,19 @@ pub mod create_user {
     pub struct RequestBody {
         /// Optional metadata (e.g. {"key": "value"})
         #[serde(default)]
-        #[ts(optional, type = "Record<string, string>")]
-        pub metadata: Option<Metadata>,
+        #[ts(optional)]
+        pub metadata: Option<serde_json::Value>,
+
+        /// Optional external ID (e.g. the ID of the user in an external system)
+        #[serde(default)]
+        #[ts(optional)]
+        pub external_id: Option<String>,
 
         /// Optional user ID
         /// If not provided, a new UUID will be generated
         /// This is useful for external applications that need to link Nittei's users to their own data models
+        #[serde(default)]
+        #[ts(optional)]
         pub user_id: Option<ID>,
     }
 
@@ -112,8 +128,6 @@ pub mod oauth_outlook {
 }
 
 pub mod update_user {
-    use nittei_domain::Metadata;
-
     use super::*;
 
     /// Request body for updating a user
@@ -121,10 +135,15 @@ pub mod update_user {
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "UpdateUserRequestBody")]
     pub struct RequestBody {
+        /// Optional external ID (e.g. the ID of the user in an external system)
+        #[serde(default)]
+        #[ts(optional)]
+        pub external_id: Option<String>,
+
         /// Optional metadata (e.g. {"key": "value"})
         #[serde(default)]
-        #[ts(optional, type = "Record<string, string>")]
-        pub metadata: Option<Metadata>,
+        #[ts(optional, type = "Record<string, string | number | boolean>")]
+        pub metadata: Option<serde_json::Value>,
     }
 
     #[derive(Debug, Deserialize)]

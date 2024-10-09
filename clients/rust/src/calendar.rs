@@ -5,7 +5,6 @@ use nittei_api_structs::*;
 use nittei_domain::{
     providers::{google::GoogleCalendarAccessRole, outlook::OutlookCalendarAccessRole},
     IntegrationProvider,
-    Metadata,
     ID,
 };
 use reqwest::StatusCode;
@@ -28,7 +27,7 @@ pub struct CreateCalendarInput {
     pub name: Option<String>,
     pub key: Option<String>,
     pub week_start: Weekday,
-    pub metadata: Option<Metadata>,
+    pub metadata: Option<serde_json::Value>,
 }
 
 pub struct SyncCalendarInput {
@@ -56,7 +55,7 @@ pub struct UpdateCalendarInput {
     pub week_start: Option<Weekday>,
     pub name: Option<String>,
     pub timezone: Option<Tz>,
-    pub metadata: Option<Metadata>,
+    pub metadata: Option<serde_json::Value>,
 }
 
 pub struct GetGoogleCalendars {

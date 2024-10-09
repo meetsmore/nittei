@@ -100,11 +100,16 @@
       },
       {
         "ordinal": 19,
+        "name": "external_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 20,
         "name": "user_uid",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 20,
+        "ordinal": 21,
         "name": "account_uid",
         "type_info": "Uuid"
       }
@@ -136,6 +141,7 @@
       true,
       true,
       false,
+      true,
       false,
       false
     ]

@@ -24,7 +24,7 @@ impl CalendarEventResponse {
 
 pub mod create_event {
     use chrono::{DateTime, Utc};
-    use nittei_domain::{CalendarEventStatus, Metadata};
+    use nittei_domain::CalendarEventStatus;
 
     use super::*;
 
@@ -54,11 +54,18 @@ pub mod create_event {
         pub description: Option<String>,
 
         /// Optional parent event ID
-        /// This is useful for external applications that need to link Nittei's events to their own data models
+        /// This is useful for external applications that need to link Nittei's events to a wider data model (e.g. a project, an order, etc.)
         #[serde(default)]
         #[ts(optional)]
         #[validate(length(min = 1))]
         pub parent_id: Option<String>,
+
+        /// Optional external event ID
+        /// This is useful for external applications that need to link Nittei's events to their own data models
+        #[serde(default)]
+        #[ts(optional)]
+        #[validate(length(min = 1))]
+        pub external_id: Option<String>,
 
         /// Optional location of the event
         #[serde(default)]
@@ -110,8 +117,8 @@ pub mod create_event {
 
         /// Optional metadata (e.g. {"key": "value"})
         #[serde(default)]
-        #[ts(optional, type = "Record<string, string>")]
-        pub metadata: Option<Metadata>,
+        #[ts(optional)]
+        pub metadata: Option<serde_json::Value>,
     }
 
     pub type APIResponse = CalendarEventResponse;
@@ -172,6 +179,17 @@ pub mod get_event {
     #[derive(Deserialize)]
     pub struct PathParams {
         pub event_id: ID,
+    }
+
+    pub type APIResponse = CalendarEventResponse;
+}
+
+pub mod get_event_by_external_id {
+    use super::*;
+
+    #[derive(Deserialize)]
+    pub struct PathParams {
+        pub external_id: String,
     }
 
     pub type APIResponse = CalendarEventResponse;
@@ -260,7 +278,7 @@ pub mod get_events_by_meta {
 
 pub mod update_event {
     use chrono::{DateTime, Utc};
-    use nittei_domain::{CalendarEventStatus, Metadata};
+    use nittei_domain::CalendarEventStatus;
 
     use super::*;
 
@@ -287,11 +305,19 @@ pub mod update_event {
         pub description: Option<String>,
 
         /// Optional parent event ID
-        /// This is useful for external applications that need to link Nittei's events to their own data models
+        /// This is useful for external applications that need to link Nittei's events to a wider data model (e.g. a project, an order, etc.)
         #[serde(default)]
         #[ts(optional)]
         #[validate(length(min = 1))]
         pub parent_id: Option<String>,
+
+        /// Optional external event ID
+        /// This is useful for external applications that need to link Nittei's events to their own data models
+        /// Default is None
+        #[serde(default)]
+        #[ts(optional)]
+        #[validate(length(min = 1))]
+        pub external_id: Option<String>,
 
         /// Optional location of the event
         #[serde(default)]
@@ -343,8 +369,8 @@ pub mod update_event {
 
         /// Optional metadata (e.g. {"key": "value"})
         #[serde(default)]
-        #[ts(optional, type = "Record<string, string>")]
-        pub metadata: Option<Metadata>,
+        #[ts(optional, type = "Record<string, string | number | boolean>")]
+        pub metadata: Option<serde_json::Value>,
     }
 
     #[derive(Deserialize)]

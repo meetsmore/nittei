@@ -1,7 +1,7 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono_tz::Tz;
 use nittei_api_structs::update_schedule::*;
-use nittei_domain::{Metadata, Schedule, ScheduleRule, ID};
+use nittei_domain::{Schedule, ScheduleRule, ID};
 use nittei_infra::NitteiContext;
 
 use crate::{
@@ -65,7 +65,7 @@ struct UpdateScheduleUseCase {
     pub schedule_id: ID,
     pub timezone: Option<Tz>,
     pub rules: Option<Vec<ScheduleRule>>,
-    pub metadata: Option<Metadata>,
+    pub metadata: Option<serde_json::Value>,
 }
 
 #[derive(Debug)]
@@ -115,8 +115,8 @@ impl UseCase for UpdateScheduleUseCase {
             schedule.set_rules(rules);
         }
 
-        if let Some(metadata) = &self.metadata {
-            schedule.metadata = metadata.clone();
+        if self.metadata.is_some() {
+            schedule.metadata = self.metadata.clone();
         }
 
         let repo_res = ctx.repos.schedules.save(&schedule).await;

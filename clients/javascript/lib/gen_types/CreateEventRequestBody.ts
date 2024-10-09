@@ -2,6 +2,7 @@
 import type { CalendarEventReminder } from './CalendarEventReminder'
 import type { CalendarEventStatus } from './CalendarEventStatus'
 import type { ID } from './ID'
+import type { JsonValue } from './serde_json/JsonValue'
 import type { RRuleOptions } from './RRuleOptions'
 
 /**
@@ -22,9 +23,14 @@ export type CreateEventRequestBody = {
   description?: string
   /**
    * Optional parent event ID
-   * This is useful for external applications that need to link Nittei's events to their own data models
+   * This is useful for external applications that need to link Nittei's events to a wider data model (e.g. a project, an order, etc.)
    */
   parentId?: string
+  /**
+   * Optional external event ID
+   * This is useful for external applications that need to link Nittei's events to their own data models
+   */
+  externalId?: string
   /**
    * Optional location of the event
    */
@@ -68,5 +74,5 @@ export type CreateEventRequestBody = {
   /**
    * Optional metadata (e.g. {"key": "value"})
    */
-  metadata?: Record<string, string>
+  metadata?: JsonValue
 }
