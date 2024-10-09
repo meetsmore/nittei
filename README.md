@@ -78,10 +78,11 @@ just dev
 
 There are a few environment variables that can be used to control the server
 
-- `DATABASE_URL` allows to specify the database the server should use
-- `NITTEI_PORT` allows to specify the port to be used by the server
-- `ACCOUNT_API_KEY` is going to create an `Account` (if it does not already exist) during
-  server startup with the given key. `Account`s act as tenants in the server, and it is possible to create multiple `Account`s by using the `CREATE_ACCOUNT_SECRET_CODE` which you can provide as an environment variable.
+- `NITTEI__HTTP_HOST` allows to specify the host to be used by the server (e.g. 127.0.0.1 or 0.0.0.0)
+- `NITTEI__HTTP_PORT` allows to specify the port to be used by the server
+- `NITTEI__DATABASE_URL` allows to specify the database the server should use
+- `NITTEI__ACCOUNT__SECRET_KEY` is going to create an `Account` (if it does not already exist) during
+  server startup with the given key. `Account`s act as tenants in the server, and it is possible to create multiple `Account`s by using the `NITTEI__CREATE_ACCOUNT_SECRET_CODE` which you can provide as an environment variable.
 
 Quick example of how to create and query a user
 

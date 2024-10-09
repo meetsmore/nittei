@@ -28,8 +28,8 @@ jobs:
         ports:
           - 5432:5432
     env:
-      NITTEI_PORT: 5000
-      DATABASE_URL: postgresql://postgres:postgres@localhost/nittei
+      NITTEI__HTTP_PORT: 5000
+      NITTEI__DATABASE_URL: postgresql://postgres:postgres@localhost/nittei
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
