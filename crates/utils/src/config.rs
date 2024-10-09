@@ -1,6 +1,7 @@
 use config::Config;
 use serde::Deserialize;
 
+/// Application configuration (main)
 #[derive(Debug, Deserialize)]
 #[allow(unused)]
 pub struct AppConfig {
@@ -43,6 +44,7 @@ pub struct AppConfig {
     pub observability: Option<ObservabilityConfig>,
 }
 
+/// Observability configuration
 #[derive(Debug, Deserialize)]
 #[allow(unused)]
 pub struct ObservabilityConfig {
@@ -75,28 +77,40 @@ pub struct ObservabilityConfig {
     pub datadog_tracing_endpoint: Option<String>,
 }
 
+/// Account configuration
 #[derive(Debug, Deserialize)]
 #[allow(unused)]
 pub struct AccountConfig {
     /// Secret key to find the superadmin account
     /// Env var: NITTEI__ACCOUNT__SECRET_KEY
     pub secret_key: Option<String>,
+
     /// The account ID
     /// Used only if the account is not found by the secret key
+    /// Env var: NITTEI__ACCOUNT__ID
     pub id: Option<String>,
+
     /// The account name
     /// Used only if the account is not found by the secret key
+    /// Env var: NITTEI__ACCOUNT__WEBHOOK_URL
     pub webhook_url: Option<String>,
+
     /// Pub key
     /// Used only if the account is not found by the secret key
+    /// Env var: NITTEI__ACCOUNT__PUB_KEY
     pub pub_key: Option<String>,
 
-    /// The integration configurations
+    /// Google integration configuration
     /// Used only if the account is not found by the secret key
-    pub google: IntegrationConfig,
-    pub outlook: IntegrationConfig,
+    pub google: Option<IntegrationConfig>,
+
+    /// Outlook integration configuration
+    /// Used only if the account is not found by the secret key
+    pub outlook: Option<IntegrationConfig>,
 }
 
+/// Integration configuration
+/// This is used for Google and Outlook integrations
 #[derive(Debug, Deserialize)]
 #[allow(unused)]
 pub struct IntegrationConfig {

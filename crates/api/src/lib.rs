@@ -184,19 +184,25 @@ impl Application {
 
             self.context.repos.accounts.insert(&account).await?;
 
-            let account_google_client_id_env = "ACCOUNT_GOOGLE_CLIENT_ID";
-            let account_google_client_secret_env = "ACCOUNT_GOOGLE_CLIENT_SECRET";
-            let account_google_redirect_uri_env = "ACCOUNT_GOOGLE_REDIRECT_URI";
-            if let Ok(google_client_id) = std::env::var(account_google_client_id_env) {
-                let google_client_secret = std::env::var(account_google_client_secret_env)
-                    .unwrap_or_else(|_| {
+            let account_google_client_id_env = "NITTEI__ACCOUNT__GOOGLE__CLIENT_ID";
+            let account_google_client_secret_env = "NITTEI__ACCOUNT__GOOGLE__CLIENT_SECRET";
+            let account_google_redirect_uri_env = "NITTEI__ACCOUNT__GOOGLE__REDIRECT_URI";
+            let google_config = nittei_utils::config::APP_CONFIG
+                .account
+                .as_ref()
+                .and_then(|a| a.google.as_ref());
+            if let Some(google_client_id) = google_config.map(|g| g.client_id.clone()) {
+                let google_client_secret = google_config
+                    .map(|g| g.client_secret.clone())
+                    .unwrap_or_else(|| {
                         panic!(
                             "{} should be specified also when {} is specified.",
                             account_google_client_secret_env, account_google_client_id_env
                         )
                     });
-                let google_redirect_uri = std::env::var(account_google_redirect_uri_env)
-                    .unwrap_or_else(|_| {
+                let google_redirect_uri = google_config
+                    .map(|g| g.redirect_uri.clone())
+                    .unwrap_or_else(|| {
                         panic!(
                             "{} should be specified also when {} is specified.",
                             account_google_redirect_uri_env, account_google_client_id_env
@@ -214,19 +220,26 @@ impl Application {
                     })
                     .await?;
             }
-            let account_outlook_client_id_env = "ACCOUNT_OUTLOOK_CLIENT_ID";
-            let account_outlook_client_secret_env = "ACCOUNT_OUTLOOK_CLIENT_SECRET";
-            let account_outlook_redirect_uri_env = "ACCOUNT_OUTLOOK_REDIRECT_URI";
-            if let Ok(outlook_client_id) = std::env::var(account_outlook_client_id_env) {
-                let outlook_client_secret = std::env::var(account_outlook_client_secret_env)
-                    .unwrap_or_else(|_| {
+
+            let account_outlook_client_id_env = "NITTEI__ACCOUNT__OUTLOOK__CLIENT_ID";
+            let account_outlook_client_secret_env = "NITTEI__ACCOUNT__OUTLOOK__CLIENT_SECRET";
+            let account_outlook_redirect_uri_env = "NITTEI__ACCOUNT__OUTLOOK__REDIRECT_URI";
+            let outlook_config = nittei_utils::config::APP_CONFIG
+                .account
+                .as_ref()
+                .and_then(|a| a.outlook.as_ref());
+            if let Some(outlook_client_id) = outlook_config.map(|o| o.client_id.clone()) {
+                let outlook_client_secret = outlook_config
+                    .map(|o| o.client_secret.clone())
+                    .unwrap_or_else(|| {
                         panic!(
                             "{} should be specified also when {} is specified.",
                             account_outlook_client_secret_env, account_outlook_client_id_env
                         )
                     });
-                let outlook_redirect_uri = std::env::var(account_outlook_redirect_uri_env)
-                    .unwrap_or_else(|_| {
+                let outlook_redirect_uri = outlook_config
+                    .map(|o| o.redirect_uri.clone())
+                    .unwrap_or_else(|| {
                         panic!(
                             "{} should be specified also when {} is specified.",
                             account_outlook_redirect_uri_env, account_outlook_client_id_env
