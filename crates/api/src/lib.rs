@@ -76,23 +76,9 @@ impl Application {
     /// Start the background jobs of the application
     /// Note that the jobs are only started if the environment variable NITTEI_REMINDERS_JOB_ENABLED is set to true
     fn start_jobs(context: NitteiContext) {
-        if let Ok(reminders_job_enabled) = std::env::var("NITTEI_REMINDERS_JOB_ENABLED") {
-            // Parse the value of NITTEI_REMINDERS_JOB_ENABLED to a boolean
-            // If it fails, log a warning and default to false
-            // Use shadowing as we don't need the original value anymore
-            let reminders_job_enabled =
-                reminders_job_enabled.parse::<bool>().unwrap_or_else(|_| {
-                    warn!(
-                        "Invalid value for NITTEI_REMINDERS_JOB_ENABLED ({}). Defaulting to false.",
-                        reminders_job_enabled
-                    );
-                    false
-                });
-
-            if reminders_job_enabled {
-                start_send_reminders_job(context.clone());
-                start_reminder_generation_job(context);
-            }
+        if nittei_utils::config::APP_CONFIG.enable_reminders_job {
+            start_send_reminders_job(context.clone());
+            start_reminder_generation_job(context);
         }
     }
 
@@ -105,7 +91,7 @@ impl Application {
     /// - Tracing logger
     async fn configure_server(context: NitteiContext) -> anyhow::Result<(Server, u16)> {
         let port = context.config.port;
-        let address = std::env::var("NITTEI_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+        let address = nittei_utils::config::APP_CONFIG.http_host.clone();
         let address_and_port = format!("{}:{}", address, port);
         info!("Starting server on: {}", address_and_port);
         let listener = TcpListener::bind(address_and_port)?;
@@ -149,9 +135,13 @@ impl Application {
     /// - ACCOUNT_OUTLOOK_CLIENT_SECRET: The Outlook client secret
     /// - ACCOUNT_OUTLOOK_REDIRECT_URI: The Outlook redirect URI
     async fn init_default_account(&self) -> anyhow::Result<()> {
-        let secret_api_key = match std::env::var("ACCOUNT_API_KEY") {
-            Ok(key) => key,
-            Err(_) => Account::generate_secret_api_key(),
+        let secret_api_key = match nittei_utils::config::APP_CONFIG
+            .account
+            .as_ref()
+            .and_then(|a| a.secret_key.clone())
+        {
+            Some(key) => key,
+            None => Account::generate_secret_api_key(),
         };
         if self
             .context
@@ -162,21 +152,29 @@ impl Application {
             .is_none()
         {
             let mut account = Account::default();
-            let account_id = std::env::var("ACCOUNT_ID")
+            let account_id = nittei_utils::config::APP_CONFIG
+                .account
+                .as_ref()
+                .and_then(|a| a.id.clone())
                 .unwrap_or_default()
                 .parse::<ID>()
                 .unwrap_or_default();
             account.id = account_id;
             account.secret_api_key = secret_api_key;
-            account.settings.webhook = match std::env::var("ACCOUNT_WEBHOOK_URL") {
-                Ok(url) => Some(AccountWebhookSettings {
+            account.settings.webhook = nittei_utils::config::APP_CONFIG
+                .account
+                .as_ref()
+                .and_then(|a| a.webhook_url.clone())
+                .map(|url| AccountWebhookSettings {
                     url,
                     key: Default::default(),
-                }),
-                Err(_) => None,
-            };
+                });
 
-            if let Ok(mut verification_key) = std::env::var("ACCOUNT_PUB_KEY") {
+            if let Some(mut verification_key) = nittei_utils::config::APP_CONFIG
+                .account
+                .as_ref()
+                .and_then(|a| a.pub_key.clone())
+            {
                 verification_key = verification_key.replace("\\n", "\n");
                 match PEMKey::new(verification_key) {
                     Ok(k) => account.set_public_jwt_key(Some(k)),

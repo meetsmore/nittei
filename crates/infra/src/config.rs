@@ -1,5 +1,5 @@
 use nittei_utils::create_random_secret;
-use tracing::{info, warn};
+use tracing::info;
 
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -21,9 +21,11 @@ pub struct Config {
 
 impl Config {
     pub fn new() -> Self {
-        let create_account_secret_code = match std::env::var("CREATE_ACCOUNT_SECRET_CODE") {
-            Ok(code) => code,
-            Err(_) => {
+        let create_account_secret_code = match &nittei_utils::config::APP_CONFIG
+            .create_account_secret_code
+        {
+            Some(code) => code.clone(),
+            None => {
                 // If we are in debug mode we set a default secret code
                 if cfg!(debug_assertions) {
                     let code = "create_account_dev_secret".to_string();
@@ -44,19 +46,7 @@ impl Config {
                 }
             }
         };
-        let default_port = "5000";
-        let port = std::env::var("NITTEI_PORT").unwrap_or_else(|_| default_port.into());
-        let port = match port.parse::<usize>() {
-            Ok(port) => port,
-            Err(_) => {
-                warn!(
-                    "The given PORT: {} is not valid, falling back to the default port: {}.",
-                    port, default_port
-                );
-                #[allow(clippy::unwrap_used)]
-                default_port.parse::<usize>().unwrap()
-            }
-        };
+        let port = nittei_utils::config::APP_CONFIG.http_port;
 
         const DAYS_62: i64 = 1000 * 60 * 60 * 24 * 62;
         const DAYS_101: i64 = 1000 * 60 * 60 * 24 * 101;
