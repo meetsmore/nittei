@@ -6,6 +6,7 @@ const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
                             abcdefghijklmnopqrstuvwxyz\
                             0123456789";
 
+/// Create a random secret with the given length
 pub fn create_random_secret(secret_len: usize) -> String {
     let mut rng = rand::thread_rng();
 

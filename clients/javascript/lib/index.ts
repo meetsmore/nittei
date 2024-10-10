@@ -54,7 +54,7 @@ type ClientConfig = {
 }
 
 const DEFAULT_CONFIG: Required<ClientConfig> = {
-  baseUrl: 'http://localhost:5000/api/v1',
+  baseUrl: `http://localhost:${process.env.NITTEI_PORT ?? '5000'}/api/v1`,
   keepAlive: false,
 }
 

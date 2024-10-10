@@ -1,15 +1,13 @@
 [package]
 name = "nittei_sdk"
 version = "0.4.1"
-description = "nittei sdk"
+description = "Nittei Rust SDK"
 license = "MIT"
-authors = ["Fredrik Meringdal"]
+authors = ["Meetsmore", "Fredrik Meringdal"]
 edition = "2021"
 
 [lints]
 workspace = true
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 nittei_api_structs = { path = "../../crates/api_structs", version = "0.3.1" }

@@ -1,15 +1,13 @@
 [package]
 name = "nittei_domain"
 version = "0.2.1"
-description = "nittei domain"
+description = "Nittei domain"
 license = "MIT"
 authors = ["Fredrik Meringdal"]
 edition = "2021"
 
 [lints]
 workspace = true
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 nittei_utils = { workspace = true }

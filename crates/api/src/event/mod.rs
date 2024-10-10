@@ -18,18 +18,23 @@ use get_event_instances::{get_event_instances_admin_controller, get_event_instan
 use get_events_by_meta::get_events_by_meta_controller;
 use update_event::{update_event_admin_controller, update_event_controller};
 
+// Configure the routes for the event module
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
+    // Create an event
     cfg.route("/events", web::post().to(create_event_controller));
+    // Create an event for a user (admin route)
     cfg.route(
         "/user/{user_id}/events",
         web::post().to(create_event_admin_controller),
     );
 
+    // Get events by calendars
     cfg.route(
         "/user/{user_id}/events",
         web::get().to(get_events_by_calendars::get_events_by_calendars_controller),
     );
 
+    // Get events by metadata
     cfg.route("/events/meta", web::get().to(get_events_by_meta_controller));
 
     // Get a specific event by external id
@@ -40,30 +45,37 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
 
     // Get a specific event by uid
     cfg.route("/events/{event_id}", web::get().to(get_event_controller));
+    // Get a specific event by uid (admin route)
     cfg.route(
         "/user/events/{event_id}",
         web::get().to(get_event_admin_controller),
     );
 
+    // Delete an event by uid
     cfg.route(
         "/events/{event_id}",
         web::delete().to(delete_event_controller),
     );
+    // Delete an event by uid (admin route)
     cfg.route(
         "/user/events/{event_id}",
         web::delete().to(delete_event_admin_controller),
     );
 
+    // Update an event by uid
     cfg.route("/events/{event_id}", web::put().to(update_event_controller));
+    // Update an event by uid (admin route)
     cfg.route(
         "/user/events/{event_id}",
         web::put().to(update_event_admin_controller),
     );
 
+    // Get event instances
     cfg.route(
         "/events/{event_id}/instances",
         web::get().to(get_event_instances_controller),
     );
+    // Get event instances (admin route)
     cfg.route(
         "/user/events/{event_id}/instances",
         web::get().to(get_event_instances_admin_controller),

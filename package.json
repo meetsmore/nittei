@@ -9,7 +9,8 @@
     "pnpm": ">=9.0.0"
   },
   "scripts": {
-    "format": "cd clients/javascript && pnpm run format"
+    "format": "cd clients/javascript && pnpm run format",
+    "test": "cd clients/javascript && pnpm run test"
   },
   "author": "",
   "license": "MIT",

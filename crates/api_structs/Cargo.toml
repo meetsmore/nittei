@@ -1,15 +1,13 @@
 [package]
 name = "nittei_api_structs"
 version = "0.3.1"
-description = "nittei api types"
+description = "Nittei API types"
 license = "MIT"
 authors = ["Fredrik Meringdal"]
 edition = "2021"
 
 [lints]
 workspace = true
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 nittei_domain = { workspace = true }

@@ -9,28 +9,28 @@
 
 ## Overview
 
-`Nittei` is a self-hosted calendar and scheduler server built upon [nittei](https://github.com/fmeringdal/nittei-scheduler).
+`Nittei` is a self-hosted calendar and scheduler server built upon [nittei](https://github.com/fmeringdal/nettu-scheduler).
 
 <!-- It aims to provide the building blocks for building calendar / booking apps with ease. It has a simple REST API and also a [JavaScript SDK](https://www.npmjs.com/package/@nittei/sdk-scheduler) and [Rust SDK](https://crates.io/crates/nittei_sdk). -->
 
-It supports authentication through api keys for server - server communication and JSON Web Tokens for browser - server communication.
+It supports authentication through
+
+- API keys for server - server
+- JSON Web Tokens for browser - server
 
 ## Features
 
-- **Booking**: Create a `Service` and register `User`s on it to make them bookable.
-- **Calendar Events**: Supports recurrence rules, flexible querying and reminders.
-- **Calendars**: For grouping `Calendar Event`s.
-- **Freebusy**: Find out when `User`s are free and when they are busy.
-- **Integrations**: Connect your nittei, Google and Outlook calendars
-- **Multi-tenancy**: All resources are grouped by `Account`s.
+- **Multi-tenancy**: All resources are grouped by `Account`s
+- **Calendars**: For grouping `Calendar Event`s
+- **Calendar Events**: Supports recurrence rules, flexible querying and reminders
+- **Freebusy**: Find out when `User`s are free and when they are busy
 - **Metadata queries**: Add key-value metadata to your resources and then query on that metadata
-- **Webhooks**: Notifying your server about `Calendar Event` reminders.
 
-<br/>
+More advanced features include
 
-<!-- <div align="center">
-<img src="docs/flow.svg" alt="Application flow">
-</div> -->
+- **Booking**: Create a `Service` and register `User`s on it to make them bookable
+- **Integrations**: Connect your Nittei, Google and Outlook calendars
+- **Webhooks**: Notifying your server about `Calendar Event` reminders
 
 ## Quick start
 
@@ -57,6 +57,8 @@ just install_tools
 This will compile and install
 
 - `sqlx-cli`: CLI used for applying the SQL migrations & for generating the offline files for [SQLx](https://github.com/launchbadge/sqlx/blob/main/sqlx-cli/README.md)
+- `cargo-pretty-test`: CLI for running the tests and print them in a prettier way compared to `cargo test`
+- `cargo-watch`: CLI for auto-reloading the backend when source files have changed
 
 ### Initial setup
 
@@ -68,16 +70,16 @@ just setup
 
 ### Launching the server
 
-Now we are ready to start the `nittei` server
+Now we are ready to start the `Nittei` server
 
 ```bash
 just dev
 ```
 
-There are a few environment variables that can be used to control the server.
+There are a few environment variables that can be used to control the server
 
 - `DATABASE_URL` allows to specify the database the server should use
-- `PORT` allows to specify the port to be used by the server
+- `NITTEI_PORT` allows to specify the port to be used by the server
 - `ACCOUNT_API_KEY` is going to create an `Account` (if it does not already exist) during
   server startup with the given key. `Account`s act as tenants in the server, and it is possible to create multiple `Account`s by using the `CREATE_ACCOUNT_SECRET_CODE` which you can provide as an environment variable.
 
@@ -94,6 +96,37 @@ curl -H "x-api-key: $SECRET_API_KEY" "http://localhost:5000/api/v1/user/meta?key
 ```
 
 Please see below for links to more examples.
+
+### Running the tests
+
+For running all the tests at once, you can run:
+
+```sh
+just test-all
+```
+
+> This launches an ephemeral PostgreSQL container used by the tests. The script tries to remove the container at the end.
+
+For running only the tests for the server (Rust) and the Rust client SDK, you can simply run:
+
+```sh
+just test
+```
+
+> This also launches an ephemeral PostgreSQL container.
+
+For running the tests for the JS client SDK, you first need to have the server running. As a reminder, this is the command:
+
+```sh
+just dev
+```
+
+Once it's running, the tests can be run by doing the following:
+
+```sh
+cd clients/javascript/
+pnpm run test
+```
 
 ### Additional tools
 
@@ -128,4 +161,4 @@ Contributions are welcome and are greatly appreciated!
 
 ## Special thanks
 
-- [fmeringdal](https://github.com/fmeringdal/nittei-scheduler) for the initial project. This repository is a fork adapted to our needs.
+- [fmeringdal](https://github.com/fmeringdal/nettu-scheduler) for the initial project. This repository is a fork adapted to our needs.
