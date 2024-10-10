@@ -74,7 +74,7 @@ impl Repos {
             .await?;
         info!("DB CHECKING CONNECTION ... [done]");
 
-        if std::env::var("nittei_SKIP_MIGRATION").is_err() {
+        if !nittei_utils::config::APP_CONFIG.skip_db_migrations {
             info!("DB EXECUTING MIGRATION ...");
 
             // Run the migrations

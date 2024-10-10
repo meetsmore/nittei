@@ -23,13 +23,17 @@ pub fn init_subscriber() -> anyhow::Result<()> {
             .with_env_filter(env_filter)
             .init();
     } else {
+        let observability_config = nittei_utils::config::APP_CONFIG.observability.as_ref();
         // In production, use the JSON format for logs
-        let service_name =
-            std::env::var("SERVICE_NAME").unwrap_or_else(|_| "unknown service".to_string());
-        let service_version =
-            std::env::var("SERVICE_VERSION").unwrap_or_else(|_| "unknown version".to_string());
-        let service_env =
-            std::env::var("SERVICE_ENV").unwrap_or_else(|_| "unknown env".to_string());
+        let service_name = observability_config
+            .and_then(|o| o.service_name.clone())
+            .unwrap_or_else(|| "unknown service".to_string());
+        let service_version = observability_config
+            .and_then(|o| o.service_version.clone())
+            .unwrap_or_else(|| "unknown version".to_string());
+        let service_env = observability_config
+            .and_then(|o| o.service_env.clone())
+            .unwrap_or_else(|| "unknown env".to_string());
 
         // Set the global propagator to trace context propagator
         global::set_text_map_propagator(TraceContextPropagator::new());
@@ -80,17 +84,23 @@ fn get_tracer(
     service_version: String,
     service_env: String,
 ) -> anyhow::Result<Option<Tracer>> {
-    let otlp_endpoint = std::env::var("OTLP_TRACING_ENDPOINT");
-    let datadog_endpoint = std::env::var("DATADOG_TRACING_ENDPOINT");
+    let otlp_endpoint = nittei_utils::config::APP_CONFIG
+        .observability
+        .as_ref()
+        .and_then(|o| o.otlp_tracing_endpoint.clone());
+    let datadog_endpoint = nittei_utils::config::APP_CONFIG
+        .observability
+        .as_ref()
+        .and_then(|o| o.datadog_tracing_endpoint.clone());
 
-    if let Ok(datadog_endpoint) = datadog_endpoint {
+    if let Some(datadog_endpoint) = datadog_endpoint {
         Ok(Some(get_tracer_datadog(
             datadog_endpoint,
             service_name,
             service_version,
             service_env,
         )?))
-    } else if let Ok(otlp_endpoint) = otlp_endpoint {
+    } else if let Some(otlp_endpoint) = otlp_endpoint {
         Ok(Some(get_tracer_otlp(
             otlp_endpoint,
             service_name,
@@ -161,9 +171,10 @@ fn get_tracer_otlp(
 /// If there is no parent, then this is based on the TRACING_SAMPLE_RATIO env var, defaults to 0.1
 fn get_sampler() -> Sampler {
     // Get the sample ratio from the env var, default to 0.1
-    let ratio_to_sample = std::env::var("TRACING_SAMPLE_RATIO")
-        .unwrap_or_else(|_| "0.1".to_string())
-        .parse::<f64>()
+    let ratio_to_sample = nittei_utils::config::APP_CONFIG
+        .observability
+        .as_ref()
+        .and_then(|o| o.tracing_sample_rate)
         .unwrap_or(0.1);
 
     // Create sampler based on

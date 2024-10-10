@@ -3,7 +3,7 @@ import { readPrivateKey, readPublicKey } from './utils'
 import * as jwt from 'jsonwebtoken'
 
 export const CREATE_ACCOUNT_CODE =
-  process.env.CREATE_ACCOUNT_SECRET_CODE || 'create_account_dev_secret'
+  process.env.NITTEI__CREATE_ACCOUNT_SECRET_CODE || 'create_account_dev_secret'
 
 export const setupAccount = async () => {
   const client = await NitteiClient()
