@@ -1,3 +1,5 @@
+use std::sync::LazyLock;
+
 use config::Config;
 use serde::Deserialize;
 
@@ -161,8 +163,4 @@ fn parse_config() -> AppConfig {
 // and will be available throughout the application
 // Using global variable is bad practice, but for **immutable** environment variables
 // it is acceptable
-lazy_static::lazy_static! {
-    /// The global configuration object containing all the environment variables
-    #[derive(Debug)]
-    pub static ref APP_CONFIG: AppConfig = parse_config();
-}
+pub static APP_CONFIG: LazyLock<AppConfig> = LazyLock::new(parse_config);
