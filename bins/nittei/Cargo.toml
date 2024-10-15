@@ -42,7 +42,7 @@ opentelemetry-datadog = { version = "0.11.0", features = ["reqwest-client"] }
 
 openssl-probe = "0.1.2"
 chrono = "0.4.19"
-chrono-tz = "0.8.1"
+chrono-tz = "0.10.0"
 
 # Use Jemalloc only for musl-64 bits platforms
 # The default MUSL allocator is known to be slower than Jemalloc
