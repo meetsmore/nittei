@@ -17,6 +17,7 @@ use std::sync::Arc;
 
 use account::{IAccountRepo, PostgresAccountRepo};
 use account_integrations::{IAccountIntegrationRepo, PostgresAccountIntegrationRepo};
+use anyhow::Context;
 use calendar::{ICalendarRepo, PostgresCalendarRepo};
 use calendar_synced::{ICalendarSyncedRepo, PostgresCalendarSyncedRepo};
 use event::{
@@ -71,7 +72,11 @@ impl Repos {
         let pool = PgPoolOptions::new()
             .max_connections(5)
             .connect(connection_string)
-            .await?;
+            .await
+            .context(format!(
+                "Failed to connect to PG url '{}'",
+                remove_password_from_url(connection_string)?
+            ))?;
         info!("DB CHECKING CONNECTION ... [done]");
 
         if !nittei_utils::config::APP_CONFIG.skip_db_migrations {
@@ -121,4 +126,15 @@ impl Repos {
             status: Arc::new(PostgresStatusRepo::new(pool)),
         })
     }
+}
+
+fn remove_password_from_url(connection_string: &str) -> anyhow::Result<String> {
+    let mut url = match url::Url::parse(connection_string) {
+        Ok(url) => url,
+        // If the connection string is not a valid URL, return the connection string as is
+        Err(_) => return Ok(connection_string.to_string()),
+    };
+    #[allow(clippy::unwrap_used)]
+    url.set_password(None).unwrap();
+    Ok(url.to_string())
 }

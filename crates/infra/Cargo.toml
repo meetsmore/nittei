@@ -33,3 +33,4 @@ sqlx = { version = "0.8.2", features = [
   "json",
   "chrono",
 ] }
+url = { version = "2.5.2" }
