@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
-    "module": "CommonJS",
-    "target": "ES5",
+    "moduleResolution": "Node16",
+    "module": "Node16",
+    "target": "ES2015",
     "declaration": true,
     "declarationDir": "dist",
     "outDir": "dist",
@@ -9,10 +10,7 @@
     "alwaysStrict": true,
     "sourceMap": true,
     "esModuleInterop": true,
-    "moduleResolution": "node",
-    "downlevelIteration": true,
-    "lib": ["es2015", "dom", "esnext.asynciterable", "es2017.object"],
-    "noImplicitAny": true,
+    "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true
   },
   "include": ["lib/**/*", "tests/**/*"],
