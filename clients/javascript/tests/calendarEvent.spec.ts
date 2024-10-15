@@ -237,6 +237,7 @@ describe('CalendarEvent API', () => {
       expect(res2.event.parentId).toBe(parentId)
     })
 
+    let metadataEventId: string
     it('should be able to add metadata to event', async () => {
       const metadata = {
         string: 'string',
@@ -252,6 +253,31 @@ describe('CalendarEvent API', () => {
       }
       const res = await adminClient.events.create(userId, {
         calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+        metadata,
+      })
+
+      const getRes = await adminClient.events.getById(res.event.id)
+      expect(getRes.event.metadata).toEqual(metadata)
+
+      metadataEventId = res.event.id
+    })
+
+    it('should be able to update metadata of an event', async () => {
+      const metadata = {
+        string: 'string2',
+        number: 2,
+        boolean: false,
+        null: null,
+        object: {
+          string: 'string2',
+          number: 2,
+          boolean: false,
+          null: null,
+        },
+      }
+      const res = await adminClient.events.update(metadataEventId, {
         duration: 1000,
         startTime: new Date(1000),
         metadata,
