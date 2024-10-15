@@ -5,15 +5,15 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/meetsmore/nittei
+  repository: meetsmore/nittei
   pullPolicy: IfNotPresent
   tag: "$VERSION_REPLACED_IN_CI"
 
 # Define default environment variables
 defaultEnv:
-  - name: NITTEI_HOST
+  - name: NITTEI__HOST
     value: "0.0.0.0"
-  - name: SERVICE_NAME
+  - name: NITTEI__OBSERVABILITY__SERVICE_NAME
     value: "nittei"
 
 # Define extra environment variables
