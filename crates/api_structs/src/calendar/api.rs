@@ -436,7 +436,7 @@ pub mod update_calendar {
 
         /// Optional metadata (e.g. {"key": "value"})
         #[serde(default)]
-        #[ts(optional, type = "Record<string, string | number | boolean>")]
+        #[ts(optional)]
         pub metadata: Option<serde_json::Value>,
     }
 
