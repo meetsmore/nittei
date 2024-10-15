@@ -3947,8 +3947,7 @@ checksum = "59547bce71d9c38b83d9c0e92b6066c4253371f15005def0c30d9657f50c7642"
 [[package]]
 name = "ts-rs"
 version = "10.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3a2f31991cee3dce1ca4f929a8a04fdd11fd8801aac0f2030b0fa8a0a3fef6b9"
+source = "git+https://github.com/Aleph-Alpha/ts-rs.git?rev=4aea173270f5de8490ec9bfd43d58fc0758089c0#4aea173270f5de8490ec9bfd43d58fc0758089c0"
 dependencies = [
  "chrono",
  "lazy_static",
@@ -3961,8 +3960,7 @@ dependencies = [
 [[package]]
 name = "ts-rs-macros"
 version = "10.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ea0b99e8ec44abd6f94a18f28f7934437809dd062820797c52401298116f70e"
+source = "git+https://github.com/Aleph-Alpha/ts-rs.git?rev=4aea173270f5de8490ec9bfd43d58fc0758089c0#4aea173270f5de8490ec9bfd43d58fc0758089c0"
 dependencies = [
  "proc-macro2",
  "quote",

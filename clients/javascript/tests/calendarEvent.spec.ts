@@ -238,33 +238,27 @@ describe('CalendarEvent API', () => {
     })
 
     it('should be able to add metadata to event', async () => {
+      const metadata = {
+        string: 'string',
+        number: 1,
+        boolean: true,
+        null: null,
+        object: {
+          string: 'string',
+          number: 1,
+          boolean: true,
+          null: null,
+        },
+      }
       const res = await adminClient.events.create(userId, {
         calendarId,
         duration: 1000,
         startTime: new Date(1000),
-        metadata: {
-          string: 'string',
-          number: 1,
-          // boolean: true, // To be enabled once https://github.com/Aleph-Alpha/ts-rs/pull/358 is merged
-          object: {
-            string: 'string',
-            number: 1,
-            // boolean: true,
-          },
-        },
+        metadata,
       })
 
       const getRes = await adminClient.events.getById(res.event.id)
-      expect(getRes.event.metadata).toEqual({
-        string: 'string',
-        number: 1,
-        // boolean: true,
-        object: {
-          string: 'string',
-          number: 1,
-          // boolean: true,
-        },
-      })
+      expect(getRes.event.metadata).toEqual(metadata)
     })
 
     afterAll(async () => {
