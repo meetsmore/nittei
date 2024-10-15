@@ -16,10 +16,10 @@
 
 # Set default SERVICE_VERSION env var
 {{- $defaultServiceVersion := .Values.image.tag }}
-{{- if not (hasKey $envMap "SERVICE_VERSION") }}
-  {{- $envMap = merge $envMap (dict "SERVICE_VERSION" (dict "name" "SERVICE_VERSION" "value" $defaultServiceVersion)) }}
+{{- if not (hasKey $envMap "NITTEI__OBSERVABILITY__SERVICE_VERSION") }}
+  {{- $envMap = merge $envMap (dict "NITTEI__OBSERVABILITY__SERVICE_VERSION" (dict "name" "NITTEI__OBSERVABILITY__SERVICE_VERSION" "value" $defaultServiceVersion)) }}
 {{- end }}
-# End of setting default SERVICE_VERSION env var
+# End of setting default NITTEI__OBSERVABILITY__SERVICE_VERSION env var
 
 apiVersion: apps/v1
 kind: Deployment
