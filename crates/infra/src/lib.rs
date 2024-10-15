@@ -43,15 +43,9 @@ impl NitteiContext {
 /// Will setup the infrastructure context given the environment
 pub async fn setup_context() -> anyhow::Result<NitteiContext> {
     NitteiContext::create(ContextParams {
-        postgres_connection_string: get_psql_connection_string()?,
+        postgres_connection_string: nittei_utils::config::APP_CONFIG.database_url.clone(),
     })
     .await
-}
-
-fn get_psql_connection_string() -> anyhow::Result<String> {
-    const PSQL_CONNECTION_STRING: &str = "DATABASE_URL";
-
-    Ok(std::env::var(PSQL_CONNECTION_STRING)?)
 }
 
 /// Run the migrations
@@ -61,7 +55,7 @@ fn get_psql_connection_string() -> anyhow::Result<String> {
 pub async fn run_migration() -> anyhow::Result<()> {
     let pool = PgPoolOptions::new()
         .max_connections(5)
-        .connect(&get_psql_connection_string()?)
+        .connect(nittei_utils::config::APP_CONFIG.database_url.as_str())
         .await?;
 
     sqlx::migrate!().run(&pool).await.map_err(|e| e.into())

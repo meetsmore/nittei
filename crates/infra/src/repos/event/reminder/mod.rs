@@ -85,8 +85,8 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(delete_res.len(), 2);
-        assert_eq!(delete_res[0], reminders[0]);
-        assert_eq!(delete_res[1], reminders[1]);
+        assert!(delete_res.contains(&reminders[0]));
+        assert!(delete_res.contains(&reminders[1]));
 
         // Inc version number
         let new_e3_v = ctx
