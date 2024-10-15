@@ -14,7 +14,7 @@
 {{- end }}
 # End of the environment variable merge
 
-# Set default SERVICE_VERSION env var
+# Set default NITTEI__OBSERVABILITY__SERVICE_VERSION env var
 {{- $defaultServiceVersion := .Values.image.tag }}
 {{- if not (hasKey $envMap "NITTEI__OBSERVABILITY__SERVICE_VERSION") }}
   {{- $envMap = merge $envMap (dict "NITTEI__OBSERVABILITY__SERVICE_VERSION" (dict "name" "NITTEI__OBSERVABILITY__SERVICE_VERSION" "value" $defaultServiceVersion)) }}
