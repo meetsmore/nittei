@@ -3,4 +3,4 @@
 /**
  * A `TimeSpan` type represents a time interval (duration of time)
  */
-export type TimeSpan = { startTime: string; endTime: string; duration: bigint }
+export type TimeSpan = { startTime: string, endTime: string, duration: bigint, };

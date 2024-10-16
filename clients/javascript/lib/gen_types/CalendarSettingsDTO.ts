@@ -3,13 +3,12 @@
 /**
  * Calendar settings
  */
-export type CalendarSettingsDTO = {
-  /**
-   * Week start day
-   */
-  weekStart: string
-  /**
-   * Timezone (e.g. "America/New_York")
-   */
-  timezone: string
-}
+export type CalendarSettingsDTO = { 
+/**
+ * Week start day
+ */
+weekStart: string, 
+/**
+ * Timezone (e.g. "America/New_York")
+ */
+timezone: string, };

@@ -3,13 +3,12 @@
 /**
  * Request body for updating a calendar's settings
  */
-export type UpdateCalendarSettings = {
-  /**
-   * Optional weekday for the calendar
-   */
-  weekStart?: string
-  /**
-   * Optional timezone for the calendar (e.g. "America/New_York")
-   */
-  timezone?: string
-}
+export type UpdateCalendarSettings = { 
+/**
+ * Optional weekday for the calendar
+ */
+weekStart?: string, 
+/**
+ * Optional timezone for the calendar (e.g. "America/New_York")
+ */
+timezone?: string, };

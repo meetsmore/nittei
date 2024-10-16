@@ -3,10 +3,9 @@
 /**
  * Request body for creating an account
  */
-export type CreateAccountRequestBody = {
-  /**
-   * Code used for authentifying the request
-   * Creating accounts is an admin operation, so it requires a specific code
-   */
-  code: string
-}
+export type CreateAccountRequestBody = { 
+/**
+ * Code used for authentifying the request
+ * Creating accounts is an admin operation, so it requires a specific code
+ */
+code: string, };

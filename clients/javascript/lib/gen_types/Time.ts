@@ -3,13 +3,12 @@
 /**
  * Time of the day
  */
-export type Time = {
-  /**
-   * Hours for this time (UTC)
-   */
-  hours: number
-  /**
-   * Minutes for this time (UTC)
-   */
-  minutes: number
-}
+export type Time = { 
+/**
+ * Hours for this time (UTC)
+ */
+hours: number, 
+/**
+ * Minutes for this time (UTC)
+ */
+minutes: number, };

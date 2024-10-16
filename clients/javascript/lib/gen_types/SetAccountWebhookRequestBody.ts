@@ -3,9 +3,8 @@
 /**
  * Request body for setting the webhook of an account
  */
-export type SetAccountWebhookRequestBody = {
-  /**
-   * Webhook URL
-   */
-  webhookUrl: string
-}
+export type SetAccountWebhookRequestBody = { 
+/**
+ * Webhook URL
+ */
+webhookUrl: string, };

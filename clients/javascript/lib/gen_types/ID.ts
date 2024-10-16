@@ -3,4 +3,4 @@
 /**
  * ID - a unique identifier for an entity (UUID)
  */
-export type ID = string
+export type ID = string;
