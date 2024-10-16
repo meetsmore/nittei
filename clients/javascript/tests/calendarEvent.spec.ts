@@ -1,7 +1,7 @@
 import {
   type INitteiClient,
-  NitteiClient,
   type INitteiUserClient,
+  NitteiClient,
 } from '../lib'
 import { setupAccount, setupUserClient } from './helpers/fixtures'
 

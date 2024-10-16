@@ -1,9 +1,9 @@
 import axios, {
-  AxiosRequestConfig,
+  type AxiosRequestConfig,
   type AxiosInstance,
   type AxiosResponse,
 } from 'axios'
-import { ICredentials } from './helpers/credentials'
+import type { ICredentials } from './helpers/credentials'
 import {
   BadRequestError,
   NotFoundError,
@@ -98,7 +98,7 @@ export abstract class NitteiBaseClient {
    * @returns response's data
    */
   protected async deleteWithBody<T>(path: string, data: unknown): Promise<T> {
-    const res = await this.axiosClient<T>({
+    const res: AxiosResponse<T> = await this.axiosClient({
       method: 'DELETE',
       data,
       url: path,
@@ -122,13 +122,14 @@ export abstract class NitteiBaseClient {
     if (res.status >= 400) {
       if (res.status === 400) {
         throw new BadRequestError(res.data)
-      } else if (res.status === 401 || res.status === 403) {
-        throw new UnauthorizedError(res.data)
-      } else if (res.status === 404) {
-        throw new NotFoundError(res.data)
-      } else {
-        throw new Error(`Request failed with status code ${res.status}`)
       }
+      if (res.status === 401 || res.status === 403) {
+        throw new UnauthorizedError(res.data)
+      }
+      if (res.status === 404) {
+        throw new NotFoundError(res.data)
+      }
+      throw new Error(`Request failed with status code ${res.status}`)
     }
   }
 }
@@ -153,8 +154,18 @@ export const createAxiosInstanceFrontend = (
     baseURL: args.baseUrl,
     headers: credentials.createAuthHeaders(),
     validateStatus: () => true, // allow all status codes without throwing error
-    paramsSerializer: {
-      indexes: null, // Force to stringify arrays like value1,value2 instead of value1[0],value1[1]
+    paramsSerializer: params => {
+      if (!params) {
+        return ''
+      }
+      const filteredMap = Object.entries(params)
+        .filter(([, value]) => value !== undefined)
+        .reduce((acc, [key, value]) => {
+          acc[key] = value
+          return acc
+          // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+        }, {} as any)
+      return new URLSearchParams(filteredMap).toString()
     },
   }
 
@@ -180,8 +191,18 @@ export const createAxiosInstanceBackend = async (
     baseURL: args.baseUrl,
     headers: credentials.createAuthHeaders(),
     validateStatus: () => true, // allow all status codes without throwing error
-    paramsSerializer: {
-      indexes: null, // Force to stringify arrays like value1,value2 instead of value1[0],value1[1]
+    paramsSerializer: params => {
+      if (!params) {
+        return ''
+      }
+      const filteredMap = Object.entries(params)
+        .filter(([, value]) => value !== undefined)
+        .reduce((acc, [key, value]) => {
+          acc[key] = value
+          return acc
+          // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+        }, {} as any)
+      return new URLSearchParams(filteredMap).toString()
     },
   }
 
@@ -190,11 +211,11 @@ export const createAxiosInstanceBackend = async (
   if (args.keepAlive && typeof module !== 'undefined' && module.exports) {
     if (args.baseUrl.startsWith('https')) {
       // This is a dynamic import to avoid loading the https module in the browser
-      const https = await import('https')
+      const https = await import('node:https')
       config.httpsAgent = new https.Agent({ keepAlive: true })
     } else {
       // This is a dynamic import to avoid loading the http module in the browser
-      const http = await import('http')
+      const http = await import('node:http')
       config.httpAgent = new http.Agent({ keepAlive: true })
     }
   }

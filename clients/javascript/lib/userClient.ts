@@ -1,20 +1,20 @@
 import { NitteiBaseClient } from './baseClient'
+import type { CreateUserRequestBody } from './gen_types/CreateUserRequestBody'
+import type { GetEventsByCalendarsAPIResponse } from './gen_types/GetEventsByCalendarsAPIResponse'
+import type { GetEventsByCalendarsQueryParams } from './gen_types/GetEventsByCalendarsQueryParams'
+import type { GetUserFreeBusyAPIResponse } from './gen_types/GetUserFreeBusyAPIResponse'
+import type { GetUserFreeBusyQueryParams } from './gen_types/GetUserFreeBusyQueryParams'
+import type { ID } from './gen_types/ID'
+import type { IntegrationProvider } from './gen_types/IntegrationProvider'
+import type { MultipleFreeBusyAPIResponse } from './gen_types/MultipleFreeBusyAPIResponse'
+import type { MultipleFreeBusyRequestBody } from './gen_types/MultipleFreeBusyRequestBody'
+import type { UpdateUserRequestBody } from './gen_types/UpdateUserRequestBody'
+import type { UserDTO } from './gen_types/UserDTO'
+import type { UserResponse } from './gen_types/UserResponse'
 import {
   convertEventDates,
   convertInstanceDates,
 } from './helpers/datesConverters'
-import { CreateUserRequestBody } from './gen_types/CreateUserRequestBody'
-import { GetEventsByCalendarsAPIResponse } from './gen_types/GetEventsByCalendarsAPIResponse'
-import { GetEventsByCalendarsQueryParams } from './gen_types/GetEventsByCalendarsQueryParams'
-import { GetUserFreeBusyAPIResponse } from './gen_types/GetUserFreeBusyAPIResponse'
-import { GetUserFreeBusyQueryParams } from './gen_types/GetUserFreeBusyQueryParams'
-import { ID } from './gen_types/ID'
-import { IntegrationProvider } from './gen_types/IntegrationProvider'
-import { MultipleFreeBusyAPIResponse } from './gen_types/MultipleFreeBusyAPIResponse'
-import { MultipleFreeBusyRequestBody } from './gen_types/MultipleFreeBusyRequestBody'
-import { UpdateUserRequestBody } from './gen_types/UpdateUserRequestBody'
-import { UserDTO } from './gen_types/UserDTO'
-import { UserResponse } from './gen_types/UserResponse'
 
 /**
  * Client for the user endpoints

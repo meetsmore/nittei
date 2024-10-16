@@ -1,14 +1,14 @@
 import { NitteiBaseClient } from './baseClient'
+import type { CalendarEventDTO } from './gen_types/CalendarEventDTO'
+import type { CalendarEventResponse } from './gen_types/CalendarEventResponse'
+import type { CreateEventRequestBody } from './gen_types/CreateEventRequestBody'
+import type { GetEventInstancesAPIResponse } from './gen_types/GetEventInstancesAPIResponse'
+import type { ID } from './gen_types/ID'
+import type { UpdateEventRequestBody } from './gen_types/UpdateEventRequestBody'
 import {
   convertEventDates,
   convertInstanceDates,
 } from './helpers/datesConverters'
-import { CalendarEventDTO } from './gen_types/CalendarEventDTO'
-import { CalendarEventResponse } from './gen_types/CalendarEventResponse'
-import { CreateEventRequestBody } from './gen_types/CreateEventRequestBody'
-import { GetEventInstancesAPIResponse } from './gen_types/GetEventInstancesAPIResponse'
-import { ID } from './gen_types/ID'
-import { UpdateEventRequestBody } from './gen_types/UpdateEventRequestBody'
 
 /**
  * Timespan for getting event instances
@@ -60,7 +60,7 @@ export class NitteiEventClient extends NitteiBaseClient {
   }
 
   public async getByExternalId(
-    externalId: String
+    externalId: string
   ): Promise<CalendarEventResponse> {
     const res = await this.get<CalendarEventResponse>(
       `/user/events/external_id/${externalId}`

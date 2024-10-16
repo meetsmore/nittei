@@ -2,8 +2,8 @@
 import type { CalendarEventReminder } from './CalendarEventReminder'
 import type { CalendarEventStatus } from './CalendarEventStatus'
 import type { ID } from './ID'
-import type { JsonValue } from './serde_json/JsonValue'
 import type { RRuleOptions } from './RRuleOptions'
+import type { JsonValue } from './serde_json/JsonValue'
 
 /**
  * Request body for creating an event
