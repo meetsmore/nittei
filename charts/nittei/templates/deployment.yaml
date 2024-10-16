@@ -22,7 +22,7 @@
 # Set default NITTEI__OBSERVABILITY__SERVICE_VERSION env var
 {{- $defaultServiceVersion := .Values.image.tag }}
 {{- if not (hasKey $envMap "NITTEI__OBSERVABILITY__SERVICE_VERSION") }}
-  {{- $envMap = merge $envMap (dict "NITTEI__OBSERVABILITY__SERVICE_VERSION" (dict "name" "NITTEI__OBSERVABILITY__SERVICE_VERSION" "value" $defaultServiceVersion)) }}
+  {{- $envMap = merge $envMap (dict "NITTEI__OBSERVABILITY__SERVICE_VERSION" (dict "value" $defaultServiceVersion)) }}
 {{- end }}
 # End of setting default NITTEI__OBSERVABILITY__SERVICE_VERSION env var
 
@@ -83,9 +83,9 @@ spec:
             {{- range $key, $value := $envMap }}
             - name: {{ $key }}
               {{- if hasKey $value "value" }}
-              value: {{ $value.value }}
+              value: {{ $value.value | quote }}
               {{- else if hasKey $value "valueFrom" }}
-              valueFrom: {{ $value.valueFrom }}
+              valueFrom: {{ toYaml $value.valueFrom | nindent 14 }}
               {{- end }}
             {{- end }}
       {{- with .Values.volumes }}
