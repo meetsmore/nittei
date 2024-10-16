@@ -79,6 +79,7 @@ docker run --rm -d -l ${LABEL} --name $RANDOM_NAME -p $PORT:5432 -e POSTGRES_USE
 
 # Set the DATABASE_URL environment variable
 export DATABASE_URL="postgres://postgres:postgres@localhost:${PORT}/nittei"
+export NITTEI__DATABASE_URL="$DATABASE_URL"
 
 # Wait for PostgreSQL to be ready
 RETRIES=5
