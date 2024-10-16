@@ -1,7 +1,11 @@
 {
   "$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
   "files": {
-    "ignore": ["**/swagger.json", "**/package.json"]
+    "ignore": [
+      "**/swagger.json",
+      "**/package.json",
+      "**/gen_types/**"
+    ]
   },
   "organizeImports": {
     "enabled": true

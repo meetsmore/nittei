@@ -1,23 +1,23 @@
 import { NitteiBaseClient } from './baseClient'
 import type { Timespan } from './eventClient'
+import type { AddSyncCalendarPathParams } from './gen_types/AddSyncCalendarPathParams'
+import type { AddSyncCalendarRequestBody } from './gen_types/AddSyncCalendarRequestBody'
+import type { CalendarDTO } from './gen_types/CalendarDTO'
+import type { CalendarResponse } from './gen_types/CalendarResponse'
+import type { CreateCalendarRequestBody } from './gen_types/CreateCalendarRequestBody'
+import type { GetCalendarEventsAPIResponse } from './gen_types/GetCalendarEventsAPIResponse'
+import type { GetCalendarsByUserAPIResponse } from './gen_types/GetCalendarsByUserAPIResponse'
+import type { GoogleCalendarAccessRole } from './gen_types/GoogleCalendarAccessRole'
+import type { GoogleCalendarListEntry } from './gen_types/GoogleCalendarListEntry'
+import type { ID } from './gen_types/ID'
+import type { OutlookCalendar } from './gen_types/OutlookCalendar'
+import type { OutlookCalendarAccessRole } from './gen_types/OutlookCalendarAccessRole'
+import type { RemoveSyncCalendarPathParams } from './gen_types/RemoveSyncCalendarPathParams'
+import type { RemoveSyncCalendarRequestBody } from './gen_types/RemoveSyncCalendarRequestBody'
 import {
   convertEventDates,
   convertInstanceDates,
 } from './helpers/datesConverters'
-import { AddSyncCalendarPathParams } from './gen_types/AddSyncCalendarPathParams'
-import { AddSyncCalendarRequestBody } from './gen_types/AddSyncCalendarRequestBody'
-import { CalendarDTO } from './gen_types/CalendarDTO'
-import { CalendarResponse } from './gen_types/CalendarResponse'
-import { CreateCalendarRequestBody } from './gen_types/CreateCalendarRequestBody'
-import { GetCalendarEventsAPIResponse } from './gen_types/GetCalendarEventsAPIResponse'
-import { GoogleCalendarAccessRole } from './gen_types/GoogleCalendarAccessRole'
-import { GoogleCalendarListEntry } from './gen_types/GoogleCalendarListEntry'
-import { ID } from './gen_types/ID'
-import { OutlookCalendar } from './gen_types/OutlookCalendar'
-import { OutlookCalendarAccessRole } from './gen_types/OutlookCalendarAccessRole'
-import { RemoveSyncCalendarPathParams } from './gen_types/RemoveSyncCalendarPathParams'
-import { RemoveSyncCalendarRequestBody } from './gen_types/RemoveSyncCalendarRequestBody'
-import { GetCalendarsByUserAPIResponse } from './gen_types/GetCalendarsByUserAPIResponse'
 
 /**
  * Request for updating a calendar

@@ -1,3 +1,5 @@
+import type { AxiosRequestHeaders } from 'axios'
+
 /**
  * Partial credentials to be used for the client
  */
@@ -84,5 +86,5 @@ export class EmptyCreds implements ICredentials {
 }
 
 export interface ICredentials {
-  createAuthHeaders(): object
+  createAuthHeaders(): AxiosRequestHeaders
 }
