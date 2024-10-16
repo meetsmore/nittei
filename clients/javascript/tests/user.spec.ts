@@ -1,11 +1,11 @@
+import { v4 } from 'uuid'
 import {
-  type INitteiClient,
-  NitteiClient,
   Frequency,
+  type INitteiClient,
   type INitteiUserClient,
+  NitteiClient,
 } from '../lib'
 import { setupUserClient } from './helpers/fixtures'
-import { v4 } from 'uuid'
 
 describe('User API', () => {
   let userId: string

@@ -9,15 +9,15 @@ import {
 } from './calendarClient'
 import { NitteiEventClient, NitteiEventUserClient } from './eventClient'
 import { NitteiHealthClient } from './healthClient'
-import { createCreds, PartialCredentials } from './helpers/credentials'
+import { type PartialCredentials, createCreds } from './helpers/credentials'
 import {
-  NitteiScheduleUserClient,
   NitteiScheduleClient,
+  NitteiScheduleUserClient,
 } from './scheduleClient'
-import { NitteiServiceUserClient, NitteiServiceClient } from './serviceClient'
+import { NitteiServiceClient, NitteiServiceUserClient } from './serviceClient'
 import {
-  NitteiUserClient as _NitteiUserClient,
   NitteiUserUserClient,
+  NitteiUserClient as _NitteiUserClient,
 } from './userClient'
 
 export interface INitteiUserClient {

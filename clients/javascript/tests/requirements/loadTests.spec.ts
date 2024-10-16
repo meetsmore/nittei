@@ -1,12 +1,12 @@
 import dayjs from 'dayjs'
-import { setupAccount } from '../helpers/fixtures'
-import { v4 } from 'uuid'
-import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
-import { INitteiClient } from '../../lib'
-import { UserDTO } from '../../lib/gen_types/UserDTO'
-import { CalendarDTO } from '../../lib/gen_types/CalendarDTO'
-import { CalendarEventDTO } from '../../lib/gen_types/CalendarEventDTO'
+import utc from 'dayjs/plugin/utc'
+import { v4 } from 'uuid'
+import type { INitteiClient } from '../../lib'
+import type { CalendarDTO } from '../../lib/gen_types/CalendarDTO'
+import type { CalendarEventDTO } from '../../lib/gen_types/CalendarEventDTO'
+import type { UserDTO } from '../../lib/gen_types/UserDTO'
+import { setupAccount } from '../helpers/fixtures'
 
 dayjs.extend(utc)
 dayjs.extend(timezone)
@@ -32,8 +32,8 @@ async function create300Events(
   let dayCount = 0
   for (let i = 0; i < 300; i++) {
     // Event index for 10 events per day, each spaced within the range of 9 AM to 6 PM
-    let events_per_day = 10
-    let event_hour = 9 + (i % events_per_day) // Ensure hour stays between 9 AM and 6 PM
+    const events_per_day = 10
+    const event_hour = 9 + (i % events_per_day) // Ensure hour stays between 9 AM and 6 PM
 
     const startTime = dayjs(TIMESTAMP_FIRST_JANUARY_2024)
       .add(dayCount, 'day')
@@ -48,7 +48,7 @@ async function create300Events(
     }
     const res = await client.events.create(user.id, event)
     events.push(res.event)
-    if (i != 0 && i % 10 === 0) {
+    if (i !== 0 && i % 10 === 0) {
       dayCount++
     }
   }

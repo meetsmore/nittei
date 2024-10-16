@@ -1,8 +1,8 @@
 import { NitteiBaseClient } from './baseClient'
-import { AccountResponse } from './gen_types/AccountResponse'
-import { AddAccountIntegrationRequestBody } from './gen_types/AddAccountIntegrationRequestBody'
-import { CreateAccountRequestBody } from './gen_types/CreateAccountRequestBody'
-import { CreateAccountResponseBody } from './gen_types/CreateAccountResponseBody'
+import type { AccountResponse } from './gen_types/AccountResponse'
+import type { AddAccountIntegrationRequestBody } from './gen_types/AddAccountIntegrationRequestBody'
+import type { CreateAccountRequestBody } from './gen_types/CreateAccountRequestBody'
+import type { CreateAccountResponseBody } from './gen_types/CreateAccountResponseBody'
 
 /**
  * Client for the account endpoints

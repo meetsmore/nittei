@@ -1,5 +1,9 @@
-import { INitteiClient, NitteiClient, type INitteiUserClient } from '../lib'
-import { setupUserClient, setupAccount } from './helpers/fixtures'
+import {
+  type INitteiClient,
+  type INitteiUserClient,
+  NitteiClient,
+} from '../lib'
+import { setupAccount, setupUserClient } from './helpers/fixtures'
 
 describe('Calendar API', () => {
   let client: INitteiUserClient

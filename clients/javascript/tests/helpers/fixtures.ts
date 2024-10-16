@@ -1,6 +1,6 @@
+import * as jwt from 'jsonwebtoken'
 import { NitteiClient, NitteiUserClient } from '../../lib'
 import { readPrivateKey, readPublicKey } from './utils'
-import * as jwt from 'jsonwebtoken'
 
 export const CREATE_ACCOUNT_CODE =
   process.env.NITTEI__CREATE_ACCOUNT_SECRET_CODE || 'create_account_dev_secret'

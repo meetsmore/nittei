@@ -1,12 +1,12 @@
 import dayjs from 'dayjs'
-import { setupAccount } from '../helpers/fixtures'
-import { v4 } from 'uuid'
-import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
-import { INitteiClient } from '../../lib'
-import { UserDTO } from '../../lib/gen_types/UserDTO'
-import { CalendarDTO } from '../../lib/gen_types/CalendarDTO'
-import { CalendarEventDTO } from '../../lib/gen_types/CalendarEventDTO'
+import utc from 'dayjs/plugin/utc'
+import { v4 } from 'uuid'
+import type { INitteiClient } from '../../lib'
+import type { CalendarDTO } from '../../lib/gen_types/CalendarDTO'
+import type { CalendarEventDTO } from '../../lib/gen_types/CalendarEventDTO'
+import type { UserDTO } from '../../lib/gen_types/UserDTO'
+import { setupAccount } from '../helpers/fixtures'
 
 dayjs.extend(utc)
 dayjs.extend(timezone)
@@ -801,8 +801,8 @@ describe('Requirements', () => {
       let user1: UserDTO | undefined
       let user1Calendar1: CalendarDTO | undefined
 
-      let date1 = dayjs.tz('2024-01-01T00:00:00', 'Asia/Tokyo') // 1st January 2024 at 0h00 in JST
-      let date2 = dayjs.tz('2024-01-01T00:00:00', 'UTC') // 1st January 2024 at 0h00 in UTC
+      const date1 = dayjs.tz('2024-01-01T00:00:00', 'Asia/Tokyo') // 1st January 2024 at 0h00 in JST
+      const date2 = dayjs.tz('2024-01-01T00:00:00', 'UTC') // 1st January 2024 at 0h00 in UTC
 
       beforeAll(async () => {
         const res = await client?.user.create()

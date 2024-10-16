@@ -1,5 +1,5 @@
-import { CalendarEventDTO } from '../gen_types/CalendarEventDTO'
-import { EventInstance } from '../gen_types/EventInstance'
+import type { CalendarEventDTO } from '../gen_types/CalendarEventDTO'
+import type { EventInstance } from '../gen_types/EventInstance'
 
 /**
  * Convert the dates inside an event to Date objects

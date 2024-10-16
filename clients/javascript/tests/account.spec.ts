@@ -1,8 +1,8 @@
-import { INitteiClient, NitteiClient } from '../lib'
+import { type INitteiClient, NitteiClient } from '../lib'
 import {
+  CREATE_ACCOUNT_CODE,
   setupAccount,
   setupUserClientForAccount,
-  CREATE_ACCOUNT_CODE,
 } from './helpers/fixtures'
 import { readPrivateKey, readPublicKey } from './helpers/utils'
 
