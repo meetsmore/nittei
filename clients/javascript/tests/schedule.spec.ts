@@ -1,5 +1,5 @@
 import {
-  INitteiClient,
+  type INitteiClient,
   type INitteiUserClient,
   NitteiClient,
   ScheduleRuleVariant,
