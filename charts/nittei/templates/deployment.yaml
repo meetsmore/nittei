@@ -9,8 +9,13 @@
   {{- $envMap = merge $envMap (dict .name .) }}
 {{- end }}
 
+# Merge defaultEnv and extraEnv, accounting for both value and valueFrom
 {{- range $extraEnv }}
-  {{- $envMap = merge $envMap (dict .name .) }}
+  {{- if hasKey . "valueFrom" }}
+    {{- $envMap = merge $envMap (dict .name (dict "valueFrom" .valueFrom)) }}
+  {{- else }}
+    {{- $envMap = merge $envMap (dict .name (dict "value" .value)) }}
+  {{- end }}
 {{- end }}
 # End of the environment variable merge
 
@@ -77,7 +82,11 @@ spec:
           env:
             {{- range $key, $value := $envMap }}
             - name: {{ $key }}
+              {{- if hasKey $value "value" }}
               value: {{ $value.value }}
+              {{- else if hasKey $value "valueFrom" }}
+              valueFrom: {{ $value.valueFrom }}
+              {{- end }}
             {{- end }}
       {{- with .Values.volumes }}
       volumes:
