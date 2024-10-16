@@ -12,6 +12,6 @@ export const tsup: Options = {
   entryPoints: ['lib/index.ts'],
   target: 'es2020',
   outDir: 'dist',
-  entry: ['lib/**/*.ts'], //include all files under src
+  entry: ['lib/**/*.ts'], //include all files under lib
   tsconfig: 'tsconfig.release.json',
 }
