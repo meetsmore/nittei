@@ -16,7 +16,7 @@
   "scripts": {
     "build": "tsup",
     "deploy": "pnpm run build && pnpm publish --no-git-checks",
-    "format": "biome format --write ./lib ./tests",
+    "format": "biome check --fix ./lib ./tests",
     "lint": "biome lint --write ./lib ./tests",
     "test": "jest -i --verbose"
   },
