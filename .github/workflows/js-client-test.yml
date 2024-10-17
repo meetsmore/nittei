@@ -75,6 +75,30 @@ jobs:
           cd clients/javascript
           pnpm i
 
+      - name: Check if generated types are up-to-date
+        run: |
+          # Copy the generated types to a temporary folder for comparison
+          cd clients/javascript
+          cp -r ./lib/gen_types ./lib/gen_types_copy
+          cd ../..
+
+          bash ./scripts/generate_ts_types.sh
+
+          # Compare the generated types with the copied ones
+          cd clients/javascript
+          diff -r ./lib/gen_types ./lib/gen_types_copy
+
+          # Get the exit code of the diff command
+          exit_code=$?
+          if [ $exit_code -ne 0 ]; then
+            echo "Generated types are not up-to-date"
+            echo "Generate them with 'just generate-ts-types' and commit the changes"
+            exit 1
+          fi
+
+          # Remove the temporary folder
+          rm -rf ./lib/gen_types_copy
+
       - name: Build JS
         run: |
           cd clients/javascript
