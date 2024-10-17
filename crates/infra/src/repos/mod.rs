@@ -135,6 +135,6 @@ fn remove_password_from_url(connection_string: &str) -> anyhow::Result<String> {
         Err(_) => return Ok(connection_string.to_string()),
     };
     #[allow(clippy::unwrap_used)]
-    url.set_password(None).unwrap();
+    url.set_password(Some("*********")).unwrap();
     Ok(url.to_string())
 }
