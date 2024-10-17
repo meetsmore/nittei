@@ -5,12 +5,12 @@
 
 {{- $envMap := dict }}
 
-# Loop through defaultEnv
+# Loop through defaultEnv and merge into envMap (normal values)
 {{- range $defaultEnv }}
   {{- $envMap = merge $envMap (dict .name (dict "value" .value)) }}
 {{- end }}
 
-# Loop through extraEnv
+# Merge through extraEnv and merge into envMap (normal values and valueFrom)
 {{- range $extraEnv }}
   {{- if hasKey . "valueFrom" }}
     {{- $envMap = merge $envMap (dict .name (dict "valueFrom" .valueFrom)) }}
