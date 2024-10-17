@@ -1,5 +1,8 @@
 import fs from 'node:fs/promises'
 
+// This script is used for generating index files for the generated types
+// It recursively goes through the gen_types folder and generates index files
+
 export async function generateIndexFiles(path: string) {
   const files = await fs.readdir(path, { withFileTypes: true })
 
