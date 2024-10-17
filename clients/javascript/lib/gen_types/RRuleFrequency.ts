@@ -3,4 +3,4 @@
 /**
  * Frequency rule for recurring events
  */
-export type RRuleFrequency = "yearly" | "monthly" | "weekly" | "daily";
+export type RRuleFrequency = 'yearly' | 'monthly' | 'weekly' | 'daily'

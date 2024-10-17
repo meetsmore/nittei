@@ -3,8 +3,9 @@
 /**
  * Request body for setting the public JWT key of an account
  */
-export type SetAccountPubKeyRequestBody = { 
-/**
- * Public JWT key
- */
-publicJwtKey: string | null, };
+export type SetAccountPubKeyRequestBody = {
+  /**
+   * Public JWT key
+   */
+  publicJwtKey: string | null
+}

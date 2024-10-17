@@ -3,4 +3,4 @@
 /**
  * Occurrence of a `CalendarEvent`
  */
-export type EventInstance = { startTime: Date, endTime: Date, busy: boolean, };
+export type EventInstance = { startTime: Date; endTime: Date; busy: boolean }

@@ -4,4 +4,4 @@
  * Round robin algorithm to decide which member should be assigned a
  * `Service Event` when there are multiple members of a `Service`
  */
-export type RoundRobinAlgorithm = "availability" | "equalDistribution";
+export type RoundRobinAlgorithm = 'availability' | 'equalDistribution'

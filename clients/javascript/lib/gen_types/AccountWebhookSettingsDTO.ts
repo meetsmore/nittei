@@ -3,12 +3,13 @@
 /**
  * Account webhook settings
  */
-export type AccountWebhookSettingsDTO = { 
-/**
- * Webhook URL
- */
-url: string, 
-/**
- * Webhook key
- */
-key: string, };
+export type AccountWebhookSettingsDTO = {
+  /**
+   * Webhook URL
+   */
+  url: string
+  /**
+   * Webhook key
+   */
+  key: string
+}
