@@ -100,6 +100,7 @@ impl UserClient {
     pub async fn update(&self, input: UpdateUserInput) -> APIResponse<update_user::APIResponse> {
         let body = update_user::RequestBody {
             external_id: input.external_id,
+            test: None,
             metadata: input.metadata,
         };
         self.base

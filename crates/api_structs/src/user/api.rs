@@ -140,6 +140,9 @@ pub mod update_user {
         #[ts(optional)]
         pub external_id: Option<String>,
 
+        /// Optional test field
+        pub test: Option<String>,
+
         /// Optional metadata (e.g. {"key": "value"})
         #[serde(default)]
         #[ts(optional)]
