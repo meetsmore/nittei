@@ -87,10 +87,10 @@ TEST_NAME=$1
 
 # Add `-- --nocapture` if DEBUG is set
 if [ -n "$DEBUG" ]; then
-  cargo test --workspace $1 -- --nocapture
+  cargo test --workspace $1 -- --nocapture --skip export_bindings_
 else
   # If not in debug mode, run the tests with `cargo-pretty-test`
-  cargo-pretty-test --workspace $1
+  cargo-pretty-test --workspace $1 -- --skip export_bindings_
 fi
 
 # Store result

@@ -10,7 +10,10 @@
   },
   "scripts": {
     "format": "cd clients/javascript && pnpm run format",
-    "test": "cd clients/javascript && pnpm run test"
+    "test": "cd clients/javascript && pnpm run test",
+    "clean-generated-files": "cd clients/javascript && pnpm run clean-generated-files",
+    "generate-index-files": "cd clients/javascript && pnpm run generate-index-files",
+    "type-check": "cd clients/javascript && pnpm run type-check"
   },
   "author": "",
   "license": "MIT",

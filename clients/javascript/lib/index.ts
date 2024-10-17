@@ -121,7 +121,5 @@ export {
 } from './helpers/errors'
 
 // Enums
-export { RRuleFrequency } from './gen_types/RRuleFrequency'
-export { ScheduleRuleVariant } from './types/ScheduleRuleVariant'
-export { Weekday } from './types/Weekday'
-export { Frequency } from './types/Frequency'
+export * from './gen_types'
+export * from './types'
