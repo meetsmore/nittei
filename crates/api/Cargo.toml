@@ -29,7 +29,7 @@ anyhow = "1.0"
 jsonwebtoken = "7"
 thiserror = "1.0"
 tracing = "0.1.25"
-tracing-actix-web = { version = "0.7.11", features = ["opentelemetry_0_23"] }
+tracing-actix-web = { version = "0.7.14", features = ["opentelemetry_0_23"] }
 tracing-futures = "0.2.5"
 
 [dev-dependencies]
