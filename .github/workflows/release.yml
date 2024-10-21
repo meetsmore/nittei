@@ -5,12 +5,9 @@ env:
 
 on:
   push:
-    # Sequence of patterns matched against refs/tags
-    # Unfortunately, regex are not fully supported in YAML files, so we cannot
-    # use the officially recommended regex to verify the semantic versioning tag
-    # https://github.com/semver/semver/blob/master/semver.md#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
+    # Docs on syntax: https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions#filter-pattern-cheat-sheet
     tags:
-      - "v[0-9]+.[0-9]+.[0-9]+-?[a-zA-Z0-9]*"
+      - "v[0-9]+.[0-9]+.[0-9]+**"
 
 # Taken from https://docs.docker.com/build/ci/github-actions/multi-platform/#distribute-build-across-multiple-runners
 jobs:
