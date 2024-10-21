@@ -43,7 +43,7 @@ pub struct CalendarEventDTO {
     #[ts(type = "Date")]
     pub start_time: DateTime<Utc>,
 
-    /// Duration of the event in minutes
+    /// Duration of the event in seconds
     #[ts(type = "number")]
     pub duration: i64,
 
