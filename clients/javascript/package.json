@@ -16,9 +16,12 @@
   "scripts": {
     "build": "tsup",
     "deploy": "pnpm run build && pnpm publish --no-git-checks",
-    "format": "biome format --write ./lib ./tests",
+    "format": "biome check --fix ./lib ./tests",
+    "clean-generated-files": "rm -rf ./lib/gen_types",
+    "generate-index-files": "ts-node ./scripts/generateIndexFile.ts && pnpm run format",
     "lint": "biome lint --write ./lib ./tests",
-    "test": "jest -i --verbose"
+    "test": "jest -i --verbose",
+    "type-check": "tsc --noEmit"
   },
   "repository": {
     "type": "git",
@@ -50,6 +53,7 @@
     "jest": "29.7.0",
     "jsonwebtoken": "9.0.2",
     "ts-jest": "29.2.5",
+    "ts-node": "10.9.2",
     "tsup": "8.3.0",
     "typescript": "5.6.3",
     "uuid": "10.0.0"

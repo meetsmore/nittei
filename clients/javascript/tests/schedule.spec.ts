@@ -2,8 +2,8 @@ import {
   type INitteiClient,
   type INitteiUserClient,
   NitteiClient,
-  ScheduleRuleVariant,
-  Weekday,
+  ScheduleRuleVariantEnum,
+  WeekdayEnum,
 } from '../lib'
 import { setupUserClient } from './helpers/fixtures'
 
@@ -60,8 +60,8 @@ describe('Schedule API', () => {
       rules: [
         {
           variant: {
-            type: ScheduleRuleVariant.WDay,
-            value: Weekday.Mon,
+            type: ScheduleRuleVariantEnum.WDay,
+            value: WeekdayEnum.Mon,
           },
           intervals: [
             {

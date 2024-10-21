@@ -1,8 +1,8 @@
 import {
   type INitteiClient,
   type INitteiUserClient,
-  ScheduleRuleVariant,
-  Weekday,
+  ScheduleRuleVariantEnum,
+  WeekdayEnum,
 } from '../lib'
 import { setupUserClient } from './helpers/fixtures'
 
@@ -78,16 +78,16 @@ describe('Service API', () => {
     const scheduleRes = await userClient.schedule.create({
       timezone: 'Europe/Berlin',
       rules: [
-        Weekday.Mon,
-        Weekday.Tue,
-        Weekday.Wed,
-        Weekday.Thu,
-        Weekday.Fri,
-        Weekday.Sat,
-        Weekday.Sun,
+        WeekdayEnum.Mon,
+        WeekdayEnum.Tue,
+        WeekdayEnum.Wed,
+        WeekdayEnum.Thu,
+        WeekdayEnum.Fri,
+        WeekdayEnum.Sat,
+        WeekdayEnum.Sun,
       ].map(day => ({
         variant: {
-          type: ScheduleRuleVariant.WDay,
+          type: ScheduleRuleVariantEnum.WDay,
           value: day,
         },
         intervals: [
