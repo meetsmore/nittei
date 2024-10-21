@@ -10,7 +10,7 @@ on:
     # use the officially recommended regex to verify the semantic versioning tag
     # https://github.com/semver/semver/blob/master/semver.md#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
     tags:
-      - "v[0-9]+.[0-9]+.[0-9]+-?[a-zA-Z0-9]*"
+      - "v[0-9]+.[0-9]+.[0-9]+**"
 
 # Taken from https://docs.docker.com/build/ci/github-actions/multi-platform/#distribute-build-across-multiple-runners
 jobs:
