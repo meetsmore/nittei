@@ -84,4 +84,4 @@ jobs:
 
       - name: Run server tests
         run: |
-          cargo test --workspace
+          cargo test --workspace -- --skip export_bindings_

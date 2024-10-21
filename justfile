@@ -33,6 +33,10 @@ dev: _setup_db
 prepare_sqlx:
 	cd crates/infra && cargo sqlx prepare
 
+# Generate TS types
+generate-ts-types:
+	bash ./scripts/generate_ts_types.sh
+
 # Run the tests on a temporary DB container
 test test_name="":
 	bash ./scripts/run_tests_backend.sh {{test_name}}

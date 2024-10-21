@@ -77,8 +77,9 @@ NC_PID=$!
 # Launch a PG container
 docker run --rm -d -l ${LABEL} --name $RANDOM_NAME -p $PORT:5432 -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=nittei postgres:13 >/dev/null 2>&1
 
-# Set the DATABASE_URL environment variable
+# Set DATABASE_URL (migrations) and NITTEI__DATABASE_URL (app) environment variables
 export DATABASE_URL="postgres://postgres:postgres@localhost:${PORT}/nittei"
+export NITTEI__DATABASE_URL="$DATABASE_URL"
 
 # Wait for PostgreSQL to be ready
 RETRIES=5
@@ -98,17 +99,14 @@ TEST_NAME=$1
 
 # Add `-- --nocapture` if DEBUG is set
 if [ -n "$DEBUG" ]; then
-  cargo test --workspace $1 -- --nocapture
+  cargo test --workspace $1 -- --nocapture --skip export_bindings_
 else
   # If not in debug mode, run the tests with `cargo-pretty-test`
-  cargo-pretty-test --workspace $1
+  cargo-pretty-test --workspace $1 -- --skip export_bindings_
 fi
 
 # Store result
 RESULT=$?
-
-# Format TS code (always run so that we are not in a bad state)
-pnpm run format
 
 if [ $RESULT -ne 0 ]; then
   echo ""

@@ -1,7 +1,7 @@
 /**
  * Enum for the different weekdays
  */
-export enum Weekday {
+export enum WeekdayEnum {
   Mon = 'Mon',
   Tue = 'Tue',
   Wed = 'Wed',
