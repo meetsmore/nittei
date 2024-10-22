@@ -47,7 +47,7 @@ export type UpdateEventRequestBody = {
    */
   allDay?: boolean
   /**
-   * Optional duration of the event in minutes
+   * Optional duration of the event in seconds
    */
   duration?: number
   /**
