@@ -1,3 +1,4 @@
+import dayjs from 'dayjs'
 import {
   type INitteiClient,
   type INitteiUserClient,
@@ -169,6 +170,37 @@ describe('CalendarEvent API', () => {
         timezone: 'UTC',
       })
       calendarId = calendarRes.calendar.id
+    })
+
+    it('should be able to create event', async () => {
+      const res = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+      })
+      expect(res.event).toBeDefined()
+      expect(res.event.calendarId).toBe(calendarId)
+    })
+
+    it('should be able to update event', async () => {
+      const res = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+      })
+      const eventId = res.event.id
+
+      expect(dayjs(res.event.endTime)).toEqual(dayjs(2000))
+
+      const res2 = await adminClient.events.update(eventId, {
+        title: 'new title',
+        startTime: new Date(2000),
+        duration: 2000,
+      })
+      expect(res2.event.title).toBe('new title')
+      expect(dayjs(res2.event.startTime)).toEqual(dayjs(2000))
+      expect(res2.event.duration).toEqual(2000)
+      expect(dayjs(res2.event.endTime)).toEqual(dayjs(4000))
     })
 
     it('should be able to query on external ID', async () => {

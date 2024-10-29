@@ -89,7 +89,7 @@ pub mod create_event {
         #[ts(type = "Date")]
         pub start_time: DateTime<Utc>,
 
-        /// Duration of the event in seconds
+        /// Duration of the event in milliseconds
         #[ts(type = "number")]
         pub duration: i64,
 
@@ -337,7 +337,7 @@ pub mod update_event {
         #[ts(optional)]
         pub all_day: Option<bool>,
 
-        /// Optional duration of the event in seconds
+        /// Optional duration of the event in milliseconds
         #[serde(default)]
         #[ts(optional, type = "number")]
         pub duration: Option<i64>,

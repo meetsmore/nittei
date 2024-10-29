@@ -43,7 +43,11 @@ pub struct CalendarEventDTO {
     #[ts(type = "Date")]
     pub start_time: DateTime<Utc>,
 
-    /// Duration of the event in seconds
+    /// Start time of the event (UTC)
+    #[ts(type = "Date")]
+    pub end_time: DateTime<Utc>,
+
+    /// Duration of the event in milliseconds
     #[ts(type = "number")]
     pub duration: i64,
 
@@ -92,6 +96,7 @@ impl CalendarEventDTO {
             parent_id: event.parent_id,
             external_id: event.external_id,
             start_time: event.start_time,
+            end_time: event.end_time,
             duration: event.duration,
             busy: event.busy,
             updated: event.updated,
