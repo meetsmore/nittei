@@ -46,7 +46,11 @@ export type CalendarEventDTO = {
    */
   startTime: Date
   /**
-   * Duration of the event in seconds
+   * Start time of the event (UTC)
+   */
+  endTime: Date
+  /**
+   * Duration of the event in milliseconds
    */
   duration: number
   /**

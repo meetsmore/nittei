@@ -50,7 +50,7 @@ export type CreateEventRequestBody = {
    */
   startTime: Date
   /**
-   * Duration of the event in seconds
+   * Duration of the event in milliseconds
    */
   duration: number
   /**

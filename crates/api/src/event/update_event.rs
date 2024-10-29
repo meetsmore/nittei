@@ -1,5 +1,5 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, TimeDelta, Utc};
 use event::subscribers::SyncRemindersOnEventUpdated;
 use nittei_api_structs::update_event::*;
 use nittei_domain::{
@@ -250,6 +250,10 @@ impl UseCase for UpdateEventUseCase {
             // This unwrap is safe as we have checked that recurrence "is_some"
             #[allow(clippy::unwrap_used)]
             e.set_recurrence(e.recurrence.clone().unwrap(), &calendar.settings, true)
+        } else if start_or_duration_change {
+            e.end_time = e.start_time + TimeDelta::milliseconds(e.duration);
+            e.recurrence = None;
+            true
         } else {
             e.recurrence = None;
             true
