@@ -13,6 +13,7 @@ export function convertEventDates(event: CalendarEventDTO): CalendarEventDTO {
   return {
     ...event,
     startTime: new Date(event.startTime),
+    endTime: new Date(event.endTime),
     exdates: event.exdates?.map(date => new Date(date)),
   }
 }
