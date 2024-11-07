@@ -1,5 +1,4 @@
 use sqlx::PgPool;
-use tracing::instrument;
 
 use super::IStatusRepo;
 
@@ -17,7 +16,6 @@ impl PostgresStatusRepo {
 
 #[async_trait::async_trait]
 impl IStatusRepo for PostgresStatusRepo {
-    #[instrument]
     async fn check_connection(&self) -> anyhow::Result<()> {
         // Send a simple query to check the connection
         sqlx::query("SELECT 1 AS health")
