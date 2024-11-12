@@ -245,6 +245,59 @@ pub mod get_events_by_calendars {
     }
 }
 
+pub mod search_events {
+    use nittei_domain::{DateTimeQuery, IDQuery};
+
+    use super::*;
+
+    /// Query parameters for searching events
+    #[derive(Deserialize, Serialize, Validate, TS)]
+    #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "SearchEventsRequestBody")]
+    pub struct RequestBody {
+        /// User ID
+        pub user_id: ID,
+
+        /// Optional list of calendar UUIDs
+        /// If not provided, all calendars will be used
+        #[validate(length(min = 1))]
+        pub calendar_ids: Option<Vec<ID>>,
+
+        /// Optional query on parent ID
+        pub parent_id: Option<IDQuery>,
+
+        /// Optional query on start time - "lower than or equal", or "great than or equal" (UTC)
+        pub start_time: Option<DateTimeQuery>,
+
+        /// Optional query on end time - "lower than or equal", or "great than or equal" (UTC)
+        pub end_time: Option<DateTimeQuery>,
+
+        /// Optional list of event status
+        pub status: Option<Vec<String>>,
+
+        /// Optioanl query on updated at - "lower than or equal", or "great than or equal" (UTC)
+        pub updated_at: Option<DateTimeQuery>,
+
+        /// Optional list of metadata key-value pairs
+        pub metadata: Option<serde_json::Value>,
+    }
+
+    /// API response for getting events by calendars
+    #[derive(Serialize, TS)]
+    #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "SearchEventsAPIResponse")]
+    pub struct APIResponse {
+        /// List of calendar events retrieved
+        pub events: Vec<CalendarEventDTO>,
+    }
+
+    impl APIResponse {
+        pub fn new(events: Vec<CalendarEventDTO>) -> Self {
+            Self { events }
+        }
+    }
+}
+
 pub mod get_events_by_meta {
     use super::*;
 

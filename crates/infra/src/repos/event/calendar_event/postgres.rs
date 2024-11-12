@@ -7,10 +7,11 @@ use sqlx::{
     types::{Json, Uuid},
     FromRow,
     PgPool,
+    QueryBuilder,
 };
 use tracing::{error, instrument};
 
-use super::{IEventRepo, MostRecentCreatedServiceEvents};
+use super::{IEventRepo, MostRecentCreatedServiceEvents, SearchEventsParams};
 use crate::repos::shared::query_structs::MetadataFindQuery;
 
 #[derive(Debug)]
@@ -403,6 +404,121 @@ impl IEventRepo for PostgresEventRepo {
         .into_iter()
         .map(|e| e.try_into())
         .collect()
+    }
+
+    /// Search events
+    /// This method is used to search events based on the given parameters
+    /// The parameters are optional and can be used to filter the events
+    ///
+    /// Warning: performance of this method is not optimal
+    async fn search_events(
+        &self,
+        search_events_params: SearchEventsParams,
+    ) -> anyhow::Result<Vec<CalendarEvent>> {
+        let mut query = QueryBuilder::new(
+            r#"
+            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+            INNER JOIN calendars AS c
+                ON c.calendar_uid = e.calendar_uid
+            WHERE c.user_uuid = "#,
+        );
+
+        query.push_bind(search_events_params.user_id.to_string());
+
+        // let user_ids: Option<Vec<Uuid>> = search_events_params
+        //     .user_ids
+        //     .map(|v| v.into_iter().map(|id| id.into()).collect());
+        // if let Some(user_ids) = user_ids {
+        //     query.push(" AND u.user_uid IN (");
+        //     let mut separated = query.separated(", ");
+        //     for value_type in user_ids.iter() {
+        //         separated.push_bind(value_type.to_string());
+        //     }
+        //     separated.push_unseparated(") ");
+        // }
+
+        if let Some(calendar_ids) = search_events_params.calendar_ids {
+            query.push(" AND c.calendar_uid IN (");
+            let mut separated = query.separated(", ");
+            for value_type in calendar_ids.iter() {
+                separated.push_bind(value_type.to_string());
+            }
+            separated.push_unseparated(") ");
+        }
+
+        if let Some(parent_id) = search_events_params.parent_id {
+            if let Some(eq) = parent_id.eq {
+                query.push(" AND e.parent_id =");
+                query.push_bind(eq.to_string());
+            } else if let Some(exists) = parent_id.exists {
+                if exists {
+                    query.push(" AND e.parent_id IS NOT NULL");
+                } else {
+                    query.push(" AND e.parent_id IS NULL");
+                };
+            };
+        }
+
+        if let Some(start_time) = search_events_params.start_time {
+            if let Some(gte) = start_time.gte {
+                query.push(" AND e.start_time >= ");
+                query.push_bind(gte);
+            }
+            if let Some(lte) = start_time.lte {
+                query.push(" AND e.start_time <= ");
+                query.push_bind(lte);
+            }
+        }
+
+        if let Some(end_time) = search_events_params.end_time {
+            if let Some(gte) = end_time.gte {
+                query.push(" AND e.end_time >= ");
+                query.push_bind(gte);
+            }
+            if let Some(lte) = end_time.lte {
+                query.push(" AND e.end_time <= ");
+                query.push_bind(lte);
+            }
+        }
+
+        if let Some(status) = search_events_params.status {
+            query.push(" AND e.status IN (");
+            let mut separated = query.separated(", ");
+            for value_type in status.iter() {
+                separated.push_bind(value_type.clone());
+            }
+            separated.push_unseparated(") ");
+        }
+
+        if let Some(updated_at) = search_events_params.updated_at {
+            if let Some(gte) = updated_at.gte {
+                query.push(" AND e.updated >= ");
+                query.push_bind(gte);
+            }
+            if let Some(lte) = updated_at.lte {
+                query.push(" AND e.updated <= ");
+                query.push_bind(lte);
+            }
+        }
+
+        if let Some(metadata) = search_events_params.metadata {
+            query.push(" AND e.metadata @> ");
+            query.push_bind(Json(metadata.clone()));
+        }
+
+        let rows = query.build().fetch_all(&self.pool).await.inspect_err(|e| {
+            error!("Search events failed. DB returned error: {:?}", e);
+        })?;
+
+        let events_raw: Vec<EventRaw> = rows
+            .into_iter()
+            .map(|row| EventRaw::from_row(&row))
+            .collect::<Result<Vec<_>, sqlx::Error>>()?;
+
+        events_raw
+            .into_iter()
+            .map(CalendarEvent::try_from)
+            .collect()
     }
 
     #[instrument]

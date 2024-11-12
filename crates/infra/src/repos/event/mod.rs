@@ -3,7 +3,7 @@ mod event_reminders_expansion_jobs;
 mod event_synced;
 mod reminder;
 
-pub use calendar_event::{IEventRepo, PostgresEventRepo};
+pub use calendar_event::{IEventRepo, PostgresEventRepo, SearchEventsParams};
 pub use event_reminders_expansion_jobs::{
     IEventRemindersGenerationJobsRepo,
     PostgresEventReminderGenerationJobsRepo,

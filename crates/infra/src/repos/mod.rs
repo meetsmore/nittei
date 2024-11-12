@@ -20,6 +20,7 @@ use account_integrations::{IAccountIntegrationRepo, PostgresAccountIntegrationRe
 use anyhow::Context;
 use calendar::{ICalendarRepo, PostgresCalendarRepo};
 use calendar_synced::{ICalendarSyncedRepo, PostgresCalendarSyncedRepo};
+pub use event::SearchEventsParams;
 use event::{
     IEventRemindersGenerationJobsRepo,
     IEventRepo,

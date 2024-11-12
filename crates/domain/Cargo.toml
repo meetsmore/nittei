@@ -31,3 +31,4 @@ ts-rs = { git = "https://github.com/Aleph-Alpha/ts-rs.git", rev = "4aea173270f5d
   "chrono-impl",
   "serde-json-impl",
 ] }
+validator = { version = "0.18", features = ["derive"] }
