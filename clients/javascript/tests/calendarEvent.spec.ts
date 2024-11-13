@@ -319,6 +319,245 @@ describe('CalendarEvent API', () => {
       expect(getRes.event.metadata).toEqual(metadata)
     })
 
+    describe('Search events API', () => {
+      let userId: string
+      let calendarId: string
+      let calendarId2: string
+
+      let eventId1: string
+      let metadataEventId1: string
+      let eventId2: string
+      beforeAll(async () => {
+        const userRes = await adminClient.user.create()
+        userId = userRes.user.id
+
+        const calendarRes = await adminClient.calendar.create(userId, {
+          timezone: 'UTC',
+        })
+        calendarId = calendarRes.calendar.id
+
+        const calendarRes2 = await adminClient.calendar.create(userId, {
+          timezone: 'UTC',
+        })
+        calendarId2 = calendarRes2.calendar.id
+
+        const eventRes1 = await adminClient.events.create(userId, {
+          calendarId,
+          duration: 1000,
+          startTime: new Date(1000),
+        })
+
+        eventId1 = eventRes1.event.id
+
+        const metadataEventRes1 = await adminClient.events.create(userId, {
+          calendarId,
+          duration: 1000,
+          startTime: new Date(1000),
+          metadata: {
+            string: 'string',
+            number: 1,
+            boolean: true,
+            null: null,
+            object: {
+              string: 'string',
+              number: 1,
+              boolean: true,
+              null: null,
+            },
+          },
+        })
+        metadataEventId1 = metadataEventRes1.event.id
+
+        const eventRes2 = await adminClient.events.create(userId, {
+          calendarId: calendarId2,
+          duration: 1000,
+          startTime: new Date(1000),
+          status: 'confirmed',
+          parentId: 'parentId',
+        })
+
+        eventId2 = eventRes2.event.id
+      })
+
+      it('should be able to search for events (only user)', async () => {
+        const res = await adminClient.events.searchEvents({
+          userId: userId,
+        })
+        expect(res.events.length).toBe(3)
+        expect(res.events).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              id: metadataEventId1,
+            }),
+            expect.objectContaining({
+              id: eventId1,
+            }),
+            expect.objectContaining({
+              id: eventId2,
+            }),
+          ])
+        )
+      })
+
+      it('should be able to search for events (calendarId)', async () => {
+        const res = await adminClient.events.searchEvents({
+          userId: userId,
+          calendarIds: [calendarId2],
+        })
+        expect(res.events.length).toBe(1)
+        expect(res.events[0].id).toBe(eventId2)
+      })
+
+      it('should be able to search for events (startTime)', async () => {
+        const res = await adminClient.events.searchEvents({
+          userId: userId,
+          startTime: {
+            gte: new Date(500),
+          },
+        })
+        expect(res.events.length).toBe(3)
+      })
+
+      it('should receive nothing when querying on wrong startTime', async () => {
+        const res = await adminClient.events.searchEvents({
+          userId: userId,
+          startTime: {
+            gte: new Date(2000),
+          },
+        })
+        expect(res.events.length).toBe(0)
+      })
+
+      it('should be able to search for events (endTime)', async () => {
+        const res = await adminClient.events.searchEvents({
+          userId: userId,
+          endTime: {
+            lte: new Date(2000),
+          },
+        })
+        expect(res.events.length).toBe(3)
+      })
+
+      it('should receive nothing when querying on wrong endTime', async () => {
+        const res = await adminClient.events.searchEvents({
+          userId: userId,
+          endTime: {
+            lte: new Date(500),
+          },
+        })
+        expect(res.events.length).toBe(0)
+      })
+
+      it('should be able to search for events (status)', async () => {
+        const res = await adminClient.events.searchEvents({
+          userId: userId,
+          status: ['tentative'],
+        })
+        expect(res.events.length).toBe(2)
+      })
+
+      it('should be able to search for events (multiple status)', async () => {
+        const res = await adminClient.events.searchEvents({
+          userId: userId,
+          status: ['confirmed', 'tentative'],
+        })
+        expect(res.events.length).toBe(3)
+      })
+
+      it('should be able to search by parentId (equality)', async () => {
+        const res = await adminClient.events.searchEvents({
+          userId: userId,
+          parentId: {
+            eq: 'parentId',
+          },
+        })
+        expect(res.events.length).toBe(1)
+        expect(res.events[0].id).toBe(eventId2)
+      })
+
+      it('should be able to search by parentId (existence)', async () => {
+        const res = await adminClient.events.searchEvents({
+          userId: userId,
+          parentId: {
+            exists: true,
+          },
+        })
+        expect(res.events.length).toBe(1)
+        expect(res.events[0].id).toBe(eventId2)
+      })
+
+      it('should be able to search by parentId and startTime', async () => {
+        const res = await adminClient.events.searchEvents({
+          userId: userId,
+          parentId: {
+            eq: 'parentId',
+          },
+          startTime: {
+            gte: new Date(500),
+          },
+        })
+        expect(res.events.length).toBe(1)
+        expect(res.events[0].id).toBe(eventId2)
+      })
+
+      it('should fail to find something when searching by parentId and wrong startTime', async () => {
+        const res = await adminClient.events.searchEvents({
+          userId: userId,
+          parentId: {
+            eq: 'parentId',
+          },
+          startTime: {
+            gte: new Date(2000),
+          },
+        })
+        expect(res.events.length).toBe(0)
+      })
+
+      it('should be able to search by updatedAt', async () => {
+        const res = await adminClient.events.searchEvents({
+          userId: userId,
+          updatedAt: {
+            gte: new Date(0),
+          },
+        })
+        expect(res.events.length).toBe(3)
+      })
+
+      it('should not find anything when searching by wrong updatedAt', async () => {
+        const res = await adminClient.events.searchEvents({
+          userId: userId,
+          updatedAt: {
+            gte: new Date(new Date().getTime() + 10000),
+          },
+        })
+        expect(res.events.length).toBe(0)
+      })
+
+      it('should receive empty array when querying on wrong metadata', async () => {
+        const res = await adminClient.events.searchEvents({
+          userId: userId,
+          metadata: {
+            string: 'stringg',
+          },
+        })
+        expect(res.events.length).toBe(0)
+      })
+
+      it('should be able to search for events (metadata)', async () => {
+        const res = await adminClient.events.searchEvents({
+          userId: userId,
+          metadata: {
+            string: 'string',
+            number: 1,
+            boolean: true,
+            null: null,
+          },
+        })
+        expect(res.events.length).toBe(1)
+        expect(res.events[0].id).toBe(metadataEventId1)
+      })
+    })
+
     afterAll(async () => {
       await adminClient.user.remove(userId)
     })
