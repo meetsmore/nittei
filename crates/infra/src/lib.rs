@@ -7,7 +7,12 @@ use std::sync::Arc;
 
 pub use config::Config;
 use repos::Repos;
-pub use repos::{BusyCalendarIdentifier, ExternalBusyCalendarIdentifier, MetadataFindQuery};
+pub use repos::{
+    BusyCalendarIdentifier,
+    ExternalBusyCalendarIdentifier,
+    MetadataFindQuery,
+    SearchEventsParams,
+};
 pub use services::*;
 use sqlx::postgres::PgPoolOptions;
 pub use system::ISys;

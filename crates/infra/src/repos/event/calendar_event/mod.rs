@@ -1,7 +1,7 @@
 mod postgres;
 
 use chrono::{DateTime, Utc};
-use nittei_domain::{CalendarEvent, TimeSpan, ID};
+use nittei_domain::{CalendarEvent, DateTimeQuery, IDQuery, TimeSpan, ID};
 pub use postgres::PostgresEventRepo;
 
 use crate::repos::shared::query_structs::MetadataFindQuery;
@@ -10,6 +10,17 @@ use crate::repos::shared::query_structs::MetadataFindQuery;
 pub struct MostRecentCreatedServiceEvents {
     pub user_id: ID,
     pub created: Option<i64>,
+}
+
+pub struct SearchEventsParams {
+    pub user_id: ID,
+    pub calendar_ids: Option<Vec<ID>>,
+    pub parent_id: Option<IDQuery>,
+    pub start_time: Option<DateTimeQuery>,
+    pub end_time: Option<DateTimeQuery>,
+    pub status: Option<Vec<String>>,
+    pub updated_at: Option<DateTimeQuery>,
+    pub metadata: Option<serde_json::Value>,
 }
 
 #[async_trait::async_trait]
@@ -28,6 +39,10 @@ pub trait IEventRepo: Send + Sync {
         &self,
         calendar_ids: Vec<ID>,
         timespan: &TimeSpan,
+    ) -> anyhow::Result<Vec<CalendarEvent>>;
+    async fn search_events(
+        &self,
+        search_events_params: SearchEventsParams,
     ) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn find_most_recently_created_service_events(
         &self,

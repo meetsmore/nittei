@@ -6,6 +6,7 @@ mod get_event_instances;
 mod get_events_by_calendars;
 mod get_events_by_meta;
 pub mod get_upcoming_reminders;
+mod search_events;
 mod subscribers;
 pub mod sync_event_reminders;
 mod update_event;
@@ -16,6 +17,7 @@ use delete_event::{delete_event_admin_controller, delete_event_controller};
 use get_event::{get_event_admin_controller, get_event_controller};
 use get_event_instances::{get_event_instances_admin_controller, get_event_instances_controller};
 use get_events_by_meta::get_events_by_meta_controller;
+use search_events::search_events_controller;
 use update_event::{update_event_admin_controller, update_event_controller};
 
 // Configure the routes for the event module
@@ -36,6 +38,10 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
 
     // Get events by metadata
     cfg.route("/events/meta", web::get().to(get_events_by_meta_controller));
+
+    // Search events
+    // /!\ This is a POST route
+    cfg.route("/events/search", web::post().to(search_events_controller));
 
     // Get a specific event by external id
     cfg.route(
