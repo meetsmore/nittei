@@ -4,14 +4,14 @@ import type { ID } from './ID'
 /**
  * Query parameters for searching on an ID
  */
-export type IdQuery = {
+export type IDQuery = {
   /**
    * Optional ID (equality test)
    */
-  eq: ID | null
+  eq?: ID
   /**
    * Optional bool (existence test)
    * If "eq" is provided, this field is ignored
    */
-  exists: boolean | null
+  exists?: boolean
 }

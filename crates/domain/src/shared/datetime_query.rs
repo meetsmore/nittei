@@ -9,10 +9,10 @@ use validator::Validate;
 #[ts(export, rename = "DateTimeQuery")]
 pub struct DateTimeQuery {
     /// Optional "greater than or equal" query (UTC)
-    #[ts(type = "Date")]
+    #[ts(type = "Date", optional)]
     pub gte: Option<DateTime<Utc>>,
 
     /// Optional "less than or equal" query (UTC)
-    #[ts(type = "Date")]
+    #[ts(type = "Date", optional)]
     pub lte: Option<DateTime<Utc>>,
 }

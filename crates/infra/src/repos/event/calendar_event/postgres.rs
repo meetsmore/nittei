@@ -417,31 +417,21 @@ impl IEventRepo for PostgresEventRepo {
     ) -> anyhow::Result<Vec<CalendarEvent>> {
         let mut query = QueryBuilder::new(
             r#"
-            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+            SELECT e.*, c.user_uid, u.account_uid FROM calendar_events AS e
             INNER JOIN calendars AS c
                 ON c.calendar_uid = e.calendar_uid
-            WHERE c.user_uuid = "#,
+            INNER JOIN users AS u
+                ON u.user_uid = c.user_uid
+            WHERE u.user_uid = "#,
         );
 
-        query.push_bind(search_events_params.user_id.to_string());
-
-        // let user_ids: Option<Vec<Uuid>> = search_events_params
-        //     .user_ids
-        //     .map(|v| v.into_iter().map(|id| id.into()).collect());
-        // if let Some(user_ids) = user_ids {
-        //     query.push(" AND u.user_uid IN (");
-        //     let mut separated = query.separated(", ");
-        //     for value_type in user_ids.iter() {
-        //         separated.push_bind(value_type.to_string());
-        //     }
-        //     separated.push_unseparated(") ");
-        // }
+        query.push_bind::<Uuid>(search_events_params.user_id.into());
 
         if let Some(calendar_ids) = search_events_params.calendar_ids {
             query.push(" AND c.calendar_uid IN (");
             let mut separated = query.separated(", ");
             for value_type in calendar_ids.iter() {
-                separated.push_bind(value_type.to_string());
+                separated.push_bind::<Uuid>(value_type.clone().into());
             }
             separated.push_unseparated(") ");
         }
@@ -493,11 +483,11 @@ impl IEventRepo for PostgresEventRepo {
         if let Some(updated_at) = search_events_params.updated_at {
             if let Some(gte) = updated_at.gte {
                 query.push(" AND e.updated >= ");
-                query.push_bind(gte);
+                query.push_bind(gte.timestamp_millis());
             }
             if let Some(lte) = updated_at.lte {
                 query.push(" AND e.updated <= ");
-                query.push_bind(lte);
+                query.push_bind(lte.timestamp_millis());
             }
         }
 

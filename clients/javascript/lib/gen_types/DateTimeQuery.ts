@@ -7,9 +7,9 @@ export type DateTimeQuery = {
   /**
    * Optional "greater than or equal" query (UTC)
    */
-  gte: Date
+  gte?: Date
   /**
    * Optional "less than or equal" query (UTC)
    */
-  lte: Date
+  lte?: Date
 }

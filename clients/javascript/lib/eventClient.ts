@@ -1,4 +1,8 @@
 import { NitteiBaseClient } from './baseClient'
+import type {
+  SearchEventsAPIResponse,
+  SearchEventsRequestBody,
+} from './gen_types'
 import type { CalendarEventDTO } from './gen_types/CalendarEventDTO'
 import type { CalendarEventResponse } from './gen_types/CalendarEventResponse'
 import type { CreateEventRequestBody } from './gen_types/CreateEventRequestBody'
@@ -68,6 +72,24 @@ export class NitteiEventClient extends NitteiBaseClient {
 
     return {
       event: convertEventDates(res.event),
+    }
+  }
+
+  /**
+   * Search events given the options
+   * @param options - options - see {@link SearchEventsRequestBody} for more details
+   * @returns - the events found
+   */
+  public async searchEvents(
+    options: SearchEventsRequestBody
+  ): Promise<SearchEventsAPIResponse> {
+    const res = await this.post<SearchEventsAPIResponse>(
+      '/events/search',
+      options
+    )
+
+    return {
+      events: res.events.map(convertEventDates),
     }
   }
 
