@@ -31,7 +31,7 @@ use nittei_domain::{
     ID,
 };
 use nittei_infra::NitteiContext;
-use tracing::{info, warn};
+use tracing::{error, info, warn};
 use tracing_actix_web::TracingLogger;
 
 /// Configure the Actix server API
@@ -123,14 +123,19 @@ impl Application {
     /// Initialize the default account
     /// The default account is created if it doesn't exist
     async fn init_default_account(&self) -> anyhow::Result<()> {
-        let secret_api_key = match nittei_utils::config::APP_CONFIG
+        let secret_api_key_option = nittei_utils::config::APP_CONFIG
             .account
             .as_ref()
-            .and_then(|a| a.secret_key.clone())
-        {
-            Some(key) => key,
+            .and_then(|a| a.secret_key.clone());
+
+        let secret_api_key = match &secret_api_key_option {
+            Some(key) => {
+                info!("Using provided secret api key");
+                key.to_owned()
+            }
             None => Account::generate_secret_api_key(),
         };
+
         if self
             .context
             .repos
@@ -139,6 +144,12 @@ impl Application {
             .await?
             .is_none()
         {
+            if secret_api_key_option.is_none() {
+                info!("Creating default account with self-generated secret api key");
+            } else {
+                warn!("Account not found based on given secret api key - creating default account");
+            }
+
             let mut account = Account::default();
             let account_id = nittei_utils::config::APP_CONFIG
                 .account
@@ -147,8 +158,10 @@ impl Application {
                 .unwrap_or_default()
                 .parse::<ID>()
                 .unwrap_or_default();
+
+            info!("Using account id: {}", account_id);
             account.id = account_id;
-            account.secret_api_key = secret_api_key;
+            account.secret_api_key = secret_api_key.clone();
             account.settings.webhook = nittei_utils::config::APP_CONFIG
                 .account
                 .as_ref()
@@ -244,6 +257,19 @@ impl Application {
                         provider: IntegrationProvider::Outlook,
                     })
                     .await?;
+
+                // Check account is created
+                if let Some(account) = self
+                    .context
+                    .repos
+                    .accounts
+                    .find_by_apikey(&secret_api_key)
+                    .await?
+                {
+                    info!("Account created: {:?}", account.id);
+                } else {
+                    error!("Account not created {:?}", account.id);
+                }
             }
         };
         Ok(())
