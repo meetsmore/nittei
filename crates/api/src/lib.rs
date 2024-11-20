@@ -123,14 +123,15 @@ impl Application {
     /// Initialize the default account
     /// The default account is created if it doesn't exist
     async fn init_default_account(&self) -> anyhow::Result<()> {
-        let secret_api_key = match nittei_utils::config::APP_CONFIG
+        let secret_api_key_option = nittei_utils::config::APP_CONFIG
             .account
             .as_ref()
-            .and_then(|a| a.secret_key.clone())
-        {
+            .and_then(|a| a.secret_key.clone());
+
+        let secret_api_key = match &secret_api_key_option {
             Some(key) => {
                 info!("Using provided secret api key");
-                key
+                key.to_owned()
             }
             None => Account::generate_secret_api_key(),
         };
@@ -143,7 +144,12 @@ impl Application {
             .await?
             .is_none()
         {
-            info!("Account not found based on secret api key - creating default account");
+            if secret_api_key_option.is_none() {
+                warn!("Account not found based on given secret api key - creating default account");
+            } else {
+                info!("Creating default account with self-generated secret api key");
+            }
+
             let mut account = Account::default();
             let account_id = nittei_utils::config::APP_CONFIG
                 .account
