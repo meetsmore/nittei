@@ -145,9 +145,9 @@ impl Application {
             .is_none()
         {
             if secret_api_key_option.is_none() {
-                warn!("Account not found based on given secret api key - creating default account");
-            } else {
                 info!("Creating default account with self-generated secret api key");
+            } else {
+                warn!("Account not found based on given secret api key - creating default account");
             }
 
             let mut account = Account::default();
