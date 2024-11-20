@@ -31,7 +31,7 @@ use nittei_domain::{
     ID,
 };
 use nittei_infra::NitteiContext;
-use tracing::{info, warn};
+use tracing::{error, info, warn};
 use tracing_actix_web::TracingLogger;
 
 /// Configure the Actix server API
@@ -128,9 +128,13 @@ impl Application {
             .as_ref()
             .and_then(|a| a.secret_key.clone())
         {
-            Some(key) => key,
+            Some(key) => {
+                info!("Using provided secret api key");
+                key
+            }
             None => Account::generate_secret_api_key(),
         };
+
         if self
             .context
             .repos
@@ -139,6 +143,7 @@ impl Application {
             .await?
             .is_none()
         {
+            info!("Account not found based on secret api key - creating default account");
             let mut account = Account::default();
             let account_id = nittei_utils::config::APP_CONFIG
                 .account
@@ -147,8 +152,10 @@ impl Application {
                 .unwrap_or_default()
                 .parse::<ID>()
                 .unwrap_or_default();
+
+            info!("Using account id: {}", account_id);
             account.id = account_id;
-            account.secret_api_key = secret_api_key;
+            account.secret_api_key = secret_api_key.clone();
             account.settings.webhook = nittei_utils::config::APP_CONFIG
                 .account
                 .as_ref()
@@ -244,6 +251,19 @@ impl Application {
                         provider: IntegrationProvider::Outlook,
                     })
                     .await?;
+
+                // Check account is created
+                if let Some(account) = self
+                    .context
+                    .repos
+                    .accounts
+                    .find_by_apikey(&secret_api_key)
+                    .await?
+                {
+                    info!("Account created: {:?}", account.id);
+                } else {
+                    error!("Account not created {:?}", account.id);
+                }
             }
         };
         Ok(())
