@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use futures::future::join_all;
 use nittei_infra::NitteiContext;
-use tracing::{info, warn};
+use tracing::{debug, warn};
 
 use super::auth::{Permission, Policy};
 use crate::error::NitteiError;
@@ -95,7 +95,7 @@ where
     U: UseCase,
     U::Error: Debug,
 {
-    info!("{:?}", usecase);
+    debug!("{:?}", usecase);
     let res = usecase.execute(ctx).await;
 
     match &res {
@@ -108,7 +108,8 @@ where
             join_all(subscriber_promises).await;
         }
         Err(e) => {
-            warn!("Error: {:?}", e);
+            // This is debug because the error is usually already logged deeper in the stack
+            debug!("Error: {:?}", e);
         }
     }
 
