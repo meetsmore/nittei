@@ -325,24 +325,33 @@ impl Application {
             } else {
                 info!("[server] Received shutdown signal",);
 
-                // Update flag
-                *shared_state.is_shutting_down.lock().await = true;
+                if cfg!(debug_assertions) {
+                    // In debug mode, stop the server immediately
+                    info!("[server] Stopping server...");
+                    server_handle.stop(true).await;
+                    info!("[server] Server stopped");
+                } else {
+                    // In production, do the whole graceful shutdown process
 
-                info!("[server] is_shutting_down flag is now true");
+                    // Update flag
+                    *shared_state.is_shutting_down.lock().await = true;
 
-                let duration = nittei_utils::config::APP_CONFIG.server_shutdown_sleep;
+                    info!("[server] is_shutting_down flag is now true");
 
-                info!("[server] Waiting {}s before stopping", duration);
+                    let duration = nittei_utils::config::APP_CONFIG.server_shutdown_sleep;
 
-                // Wait for the timeout
-                tokio::time::sleep(std::time::Duration::from_secs(duration)).await;
+                    info!("[server] Waiting {}s before stopping", duration);
 
-                info!("[server] Stopping server...");
+                    // Wait for the timeout
+                    tokio::time::sleep(std::time::Duration::from_secs(duration)).await;
 
-                // Shutdown the server
-                server_handle.stop(true).await;
+                    info!("[server] Stopping server...");
 
-                info!("[server] Server stopped");
+                    // Shutdown the server
+                    server_handle.stop(true).await;
+
+                    info!("[server] Server stopped");
+                }
             }
         });
     }
