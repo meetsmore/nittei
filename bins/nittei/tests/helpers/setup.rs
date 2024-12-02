@@ -22,12 +22,14 @@ pub async fn spawn_app() -> (TestApp, NitteiSDK, String) {
 
     let address = format!("http://localhost:{}", application.port());
 
+    let (_, rx) = tokio::sync::oneshot::channel::<()>();
+
     // Allow underscore future because it needs to run in background
     // If we `await` it, the tests will hang
     #[allow(clippy::let_underscore_future)]
     let _ = actix_web::rt::spawn(async move {
         application
-            .start()
+            .start(rx)
             .await
             .expect("Expected application to start");
     });

@@ -10,7 +10,7 @@ mod shared;
 mod status;
 mod user;
 
-use std::net::TcpListener;
+use std::{net::TcpListener, sync::Arc};
 
 use actix_cors::Cors;
 use actix_web::{
@@ -20,6 +20,7 @@ use actix_web::{
     App,
     HttpServer,
 };
+use futures::lock::Mutex;
 use http_logger::NitteiTracingRootSpanBuilder;
 use job_schedulers::{start_reminder_generation_job, start_send_reminders_job};
 use nittei_domain::{
@@ -54,11 +55,28 @@ pub struct Application {
     port: u16,
     /// The application context (database connections, etc.)
     context: NitteiContext,
+
+    /// Shutdown data
+    /// Shared state of the server
+    shared_state: ServerSharedState,
+}
+
+/// Struct for storing the shared state of the server
+/// Mainly useful for sharing the shutdown flag between the binary crate and the status endpoint
+#[derive(Clone)]
+pub struct ServerSharedState {
+    /// Flag to indicate if the application is shutting down
+    pub is_shutting_down: Arc<Mutex<bool>>,
 }
 
 impl Application {
     pub async fn new(context: NitteiContext) -> anyhow::Result<Self> {
-        let (server, port) = Application::configure_server(context.clone()).await?;
+        let shared_state = ServerSharedState {
+            is_shutting_down: Arc::new(Mutex::new(false)),
+        };
+
+        let (server, port) =
+            Application::configure_server(context.clone(), shared_state.clone()).await?;
 
         Application::start_jobs(context.clone());
 
@@ -66,6 +84,7 @@ impl Application {
             server,
             port,
             context,
+            shared_state,
         })
     }
 
@@ -89,7 +108,10 @@ impl Application {
     /// - CORS (permissive)
     /// - Compression
     /// - Tracing logger
-    async fn configure_server(context: NitteiContext) -> anyhow::Result<(Server, u16)> {
+    async fn configure_server(
+        context: NitteiContext,
+        shared_state: ServerSharedState,
+    ) -> anyhow::Result<(Server, u16)> {
         let port = context.config.port;
         let address = nittei_utils::config::APP_CONFIG.http_host.clone();
         let address_and_port = format!("{}:{}", address, port);
@@ -99,14 +121,19 @@ impl Application {
 
         let server = HttpServer::new(move || {
             let ctx = context.clone();
+            let shared_state = shared_state.clone();
 
             App::new()
                 .wrap(Cors::permissive())
                 .wrap(middleware::Compress::default())
                 .wrap(TracingLogger::<NitteiTracingRootSpanBuilder>::new())
                 .app_data(Data::new(ctx))
+                .app_data(Data::new(shared_state))
                 .service(web::scope("/api/v1").configure(configure_server_api))
         })
+        // Disable signals to avoid conflicts with the signal handler
+        // This is handled by the signal handler in the binary and the `schedule_shutdown` function
+        .disable_signals()
         .listen(listener)?
         .workers(4)
         .run();
@@ -115,7 +142,14 @@ impl Application {
     }
 
     /// Init the default account and start the Actix server
-    pub async fn start(self) -> anyhow::Result<()> {
+    ///
+    /// It also sets up the shutdown handler
+    pub async fn start(
+        self,
+        shutdown_channel: tokio::sync::oneshot::Receiver<()>,
+    ) -> anyhow::Result<()> {
+        self.setup_shutdown_handler(shutdown_channel);
+
         self.init_default_account().await?;
         self.server.await.map_err(|e| anyhow::anyhow!(e))
     }
@@ -273,5 +307,42 @@ impl Application {
             }
         };
         Ok(())
+    }
+
+    /// Setup the shutdown handler
+    fn setup_shutdown_handler(&self, shutdown_channel: tokio::sync::oneshot::Receiver<()>) {
+        let server_handle = self.server.handle();
+        let shared_state = self.shared_state.clone();
+
+        // Listen to shutdown channel
+        tokio::spawn(async move {
+            // Wait for the shutdown channel to receive a message
+            if let Err(e) = shutdown_channel.await {
+                error!("[server] Failed to listen for shutdown channel: {}", e);
+            } else {
+                info!("[server] Received shutdown signal",);
+
+                // Update flag
+                *shared_state.is_shutting_down.lock().await = true;
+
+                info!("[server] is_shutting_down flag is now true");
+
+                let duration = nittei_utils::config::APP_CONFIG
+                    .shutdown_timeout
+                    .unwrap_or(30);
+
+                info!("[server] Waiting {}s before stopping", duration);
+
+                // Wait for the timeout
+                tokio::time::sleep(std::time::Duration::from_secs(duration)).await;
+
+                info!("[server] Stopping server...");
+
+                // Shutdown the server
+                server_handle.stop(true).await;
+
+                info!("[server] Server stopped");
+            }
+        });
     }
 }
