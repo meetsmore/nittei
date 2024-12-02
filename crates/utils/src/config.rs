@@ -17,10 +17,15 @@ pub struct AppConfig {
     /// Env var: NITTEI__HTTP_PORT
     pub http_port: usize,
 
+    /// The sleep time for the HTTP server shutdown (in seconds)
+    /// Default is 25 seconds
+    /// Env var: NITTEI__SERVER_SHUTDOWN_SLEEP
+    pub server_shutdown_sleep: u64,
+
     /// The shutdown timeout for the HTTP server (in seconds)
-    /// Default is 30 seconds
-    /// Env var: NITTEI__SHUTDOWN_TIMEOUT
-    pub shutdown_timeout: Option<u64>,
+    /// Default is 5 seconds
+    /// Env var: NITTEI__SERVER_SHUTDOWN_TIMEOUT
+    pub server_shutdown_timeout: u64,
 
     /// The database URL
     /// Default is postgresql://postgres:postgres@localhost:45432/nittei
@@ -144,8 +149,10 @@ fn parse_config() -> AppConfig {
         .expect("Failed to set default host")
         .set_default("http_port", "5000")
         .expect("Failed to set default port")
-        .set_default("shutdown_timeout", "30")
-        .expect("Failed to set default shutdown_timeout")
+        .set_default("server_shutdown_sleep", "25")
+        .expect("Failed to set default server_shutdown_sleep")
+        .set_default("server_shutdown_timeout", "5")
+        .expect("Failed to set default server_shutdown_timeout")
         .set_default("skip_db_migrations", false)
         .expect("Failed to set default skip_db_migrations")
         .set_default("enable_reminders_job", false)

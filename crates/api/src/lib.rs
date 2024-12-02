@@ -134,6 +134,9 @@ impl Application {
         // Disable signals to avoid conflicts with the signal handler
         // This is handled by the signal handler in the binary and the `schedule_shutdown` function
         .disable_signals()
+        // Set the shutdown timeout (time to wait for the server to finish processing requests)
+        // Default is 30 seconds
+        .shutdown_timeout(nittei_utils::config::APP_CONFIG.server_shutdown_timeout)
         .listen(listener)?
         .workers(4)
         .run();
@@ -327,9 +330,7 @@ impl Application {
 
                 info!("[server] is_shutting_down flag is now true");
 
-                let duration = nittei_utils::config::APP_CONFIG
-                    .shutdown_timeout
-                    .unwrap_or(30);
+                let duration = nittei_utils::config::APP_CONFIG.server_shutdown_sleep;
 
                 info!("[server] Waiting {}s before stopping", duration);
 
