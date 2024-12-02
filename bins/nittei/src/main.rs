@@ -5,6 +5,8 @@ use nittei_infra::setup_context;
 use telemetry::init_subscriber;
 #[cfg(all(target_env = "musl", target_pointer_width = "64"))]
 use tikv_jemallocator::Jemalloc;
+use tokio::signal;
+use tracing::{error, info};
 
 // Use Jemalloc only for musl-64 bits platforms
 // The default MUSL allocator is known to be slower than Jemalloc
@@ -22,7 +24,27 @@ async fn main() -> anyhow::Result<()> {
     init_subscriber()?;
 
     let context = setup_context().await?;
+    let (tx, rx) = tokio::sync::oneshot::channel::<()>();
 
     let app = Application::new(context).await?;
-    app.start().await
+
+    // Listen for SIGINT (Ctrl+C) to shutdown the service
+    // This sends a message on the channel to shutdown the server gracefully
+    // By doing so, it makes the app return failed status on the status API endpoint (useful for k8s)
+    // It waits for a configurable amount of seconds (in order for the readiness probe to fail)
+    // And then waits for the server to finish processing the current requests before shutting down
+    tokio::spawn(async move {
+        if let Err(e) = signal::ctrl_c().await {
+            error!("[main] Failed to listen for SIGINT: {}", e);
+        }
+        info!("[shutdown] Received SIGINT, sending event on channel...");
+        let _ = tx.send(());
+    });
+
+    // Start the application and block until it finishes
+    app.start(rx).await?;
+
+    info!("[shutdown] shutdown complete");
+
+    Ok(())
 }
