@@ -147,7 +147,7 @@ async fn create_event_reminders(
 }
 
 #[async_trait::async_trait(?Send)]
-impl<'a> UseCase for SyncEventRemindersUseCase<'a> {
+impl UseCase for SyncEventRemindersUseCase<'_> {
     type Response = ();
 
     type Error = UseCaseError;

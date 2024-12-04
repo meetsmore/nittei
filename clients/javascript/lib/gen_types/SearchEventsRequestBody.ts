@@ -22,6 +22,10 @@ export type SearchEventsRequestBody = {
    */
   parentId?: IDQuery
   /**
+   * Optional query on group ID
+   */
+  groupId?: IDQuery
+  /**
    * Optional query on start time - "lower than or equal", or "great than or equal" (UTC)
    */
   startTime?: DateTimeQuery

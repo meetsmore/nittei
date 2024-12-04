@@ -1,75 +1,15 @@
 mod postgres;
 
-use chrono::{DateTime, Utc};
-use nittei_domain::{CalendarEvent, DateTimeQuery, IDQuery, TimeSpan, ID};
-pub use postgres::PostgresEventRepo;
-
-use crate::repos::shared::query_structs::MetadataFindQuery;
-
-#[derive(Debug)]
-pub struct MostRecentCreatedServiceEvents {
-    pub user_id: ID,
-    pub created: Option<i64>,
-}
-
-pub struct SearchEventsParams {
-    pub user_id: ID,
-    pub calendar_ids: Option<Vec<ID>>,
-    pub parent_id: Option<IDQuery>,
-    pub group_id: Option<IDQuery>,
-    pub start_time: Option<DateTimeQuery>,
-    pub end_time: Option<DateTimeQuery>,
-    pub status: Option<Vec<String>>,
-    pub updated_at: Option<DateTimeQuery>,
-    pub metadata: Option<serde_json::Value>,
-}
+use nittei_domain::{event_group::EventGroup, ID};
+pub use postgres::PostgresEventGroupRepo;
 
 #[async_trait::async_trait]
-pub trait IEventRepo: Send + Sync {
-    async fn insert(&self, e: &CalendarEvent) -> anyhow::Result<()>;
-    async fn save(&self, e: &CalendarEvent) -> anyhow::Result<()>;
-    async fn find(&self, event_id: &ID) -> anyhow::Result<Option<CalendarEvent>>;
-    async fn get_by_external_id(&self, external_id: &str) -> anyhow::Result<Option<CalendarEvent>>;
-    async fn find_many(&self, event_ids: &[ID]) -> anyhow::Result<Vec<CalendarEvent>>;
-    async fn find_by_calendar(
-        &self,
-        calendar_id: &ID,
-        timespan: Option<&TimeSpan>,
-    ) -> anyhow::Result<Vec<CalendarEvent>>;
-    async fn find_by_calendars(
-        &self,
-        calendar_ids: Vec<ID>,
-        timespan: &TimeSpan,
-    ) -> anyhow::Result<Vec<CalendarEvent>>;
-    async fn search_events(
-        &self,
-        search_events_params: SearchEventsParams,
-    ) -> anyhow::Result<Vec<CalendarEvent>>;
-    async fn find_most_recently_created_service_events(
-        &self,
-        service_id: &ID,
-        user_ids: &[ID],
-    ) -> anyhow::Result<Vec<MostRecentCreatedServiceEvents>>;
-    async fn find_by_service(
-        &self,
-        service_id: &ID,
-        user_ids: &[ID],
-        min_time: DateTime<Utc>,
-        max_time: DateTime<Utc>,
-    ) -> anyhow::Result<Vec<CalendarEvent>>;
-    async fn find_user_service_events(
-        &self,
-        user_id: &ID,
-        busy: bool,
-        min_time: DateTime<Utc>,
-        max_time: DateTime<Utc>,
-    ) -> anyhow::Result<Vec<CalendarEvent>>;
-    async fn delete(&self, event_id: &ID) -> anyhow::Result<()>;
-    async fn delete_by_service(&self, service_id: &ID) -> anyhow::Result<()>;
-    async fn find_by_metadata(
-        &self,
-        query: MetadataFindQuery,
-    ) -> anyhow::Result<Vec<CalendarEvent>>;
+pub trait IEventGroupRepo: Send + Sync {
+    async fn insert(&self, e: &EventGroup) -> anyhow::Result<()>;
+    async fn save(&self, e: &EventGroup) -> anyhow::Result<()>;
+    async fn find(&self, group_id: &ID) -> anyhow::Result<Option<EventGroup>>;
+    async fn get_by_external_id(&self, external_id: &str) -> anyhow::Result<Option<EventGroup>>;
+    async fn delete(&self, group_id: &ID) -> anyhow::Result<()>;
 }
 
 #[cfg(test)]
