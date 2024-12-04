@@ -73,6 +73,7 @@ pub struct CalendarEvent {
     pub account_id: ID,
     pub reminders: Vec<CalendarEventReminder>,
     pub service_id: Option<ID>,
+    pub group_id: Option<ID>,
     pub metadata: Option<serde_json::Value>,
 }
 
