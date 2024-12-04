@@ -312,7 +312,7 @@ impl<'de> Deserialize<'de> for WeekDayRecurrence {
     {
         struct WeekDayVisitor;
 
-        impl<'de> Visitor<'de> for WeekDayVisitor {
+        impl Visitor<'_> for WeekDayVisitor {
             type Value = WeekDayRecurrence;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
