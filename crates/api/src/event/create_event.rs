@@ -183,6 +183,7 @@ impl UseCase for CreateEventUseCase {
             account_id: self.user.account_id.clone(),
             reminders: self.reminders.clone(),
             service_id: self.service_id.clone(),
+            group_id: None,
             metadata: self.metadata.clone(),
         };
 

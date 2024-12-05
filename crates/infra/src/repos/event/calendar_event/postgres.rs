@@ -63,6 +63,7 @@ struct EventRaw {
     exdates: Vec<DateTime<Utc>>,
     reminders: Option<Value>,
     service_uid: Option<Uuid>,
+    group_uid: Option<Uuid>,
     metadata: Value,
 }
 
@@ -101,6 +102,7 @@ impl TryFrom<EventRaw> for CalendarEvent {
             exdates: e.exdates,
             reminders,
             service_id: e.service_uid.map(|id| id.into()),
+            group_id: e.group_uid.map(|id| id.into()),
             metadata: serde_json::from_value(e.metadata)?,
         })
     }

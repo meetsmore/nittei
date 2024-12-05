@@ -102,6 +102,11 @@
         "ordinal": 19,
         "name": "external_id",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 20,
+        "name": "group_uid",
+        "type_info": "Uuid"
       }
     ],
     "parameters": {
@@ -129,6 +134,7 @@
       true,
       true,
       false,
+      true,
       true
     ]
   },

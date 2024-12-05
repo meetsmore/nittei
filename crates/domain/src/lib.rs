@@ -3,6 +3,7 @@ pub mod booking_slots;
 mod calendar;
 mod date;
 mod event;
+pub mod event_group;
 mod event_instance;
 pub mod providers;
 mod reminder;
