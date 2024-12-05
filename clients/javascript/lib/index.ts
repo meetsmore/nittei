@@ -82,6 +82,10 @@ export const NitteiUserClient = (
     service: new NitteiServiceUserClient(axiosClient),
     schedule: new NitteiScheduleUserClient(axiosClient),
     user: new NitteiUserUserClient(axiosClient),
+    // Axios client exposed so that the user can use it
+    // - For adding interceptors
+    // - For making custom requests
+    axiosClient,
   })
 }
 
@@ -110,6 +114,10 @@ export const NitteiClient = async (
     service: new NitteiServiceClient(axiosClient),
     schedule: new NitteiScheduleClient(axiosClient),
     health: new NitteiHealthClient(axiosClient),
+    // Axios client exposed so that the user can use it
+    // - For adding interceptors
+    // - For making custom requests
+    axiosClient,
   })
 }
 
