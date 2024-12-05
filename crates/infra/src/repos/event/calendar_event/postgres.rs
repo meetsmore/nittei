@@ -40,7 +40,7 @@ impl From<MostRecentCreatedServiceEventsRaw> for MostRecentCreatedServiceEvents 
     }
 }
 
-#[derive(Debug, FromRow)]
+#[derive(Debug, FromRow, Clone)]
 struct EventRaw {
     event_uid: Uuid,
     calendar_uid: Uuid,
@@ -135,9 +135,10 @@ impl IEventRepo for PostgresEventRepo {
                 exdates,
                 reminders,
                 service_uid,
+                group_uid,
                 metadata
             )
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
             "#,
             e.id.as_ref(),
             e.calendar_id.as_ref(),
@@ -158,6 +159,7 @@ impl IEventRepo for PostgresEventRepo {
             &e.exdates,
             Json(&e.reminders) as _,
             e.service_id.as_ref().map(|id| id.as_ref()),
+            e.group_id.as_ref().map(|id| id.as_ref()),
             Json(&e.metadata) as _,
         )
         .execute(&self.pool)
@@ -195,7 +197,8 @@ impl IEventRepo for PostgresEventRepo {
                 exdates = $16,
                 reminders = $17,
                 service_uid = $18,
-                metadata = $19
+                group_uid = $19,
+                metadata = $20
             WHERE event_uid = $1
             "#,
             e.id.as_ref(),
@@ -216,6 +219,7 @@ impl IEventRepo for PostgresEventRepo {
             &e.exdates,
             Json(&e.reminders) as _,
             e.service_id.as_ref().map(|id| id.as_ref()),
+            e.group_id.as_ref().map(|id| id.as_ref()),
             Json(&e.metadata) as _,
         )
         .execute(&self.pool)
@@ -440,7 +444,7 @@ impl IEventRepo for PostgresEventRepo {
 
         if let Some(parent_id) = search_events_params.parent_id {
             if let Some(eq) = parent_id.eq {
-                query.push(" AND e.parent_id =");
+                query.push(" AND e.parent_id = ");
                 query.push_bind(eq.to_string());
             } else if let Some(exists) = parent_id.exists {
                 if exists {
@@ -452,16 +456,8 @@ impl IEventRepo for PostgresEventRepo {
         }
 
         if let Some(group_id) = search_events_params.group_id {
-            if let Some(eq) = group_id.eq {
-                query.push(" AND e.group_id =");
-                query.push_bind(eq.to_string());
-            } else if let Some(exists) = group_id.exists {
-                if exists {
-                    query.push(" AND e.group_id IS NOT NULL");
-                } else {
-                    query.push(" AND e.group_id IS NULL");
-                };
-            };
+            query.push(" AND e.group_uid = ");
+            query.push_bind::<Uuid>(group_id.into());
         }
 
         if let Some(start_time) = search_events_params.start_time {

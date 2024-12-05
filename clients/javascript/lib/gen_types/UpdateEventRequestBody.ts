@@ -63,6 +63,12 @@ export type UpdateEventRequestBody = {
    */
   serviceId?: ID
   /**
+   * Optional group UUID
+   * Allows to group events together (e.g. a project, a team, etc.)
+   * Default is None
+   */
+  groupId?: ID
+  /**
    * Optional list of exclusion dates for the recurrence rule
    */
   exdates?: Array<Date>

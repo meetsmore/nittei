@@ -115,6 +115,13 @@ pub mod create_event {
         #[ts(optional)]
         pub service_id: Option<ID>,
 
+        /// Optional group UUID
+        /// Allows to group events together (e.g. a project, a team, etc.)
+        /// Default is None
+        #[serde(default)]
+        #[ts(optional)]
+        pub group_id: Option<ID>,
+
         /// Optional metadata (e.g. {"key": "value"})
         #[serde(default)]
         #[ts(optional)]
@@ -270,7 +277,7 @@ pub mod search_events {
 
         /// Optional query on group ID
         #[ts(optional)]
-        pub group_id: Option<IDQuery>,
+        pub group_id: Option<ID>,
 
         /// Optional query on start time - "lower than or equal", or "great than or equal" (UTC)
         #[ts(optional)]
@@ -420,6 +427,13 @@ pub mod update_event {
         #[serde(default)]
         #[ts(optional)]
         pub service_id: Option<ID>,
+
+        /// Optional group UUID
+        /// Allows to group events together (e.g. a project, a team, etc.)
+        /// Default is None
+        #[serde(default)]
+        #[ts(optional)]
+        pub group_id: Option<ID>,
 
         /// Optional list of exclusion dates for the recurrence rule
         #[serde(default)]

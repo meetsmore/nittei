@@ -132,6 +132,8 @@ impl CalendarEventClient {
             recurrence: input.recurrence,
             reminders: input.reminders,
             service_id: input.service_id,
+            // TODO
+            group_id: None,
             metadata: input.metadata,
         };
 
@@ -168,12 +170,14 @@ impl CalendarEventClient {
             parent_id: input.parent_id,
             external_id: input.external_id,
             busy: input.busy,
+            start_time: input.start_time,
             duration: input.duration,
             exdates: input.exdates,
             recurrence: input.rrule_options,
             reminders: input.reminders,
             service_id: input.service_id,
-            start_time: input.start_time,
+            // TODO
+            group_id: None,
             metadata: input.metadata,
         };
         self.base
