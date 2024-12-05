@@ -556,6 +556,30 @@ describe('CalendarEvent API', () => {
         expect(res.events.length).toBe(1)
         expect(res.events[0].id).toBe(metadataEventId1)
       })
+
+      it('should be search events on event group id', async () => {
+        const group = await adminClient.eventGroups.create(userId, {
+          calendarId,
+        })
+
+        const resCreate = await adminClient.events.create(userId, {
+          calendarId,
+          duration: 1000,
+          startTime: new Date(1000),
+          groupId: group.eventGroup.id,
+        })
+        expect(resCreate.event).toBeDefined()
+        expect(resCreate.event.calendarId).toBe(calendarId)
+
+        const resSearch = await adminClient.events.searchEvents({
+          userId,
+          groupId: group.eventGroup.id,
+        })
+
+        expect(resSearch.events.length).toBe(1)
+        expect(resSearch.events[0].id).toBe(resCreate.event.id)
+        expect(resSearch.events[0].groupId).toBe(group.eventGroup.id)
+      })
     })
 
     afterAll(async () => {

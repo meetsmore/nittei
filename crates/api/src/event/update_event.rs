@@ -54,6 +54,7 @@ pub async fn update_event_admin_controller(
         recurrence: body.recurrence,
         busy: body.busy,
         service_id: body.service_id,
+        group_id: body.group_id,
         exdates: body.exdates,
         metadata: body.metadata,
     };
@@ -89,6 +90,7 @@ pub async fn update_event_controller(
         recurrence: body.recurrence,
         busy: body.busy,
         service_id: body.service_id,
+        group_id: body.group_id,
         exdates: body.exdates,
         metadata: body.metadata,
     };
@@ -117,6 +119,7 @@ pub struct UpdateEventUseCase {
     pub reminders: Option<Vec<CalendarEventReminder>>,
     pub recurrence: Option<RRuleOptions>,
     pub service_id: Option<ID>,
+    pub group_id: Option<ID>,
     pub exdates: Option<Vec<DateTime<Utc>>>,
     pub metadata: Option<serde_json::Value>,
 }
@@ -173,6 +176,7 @@ impl UseCase for UpdateEventUseCase {
             exdates,
             reminders,
             service_id,
+            group_id,
             metadata,
         } = self;
 
@@ -277,6 +281,10 @@ impl UseCase for UpdateEventUseCase {
 
         if external_id.is_some() {
             e.external_id.clone_from(external_id);
+        }
+
+        if group_id.is_some() {
+            e.group_id.clone_from(group_id);
         }
 
         if location.is_some() {
