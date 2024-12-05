@@ -7,6 +7,8 @@ import type { ID } from './ID'
 export type EventGroup = {
   id: ID
   calendarId: ID
+  userId: ID
+  accountId: ID
   parentId: string | null
   externalId: string | null
   eventIds: Array<ID>

@@ -268,6 +268,10 @@ pub mod search_events {
         #[ts(optional)]
         pub parent_id: Option<IDQuery>,
 
+        /// Optional query on group ID
+        #[ts(optional)]
+        pub group_id: Option<IDQuery>,
+
         /// Optional query on start time - "lower than or equal", or "great than or equal" (UTC)
         #[ts(optional)]
         pub start_time: Option<DateTimeQuery>,

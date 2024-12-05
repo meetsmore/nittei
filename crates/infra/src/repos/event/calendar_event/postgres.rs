@@ -451,6 +451,19 @@ impl IEventRepo for PostgresEventRepo {
             };
         }
 
+        if let Some(group_id) = search_events_params.group_id {
+            if let Some(eq) = group_id.eq {
+                query.push(" AND e.group_id =");
+                query.push_bind(eq.to_string());
+            } else if let Some(exists) = group_id.exists {
+                if exists {
+                    query.push(" AND e.group_id IS NOT NULL");
+                } else {
+                    query.push(" AND e.group_id IS NULL");
+                };
+            };
+        }
+
         if let Some(start_time) = search_events_params.start_time {
             if let Some(gte) = start_time.gte {
                 query.push(" AND e.start_time >= ");

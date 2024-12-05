@@ -24,6 +24,7 @@ pub async fn search_events_controller(
         user_id: body.user_id,
         calendar_ids: body.calendar_ids,
         parent_id: body.parent_id,
+        group_id: body.group_id,
         start_time: body.start_time,
         end_time: body.end_time,
         status: body.status,
@@ -51,6 +52,9 @@ pub struct SearchEventsUseCase {
 
     /// Optional query on parent ID
     pub parent_id: Option<IDQuery>,
+
+    /// Optional query on the group ID
+    pub group_id: Option<IDQuery>,
 
     /// Optional query on start time - "lower than or equal", or "great than or equal" (UTC)
     pub start_time: Option<DateTimeQuery>,
@@ -141,6 +145,7 @@ impl UseCase for SearchEventsUseCase {
                 user_id: self.user_id.clone(),
                 calendar_ids: self.calendar_ids.clone(),
                 parent_id: self.parent_id.clone(),
+                group_id: self.group_id.clone(),
                 start_time: self.start_time.clone(),
                 end_time: self.end_time.clone(),
                 status: self.status.clone(),

@@ -16,6 +16,7 @@ pub struct SearchEventsParams {
     pub user_id: ID,
     pub calendar_ids: Option<Vec<ID>>,
     pub parent_id: Option<IDQuery>,
+    pub group_id: Option<IDQuery>,
     pub start_time: Option<DateTimeQuery>,
     pub end_time: Option<DateTimeQuery>,
     pub status: Option<Vec<String>>,
