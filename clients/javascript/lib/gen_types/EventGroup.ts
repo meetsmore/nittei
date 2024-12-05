@@ -5,11 +5,34 @@ import type { ID } from './ID'
  * Group of calendar events
  */
 export type EventGroup = {
+  /**
+   * Unique ID
+   */
   id: ID
+  /**
+   * Calendar ID to which the group belongs
+   */
   calendarId: ID
+  /**
+   * User ID
+   */
   userId: ID
+  /**
+   * Account ID
+   */
   accountId: ID
+  /**
+   * Parent ID - this is an ID external to the system
+   * It allows to link groups of events together to an outside entity
+   */
   parentId: string | null
+  /**
+   * External ID - this is an ID external to the system
+   * It allows to link a group of events to an outside entity
+   */
   externalId: string | null
+  /**
+   * List of event IDs in the group
+   */
   eventIds: Array<ID>
 }
