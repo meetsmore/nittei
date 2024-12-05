@@ -6,7 +6,7 @@ use nittei_infra::NitteiContext;
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_event, protect_account_route},
+        auth::{account_can_modify_event_group, protect_account_route},
         usecase::{execute, UseCase},
     },
 };
@@ -17,7 +17,7 @@ pub async fn get_event_group_admin_controller(
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
-    let e = account_can_modify_event(&account, &path_params.event_group_id, &ctx).await?;
+    let e = account_can_modify_event_group(&account, &path_params.event_group_id, &ctx).await?;
 
     let usecase = GetEventGroupUseCase {
         user_id: e.user_id,
