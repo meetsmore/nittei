@@ -7,6 +7,15 @@ FROM messense/rust-musl-cross:${ARCH}-musl AS builder
 
 ARG ARCH=x86_64
 ARG APP_NAME=nittei
+ARG RUST_VERSION=1.83.0
+# Install and set the specific Rust version
+RUN rustup install ${RUST_VERSION} && rustup default ${RUST_VERSION}
+
+# Install the musl target for the correct architecture
+RUN rustup target add ${ARCH}-unknown-linux-musl
+
+# Verify the Rust and target setup
+RUN rustc --version && rustup show
 
 # Copy source code from previous stage
 COPY . .
