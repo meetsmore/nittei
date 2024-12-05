@@ -82,6 +82,10 @@ export type CalendarEventDTO = {
    */
   userId: ID
   /**
+   * Optional group ID
+   */
+  groupId: ID | null
+  /**
    * List of reminders
    */
   reminders: Array<CalendarEventReminder>

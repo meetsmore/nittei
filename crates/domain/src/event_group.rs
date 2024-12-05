@@ -27,7 +27,4 @@ pub struct EventGroup {
     /// External ID - this is an ID external to the system
     /// It allows to link a group of events to an outside entity
     pub external_id: Option<String>,
-
-    /// List of event IDs in the group
-    pub event_ids: Vec<ID>,
 }
