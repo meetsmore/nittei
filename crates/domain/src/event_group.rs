@@ -4,7 +4,7 @@ use ts_rs::TS;
 use crate::ID;
 
 /// Group of calendar events
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, TS)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct EventGroup {
