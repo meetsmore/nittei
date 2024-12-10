@@ -54,7 +54,7 @@ pub struct SearchEventsUseCase {
     pub parent_id: Option<IDQuery>,
 
     /// Optional query on the group ID
-    pub group_id: Option<IDQuery>,
+    pub group_id: Option<ID>,
 
     /// Optional query on start time - "lower than or equal", or "great than or equal" (UTC)
     pub start_time: Option<DateTimeQuery>,
@@ -143,14 +143,14 @@ impl UseCase for SearchEventsUseCase {
             .events
             .search_events(SearchEventsParams {
                 user_id: self.user_id.clone(),
-                calendar_ids: self.calendar_ids.clone(),
-                parent_id: self.parent_id.clone(),
-                group_id: self.group_id.clone(),
-                start_time: self.start_time.clone(),
-                end_time: self.end_time.clone(),
-                status: self.status.clone(),
-                updated_at: self.updated_at.clone(),
-                metadata: self.metadata.clone(),
+                calendar_ids: self.calendar_ids.take(),
+                parent_id: self.parent_id.take(),
+                group_id: self.group_id.take(),
+                start_time: self.start_time.take(),
+                end_time: self.end_time.take(),
+                status: self.status.take(),
+                updated_at: self.updated_at.take(),
+                metadata: self.metadata.take(),
             })
             .await;
 
