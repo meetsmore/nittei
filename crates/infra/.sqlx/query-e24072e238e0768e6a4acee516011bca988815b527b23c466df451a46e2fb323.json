@@ -105,11 +105,16 @@
       },
       {
         "ordinal": 20,
-        "name": "user_uid",
+        "name": "group_uid",
         "type_info": "Uuid"
       },
       {
         "ordinal": 21,
+        "name": "user_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 22,
         "name": "account_uid",
         "type_info": "Uuid"
       }
@@ -141,6 +146,7 @@
       true,
       true,
       false,
+      true,
       true,
       false,
       false
