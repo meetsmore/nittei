@@ -110,24 +110,3 @@ impl UseCase for UpdateEventGroupUseCase {
             .map_err(|_| UseCaseError::StorageError)
     }
 }
-
-// #[cfg(test)]
-// mod test {
-//     use nittei_infra::setup_context;
-
-//     use super::*;
-
-//     #[actix_web::main]
-//     #[test]
-//     async fn update_nonexisting_event() {
-//         let mut usecase = UpdateEventGroupUseCase {
-//             start_time: Some(DateTime::from_timestamp_millis(500).unwrap()),
-//             duration: Some(800),
-//             busy: Some(false),
-//             ..Default::default()
-//         };
-//         let ctx = setup_context().await.unwrap();
-//         let res = usecase.execute(&ctx).await;
-//         assert!(res.is_err());
-//     }
-// }
