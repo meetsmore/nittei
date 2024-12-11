@@ -31,8 +31,4 @@ export type EventGroup = {
    * It allows to link a group of events to an outside entity
    */
   externalId: string | null
-  /**
-   * List of event IDs in the group
-   */
-  eventIds: Array<ID>
 }

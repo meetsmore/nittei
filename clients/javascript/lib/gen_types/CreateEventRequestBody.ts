@@ -72,6 +72,12 @@ export type CreateEventRequestBody = {
    */
   serviceId?: ID
   /**
+   * Optional group UUID
+   * Allows to group events together (e.g. a project, a team, etc.)
+   * Default is None
+   */
+  groupId?: ID
+  /**
    * Optional metadata (e.g. {"key": "value"})
    */
   metadata?: JsonValue

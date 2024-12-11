@@ -93,7 +93,6 @@ impl UseCase for CreateEventGroupUseCase {
             calendar_id: calendar.id.clone(),
             user_id: self.user.id.clone(),
             account_id: self.user.account_id.clone(),
-            event_ids: vec![],
         };
 
         ctx.repos.event_groups.insert(&g).await?;

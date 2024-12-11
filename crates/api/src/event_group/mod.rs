@@ -15,7 +15,7 @@ use update_event_group::update_event_group_admin_controller;
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     // Create an event group for a user (admin route)
     cfg.route(
-        "/user/{user_id}/event_group",
+        "/user/{user_id}/event_groups",
         web::post().to(create_event_group_admin_controller),
     );
 
@@ -33,7 +33,7 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
 
     // Update an event group by uid (admin route)
     cfg.route(
-        "/user/event_grups/{event_group_id}",
+        "/user/event_groups/{event_group_id}",
         web::put().to(update_event_group_admin_controller),
     );
 
