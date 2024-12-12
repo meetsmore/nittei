@@ -8,6 +8,7 @@ import {
   NitteiCalendarUserClient,
 } from './calendarClient'
 import { NitteiEventClient, NitteiEventUserClient } from './eventClient'
+import { NitteiEventGroupClient } from './eventGroupClient'
 import { NitteiHealthClient } from './healthClient'
 import { type PartialCredentials, createCreds } from './helpers/credentials'
 import {
@@ -32,6 +33,7 @@ export interface INitteiClient {
   account: NitteiAccountClient
   calendar: NitteiCalendarClient
   events: NitteiEventClient
+  eventGroups: NitteiEventGroupClient
   health: NitteiHealthClient
   service: NitteiServiceClient
   schedule: NitteiScheduleClient
@@ -109,6 +111,7 @@ export const NitteiClient = async (
   return Object.freeze({
     account: new NitteiAccountClient(axiosClient),
     events: new NitteiEventClient(axiosClient),
+    eventGroups: new NitteiEventGroupClient(axiosClient),
     calendar: new NitteiCalendarClient(axiosClient),
     user: new _NitteiUserClient(axiosClient),
     service: new NitteiServiceClient(axiosClient),

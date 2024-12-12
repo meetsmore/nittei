@@ -47,6 +47,7 @@ pub async fn create_event_admin_controller(
         recurrence: body.recurrence,
         reminders: body.reminders,
         service_id: body.service_id,
+        group_id: body.group_id,
         metadata: body.metadata,
     };
 
@@ -80,6 +81,7 @@ pub async fn create_event_controller(
         user,
         reminders: body.reminders,
         service_id: body.service_id,
+        group_id: body.group_id,
         metadata: body.metadata,
     };
 
@@ -106,6 +108,7 @@ pub struct CreateEventUseCase {
     pub recurrence: Option<RRuleOptions>,
     pub reminders: Vec<CalendarEventReminder>,
     pub service_id: Option<ID>,
+    pub group_id: Option<ID>,
     pub metadata: Option<serde_json::Value>,
 }
 
@@ -183,7 +186,7 @@ impl UseCase for CreateEventUseCase {
             account_id: self.user.account_id.clone(),
             reminders: self.reminders.clone(),
             service_id: self.service_id.clone(),
-            group_id: None,
+            group_id: self.group_id.clone(),
             metadata: self.metadata.clone(),
         };
 

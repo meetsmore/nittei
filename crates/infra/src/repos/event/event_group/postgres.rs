@@ -34,7 +34,6 @@ impl From<EventGroupRaw> for EventGroup {
             account_id: e.account_uid,
             parent_id: e.parent_id,
             external_id: e.external_id,
-            event_ids: vec![],
         }
     }
 }

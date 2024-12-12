@@ -6,7 +6,7 @@ use nittei_infra::NitteiContext;
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_event, account_can_modify_user, protect_account_route},
+        auth::{account_can_modify_event_group, account_can_modify_user, protect_account_route},
         usecase::{execute, UseCase},
     },
 };
@@ -18,7 +18,7 @@ pub async fn update_event_group_admin_controller(
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
-    let e = account_can_modify_event(&account, &path_params.event_group_id, &ctx).await?;
+    let e = account_can_modify_event_group(&account, &path_params.event_group_id, &ctx).await?;
     let user = account_can_modify_user(&account, &e.user_id, &ctx).await?;
 
     let body = body.0;
@@ -110,3 +110,24 @@ impl UseCase for UpdateEventGroupUseCase {
             .map_err(|_| UseCaseError::StorageError)
     }
 }
+
+// #[cfg(test)]
+// mod test {
+//     use nittei_infra::setup_context;
+
+//     use super::*;
+
+//     #[actix_web::main]
+//     #[test]
+//     async fn update_nonexisting_event() {
+//         let mut usecase = UpdateEventGroupUseCase {
+//             start_time: Some(DateTime::from_timestamp_millis(500).unwrap()),
+//             duration: Some(800),
+//             busy: Some(false),
+//             ..Default::default()
+//         };
+//         let ctx = setup_context().await.unwrap();
+//         let res = usecase.execute(&ctx).await;
+//         assert!(res.is_err());
+//     }
+// }

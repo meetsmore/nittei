@@ -76,6 +76,9 @@ pub struct CalendarEventDTO {
     /// UUID of the user
     pub user_id: ID,
 
+    /// Optional group ID
+    pub group_id: Option<ID>,
+
     /// List of reminders
     pub reminders: Vec<CalendarEventReminder>,
 
@@ -105,6 +108,7 @@ impl CalendarEventDTO {
             exdates: event.exdates,
             calendar_id: event.calendar_id,
             user_id: event.user_id,
+            group_id: event.group_id,
             reminders: event.reminders,
             metadata: event.metadata,
         }
