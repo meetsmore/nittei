@@ -1,5 +1,9 @@
 mod telemetry;
 
+use axum::{
+    routing::get,
+    Router,
+};
 use nittei_api::Application;
 use nittei_infra::setup_context;
 use telemetry::init_subscriber;

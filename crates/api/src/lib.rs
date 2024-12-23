@@ -11,15 +11,13 @@ mod shared;
 mod status;
 mod user;
 
-use std::{net::TcpListener, sync::Arc};
+use std::{net::SocketAddr, sync::Arc};
 
-use actix_cors::Cors;
-use actix_web::{
-    dev::Server,
-    middleware::{self},
-    web::{self, Data},
-    App,
-    HttpServer,
+use axum::{
+    routing::get,
+    Router,
+    Server,
+    Extension,
 };
 use futures::lock::Mutex;
 use http_logger::NitteiTracingRootSpanBuilder;
@@ -33,25 +31,26 @@ use nittei_domain::{
     ID,
 };
 use nittei_infra::NitteiContext;
+use tower_http::trace::TraceLayer;
 use tracing::{error, info, warn};
-use tracing_actix_web::TracingLogger;
 
-/// Configure the Actix server API
+/// Configure the Axum server API
 /// Add all the routes to the server
-pub fn configure_server_api(cfg: &mut web::ServiceConfig) {
-    account::configure_routes(cfg);
-    calendar::configure_routes(cfg);
-    event::configure_routes(cfg);
-    event_group::configure_routes(cfg);
-    schedule::configure_routes(cfg);
-    service::configure_routes(cfg);
-    status::configure_routes(cfg);
-    user::configure_routes(cfg);
+pub fn configure_server_api() -> Router {
+    Router::new()
+        .nest("/account", account::configure_routes())
+        .nest("/calendar", calendar::configure_routes())
+        .nest("/event", event::configure_routes())
+        .nest("/event_group", event_group::configure_routes())
+        .nest("/schedule", schedule::configure_routes())
+        .nest("/service", service::configure_routes())
+        .nest("/status", status::configure_routes())
+        .nest("/user", user::configure_routes())
 }
 
 /// Struct for storing the main application state
 pub struct Application {
-    /// The Actix server instance
+    /// The Axum server instance
     server: Server,
     /// The port the server is running on
     port: u16,
@@ -103,7 +102,7 @@ impl Application {
         }
     }
 
-    /// Configure the Actix server
+    /// Configure the Axum server
     /// This function creates the server and adds all the routes to it
     ///
     /// This adds the following middleware:
@@ -118,35 +117,24 @@ impl Application {
         let address = nittei_utils::config::APP_CONFIG.http_host.clone();
         let address_and_port = format!("{}:{}", address, port);
         info!("Starting server on: {}", address_and_port);
-        let listener = TcpListener::bind(address_and_port)?;
-        let port = listener.local_addr()?.port();
+        let addr: SocketAddr = address_and_port.parse()?;
+        let port = addr.port();
 
-        let server = HttpServer::new(move || {
-            let ctx = context.clone();
-            let shared_state = shared_state.clone();
+        let app = Router::new()
+            .route("/", get(|| async { "Hello, World!" }))
+            .layer(TraceLayer::new_for_http())
+            .layer(Extension(context.clone()))
+            .layer(Extension(shared_state.clone()))
+            .nest("/api/v1", configure_server_api());
 
-            App::new()
-                .wrap(Cors::permissive())
-                .wrap(middleware::Compress::default())
-                .wrap(TracingLogger::<NitteiTracingRootSpanBuilder>::new())
-                .app_data(Data::new(ctx))
-                .app_data(Data::new(shared_state))
-                .service(web::scope("/api/v1").configure(configure_server_api))
-        })
-        // Disable signals to avoid conflicts with the signal handler
-        // This is handled by the signal handler in the binary and the `schedule_shutdown` function
-        .disable_signals()
-        // Set the shutdown timeout (time to wait for the server to finish processing requests)
-        // Default is 30 seconds
-        .shutdown_timeout(nittei_utils::config::APP_CONFIG.server_shutdown_timeout)
-        .listen(listener)?
-        .workers(4)
-        .run();
+        let server = Server::bind(&addr)
+            .serve(app.into_make_service())
+            .with_graceful_shutdown(shutdown_signal());
 
         Ok((server, port))
     }
 
-    /// Init the default account and start the Actix server
+    /// Init the default account and start the Axum server
     ///
     /// It also sets up the shutdown handler
     pub async fn start(
@@ -316,7 +304,7 @@ impl Application {
 
     /// Setup the shutdown handler
     fn setup_shutdown_handler(&self, shutdown_channel: tokio::sync::oneshot::Receiver<()>) {
-        let server_handle = self.server.handle();
+        let server_handle = self.server.clone();
         let shared_state = self.shared_state.clone();
 
         // Listen to shutdown channel
@@ -330,7 +318,7 @@ impl Application {
                 if cfg!(debug_assertions) {
                     // In debug mode, stop the server immediately
                     info!("[server] Stopping server...");
-                    server_handle.stop(true).await;
+                    server_handle.abort();
                     info!("[server] Server stopped");
                 } else {
                     // In production, do the whole graceful shutdown process
@@ -350,11 +338,16 @@ impl Application {
                     info!("[server] Stopping server...");
 
                     // Shutdown the server
-                    server_handle.stop(true).await;
+                    server_handle.abort();
 
                     info!("[server] Server stopped");
                 }
             }
         });
     }
+}
+
+async fn shutdown_signal() {
+    // Wait for the shutdown signal
+    let _ = tokio::signal::ctrl_c().await;
 }
