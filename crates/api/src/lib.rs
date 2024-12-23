@@ -13,12 +13,7 @@ mod user;
 
 use std::{net::SocketAddr, sync::Arc};
 
-use axum::{
-    routing::get,
-    Router,
-    Server,
-    Extension,
-};
+use axum::{routing::get, Extension, Router, Server};
 use futures::lock::Mutex;
 use http_logger::NitteiTracingRootSpanBuilder;
 use job_schedulers::{start_reminder_generation_job, start_send_reminders_job};

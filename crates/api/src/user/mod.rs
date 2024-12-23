@@ -11,7 +11,7 @@ mod remove_integration;
 mod update_user;
 
 use axum::{
-    routing::{get, post, put, delete},
+    routing::{delete, get, post, put},
     Router,
 };
 use create_user::create_user_controller;
@@ -43,10 +43,7 @@ pub fn configure_routes() -> Router {
         )
         // Get freebusy for multiple users
         // This is a POST route !
-        .route(
-            "/user/freebusy",
-            post(get_multiple_freebusy_controller),
-        )
+        .route("/user/freebusy", post(get_multiple_freebusy_controller))
         // Get a specific user by id
         .route("/user/:user_id", get(get_user_controller))
         // Update a specific user by id
@@ -54,16 +51,10 @@ pub fn configure_routes() -> Router {
         // Delete a specific user by id
         .route("/user/:user_id", delete(delete_user_controller))
         // Get freebusy for a specific user
-        .route(
-            "/user/:user_id/freebusy",
-            get(get_freebusy_controller),
-        )
+        .route("/user/:user_id/freebusy", get(get_freebusy_controller))
         // Oauth
         .route("/me/oauth", post(oauth_integration_controller))
-        .route(
-            "/me/oauth/:provider",
-            delete(remove_integration_controller),
-        )
+        .route("/me/oauth/:provider", delete(remove_integration_controller))
         .route(
             "/user/:user_id/oauth",
             post(oauth_integration_admin_controller),

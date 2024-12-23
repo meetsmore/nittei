@@ -1,5 +1,5 @@
 use axum::{
-    routing::{get, post, put, delete},
+    routing::{delete, get, post, put},
     Router,
 };
 
@@ -38,36 +38,75 @@ pub fn configure_routes() -> Router {
         // Create a calendar
         .route("/calendar", post(create_calendar_controller))
         // Create a calendar for a user (admin route)
-        .route("/user/:user_id/calendar", post(create_calendar_admin_controller))
+        .route(
+            "/user/:user_id/calendar",
+            post(create_calendar_admin_controller),
+        )
         // List calendars
         .route("/calendar", get(get_calendars::get_calendars_controller))
         // List calendars for a user (admin route)
-        .route("/user/:user_id/calendar", get(get_calendars::get_calendars_admin_controller))
+        .route(
+            "/user/:user_id/calendar",
+            get(get_calendars::get_calendars_admin_controller),
+        )
         // List calendars by metadata
         .route("/calendar/meta", get(get_calendars_by_meta_controller))
         // Get a specific calendar by uid
         .route("/calendar/:calendar_id", get(get_calendar_controller))
         // Get a specific calendar by uid for a user (admin route)
-        .route("/user/calendar/:calendar_id", get(get_calendar_admin_controller))
+        .route(
+            "/user/calendar/:calendar_id",
+            get(get_calendar_admin_controller),
+        )
         // Delete a calendar by uid
         .route("/calendar/:calendar_id", delete(delete_calendar_controller))
         // Delete a calendar by uid for a user (admin route)
-        .route("/user/calendar/:calendar_id", delete(delete_calendar_admin_controller))
+        .route(
+            "/user/calendar/:calendar_id",
+            delete(delete_calendar_admin_controller),
+        )
         // Update a calendar by uid
         .route("/calendar/:calendar_id", put(update_calendar_controller))
         // Update a calendar by uid for a user (admin route)
-        .route("/user/calendar/:calendar_id", put(update_calendar_admin_controller))
+        .route(
+            "/user/calendar/:calendar_id",
+            put(update_calendar_admin_controller),
+        )
         // Get events for a calendar
-        .route("/calendar/:calendar_id/events", get(get_calendar_events_controller))
+        .route(
+            "/calendar/:calendar_id/events",
+            get(get_calendar_events_controller),
+        )
         // Get events for a calendar for a user (admin route)
-        .route("/user/calendar/:calendar_id/events", get(get_calendar_events_admin_controller))
+        .route(
+            "/user/calendar/:calendar_id/events",
+            get(get_calendar_events_admin_controller),
+        )
         // Calendar providers
-        .route("/calendar/provider/google", get(get_google_calendars_controller))
-        .route("/user/:user_id/calendar/provider/google", get(get_google_calendars_admin_controller))
-        .route("/calendar/provider/outlook", get(get_outlook_calendars_controller))
-        .route("/user/:user_id/calendar/provider/outlook", get(get_outlook_calendars_admin_controller))
+        .route(
+            "/calendar/provider/google",
+            get(get_google_calendars_controller),
+        )
+        .route(
+            "/user/:user_id/calendar/provider/google",
+            get(get_google_calendars_admin_controller),
+        )
+        .route(
+            "/calendar/provider/outlook",
+            get(get_outlook_calendars_controller),
+        )
+        .route(
+            "/user/:user_id/calendar/provider/outlook",
+            get(get_outlook_calendars_admin_controller),
+        )
         // .route("/calendar/sync/", put(add_sync_calendar_controller))
-        .route("/user/:user_id/calendar/sync", put(add_sync_calendar_admin_controller))
+        .route(
+            "/user/:user_id/calendar/sync",
+            put(add_sync_calendar_admin_controller),
+        )
         // .route("/calendar/sync", delete(remove_sync_calendar_controller))
-        .route("/user/:user_id/calendar/sync", delete(remove_sync_calendar_admin_controller))
+        .route(
+            "/user/:user_id/calendar/sync",
+            delete(remove_sync_calendar_admin_controller),
+        )
 }

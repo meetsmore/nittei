@@ -1,7 +1,8 @@
+use std::sync::Arc;
+
 use axum::{extract::Extension, http::StatusCode, response::IntoResponse, routing::get, Router};
 use nittei_api_structs::get_service_health::*;
 use nittei_infra::NitteiContext;
-use std::sync::Arc;
 
 use crate::ServerSharedState;
 

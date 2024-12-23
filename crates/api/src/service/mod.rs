@@ -12,9 +12,12 @@ mod remove_user_from_service;
 mod update_service;
 mod update_service_user;
 
-use axum::{routing::get, routing::post, routing::put, routing::delete, Router};
 use add_busy_calendar::add_busy_calendar_controller;
 use add_user_to_service::add_user_to_service_controller;
+use axum::{
+    routing::{delete, get, post, put},
+    Router,
+};
 use create_service::create_service_controller;
 use create_service_event_intend::create_service_event_intend_controller;
 use delete_service::delete_service_controller;
@@ -34,12 +37,36 @@ pub fn configure_routes() -> Router {
         .route("/service/:service_id", get(get_service_controller))
         .route("/service/:service_id", put(update_service_controller))
         .route("/service/:service_id", delete(delete_service_controller))
-        .route("/service/:service_id/users", post(add_user_to_service_controller))
-        .route("/service/:service_id/users/:user_id", delete(remove_user_from_service_controller))
-        .route("/service/:service_id/users/:user_id", put(update_service_user_controller))
-        .route("/service/:service_id/users/:user_id/busy", put(add_busy_calendar_controller))
-        .route("/service/:service_id/users/:user_id/busy", delete(remove_busy_calendar_controller))
-        .route("/service/:service_id/booking", get(get_service_bookingslots_controller))
-        .route("/service/:service_id/booking-intend", post(create_service_event_intend_controller))
-        .route("/service/:service_id/booking-intend", delete(remove_service_event_intend_controller))
+        .route(
+            "/service/:service_id/users",
+            post(add_user_to_service_controller),
+        )
+        .route(
+            "/service/:service_id/users/:user_id",
+            delete(remove_user_from_service_controller),
+        )
+        .route(
+            "/service/:service_id/users/:user_id",
+            put(update_service_user_controller),
+        )
+        .route(
+            "/service/:service_id/users/:user_id/busy",
+            put(add_busy_calendar_controller),
+        )
+        .route(
+            "/service/:service_id/users/:user_id/busy",
+            delete(remove_busy_calendar_controller),
+        )
+        .route(
+            "/service/:service_id/booking",
+            get(get_service_bookingslots_controller),
+        )
+        .route(
+            "/service/:service_id/booking-intend",
+            post(create_service_event_intend_controller),
+        )
+        .route(
+            "/service/:service_id/booking-intend",
+            delete(remove_service_event_intend_controller),
+        )
 }
