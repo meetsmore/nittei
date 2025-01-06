@@ -16,15 +16,15 @@ export type CalendarEventDTO = {
   /**
    * Optional title of the event
    */
-  title: string | null
+  title?: string
   /**
    * Optional description of the event
    */
-  description: string | null
+  description?: string
   /**
    * Optional location of the event
    */
-  location: string | null
+  location?: string
   /**
    * Flag to indicate if the event is all day, default is false
    */
@@ -36,11 +36,11 @@ export type CalendarEventDTO = {
   /**
    * Optional parent event ID
    */
-  parentId: string | null
+  parentId?: string
   /**
    * Optional external ID
    */
-  externalId: string | null
+  externalId?: string
   /**
    * Start time of the event (UTC)
    */
@@ -84,7 +84,7 @@ export type CalendarEventDTO = {
   /**
    * Optional group ID
    */
-  groupId: ID | null
+  groupId?: ID
   /**
    * List of reminders
    */

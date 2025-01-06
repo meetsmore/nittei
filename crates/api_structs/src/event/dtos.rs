@@ -19,12 +19,15 @@ pub struct CalendarEventDTO {
     pub id: ID,
 
     /// Optional title of the event
+    #[ts(optional)]
     pub title: Option<String>,
 
     /// Optional description of the event
+    #[ts(optional)]
     pub description: Option<String>,
 
     /// Optional location of the event
+    #[ts(optional)]
     pub location: Option<String>,
 
     /// Flag to indicate if the event is all day, default is false
@@ -34,9 +37,11 @@ pub struct CalendarEventDTO {
     pub status: CalendarEventStatus,
 
     /// Optional parent event ID
+    #[ts(optional)]
     pub parent_id: Option<String>,
 
     /// Optional external ID
+    #[ts(optional)]
     pub external_id: Option<String>,
 
     /// Start time of the event (UTC)
@@ -77,6 +82,7 @@ pub struct CalendarEventDTO {
     pub user_id: ID,
 
     /// Optional group ID
+    #[ts(optional)]
     pub group_id: Option<ID>,
 
     /// List of reminders
