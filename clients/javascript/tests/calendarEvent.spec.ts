@@ -182,6 +182,21 @@ describe('CalendarEvent API', () => {
       expect(res.event.calendarId).toBe(calendarId)
     })
 
+    it('should be able to create event with a predefined "created" and "updated"', async () => {
+      const res = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+        created: new Date(0),
+        updated: new Date(0),
+      })
+      expect(res.event).toBeDefined()
+      expect(res.event.calendarId).toBe(calendarId)
+
+      expect(res.event.created).toEqual(new Date(0))
+      expect(res.event.updated).toEqual(new Date(0))
+    })
+
     it('should be able to update event', async () => {
       const res = await adminClient.events.create(userId, {
         calendarId,

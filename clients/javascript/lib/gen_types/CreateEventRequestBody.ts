@@ -81,4 +81,14 @@ export type CreateEventRequestBody = {
    * Optional metadata (e.g. {"key": "value"})
    */
   metadata?: JsonValue
+  /**
+   * Optional created date
+   * Defaults to the current date and time
+   */
+  created?: Date
+  /**
+   * Optional updated date
+   * Defaults to the current date and time
+   */
+  updated?: Date
 }

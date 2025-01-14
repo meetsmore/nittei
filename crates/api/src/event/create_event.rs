@@ -49,6 +49,8 @@ pub async fn create_event_admin_controller(
         service_id: body.service_id,
         group_id: body.group_id,
         metadata: body.metadata,
+        created: body.created,
+        updated: body.updated,
     };
 
     execute(usecase, &ctx)
@@ -83,6 +85,8 @@ pub async fn create_event_controller(
         service_id: body.service_id,
         group_id: body.group_id,
         metadata: body.metadata,
+        created: body.created,
+        updated: body.updated,
     };
 
     execute_with_policy(usecase, &policy, &ctx)
@@ -110,6 +114,8 @@ pub struct CreateEventUseCase {
     pub service_id: Option<ID>,
     pub group_id: Option<ID>,
     pub metadata: Option<serde_json::Value>,
+    pub created: Option<DateTime<Utc>>,
+    pub updated: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -176,8 +182,6 @@ impl UseCase for CreateEventUseCase {
             busy: self.busy,
             start_time: self.start_time,
             duration: self.duration,
-            created: ctx.sys.get_timestamp_millis(),
-            updated: ctx.sys.get_timestamp_millis(),
             recurrence: None,
             end_time: self.start_time + TimeDelta::milliseconds(self.duration), // default, if recurrence changes, this will be updated
             exdates: Vec::new(),
@@ -188,6 +192,14 @@ impl UseCase for CreateEventUseCase {
             service_id: self.service_id.clone(),
             group_id: self.group_id.clone(),
             metadata: self.metadata.clone(),
+            created: self
+                .created
+                .map(|c| c.timestamp_millis())
+                .unwrap_or(ctx.sys.get_timestamp_millis()),
+            updated: self
+                .updated
+                .map(|c| c.timestamp_millis())
+                .unwrap_or(ctx.sys.get_timestamp_millis()),
         };
 
         if let Some(rrule_opts) = self.recurrence.clone() {
