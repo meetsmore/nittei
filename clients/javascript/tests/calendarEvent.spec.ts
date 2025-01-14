@@ -193,8 +193,8 @@ describe('CalendarEvent API', () => {
       expect(res.event).toBeDefined()
       expect(res.event.calendarId).toBe(calendarId)
 
-      expect(res.event.created).toEqual(new Date(0))
-      expect(res.event.updated).toEqual(new Date(0))
+      expect(res.event.created).toEqual(new Date(0).getTime())
+      expect(res.event.updated).toEqual(new Date(0).getTime())
     })
 
     it('should be able to update event', async () => {
