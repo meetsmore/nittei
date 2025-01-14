@@ -13,8 +13,8 @@ on:
 # Taken from https://docs.docker.com/build/ci/github-actions/multi-platform/#distribute-build-across-multiple-runners
 jobs:
   build-docker:
-    # We use a custom runner for ARM64 builds (Buildjet)
-    runs-on: ${{ matrix.platform == 'linux/amd64' && 'ubuntu-latest' || 'buildjet-2vcpu-ubuntu-2204-arm' }}
+    # We use a custom runner for ARM64 builds.
+    runs-on: ${{ matrix.platform == 'linux/amd64' && 'mm-2vcpu-ubuntu-2204' || 'mm-2vcpu-ubuntu-2204-arm' }}
     strategy:
       fail-fast: false
       matrix:
@@ -83,7 +83,7 @@ jobs:
           retention-days: 1
 
   merge-docker:
-    runs-on: ubuntu-latest
+    runs-on: mm-2vcpu-ubuntu-2204
     needs:
       - build-docker
     steps:
