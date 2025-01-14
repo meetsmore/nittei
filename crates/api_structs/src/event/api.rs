@@ -126,6 +126,18 @@ pub mod create_event {
         #[serde(default)]
         #[ts(optional)]
         pub metadata: Option<serde_json::Value>,
+
+        /// Optional created date
+        /// Defaults to the current date and time
+        #[serde(default)]
+        #[ts(optional, type = "Date")]
+        pub created: Option<DateTime<Utc>>,
+
+        /// Optional updated date
+        /// Defaults to the current date and time
+        #[serde(default)]
+        #[ts(optional, type = "Date")]
+        pub updated: Option<DateTime<Utc>>,
     }
 
     pub type APIResponse = CalendarEventResponse;
