@@ -14,7 +14,7 @@ on:
 jobs:
   build-docker:
     # We use a custom runner for ARM64 builds.
-    runs-on: ${{ matrix.platform == 'linux/amd64' && 'mm-2vcpu-ubuntu-2204' || 'mm-2vcpu-ubuntu-2204-arm' }}
+    runs-on: ${{ matrix.platform == 'linux/amd64' && 'blacksmith-2vcpu-ubuntu-2204' || 'blacksmith-2vcpu-ubuntu-2204-arm' }}
     strategy:
       fail-fast: false
       matrix:
@@ -83,7 +83,7 @@ jobs:
           retention-days: 1
 
   merge-docker:
-    runs-on: mm-2vcpu-ubuntu-2204
+    runs-on: blacksmith-2vcpu-ubuntu-2204
     needs:
       - build-docker
     steps:
