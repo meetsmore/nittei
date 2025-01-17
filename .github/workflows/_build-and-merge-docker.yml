@@ -14,7 +14,7 @@ on:
 jobs:
   build-docker:
     # We use a custom runner for ARM64 builds.
-    runs-on: ${{ matrix.platform == 'linux/amd64' && 'buildjet-2vcpu-ubuntu-2204' || 'buildjet-2vcpu-ubuntu-2204-arm' }}
+    runs-on: ${{ matrix.platform == 'linux/amd64' && 'ubuntu-22.04' || 'ubuntu-22.04-arm' }}
     strategy:
       fail-fast: false
       matrix:
