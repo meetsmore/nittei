@@ -461,6 +461,16 @@ pub mod update_event {
         #[serde(default)]
         #[ts(optional)]
         pub metadata: Option<serde_json::Value>,
+
+        /// Optional created date to use to replace the current one
+        #[serde(default)]
+        #[ts(optional, type = "Date")]
+        pub created: Option<DateTime<Utc>>,
+
+        /// Optional updated date to use to replace the current one
+        #[serde(default)]
+        #[ts(optional, type = "Date")]
+        pub updated: Option<DateTime<Utc>>,
     }
 
     #[derive(Deserialize)]
