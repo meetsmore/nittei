@@ -181,6 +181,8 @@ impl CalendarEventClient {
             // TODO
             group_id: None,
             metadata: input.metadata,
+            created: None,
+            updated: None,
         };
         self.base
             .put(body, format!("user/events/{}", event_id), StatusCode::OK)

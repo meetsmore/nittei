@@ -80,4 +80,12 @@ export type UpdateEventRequestBody = {
    * Optional metadata (e.g. {"key": "value"})
    */
   metadata?: JsonValue
+  /**
+   * Optional created date to use to replace the current one
+   */
+  created?: Date
+  /**
+   * Optional updated date to use to replace the current one
+   */
+  updated?: Date
 }

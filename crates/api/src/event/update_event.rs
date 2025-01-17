@@ -57,6 +57,8 @@ pub async fn update_event_admin_controller(
         group_id: body.group_id,
         exdates: body.exdates,
         metadata: body.metadata,
+        created: body.created,
+        updated: body.updated,
     };
 
     execute(usecase, &ctx)
@@ -93,6 +95,8 @@ pub async fn update_event_controller(
         group_id: body.group_id,
         exdates: body.exdates,
         metadata: body.metadata,
+        created: body.created,
+        updated: body.updated,
     };
 
     execute_with_policy(usecase, &policy, &ctx)
@@ -122,6 +126,8 @@ pub struct UpdateEventUseCase {
     pub group_id: Option<ID>,
     pub exdates: Option<Vec<DateTime<Utc>>>,
     pub metadata: Option<serde_json::Value>,
+    pub created: Option<DateTime<Utc>>,
+    pub updated: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug)]
@@ -178,6 +184,8 @@ impl UseCase for UpdateEventUseCase {
             service_id,
             group_id,
             metadata,
+            created,
+            updated,
         } = self;
 
         let mut e = match ctx.repos.events.find(event_id).await {
@@ -299,7 +307,15 @@ impl UseCase for UpdateEventUseCase {
             e.all_day = *all_day;
         }
 
-        e.updated = ctx.sys.get_timestamp_millis();
+        if let Some(created) = created {
+            e.created = created.timestamp_millis();
+        }
+
+        if let Some(updated) = updated {
+            e.updated = updated.timestamp_millis();
+        } else {
+            e.updated = ctx.sys.get_timestamp_millis();
+        }
 
         ctx.repos
             .events

@@ -211,11 +211,16 @@ describe('CalendarEvent API', () => {
         title: 'new title',
         startTime: new Date(2000),
         duration: 2000,
+        created: new Date(0),
+        updated: new Date(0),
       })
       expect(res2.event.title).toBe('new title')
       expect(dayjs(res2.event.startTime)).toEqual(dayjs(2000))
       expect(res2.event.duration).toEqual(2000)
       expect(dayjs(res2.event.endTime)).toEqual(dayjs(4000))
+
+      expect(res2.event.created).toEqual(new Date(0).getTime())
+      expect(res2.event.updated).toEqual(new Date(0).getTime())
     })
 
     it('should be able to query on external ID', async () => {
