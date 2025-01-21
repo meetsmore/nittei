@@ -227,15 +227,44 @@ describe('CalendarEvent API', () => {
 
     it('should be able to query on external ID', async () => {
       const externalId = crypto.randomUUID()
-      const res = await adminClient.events.create(userId, {
+      const resEvent1 = await adminClient.events.create(userId, {
         calendarId,
         duration: 1000,
         startTime: new Date(1000),
         externalId: externalId,
       })
-      const eventId = res.event.id
-      const res2 = await adminClient.events.getByExternalId(externalId)
-      expect(res2.events[0].id).toBe(eventId)
+
+      const resGroup1 = await adminClient.eventGroups.create(userId, {
+        calendarId,
+        externalId: externalId,
+      })
+
+      const resEvent2 = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+        groupId: resGroup1.eventGroup.id,
+      })
+
+      const eventId1 = resEvent1.event.id
+      const eventId2 = resEvent2.event.id
+      const resExternalId = await adminClient.events.getByExternalId(externalId)
+
+      expect(resExternalId.events).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: eventId1,
+          }),
+        ])
+      )
+
+      expect(resExternalId.events).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: eventId2,
+          }),
+        ])
+      )
     })
 
     it('should be able to query on external ID (include groups)', async () => {
