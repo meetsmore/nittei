@@ -1,4 +1,4 @@
--- Add the `group_id` column to the `calendar_events` table
+-- Add the `event_type` column to the `calendar_events` table
 ALTER TABLE
   calendar_events
 ADD
