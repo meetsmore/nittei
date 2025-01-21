@@ -53,6 +53,14 @@ pub mod create_event {
         #[validate(length(min = 1))]
         pub description: Option<String>,
 
+        /// Optional type of the event
+        /// e.g. "meeting", "reminder", "birthday"
+        /// Default is None
+        #[serde(default)]
+        #[ts(optional)]
+        #[validate(length(min = 1))]
+        pub event_type: Option<String>,
+
         /// Optional parent event ID
         /// This is useful for external applications that need to link Nittei's events to a wider data model (e.g. a project, an order, etc.)
         #[serde(default)]
@@ -386,6 +394,14 @@ pub mod update_event {
         #[ts(optional)]
         #[validate(length(min = 1))]
         pub description: Option<String>,
+
+        /// Optional type of the event
+        /// e.g. "meeting", "reminder", "birthday"
+        /// Default is None
+        #[serde(default)]
+        #[ts(optional)]
+        #[validate(length(min = 1))]
+        pub event_type: Option<String>,
 
         /// Optional parent event ID
         /// This is useful for external applications that need to link Nittei's events to a wider data model (e.g. a project, an order, etc.)

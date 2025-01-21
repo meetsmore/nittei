@@ -170,8 +170,10 @@ async fn test_collective_team_scheduling() {
             let service_event = CreateEventInput {
                 parent_id: None,
                 external_id: None,
+                group_id: None,
                 title: None,
                 description: None,
+                event_type: None,
                 location: None,
                 status: nittei_domain::CalendarEventStatus::Tentative,
                 all_day: None,

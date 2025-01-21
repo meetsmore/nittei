@@ -22,6 +22,11 @@ export type CalendarEventDTO = {
    */
   description: string | null
   /**
+   * Optional type of the event
+   * e.g. "meeting", "reminder", "birthday"
+   */
+  eventType: string | null
+  /**
    * Optional location of the event
    */
   location: string | null

@@ -177,9 +177,11 @@ describe('CalendarEvent API', () => {
         calendarId,
         duration: 1000,
         startTime: new Date(1000),
+        eventType: 'job',
       })
       expect(res.event).toBeDefined()
       expect(res.event.calendarId).toBe(calendarId)
+      expect(res.event.eventType).toBe('job')
     })
 
     it('should be able to create event with a predefined "created" and "updated"', async () => {
@@ -243,6 +245,7 @@ describe('CalendarEvent API', () => {
         calendarId,
         duration: 1000,
         startTime: new Date(1000),
+        eventType: 'job',
         externalId: externalId,
         parentId: parentId,
       })
@@ -254,9 +257,12 @@ describe('CalendarEvent API', () => {
       expect(getRes.event.externalId).toBe(externalId)
       expect(getRes.event.parentId).toBe(parentId)
 
+      expect(getRes.event.eventType).toBe('job')
+
       const externalId2 = crypto.randomUUID()
       const parentId2 = crypto.randomUUID()
       const res2 = await adminClient.events.update(eventId, {
+        eventType: 'block',
         parentId: parentId2,
         externalId: externalId2,
       })
@@ -266,6 +272,7 @@ describe('CalendarEvent API', () => {
       const getRes2 = await adminClient.events.getByExternalId(externalId2)
       expect(getRes2.event.externalId).toBe(externalId2)
       expect(getRes2.event.parentId).toBe(parentId2)
+      expect(getRes2.event.eventType).toBe('block')
     })
 
     it('should not overwrite externalId and parentId when updating event', async () => {

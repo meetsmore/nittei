@@ -188,8 +188,10 @@ async fn test_group_team_scheduling() {
                 let service_event = CreateEventInput {
                     parent_id: None,
                     external_id: None,
+                    group_id: None,
                     title: None,
                     description: None,
+                    event_type: None,
                     location: None,
                     status: nittei_domain::CalendarEventStatus::Tentative,
                     all_day: None,
@@ -521,8 +523,10 @@ async fn test_group_team_scheduling_increase_max_count() {
         let service_event = CreateEventInput {
             parent_id: None,
             external_id: None,
+            group_id: None,
             title: None,
             description: None,
+            event_type: None,
             location: None,
             status: nittei_domain::CalendarEventStatus::Tentative,
             all_day: None,
@@ -951,8 +955,10 @@ async fn test_group_team_scheduling_decrease_max_count() {
         let service_event = CreateEventInput {
             parent_id: None,
             external_id: None,
+            group_id: None,
             title: None,
             description: None,
+            event_type: None,
             location: None,
             status: nittei_domain::CalendarEventStatus::Tentative,
             all_day: None,
@@ -1163,8 +1169,10 @@ async fn test_combination_of_services() {
     let service_event = CreateEventInput {
         parent_id: None,
         external_id: None,
+        group_id: None,
         title: None,
         description: None,
+        event_type: None,
         location: None,
         status: nittei_domain::CalendarEventStatus::Tentative,
         all_day: None,
