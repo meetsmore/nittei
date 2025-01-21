@@ -43,6 +43,7 @@ pub async fn update_event_admin_controller(
         event_id: e.id,
         title: body.title,
         description: body.description,
+        event_type: body.event_type,
         parent_id: body.parent_id,
         external_id: body.external_id,
         location: body.location,
@@ -81,6 +82,7 @@ pub async fn update_event_controller(
         event_id: path_params.event_id.clone(),
         title: body.title,
         description: body.description,
+        event_type: body.event_type,
         parent_id: body.parent_id,
         external_id: body.external_id,
         location: body.location,
@@ -112,6 +114,7 @@ pub struct UpdateEventUseCase {
 
     pub title: Option<String>,
     pub description: Option<String>,
+    pub event_type: Option<String>,
     pub parent_id: Option<String>,
     pub external_id: Option<String>,
     pub location: Option<String>,
@@ -170,6 +173,7 @@ impl UseCase for UpdateEventUseCase {
             event_id,
             title,
             description,
+            event_type,
             parent_id,
             external_id,
             location,
@@ -281,6 +285,10 @@ impl UseCase for UpdateEventUseCase {
 
         if description.is_some() {
             e.description.clone_from(description);
+        }
+
+        if event_type.is_some() {
+            e.event_type.clone_from(event_type);
         }
 
         if parent_id.is_some() {
