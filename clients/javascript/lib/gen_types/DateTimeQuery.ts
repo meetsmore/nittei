@@ -5,6 +5,10 @@
  */
 export type DateTimeQuery = {
   /**
+   * Optional "equal" query (UTC)
+   */
+  eq?: Date
+  /**
    * Optional "greater than or equal" query (UTC)
    */
   gte?: Date
@@ -12,4 +16,14 @@ export type DateTimeQuery = {
    * Optional "less than or equal" query (UTC)
    */
   lte?: Date
+  /**
+   * Optional "greater than" query (UTC)
+   * This is exclusive of the value
+   */
+  gt?: Date
+  /**
+   * Optional "less than" query (UTC)
+   * This is exclusive of the value
+   */
+  lt?: Date
 }

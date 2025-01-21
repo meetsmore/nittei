@@ -35,9 +35,9 @@ pub fn apply_id_query(
             query_builder.push_bind::<Uuid>(ne_query.clone().into());
         } else if let Some(exists_query) = id_query.exists {
             if exists_query {
-                query_builder.push(format!(" AND e.{} IS NOT NULL", field_name));
+                query_builder.push(format!(" AND e.{} IS NOT NULL ", field_name));
             } else {
-                query_builder.push(format!(" AND e.{} IS NULL", field_name));
+                query_builder.push(format!(" AND e.{} IS NULL ", field_name));
             };
         } else if let Some(in_query) = &id_query.r#in {
             query_builder.push(format!(" AND e.{} IN (", field_name));
@@ -74,9 +74,9 @@ pub fn apply_string_query(
             query_builder.push_bind(ne_query.clone());
         } else if let Some(exists_query) = string_query.exists {
             if exists_query {
-                query_builder.push(format!(" AND e.{} IS NOT NULL", field_name));
+                query_builder.push(format!(" AND e.{} IS NOT NULL ", field_name));
             } else {
-                query_builder.push(format!(" AND e.{} IS NULL", field_name));
+                query_builder.push(format!(" AND e.{} IS NULL ", field_name));
             };
         } else if let Some(in_query) = &string_query.r#in {
             query_builder.push(format!(" AND e.{} IN (", field_name));
@@ -103,28 +103,49 @@ pub fn apply_datetime_query(
     query_builder: &mut sqlx::QueryBuilder<'_, Postgres>,
     field_name: &str,
     datetime_query: &Option<DateTimeQuery>,
+    convert_to_millis: bool,
 ) {
     if let Some(datetime_query) = datetime_query {
         if let Some(eq_query) = &datetime_query.eq {
             query_builder.push(format!(" AND e.{} = ", field_name));
-            query_builder.push_bind(*eq_query);
+            if convert_to_millis {
+                query_builder.push_bind(eq_query.timestamp_millis());
+            } else {
+                query_builder.push_bind(*eq_query);
+            };
         } else {
             // Greater than or equal, or greater than
             if let Some(gte_query) = &datetime_query.gte {
                 query_builder.push(format!(" AND e.{} >= ", field_name));
-                query_builder.push_bind(*gte_query);
+                if convert_to_millis {
+                    query_builder.push_bind(gte_query.timestamp_millis());
+                } else {
+                    query_builder.push_bind(*gte_query);
+                };
             } else if let Some(gt_query) = &datetime_query.gt {
                 query_builder.push(format!(" AND e.{} > ", field_name));
-                query_builder.push_bind(*gt_query);
+                if convert_to_millis {
+                    query_builder.push_bind(gt_query.timestamp_millis());
+                } else {
+                    query_builder.push_bind(*gt_query);
+                };
             }
 
             // Less than or equal, or less than
             if let Some(lte_query) = &datetime_query.lte {
                 query_builder.push(format!(" AND e.{} <= ", field_name));
-                query_builder.push_bind(*lte_query);
+                if convert_to_millis {
+                    query_builder.push_bind(lte_query.timestamp_millis());
+                } else {
+                    query_builder.push_bind(*lte_query);
+                };
             } else if let Some(lt_query) = &datetime_query.lt {
                 query_builder.push(format!(" AND e.{} < ", field_name));
-                query_builder.push_bind(*lt_query);
+                if convert_to_millis {
+                    query_builder.push_bind(lt_query.timestamp_millis());
+                } else {
+                    query_builder.push_bind(*lt_query);
+                };
             };
         }
     }

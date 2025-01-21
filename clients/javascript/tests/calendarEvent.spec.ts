@@ -478,7 +478,9 @@ describe('CalendarEvent API', () => {
       it('should be able to search for events (status)', async () => {
         const res = await adminClient.events.searchEvents({
           userId: userId,
-          status: ['tentative'],
+          status: {
+            in: ['tentative'],
+          },
         })
         expect(res.events.length).toBe(2)
       })
@@ -486,7 +488,9 @@ describe('CalendarEvent API', () => {
       it('should be able to search for events (multiple status)', async () => {
         const res = await adminClient.events.searchEvents({
           userId: userId,
-          status: ['confirmed', 'tentative'],
+          status: {
+            in: ['confirmed', 'tentative'],
+          },
         })
         expect(res.events.length).toBe(3)
       })
@@ -600,7 +604,9 @@ describe('CalendarEvent API', () => {
 
         const resSearch = await adminClient.events.searchEvents({
           userId,
-          groupId: group.eventGroup.id,
+          groupId: {
+            eq: group.eventGroup.id,
+          },
         })
 
         expect(resSearch.events.length).toBe(1)

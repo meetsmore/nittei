@@ -466,7 +466,7 @@ impl IEventRepo for PostgresEventRepo {
 
         apply_id_query(
             &mut query,
-            "group_uuid",
+            "group_uid",
             &params.search_events_params.group_id,
         );
 
@@ -474,12 +474,14 @@ impl IEventRepo for PostgresEventRepo {
             &mut query,
             "start_time",
             &params.search_events_params.start_time,
+            false,
         );
 
         apply_datetime_query(
             &mut query,
             "end_time",
             &params.search_events_params.end_time,
+            false,
         );
 
         apply_string_query(
@@ -492,8 +494,9 @@ impl IEventRepo for PostgresEventRepo {
 
         apply_datetime_query(
             &mut query,
-            "updated_at",
+            "updated",
             &params.search_events_params.updated_at,
+            true,
         );
 
         if let Some(metadata) = params.search_events_params.metadata {
@@ -545,7 +548,7 @@ impl IEventRepo for PostgresEventRepo {
 
         apply_id_query(
             &mut query,
-            "group_uuid",
+            "group_uid",
             &params.search_events_params.group_id,
         );
 
@@ -553,12 +556,14 @@ impl IEventRepo for PostgresEventRepo {
             &mut query,
             "start_time",
             &params.search_events_params.start_time,
+            false,
         );
 
         apply_datetime_query(
             &mut query,
             "end_time",
             &params.search_events_params.end_time,
+            false,
         );
 
         apply_string_query(
@@ -571,8 +576,9 @@ impl IEventRepo for PostgresEventRepo {
 
         apply_datetime_query(
             &mut query,
-            "updated_at",
+            "updated",
             &params.search_events_params.updated_at,
+            true,
         );
 
         if let Some(metadata) = params.search_events_params.metadata {
