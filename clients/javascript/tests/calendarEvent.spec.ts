@@ -235,7 +235,61 @@ describe('CalendarEvent API', () => {
       })
       const eventId = res.event.id
       const res2 = await adminClient.events.getByExternalId(externalId)
-      expect(res2.event.id).toBe(eventId)
+      expect(res2.events[0].id).toBe(eventId)
+    })
+
+    it('should be able to query on external ID (include groups)', async () => {
+      const resUnrelatedEvent = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+      })
+
+      const externalId = crypto.randomUUID()
+      const resEvent1 = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+        externalId: externalId,
+      })
+
+      const resGroup = await adminClient.eventGroups.create(userId, {
+        calendarId,
+        externalId: externalId,
+      })
+
+      const resEvent2 = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+        groupId: resGroup.eventGroup.id,
+      })
+      const eventId1 = resEvent1.event.id
+      const eventId2 = resEvent2.event.id
+      const resExternalId = await adminClient.events.getByExternalId(
+        externalId,
+        {
+          includeGroups: true,
+        }
+      )
+      expect(resExternalId.events).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: eventId1,
+          }),
+          expect.objectContaining({
+            id: eventId2,
+          }),
+        ])
+      )
+
+      expect(resExternalId.events).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: resUnrelatedEvent.event.id,
+          }),
+        ])
+      )
     })
 
     it('should update event (externalId and parentId)', async () => {
@@ -254,10 +308,10 @@ describe('CalendarEvent API', () => {
       expect(res.event.parentId).toBe(parentId)
 
       const getRes = await adminClient.events.getByExternalId(externalId)
-      expect(getRes.event.externalId).toBe(externalId)
-      expect(getRes.event.parentId).toBe(parentId)
+      expect(getRes.events[0].externalId).toBe(externalId)
+      expect(getRes.events[0].parentId).toBe(parentId)
 
-      expect(getRes.event.eventType).toBe('job')
+      expect(getRes.events[0].eventType).toBe('job')
 
       const externalId2 = crypto.randomUUID()
       const parentId2 = crypto.randomUUID()
@@ -270,9 +324,9 @@ describe('CalendarEvent API', () => {
       expect(res2.event.parentId).toBe(parentId2)
 
       const getRes2 = await adminClient.events.getByExternalId(externalId2)
-      expect(getRes2.event.externalId).toBe(externalId2)
-      expect(getRes2.event.parentId).toBe(parentId2)
-      expect(getRes2.event.eventType).toBe('block')
+      expect(getRes2.events[0].externalId).toBe(externalId2)
+      expect(getRes2.events[0].parentId).toBe(parentId2)
+      expect(getRes2.events[0].eventType).toBe('block')
     })
 
     it('should not overwrite externalId and parentId when updating event', async () => {
