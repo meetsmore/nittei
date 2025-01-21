@@ -40,9 +40,10 @@ pub use service::{
 pub use shared::{
     datetime_query::DateTimeQuery,
     entity::{Entity, ID},
-    id_query::IDQuery,
+    id_query::IdQuery,
     metadata::{Meta, Metadata},
     recurrence::{RRuleFrequency, RRuleOptions, WeekDayRecurrence},
+    string_query::StringQuery,
 };
 pub use timespan::TimeSpan;
 pub use user::{IntegrationProvider, User, UserIntegration};

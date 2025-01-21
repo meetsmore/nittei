@@ -145,3 +145,70 @@ pub mod remove_account_integration {
 
     pub type APIResponse = String;
 }
+
+/// Request body for searching events for a whole account (across all users)
+pub mod account_search_events {
+    use nittei_domain::{DateTimeQuery, IdQuery, StringQuery};
+    use serde::{Deserialize, Serialize};
+    use ts_rs::TS;
+    use validator::Validate;
+
+    use crate::dtos::CalendarEventDTO;
+
+    /// Request body for searching events for a whole account (across all users)
+    #[derive(Deserialize, Serialize, Validate, TS)]
+    #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "AccountSearchEventsRequestBody")]
+    pub struct RequestBody {
+        /// Optional query on user ID, or list of user IDs
+        #[ts(optional)]
+        pub user_id: Option<IdQuery>,
+
+        /// Optional query on parent ID (which is a string as it's an ID from an external system)
+        #[ts(optional)]
+        pub parent_id: Option<StringQuery>,
+
+        /// Optional query on the group ID
+        #[ts(optional)]
+        pub group_id: Option<IdQuery>,
+
+        /// Optional query on start time - e.g. "lower than or equal", or "great than or equal" (UTC)
+        #[ts(optional)]
+        pub start_time: Option<DateTimeQuery>,
+
+        /// Optional query on end time - e.g. "lower than or equal", or "great than or equal" (UTC)
+        #[ts(optional)]
+        pub end_time: Option<DateTimeQuery>,
+
+        /// Optional query on event type
+        #[ts(optional)]
+        pub event_type: Option<StringQuery>,
+
+        /// Optional query on event status
+        #[ts(optional)]
+        pub status: Option<StringQuery>,
+
+        /// Optional query on updated at - e.g. "lower than or equal", or "great than or equal" (UTC)
+        #[ts(optional)]
+        pub updated_at: Option<DateTimeQuery>,
+
+        /// Optional query on metadata
+        #[ts(optional)]
+        pub metadata: Option<serde_json::Value>,
+    }
+
+    /// API response for getting events by calendars
+    #[derive(Serialize, TS)]
+    #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "SearchEventsAPIResponse")]
+    pub struct APIResponse {
+        /// List of calendar events retrieved
+        pub events: Vec<CalendarEventDTO>,
+    }
+
+    impl APIResponse {
+        pub fn new(events: Vec<CalendarEventDTO>) -> Self {
+            Self { events }
+        }
+    }
+}
