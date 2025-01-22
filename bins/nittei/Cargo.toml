@@ -16,7 +16,9 @@ nittei_utils = { workspace = true }
 
 anyhow = "1.0"
 
-actix-web = "4.8"
+axum = "0.5"
+tower = "0.4"
+hyper = { version = "0.14", features = ["full"] }
 
 tokio = { version = "1", features = ["full"] }
 
