@@ -42,7 +42,12 @@ pub trait IEventRepo: Send + Sync {
     async fn insert(&self, e: &CalendarEvent) -> anyhow::Result<()>;
     async fn save(&self, e: &CalendarEvent) -> anyhow::Result<()>;
     async fn find(&self, event_id: &ID) -> anyhow::Result<Option<CalendarEvent>>;
-    async fn get_by_external_id(&self, external_id: &str) -> anyhow::Result<Option<CalendarEvent>>;
+    async fn get_by_external_id(
+        &self,
+        account_uid: &ID,
+        external_id: &str,
+        include_groups: bool,
+    ) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn find_many(&self, event_ids: &[ID]) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn find_by_calendar(
         &self,

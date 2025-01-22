@@ -1,6 +1,6 @@
 use actix_web::{web, HttpRequest, HttpResponse};
-use nittei_api_structs::get_event_by_external_id::*;
-use nittei_domain::{CalendarEvent, ID};
+use nittei_api_structs::{dtos::CalendarEventDTO, get_event_by_external_id::*};
+use nittei_domain::ID;
 use nittei_infra::NitteiContext;
 
 use crate::{
@@ -14,6 +14,7 @@ use crate::{
 pub async fn get_event_by_external_id_admin_controller(
     http_req: HttpRequest,
     path_params: web::Path<PathParams>,
+    query_params: web::Query<QueryParams>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
@@ -21,11 +22,12 @@ pub async fn get_event_by_external_id_admin_controller(
     let usecase = GetEventByExternalIdUseCase {
         account_id: account.id,
         external_id: path_params.external_id.clone(),
+        include_groups: query_params.include_groups,
     };
 
     execute(usecase, &ctx)
         .await
-        .map(|event| HttpResponse::Ok().json(APIResponse::new(event)))
+        .map(|events| HttpResponse::Ok().json(APIResponse::new(events)))
         .map_err(NitteiError::from)
 }
 
@@ -33,44 +35,45 @@ pub async fn get_event_by_external_id_admin_controller(
 pub struct GetEventByExternalIdUseCase {
     pub external_id: String,
     pub account_id: ID,
+    pub include_groups: Option<bool>,
 }
 
 #[derive(Debug)]
 pub enum UseCaseError {
     InternalError,
-    NotFound(String),
 }
 
 impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::InternalError => Self::InternalError,
-            UseCaseError::NotFound(external_id) => Self::NotFound(format!(
-                "The calendar event with external_id: {}, was not found.",
-                external_id
-            )),
         }
     }
 }
 
 #[async_trait::async_trait(?Send)]
 impl UseCase for GetEventByExternalIdUseCase {
-    type Response = CalendarEvent;
+    type Response = Vec<CalendarEventDTO>;
 
     type Error = UseCaseError;
 
-    const NAME: &'static str = "GetEvent";
+    const NAME: &'static str = "GetEventsByExternalId";
 
     async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
-        let e = ctx
+        let events = ctx
             .repos
             .events
-            .get_by_external_id(&self.external_id)
+            .get_by_external_id(
+                &self.account_id,
+                &self.external_id,
+                self.include_groups.unwrap_or(false),
+            )
             .await
             .map_err(|_| UseCaseError::InternalError)?;
-        match e {
-            Some(event) if event.account_id == self.account_id => Ok(event),
-            _ => Err(UseCaseError::NotFound(self.external_id.clone())),
-        }
+
+        let events_as_dto: Vec<CalendarEventDTO> =
+            events.into_iter().map(CalendarEventDTO::new).collect();
+
+        Ok(events_as_dto)
     }
 }

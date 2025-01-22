@@ -277,29 +277,66 @@ impl IEventRepo for PostgresEventRepo {
     }
 
     #[instrument]
-    async fn get_by_external_id(&self, external_id: &str) -> anyhow::Result<Option<CalendarEvent>> {
-        sqlx::query_as!(
-            EventRaw,
-            r#"
+    async fn get_by_external_id(
+        &self,
+        account_uid: &ID,
+        external_id: &str,
+        include_groups: bool,
+    ) -> anyhow::Result<Vec<CalendarEvent>> {
+        if include_groups {
+            sqlx::query_as!(
+                EventRaw,
+                r#"
             SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
             INNER JOIN calendars AS c
                 ON c.calendar_uid = e.calendar_uid
             INNER JOIN users AS u
                 ON u.user_uid = c.user_uid
-            WHERE e.external_id = $1
+            LEFT JOIN events_groups AS g
+                ON g.group_uid = e.group_uid AND g.calendar_uid = e.calendar_uid
+            WHERE u.account_uid = $1
+                AND (e.external_id = $2 OR g.external_id = $2)
             "#,
-            external_id,
-        )
-        .fetch_optional(&self.pool)
-        .await
-        .inspect_err(|err| {
-            error!(
-                "Find calendar event with external_id: {:?} failed. DB returned error: {:?}",
-                external_id, err
-            );
-        })?
-        .map(|e| e.try_into())
-        .transpose()
+                account_uid.as_ref(),
+                external_id,
+            )
+            .fetch_all(&self.pool)
+            .await
+            .inspect_err(|err| {
+                error!(
+                    "Find calendar event with external_id: {:?} failed. DB returned error: {:?}",
+                    external_id, err
+                );
+            })?
+            .into_iter()
+            .map(|e| e.try_into())
+            .collect()
+        } else {
+            sqlx::query_as!(
+                EventRaw,
+                r#"
+            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+            INNER JOIN calendars AS c
+                ON c.calendar_uid = e.calendar_uid
+            INNER JOIN users AS u
+                ON u.user_uid = c.user_uid
+            WHERE u.account_uid = $1 AND e.external_id = $2
+            "#,
+                account_uid.as_ref(),
+                external_id,
+            )
+            .fetch_all(&self.pool)
+            .await
+            .inspect_err(|err| {
+                error!(
+                    "Find calendar event with external_id: {:?} failed. DB returned error: {:?}",
+                    external_id, err
+                );
+            })?
+            .into_iter()
+            .map(|e| e.try_into())
+            .collect()
+        }
     }
 
     #[instrument]
