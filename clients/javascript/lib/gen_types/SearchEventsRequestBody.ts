@@ -2,6 +2,7 @@
 import type { DateTimeQuery } from './DateTimeQuery'
 import type { ID } from './ID'
 import type { IDQuery } from './IDQuery'
+import type { StringQuery } from './StringQuery'
 import type { JsonValue } from './serde_json/JsonValue'
 
 /**
@@ -20,7 +21,7 @@ export type SearchEventsRequestBody = {
   /**
    * Optional query on parent ID (which is a string as it's an ID from an external system)
    */
-  parentId?: IDQuery
+  parentId?: StringQuery
   /**
    * Optional query on group ID
    */
@@ -36,11 +37,11 @@ export type SearchEventsRequestBody = {
   /**
    * Optional query on event type
    */
-  eventType?: IDQuery
+  eventType?: StringQuery
   /**
    * Optional query on status
    */
-  status?: IDQuery
+  status?: StringQuery
   /**
    * Optioanl query on updated at - "lower than or equal", or "great than or equal" (UTC)
    */

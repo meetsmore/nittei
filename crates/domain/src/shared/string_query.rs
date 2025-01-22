@@ -5,7 +5,7 @@ use validator::Validate;
 /// Query parameters for searching on a string
 #[derive(Deserialize, Serialize, TS, Debug, Validate, Clone)]
 #[serde(rename_all = "camelCase")]
-#[ts(export, rename = "IDQuery")]
+#[ts(export, rename = "StringQuery")]
 pub struct StringQuery {
     /// Optional String (equality test)
     #[ts(optional)]
