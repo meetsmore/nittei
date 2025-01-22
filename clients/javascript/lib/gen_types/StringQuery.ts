@@ -3,25 +3,8 @@
 /**
  * Query parameters for searching on a string
  */
-export type StringQuery = {
-  /**
-   * Optional String (equality test)
-   */
-  eq?: string
-  /**
-   * Optional string (inequality test)
-   * If "eq" is provided, this field is ignored
-   */
-  ne?: string
-  /**
-   * Optional bool (existence test)
-   * If "eq" is provided, this field is ignored
-   */
-  exists?: boolean
-  /**
-   * Optional list of strings (equality test)
-   * If "eq" is provided, this field is ignored
-   * (use r# in the field name as "in" is a reserved keyword)
-   */
-  in?: Array<string>
-}
+export type StringQuery =
+  | { eq: string }
+  | { ne: string }
+  | { exists: boolean }
+  | { in: Array<string> }

@@ -4,25 +4,8 @@ import type { ID } from './ID'
 /**
  * Query parameters for searching on an ID (or list of IDs)
  */
-export type IDQuery = {
-  /**
-   * Optional ID (equality test)
-   */
-  eq?: ID
-  /**
-   * Optional ID (inequality test)
-   * If "eq" is provided, this field is ignored
-   */
-  ne?: ID
-  /**
-   * Optional bool (existence test)
-   * If "eq" is provided, this field is ignored
-   */
-  exists?: boolean
-  /**
-   * Optional list of IDs (equality test)
-   * If "eq" is provided, this field is ignored
-   * (use r# in the field name as "in" is a reserved keyword)
-   */
-  in?: Array<ID>
-}
+export type IDQuery =
+  | { eq: ID }
+  | { ne: ID }
+  | { exists: boolean }
+  | { in: Array<ID> }

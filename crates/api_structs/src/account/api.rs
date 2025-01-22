@@ -148,7 +148,7 @@ pub mod remove_account_integration {
 
 /// Request body for searching events for a whole account (across all users)
 pub mod account_search_events {
-    use nittei_domain::{DateTimeQuery, IdQuery, StringQuery};
+    use nittei_domain::{DateTimeQuery, IDQuery, StringQuery};
     use serde::{Deserialize, Serialize};
     use ts_rs::TS;
     use validator::Validate;
@@ -162,7 +162,7 @@ pub mod account_search_events {
     pub struct RequestBody {
         /// Optional query on user ID, or list of user IDs
         #[ts(optional)]
-        pub user_id: Option<IdQuery>,
+        pub user_id: Option<IDQuery>,
 
         /// Optional query on parent ID (which is a string as it's an ID from an external system)
         #[ts(optional)]
@@ -170,7 +170,7 @@ pub mod account_search_events {
 
         /// Optional query on the group ID
         #[ts(optional)]
-        pub group_id: Option<IdQuery>,
+        pub group_id: Option<IDQuery>,
 
         /// Optional query on start time - e.g. "lower than or equal", or "great than or equal" (UTC)
         #[ts(optional)]

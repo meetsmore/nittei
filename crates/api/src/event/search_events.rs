@@ -1,6 +1,6 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use nittei_api_structs::{dtos::CalendarEventDTO, search_events::*};
-use nittei_domain::{DateTimeQuery, IdQuery, StringQuery, ID};
+use nittei_domain::{DateTimeQuery, IDQuery, StringQuery, ID};
 use nittei_infra::{NitteiContext, SearchEventsForUserParams, SearchEventsParams};
 
 use crate::{
@@ -55,7 +55,7 @@ pub struct SearchEventsUseCase {
     pub parent_id: Option<StringQuery>,
 
     /// Optional query on the group ID
-    pub group_id: Option<IdQuery>,
+    pub group_id: Option<IDQuery>,
 
     /// Optional query on start time - "lower than or equal", or "great than or equal" (UTC)
     pub start_time: Option<DateTimeQuery>,

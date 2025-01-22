@@ -1,7 +1,7 @@
 mod postgres;
 
 use chrono::{DateTime, Utc};
-use nittei_domain::{CalendarEvent, DateTimeQuery, IdQuery, StringQuery, TimeSpan, ID};
+use nittei_domain::{CalendarEvent, DateTimeQuery, IDQuery, StringQuery, TimeSpan, ID};
 pub use postgres::PostgresEventRepo;
 
 use crate::repos::shared::query_structs::MetadataFindQuery;
@@ -28,7 +28,7 @@ pub struct SearchEventsForAccountParams {
 #[derive(Debug, Clone)]
 pub struct SearchEventsParams {
     pub parent_id: Option<StringQuery>,
-    pub group_id: Option<IdQuery>,
+    pub group_id: Option<IDQuery>,
     pub start_time: Option<DateTimeQuery>,
     pub end_time: Option<DateTimeQuery>,
     pub status: Option<StringQuery>,

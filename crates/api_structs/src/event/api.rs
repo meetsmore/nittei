@@ -297,7 +297,7 @@ pub mod get_events_by_calendars {
 }
 
 pub mod search_events {
-    use nittei_domain::{DateTimeQuery, IdQuery, StringQuery};
+    use nittei_domain::{DateTimeQuery, IDQuery, StringQuery};
 
     use super::*;
 
@@ -321,7 +321,7 @@ pub mod search_events {
 
         /// Optional query on group ID
         #[ts(optional)]
-        pub group_id: Option<IdQuery>,
+        pub group_id: Option<IDQuery>,
 
         /// Optional query on start time - "lower than or equal", or "great than or equal" (UTC)
         #[ts(optional)]

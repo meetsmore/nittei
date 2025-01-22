@@ -1,4 +1,4 @@
-use nittei_domain::{DateTimeQuery, IdQuery, Metadata, StringQuery, ID};
+use nittei_domain::{DateTimeQuery, IDQuery, Metadata, StringQuery, ID};
 use sqlx::Postgres;
 use uuid::Uuid;
 
@@ -24,28 +24,33 @@ pub struct MetadataFindQuery {
 pub fn apply_id_query(
     query_builder: &mut sqlx::QueryBuilder<'_, Postgres>,
     field_name: &str,
-    id_query: &Option<IdQuery>,
+    id_query: &Option<IDQuery>,
 ) {
     if let Some(id_query) = id_query {
-        if let Some(eq_query) = &id_query.eq {
-            query_builder.push(format!(" AND e.{} = ", field_name));
-            query_builder.push_bind::<Uuid>(eq_query.clone().into());
-        } else if let Some(ne_query) = &id_query.ne {
-            query_builder.push(format!(" AND e.{} != ", field_name));
-            query_builder.push_bind::<Uuid>(ne_query.clone().into());
-        } else if let Some(exists_query) = id_query.exists {
-            if exists_query {
-                query_builder.push(format!(" AND e.{} IS NOT NULL", field_name));
-            } else {
-                query_builder.push(format!(" AND e.{} IS NULL", field_name));
-            };
-        } else if let Some(in_query) = &id_query.r#in {
-            query_builder.push(format!(" AND e.{} IN (", field_name));
-            let mut separated = query_builder.separated(", ");
-            for id in in_query.iter() {
-                separated.push_bind::<Uuid>(id.clone().into());
+        match id_query {
+            IDQuery::Eq(id) => {
+                query_builder.push(format!(" AND e.{} = ", field_name));
+                query_builder.push_bind::<Uuid>(id.clone().into());
             }
-            separated.push_unseparated(")");
+            IDQuery::Ne(id) => {
+                query_builder.push(format!(" AND e.{} != ", field_name));
+                query_builder.push_bind::<Uuid>(id.clone().into());
+            }
+            IDQuery::Exists(exists) => {
+                if *exists {
+                    query_builder.push(format!(" AND e.{} IS NOT NULL", field_name));
+                } else {
+                    query_builder.push(format!(" AND e.{} IS NULL", field_name));
+                };
+            }
+            IDQuery::In(ids) => {
+                query_builder.push(format!(" AND e.{} IN (", field_name));
+                let mut separated = query_builder.separated(", ");
+                for id in ids.iter() {
+                    separated.push_bind::<Uuid>(id.clone().into());
+                }
+                separated.push_unseparated(")");
+            }
         }
     }
 }
@@ -66,25 +71,30 @@ pub fn apply_string_query(
     string_query: &Option<StringQuery>,
 ) {
     if let Some(string_query) = string_query {
-        if let Some(eq_query) = &string_query.eq {
-            query_builder.push(format!(" AND e.{} = ", field_name));
-            query_builder.push_bind(eq_query.clone());
-        } else if let Some(ne_query) = &string_query.ne {
-            query_builder.push(format!(" AND e.{} != ", field_name));
-            query_builder.push_bind(ne_query.clone());
-        } else if let Some(exists_query) = string_query.exists {
-            if exists_query {
-                query_builder.push(format!(" AND e.{} IS NOT NULL", field_name));
-            } else {
-                query_builder.push(format!(" AND e.{} IS NULL", field_name));
-            };
-        } else if let Some(in_query) = &string_query.r#in {
-            query_builder.push(format!(" AND e.{} IN (", field_name));
-            let mut separated = query_builder.separated(", ");
-            for value in in_query.iter() {
-                separated.push_bind(value.clone());
+        match string_query {
+            StringQuery::Eq(eq_query) => {
+                query_builder.push(format!(" AND e.{} = ", field_name));
+                query_builder.push_bind(eq_query.clone());
             }
-            separated.push_unseparated(")");
+            StringQuery::Ne(ne_query) => {
+                query_builder.push(format!(" AND e.{} != ", field_name));
+                query_builder.push_bind(ne_query.clone());
+            }
+            StringQuery::Exists(exists_query) => {
+                if *exists_query {
+                    query_builder.push(format!(" AND e.{} IS NOT NULL", field_name));
+                } else {
+                    query_builder.push(format!(" AND e.{} IS NULL", field_name));
+                };
+            }
+            StringQuery::In(in_query) => {
+                query_builder.push(format!(" AND e.{} IN (", field_name));
+                let mut separated = query_builder.separated(", ");
+                for value in in_query.iter() {
+                    separated.push_bind(value.clone());
+                }
+                separated.push_unseparated(")");
+            }
         }
     }
 }
@@ -106,23 +116,32 @@ pub fn apply_datetime_query(
     convert_to_millis: bool,
 ) {
     if let Some(datetime_query) = datetime_query {
-        if let Some(eq_query) = &datetime_query.eq {
-            query_builder.push(format!(" AND e.{} = ", field_name));
-            if convert_to_millis {
-                query_builder.push_bind(eq_query.timestamp_millis());
-            } else {
-                query_builder.push_bind(*eq_query);
-            };
-        } else {
-            // Greater than or equal, or greater than
-            if let Some(gte_query) = &datetime_query.gte {
+        match datetime_query {
+            DateTimeQuery::Eq(eq_query) => {
+                query_builder.push(format!(" AND e.{} = ", field_name));
+                if convert_to_millis {
+                    query_builder.push_bind(eq_query.timestamp_millis());
+                } else {
+                    query_builder.push_bind(*eq_query);
+                };
+            }
+            DateTimeQuery::Gte(gte_query) => {
                 query_builder.push(format!(" AND e.{} >= ", field_name));
                 if convert_to_millis {
                     query_builder.push_bind(gte_query.timestamp_millis());
                 } else {
                     query_builder.push_bind(*gte_query);
                 };
-            } else if let Some(gt_query) = &datetime_query.gt {
+            }
+            DateTimeQuery::Lte(lte_query) => {
+                query_builder.push(format!(" AND e.{} <= ", field_name));
+                if convert_to_millis {
+                    query_builder.push_bind(lte_query.timestamp_millis());
+                } else {
+                    query_builder.push_bind(*lte_query);
+                };
+            }
+            DateTimeQuery::Gt(gt_query) => {
                 query_builder.push(format!(" AND e.{} > ", field_name));
                 if convert_to_millis {
                     query_builder.push_bind(gt_query.timestamp_millis());
@@ -130,23 +149,14 @@ pub fn apply_datetime_query(
                     query_builder.push_bind(*gt_query);
                 };
             }
-
-            // Less than or equal, or less than
-            if let Some(lte_query) = &datetime_query.lte {
-                query_builder.push(format!(" AND e.{} <= ", field_name));
-                if convert_to_millis {
-                    query_builder.push_bind(lte_query.timestamp_millis());
-                } else {
-                    query_builder.push_bind(*lte_query);
-                };
-            } else if let Some(lt_query) = &datetime_query.lt {
+            DateTimeQuery::Lt(lt_query) => {
                 query_builder.push(format!(" AND e.{} < ", field_name));
                 if convert_to_millis {
                     query_builder.push_bind(lt_query.timestamp_millis());
                 } else {
                     query_builder.push_bind(*lt_query);
                 };
-            };
+            }
         }
     }
 }
@@ -164,12 +174,7 @@ mod test {
         let mut query_builder = sqlx::QueryBuilder::new("");
 
         let id1 = ID::default();
-        let id_query = Some(IdQuery {
-            eq: Some(id1),
-            ne: None,
-            exists: None,
-            r#in: None,
-        });
+        let id_query = Some(IDQuery::Eq(id1));
 
         apply_id_query(&mut query_builder, "id", &id_query);
 
@@ -183,12 +188,7 @@ mod test {
         let mut query_builder = sqlx::QueryBuilder::new("");
 
         let id1 = ID::default();
-        let id_query = Some(IdQuery {
-            eq: None,
-            ne: Some(id1),
-            exists: None,
-            r#in: None,
-        });
+        let id_query = Some(IDQuery::Ne(id1));
 
         apply_id_query(&mut query_builder, "id", &id_query);
 
@@ -201,12 +201,7 @@ mod test {
     fn it_applies_id_query_for_exists() {
         let mut query_builder = sqlx::QueryBuilder::new("");
 
-        let id_query = Some(IdQuery {
-            eq: None,
-            ne: None,
-            exists: Some(true),
-            r#in: None,
-        });
+        let id_query = Some(IDQuery::Exists(true));
 
         apply_id_query(&mut query_builder, "id", &id_query);
 
@@ -221,12 +216,7 @@ mod test {
 
         let id1 = ID::default();
         let id2 = ID::default();
-        let id_query = Some(IdQuery {
-            eq: None,
-            ne: None,
-            exists: None,
-            r#in: Some(vec![id1, id2]),
-        });
+        let id_query = Some(IDQuery::In(vec![id1, id2]));
 
         apply_id_query(&mut query_builder, "id", &id_query);
 
@@ -238,12 +228,7 @@ mod test {
     #[test]
     fn it_applies_string_query_eq() {
         let mut query_builder = sqlx::QueryBuilder::new("");
-        let string_query = Some(StringQuery {
-            eq: Some("something".to_string()),
-            ne: None,
-            exists: None,
-            r#in: None,
-        });
+        let string_query = Some(StringQuery::Eq("something".to_string()));
 
         apply_string_query(&mut query_builder, "name", &string_query);
 
@@ -253,12 +238,7 @@ mod test {
     #[test]
     fn it_applies_string_query_ne() {
         let mut query_builder = sqlx::QueryBuilder::new("");
-        let string_query = Some(StringQuery {
-            eq: None,
-            ne: Some("something".to_string()),
-            exists: None,
-            r#in: None,
-        });
+        let string_query = Some(StringQuery::Ne("something".to_string()));
 
         apply_string_query(&mut query_builder, "name", &string_query);
 
@@ -268,12 +248,7 @@ mod test {
     #[test]
     fn it_applies_string_query_exists() {
         let mut query_builder = sqlx::QueryBuilder::new("");
-        let string_query = Some(StringQuery {
-            eq: None,
-            ne: None,
-            exists: Some(true),
-            r#in: None,
-        });
+        let string_query = Some(StringQuery::Exists(true));
 
         apply_string_query(&mut query_builder, "name", &string_query);
 
@@ -283,12 +258,7 @@ mod test {
     #[test]
     fn it_applies_string_query_in() {
         let mut query_builder = sqlx::QueryBuilder::new("");
-        let string_query = Some(StringQuery {
-            eq: None,
-            ne: None,
-            exists: None,
-            r#in: Some(vec!["in".to_string(), "in2".to_string()]),
-        });
+        let string_query = Some(StringQuery::In(vec!["in".to_string(), "in2".to_string()]));
 
         apply_string_query(&mut query_builder, "name", &string_query);
 
@@ -298,13 +268,7 @@ mod test {
     #[test]
     fn it_applies_datetime_query() {
         let mut query_builder = sqlx::QueryBuilder::new("");
-        let datetime_query = Some(DateTimeQuery {
-            eq: Some(Utc::now()),
-            gte: None,
-            lte: None,
-            gt: None,
-            lt: None,
-        });
+        let datetime_query = Some(DateTimeQuery::Eq(Utc::now()));
 
         apply_datetime_query(&mut query_builder, "created_at", &datetime_query, false);
 
@@ -314,13 +278,7 @@ mod test {
     #[test]
     fn it_applies_datetime_query_gte() {
         let mut query_builder = sqlx::QueryBuilder::new("");
-        let datetime_query = Some(DateTimeQuery {
-            eq: None,
-            gte: Some(Utc::now()),
-            lte: None,
-            gt: None,
-            lt: None,
-        });
+        let datetime_query = Some(DateTimeQuery::Gte(Utc::now()));
 
         apply_datetime_query(&mut query_builder, "created_at", &datetime_query, false);
 
@@ -330,13 +288,7 @@ mod test {
     #[test]
     fn it_applies_datetime_query_lte() {
         let mut query_builder = sqlx::QueryBuilder::new("");
-        let datetime_query = Some(DateTimeQuery {
-            eq: None,
-            gte: None,
-            lte: Some(Utc::now()),
-            gt: None,
-            lt: None,
-        });
+        let datetime_query = Some(DateTimeQuery::Lte(Utc::now()));
 
         apply_datetime_query(&mut query_builder, "created_at", &datetime_query, false);
 
@@ -346,13 +298,7 @@ mod test {
     #[test]
     fn it_applies_datetime_query_gt() {
         let mut query_builder = sqlx::QueryBuilder::new("");
-        let datetime_query = Some(DateTimeQuery {
-            eq: None,
-            gte: None,
-            lte: None,
-            gt: Some(Utc::now()),
-            lt: None,
-        });
+        let datetime_query = Some(DateTimeQuery::Gt(Utc::now()));
 
         apply_datetime_query(&mut query_builder, "created_at", &datetime_query, false);
 
@@ -362,13 +308,7 @@ mod test {
     #[test]
     fn it_applies_datetime_query_lt() {
         let mut query_builder = sqlx::QueryBuilder::new("");
-        let datetime_query = Some(DateTimeQuery {
-            eq: None,
-            gte: None,
-            lte: None,
-            gt: None,
-            lt: Some(Utc::now()),
-        });
+        let datetime_query = Some(DateTimeQuery::Lt(Utc::now()));
 
         apply_datetime_query(&mut query_builder, "created_at", &datetime_query, false);
 
@@ -378,13 +318,7 @@ mod test {
     #[test]
     fn it_applies_datetime_query_with_millis() {
         let mut query_builder = sqlx::QueryBuilder::new("");
-        let datetime_query = Some(DateTimeQuery {
-            eq: Some(Utc::now()),
-            gte: None,
-            lte: None,
-            gt: None,
-            lt: None,
-        });
+        let datetime_query = Some(DateTimeQuery::Eq(Utc::now()));
 
         apply_datetime_query(&mut query_builder, "created_at", &datetime_query, true);
 
