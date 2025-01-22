@@ -21,6 +21,9 @@ jobs:
         platform:
           - linux/amd64
           - linux/arm64
+        with_datadog:
+          - true
+          - false
     permissions:
       contents: read
       packages: write
@@ -60,7 +63,7 @@ jobs:
         id: build
         uses: docker/build-push-action@v6
         with:
-          file: "./${{ inputs.distro }}.Dockerfile"
+          file: "./${{ inputs.distro }}${{ matrix.with_dd && 'WithDD' || '' }}.Dockerfile"
           platforms: ${{ matrix.platform }}
           # This is for the Alpine image
           build-args: |
@@ -109,14 +112,34 @@ jobs:
           VERSION=${GITHUB_REF#refs/*/}
           echo "VERSION=${VERSION:1}" >> $GITHUB_ENV
 
+      - name: Set Docker tags
+        id: set-tags
+        run: |
+          # For debian: latest, debian, 1.0.0
+          # For debian with DD: dd-latest, debian-dd, dd-1.0.0
+          # For alpine: alpine-latest, alpine, alpine-1.0.0
+          # For alpine with DD: alpine-dd-latest, alpine-dd, alpine-dd-1.0.0
+
+          if [[ "${{ inputs.distro }}" == "debian" ]]; then
+            if [[ "${{ matrix.with_dd }}" == "true" ]]; then
+              echo "TAGS=dd-latest, debian-dd, dd-${{ env.VERSION }}" >> $GITHUB_ENV
+            else
+              echo "TAGS=latest, debian, ${{ env.VERSION }}" >> $GITHUB_ENV
+            fi
+          elif [[ "${{ inputs.distro }}" == "alpine" ]]; then
+            if [[ "${{ matrix.with_dd }}" == "true" ]]; then
+              echo "TAGS=alpine-dd-latest, alpine-dd, alpine-dd-${{ env.VERSION }}" >> $GITHUB_ENV
+            else
+              echo "TAGS=alpine-latest, alpine, alpine-${{ env.VERSION }}" >> $GITHUB_ENV
+            fi
+          fi
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY_IMAGE }}
-          # For debian: latest, debian, 1.0.0
-          # For alpine: alpine, alpine-1.0.0
-          tags: ${{ inputs.distro == 'debian' && format('latest, debian, {0}', env.VERSION) || format('alpine, alpine-{0}', env.VERSION) }}
+          tags: ${{ env.TAGS }}
 
       - name: Create manifest list and push
         working-directory: /tmp/digests
