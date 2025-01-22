@@ -219,7 +219,31 @@ pub mod get_event_by_external_id {
         pub external_id: String,
     }
 
-    pub type APIResponse = CalendarEventResponse;
+    /// Query parameters that can be used when getting an event by external ID
+    #[derive(Deserialize, Serialize, TS)]
+    #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "GetEventsByExternalIdQueryParams")]
+    pub struct QueryParams {
+        /// Optional flag to include the events that are from a group with the same external ID
+        #[serde(default)]
+        #[ts(optional)]
+        pub include_groups: Option<bool>,
+    }
+
+    #[derive(Serialize, TS)]
+    #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "GetEventsByExternalIdAPIResponse")]
+    pub struct APIResponse {
+        /// Calendar events retrieved
+        pub events: Vec<CalendarEventDTO>,
+    }
+
+    /// API response for getting events by calendars
+    impl APIResponse {
+        pub fn new(events: Vec<CalendarEventDTO>) -> Self {
+            Self { events }
+        }
+    }
 }
 
 pub mod get_events_by_calendars {
