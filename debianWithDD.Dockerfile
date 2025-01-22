@@ -2,12 +2,15 @@
 
 # Usage:
 # docker buildx build -f debianWithDD.Dockerfile -t image:tag --build-arg='ARCH=x86_64' --platform linux/amd64 .
-# docker buildx build -f alpineWithDD.Dockerfile -t image:tag --build-arg='ARCH=aarch64' --platform linux/arm64 .
+# docker buildx build -f debianWithDD.Dockerfile -t image:tag --build-arg='ARCH=aarch64' --platform linux/arm64 .
 
 ARG RUST_VERSION=1.84.0
 ARG APP_NAME=nittei
+ARG ARCH=x86_64
 
 FROM rust:${RUST_VERSION}-slim AS builder
+
+ARG ARCH=x86_64
 ARG APP_NAME
 
 WORKDIR /app/${APP_NAME}
@@ -29,7 +32,12 @@ RUN --mount=type=bind,source=bins,target=/app/${APP_NAME}/bins \
   cp ./target/release/$APP_NAME /bin/server
 
 # Install ddprof
-RUN curl -Lo ddprof-linux.tar.xz https://github.com/DataDog/ddprof/releases/latest/download/ddprof-amd64-linux.tar.xz && \
+RUN ARCH_IN_URL=$(case "${ARCH}" in \
+  x86_64) echo "amd64" ;; \
+  aarch64) echo "arm64" ;; \
+  *) echo "unsupported-arch" && exit 1 ;; \
+  esac) && \
+  curl -Lo ddprof-linux.tar.xz https://github.com/DataDog/ddprof/releases/latest/download/ddprof-${ARCH_IN_URL}-linux.tar.xz && \
   tar xvf ddprof-linux.tar.xz && \
   mv ddprof/bin/ddprof /ddprof
 
