@@ -15,12 +15,28 @@ jobs:
     uses: ./.github/workflows/_build-and-merge-docker.yml
     with:
       distro: debian
+      with_datadog: false
     secrets: inherit
 
   alpine-build-and-merge-docker:
     uses: ./.github/workflows/_build-and-merge-docker.yml
     with:
       distro: alpine
+      with_datadog: false
+    secrets: inherit
+
+  debian-dd-build-and-merge-docker:
+    uses: ./.github/workflows/_build-and-merge-docker.yml
+    with:
+      distro: debian
+      with_datadog: true
+    secrets: inherit
+
+  alpine-dd-build-and-merge-docker:
+    uses: ./.github/workflows/_build-and-merge-docker.yml
+    with:
+      distro: alpine
+      with_datadog: true
     secrets: inherit
 
   # We don't use the Rust client for now
