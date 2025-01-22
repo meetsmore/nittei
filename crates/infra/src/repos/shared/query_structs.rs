@@ -35,9 +35,9 @@ pub fn apply_id_query(
             query_builder.push_bind::<Uuid>(ne_query.clone().into());
         } else if let Some(exists_query) = id_query.exists {
             if exists_query {
-                query_builder.push(format!(" AND e.{} IS NOT NULL ", field_name));
+                query_builder.push(format!(" AND e.{} IS NOT NULL", field_name));
             } else {
-                query_builder.push(format!(" AND e.{} IS NULL ", field_name));
+                query_builder.push(format!(" AND e.{} IS NULL", field_name));
             };
         } else if let Some(in_query) = &id_query.r#in {
             query_builder.push(format!(" AND e.{} IN (", field_name));
@@ -45,7 +45,7 @@ pub fn apply_id_query(
             for id in in_query.iter() {
                 separated.push_bind::<Uuid>(id.clone().into());
             }
-            separated.push_unseparated(") ");
+            separated.push_unseparated(")");
         }
     }
 }
@@ -74,9 +74,9 @@ pub fn apply_string_query(
             query_builder.push_bind(ne_query.clone());
         } else if let Some(exists_query) = string_query.exists {
             if exists_query {
-                query_builder.push(format!(" AND e.{} IS NOT NULL ", field_name));
+                query_builder.push(format!(" AND e.{} IS NOT NULL", field_name));
             } else {
-                query_builder.push(format!(" AND e.{} IS NULL ", field_name));
+                query_builder.push(format!(" AND e.{} IS NULL", field_name));
             };
         } else if let Some(in_query) = &string_query.r#in {
             query_builder.push(format!(" AND e.{} IN (", field_name));
@@ -84,7 +84,7 @@ pub fn apply_string_query(
             for value in in_query.iter() {
                 separated.push_bind(value.clone());
             }
-            separated.push_unseparated(") ");
+            separated.push_unseparated(")");
         }
     }
 }
@@ -148,5 +148,246 @@ pub fn apply_datetime_query(
                 };
             };
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+
+    use chrono::Utc;
+    use sqlx::Execute;
+
+    use super::*;
+
+    #[test]
+    fn it_applies_id_query_for_eq() {
+        let mut query_builder = sqlx::QueryBuilder::new("");
+
+        let id1 = ID::default();
+        let id_query = Some(IdQuery {
+            eq: Some(id1),
+            ne: None,
+            exists: None,
+            r#in: None,
+        });
+
+        apply_id_query(&mut query_builder, "id", &id_query);
+
+        let built_query = query_builder.build();
+
+        assert_eq!(built_query.sql(), " AND e.id = $1");
+    }
+
+    #[test]
+    fn it_applies_id_query_for_ne() {
+        let mut query_builder = sqlx::QueryBuilder::new("");
+
+        let id1 = ID::default();
+        let id_query = Some(IdQuery {
+            eq: None,
+            ne: Some(id1),
+            exists: None,
+            r#in: None,
+        });
+
+        apply_id_query(&mut query_builder, "id", &id_query);
+
+        let built_query = query_builder.build();
+
+        assert_eq!(built_query.sql(), " AND e.id != $1");
+    }
+
+    #[test]
+    fn it_applies_id_query_for_exists() {
+        let mut query_builder = sqlx::QueryBuilder::new("");
+
+        let id_query = Some(IdQuery {
+            eq: None,
+            ne: None,
+            exists: Some(true),
+            r#in: None,
+        });
+
+        apply_id_query(&mut query_builder, "id", &id_query);
+
+        let built_query = query_builder.build();
+
+        assert_eq!(built_query.sql(), " AND e.id IS NOT NULL");
+    }
+
+    #[test]
+    fn it_applies_id_query_for_in() {
+        let mut query_builder = sqlx::QueryBuilder::new("");
+
+        let id1 = ID::default();
+        let id2 = ID::default();
+        let id_query = Some(IdQuery {
+            eq: None,
+            ne: None,
+            exists: None,
+            r#in: Some(vec![id1, id2]),
+        });
+
+        apply_id_query(&mut query_builder, "id", &id_query);
+
+        let built_query = query_builder.build();
+
+        assert_eq!(built_query.sql(), " AND e.id IN ($1, $2)");
+    }
+
+    #[test]
+    fn it_applies_string_query_eq() {
+        let mut query_builder = sqlx::QueryBuilder::new("");
+        let string_query = Some(StringQuery {
+            eq: Some("something".to_string()),
+            ne: None,
+            exists: None,
+            r#in: None,
+        });
+
+        apply_string_query(&mut query_builder, "name", &string_query);
+
+        assert_eq!(query_builder.build().sql(), " AND e.name = $1");
+    }
+
+    #[test]
+    fn it_applies_string_query_ne() {
+        let mut query_builder = sqlx::QueryBuilder::new("");
+        let string_query = Some(StringQuery {
+            eq: None,
+            ne: Some("something".to_string()),
+            exists: None,
+            r#in: None,
+        });
+
+        apply_string_query(&mut query_builder, "name", &string_query);
+
+        assert_eq!(query_builder.build().sql(), " AND e.name != $1");
+    }
+
+    #[test]
+    fn it_applies_string_query_exists() {
+        let mut query_builder = sqlx::QueryBuilder::new("");
+        let string_query = Some(StringQuery {
+            eq: None,
+            ne: None,
+            exists: Some(true),
+            r#in: None,
+        });
+
+        apply_string_query(&mut query_builder, "name", &string_query);
+
+        assert_eq!(query_builder.build().sql(), " AND e.name IS NOT NULL");
+    }
+
+    #[test]
+    fn it_applies_string_query_in() {
+        let mut query_builder = sqlx::QueryBuilder::new("");
+        let string_query = Some(StringQuery {
+            eq: None,
+            ne: None,
+            exists: None,
+            r#in: Some(vec!["in".to_string(), "in2".to_string()]),
+        });
+
+        apply_string_query(&mut query_builder, "name", &string_query);
+
+        assert_eq!(query_builder.build().sql(), " AND e.name IN ($1, $2)");
+    }
+
+    #[test]
+    fn it_applies_datetime_query() {
+        let mut query_builder = sqlx::QueryBuilder::new("");
+        let datetime_query = Some(DateTimeQuery {
+            eq: Some(Utc::now()),
+            gte: None,
+            lte: None,
+            gt: None,
+            lt: None,
+        });
+
+        apply_datetime_query(&mut query_builder, "created_at", &datetime_query, false);
+
+        assert_eq!(query_builder.build().sql(), " AND e.created_at = $1");
+    }
+
+    #[test]
+    fn it_applies_datetime_query_gte() {
+        let mut query_builder = sqlx::QueryBuilder::new("");
+        let datetime_query = Some(DateTimeQuery {
+            eq: None,
+            gte: Some(Utc::now()),
+            lte: None,
+            gt: None,
+            lt: None,
+        });
+
+        apply_datetime_query(&mut query_builder, "created_at", &datetime_query, false);
+
+        assert_eq!(query_builder.build().sql(), " AND e.created_at >= $1");
+    }
+
+    #[test]
+    fn it_applies_datetime_query_lte() {
+        let mut query_builder = sqlx::QueryBuilder::new("");
+        let datetime_query = Some(DateTimeQuery {
+            eq: None,
+            gte: None,
+            lte: Some(Utc::now()),
+            gt: None,
+            lt: None,
+        });
+
+        apply_datetime_query(&mut query_builder, "created_at", &datetime_query, false);
+
+        assert_eq!(query_builder.build().sql(), " AND e.created_at <= $1");
+    }
+
+    #[test]
+    fn it_applies_datetime_query_gt() {
+        let mut query_builder = sqlx::QueryBuilder::new("");
+        let datetime_query = Some(DateTimeQuery {
+            eq: None,
+            gte: None,
+            lte: None,
+            gt: Some(Utc::now()),
+            lt: None,
+        });
+
+        apply_datetime_query(&mut query_builder, "created_at", &datetime_query, false);
+
+        assert_eq!(query_builder.build().sql(), " AND e.created_at > $1");
+    }
+
+    #[test]
+    fn it_applies_datetime_query_lt() {
+        let mut query_builder = sqlx::QueryBuilder::new("");
+        let datetime_query = Some(DateTimeQuery {
+            eq: None,
+            gte: None,
+            lte: None,
+            gt: None,
+            lt: Some(Utc::now()),
+        });
+
+        apply_datetime_query(&mut query_builder, "created_at", &datetime_query, false);
+
+        assert_eq!(query_builder.build().sql(), " AND e.created_at < $1");
+    }
+
+    #[test]
+    fn it_applies_datetime_query_with_millis() {
+        let mut query_builder = sqlx::QueryBuilder::new("");
+        let datetime_query = Some(DateTimeQuery {
+            eq: Some(Utc::now()),
+            gte: None,
+            lte: None,
+            gt: None,
+            lt: None,
+        });
+
+        apply_datetime_query(&mut query_builder, "created_at", &datetime_query, true);
+
+        assert_eq!(query_builder.build().sql(), " AND e.created_at = $1");
     }
 }
