@@ -522,7 +522,10 @@ describe('CalendarEvent API', () => {
         const res = await adminClient.events.searchEvents({
           userId: userId,
           startTime: {
-            gte: new Date(500),
+            range: {
+              lte: new Date(2000),
+              gte: new Date(500),
+            },
           },
         })
         expect(res.events.length).toBe(3)
@@ -532,7 +535,9 @@ describe('CalendarEvent API', () => {
         const res = await adminClient.events.searchEvents({
           userId: userId,
           startTime: {
-            gte: new Date(2000),
+            range: {
+              gte: new Date(2000),
+            },
           },
         })
         expect(res.events.length).toBe(0)
@@ -542,7 +547,9 @@ describe('CalendarEvent API', () => {
         const res = await adminClient.events.searchEvents({
           userId: userId,
           endTime: {
-            lte: new Date(2000),
+            range: {
+              lte: new Date(2000),
+            },
           },
         })
         expect(res.events.length).toBe(3)
@@ -552,7 +559,9 @@ describe('CalendarEvent API', () => {
         const res = await adminClient.events.searchEvents({
           userId: userId,
           endTime: {
-            lte: new Date(500),
+            range: {
+              lte: new Date(500),
+            },
           },
         })
         expect(res.events.length).toBe(0)
@@ -607,7 +616,9 @@ describe('CalendarEvent API', () => {
             eq: 'parentId',
           },
           startTime: {
-            gte: new Date(500),
+            range: {
+              gte: new Date(500),
+            },
           },
         })
         expect(res.events.length).toBe(1)
@@ -621,7 +632,9 @@ describe('CalendarEvent API', () => {
             eq: 'parentId',
           },
           startTime: {
-            gte: new Date(2000),
+            range: {
+              gte: new Date(2000),
+            },
           },
         })
         expect(res.events.length).toBe(0)
@@ -631,7 +644,9 @@ describe('CalendarEvent API', () => {
         const res = await adminClient.events.searchEvents({
           userId: userId,
           updatedAt: {
-            gte: new Date(0),
+            range: {
+              gte: new Date(0),
+            },
           },
         })
         expect(res.events.length).toBe(3)
@@ -641,7 +656,9 @@ describe('CalendarEvent API', () => {
         const res = await adminClient.events.searchEvents({
           userId: userId,
           updatedAt: {
-            gte: new Date(new Date().getTime() + 10000),
+            range: {
+              gte: new Date(new Date().getTime() + 10000),
+            },
           },
         })
         expect(res.events.length).toBe(0)

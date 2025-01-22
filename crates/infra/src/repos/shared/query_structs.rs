@@ -125,37 +125,38 @@ pub fn apply_datetime_query(
                     query_builder.push_bind(*eq_query);
                 };
             }
-            DateTimeQuery::Gte(gte_query) => {
-                query_builder.push(format!(" AND e.{} >= ", field_name));
-                if convert_to_millis {
-                    query_builder.push_bind(gte_query.timestamp_millis());
-                } else {
-                    query_builder.push_bind(*gte_query);
-                };
-            }
-            DateTimeQuery::Lte(lte_query) => {
-                query_builder.push(format!(" AND e.{} <= ", field_name));
-                if convert_to_millis {
-                    query_builder.push_bind(lte_query.timestamp_millis());
-                } else {
-                    query_builder.push_bind(*lte_query);
-                };
-            }
-            DateTimeQuery::Gt(gt_query) => {
-                query_builder.push(format!(" AND e.{} > ", field_name));
-                if convert_to_millis {
-                    query_builder.push_bind(gt_query.timestamp_millis());
-                } else {
-                    query_builder.push_bind(*gt_query);
-                };
-            }
-            DateTimeQuery::Lt(lt_query) => {
-                query_builder.push(format!(" AND e.{} < ", field_name));
-                if convert_to_millis {
-                    query_builder.push_bind(lt_query.timestamp_millis());
-                } else {
-                    query_builder.push_bind(*lt_query);
-                };
+            DateTimeQuery::Range(range) => {
+                if let Some(gte_query) = range.gte {
+                    query_builder.push(format!(" AND e.{} >= ", field_name));
+                    if convert_to_millis {
+                        query_builder.push_bind(gte_query.timestamp_millis());
+                    } else {
+                        query_builder.push_bind(gte_query);
+                    };
+                } else if let Some(gt_query) = range.gt {
+                    query_builder.push(format!(" AND e.{} > ", field_name));
+                    if convert_to_millis {
+                        query_builder.push_bind(gt_query.timestamp_millis());
+                    } else {
+                        query_builder.push_bind(gt_query);
+                    };
+                }
+
+                if let Some(lte_query) = range.lte {
+                    query_builder.push(format!(" AND e.{} <= ", field_name));
+                    if convert_to_millis {
+                        query_builder.push_bind(lte_query.timestamp_millis());
+                    } else {
+                        query_builder.push_bind(lte_query);
+                    };
+                } else if let Some(lt_query) = range.lt {
+                    query_builder.push(format!(" AND e.{} < ", field_name));
+                    if convert_to_millis {
+                        query_builder.push_bind(lt_query.timestamp_millis());
+                    } else {
+                        query_builder.push_bind(lt_query);
+                    };
+                }
             }
         }
     }
@@ -165,6 +166,7 @@ pub fn apply_datetime_query(
 mod test {
 
     use chrono::Utc;
+    use nittei_domain::DateTimeQueryRange;
     use sqlx::Execute;
 
     use super::*;
@@ -278,7 +280,12 @@ mod test {
     #[test]
     fn it_applies_datetime_query_gte() {
         let mut query_builder = sqlx::QueryBuilder::new("");
-        let datetime_query = Some(DateTimeQuery::Gte(Utc::now()));
+        let datetime_query = Some(DateTimeQuery::Range(DateTimeQueryRange {
+            gte: Some(Utc::now()),
+            lte: None,
+            gt: None,
+            lt: None,
+        }));
 
         apply_datetime_query(&mut query_builder, "created_at", &datetime_query, false);
 
@@ -288,7 +295,12 @@ mod test {
     #[test]
     fn it_applies_datetime_query_lte() {
         let mut query_builder = sqlx::QueryBuilder::new("");
-        let datetime_query = Some(DateTimeQuery::Lte(Utc::now()));
+        let datetime_query = Some(DateTimeQuery::Range(DateTimeQueryRange {
+            lte: Some(Utc::now()),
+            gt: None,
+            lt: None,
+            gte: None,
+        }));
 
         apply_datetime_query(&mut query_builder, "created_at", &datetime_query, false);
 
@@ -298,7 +310,12 @@ mod test {
     #[test]
     fn it_applies_datetime_query_gt() {
         let mut query_builder = sqlx::QueryBuilder::new("");
-        let datetime_query = Some(DateTimeQuery::Gt(Utc::now()));
+        let datetime_query = Some(DateTimeQuery::Range(DateTimeQueryRange {
+            gt: Some(Utc::now()),
+            gte: None,
+            lte: None,
+            lt: None,
+        }));
 
         apply_datetime_query(&mut query_builder, "created_at", &datetime_query, false);
 
@@ -308,11 +325,34 @@ mod test {
     #[test]
     fn it_applies_datetime_query_lt() {
         let mut query_builder = sqlx::QueryBuilder::new("");
-        let datetime_query = Some(DateTimeQuery::Lt(Utc::now()));
+        let datetime_query = Some(DateTimeQuery::Range(DateTimeQueryRange {
+            lt: Some(Utc::now()),
+            gt: None,
+            gte: None,
+            lte: None,
+        }));
 
         apply_datetime_query(&mut query_builder, "created_at", &datetime_query, false);
 
         assert_eq!(query_builder.build().sql(), " AND e.created_at < $1");
+    }
+
+    #[test]
+    fn it_applies_datetime_query_gt_lt() {
+        let mut query_builder = sqlx::QueryBuilder::new("");
+        let datetime_query = Some(DateTimeQuery::Range(DateTimeQueryRange {
+            gt: Some(Utc::now()),
+            lt: Some(Utc::now()),
+            gte: None,
+            lte: None,
+        }));
+
+        apply_datetime_query(&mut query_builder, "created_at", &datetime_query, false);
+
+        assert_eq!(
+            query_builder.build().sql(),
+            " AND e.created_at > $1 AND e.created_at < $2"
+        );
     }
 
     #[test]
