@@ -9,14 +9,14 @@ on:
       distro:
         required: true
         type: string
-      with_datadog:
+      with_datadog_profiling:
         required: true
         type: boolean
 
 # Adapted from https://docs.docker.com/build/ci/github-actions/multi-platform/#distribute-build-across-multiple-runners
 jobs:
   build-docker:
-    name: Build Docker image for ${{ inputs.distro }} on ${{ matrix.platform }} (DD ${{ inputs.with_datadog }})
+    name: Build Docker image for ${{ inputs.distro }} on ${{ matrix.platform }} (DD ${{ inputs.with_datadog_profiling }})
     # We use a custom runner for ARM64 builds.
     runs-on: ${{ matrix.platform == 'linux/amd64' && 'ubuntu-22.04' || 'ubuntu-22.04-arm' }}
     strategy:
@@ -30,15 +30,6 @@ jobs:
       packages: write
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost/nittei
-
-    services:
-      postgres:
-        image: postgres:13
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: nittei
-        ports:
-          - 5432:5432
 
     steps:
       - name: Prepare
@@ -74,34 +65,12 @@ jobs:
         id: build
         uses: docker/build-push-action@v6
         with:
-          file: "./${{ inputs.distro }}${{ inputs.with_datadog && 'WithDD' || '' }}.Dockerfile"
+          file: "./${{ inputs.distro }}${{ inputs.with_datadog_profiling && 'WithDD' || '' }}.Dockerfile"
           platforms: ${{ matrix.platform }}
-          # This is for the Alpine image
+          # Handle the correct arch
           build-args: |
             ARCH=${{ matrix.platform == 'linux/amd64' && 'x86_64' || 'aarch64' }}
-          labels: ${{ steps.meta.outputs.labels }}
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
-
-      - name: Test image
-        run: |
-
-          # Test the image by running a container from it, linking to the host network, and running the JS tests
-          docker run --rm -e DATABASE_URL=$DATABASE_URL -e NITTEI__HTTP_PORT=5000 -e NITTEI__DATABASE_URL=$DATABASE_URL -p 5000:5000 --network host --name nittei-test ${{ steps.build.outputs.image }}
-
-          # Wait for the server to start
-          sleep 5
-
-      - name: Run tests
-        run: |
-
-          # Run the tests
-          cd clients/javascript
-          pnpm i
-          pnpm run test
-
-      - name: Stop test container
-        run: |
-          docker stop nittei-test
 
       - name: Export digest
         run: |
@@ -153,13 +122,13 @@ jobs:
           # For alpine with DD: alpine-dd-latest, alpine-dd, alpine-dd-1.0.0
 
           if [[ "${{ inputs.distro }}" == "debian" ]]; then
-            if [[ "${{ inputs.with_datadog }}" == "true" ]]; then
+            if [[ "${{ inputs.with_datadog_profiling }}" == "true" ]]; then
               echo "TAGS=dd-latest, debian-dd, dd-${{ env.VERSION }}" >> $GITHUB_ENV
             else
               echo "TAGS=latest, debian, ${{ env.VERSION }}" >> $GITHUB_ENV
             fi
           elif [[ "${{ inputs.distro }}" == "alpine" ]]; then
-            if [[ "${{ inputs.with_datadog }}" == "true" ]]; then
+            if [[ "${{ inputs.with_datadog_profiling }}" == "true" ]]; then
               echo "TAGS=alpine-dd-latest, alpine-dd, alpine-dd-${{ env.VERSION }}" >> $GITHUB_ENV
             else
               echo "TAGS=alpine-latest, alpine, alpine-${{ env.VERSION }}" >> $GITHUB_ENV

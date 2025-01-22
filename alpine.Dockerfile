@@ -32,4 +32,4 @@ ENV APP_NAME=${APP_NAME}
 
 COPY --from=builder /${APP_NAME} /${APP_NAME}
 
-CMD /${APP_NAME}
+CMD ["/bin/sh", "-c", "exec /${APP_NAME}"]
