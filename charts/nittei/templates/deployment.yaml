@@ -7,22 +7,22 @@
 
 # Loop through defaultEnv and merge into envMap (normal values)
 {{- range $defaultEnv }}
-  {{- $envMap = merge $envMap (dict .name (dict "value" .value)) }}
+  {{- $envMap = merge (dict .name (dict "value" .value)) $envMap }}
 {{- end }}
 
 # Merge through extraEnv and merge into envMap (normal values and valueFrom)
 {{- range $extraEnv }}
   {{- if hasKey . "valueFrom" }}
-    {{- $envMap = merge $envMap (dict .name (dict "valueFrom" .valueFrom)) }}
+    {{- $envMap = merge (dict .name (dict "valueFrom" .valueFrom)) $envMap }}
   {{- else }}
-    {{- $envMap = merge $envMap (dict .name (dict "value" .value)) }}
+    {{- $envMap = merge (dict .name (dict "value" .value)) $envMap }}
   {{- end }}
 {{- end }}
 
 # Set default NITTEI__OBSERVABILITY__SERVICE_VERSION env var
 {{- $defaultServiceVersion := .Values.image.tag }}
 {{- if not (hasKey $envMap "NITTEI__OBSERVABILITY__SERVICE_VERSION") }}
-  {{- $envMap = merge $envMap (dict "NITTEI__OBSERVABILITY__SERVICE_VERSION" (dict "value" $defaultServiceVersion)) }}
+  {{- $envMap = merge (dict "NITTEI__OBSERVABILITY__SERVICE_VERSION" (dict "value" $defaultServiceVersion)) $envMap }}
 {{- end }}
 # End of setting default NITTEI__OBSERVABILITY__SERVICE_VERSION env var
 
