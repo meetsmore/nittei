@@ -11,6 +11,8 @@ pub use repos::{
     BusyCalendarIdentifier,
     ExternalBusyCalendarIdentifier,
     MetadataFindQuery,
+    SearchEventsForAccountParams,
+    SearchEventsForUserParams,
     SearchEventsParams,
 };
 pub use services::*;

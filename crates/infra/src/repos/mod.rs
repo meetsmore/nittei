@@ -20,7 +20,6 @@ use account_integrations::{IAccountIntegrationRepo, PostgresAccountIntegrationRe
 use anyhow::Context;
 use calendar::{ICalendarRepo, PostgresCalendarRepo};
 use calendar_synced::{ICalendarSyncedRepo, PostgresCalendarSyncedRepo};
-pub use event::SearchEventsParams;
 use event::{
     IEventGroupRepo,
     IEventRemindersGenerationJobsRepo,
@@ -33,6 +32,7 @@ use event::{
     PostgresEventSyncedRepo,
     PostgresReminderRepo,
 };
+pub use event::{SearchEventsForAccountParams, SearchEventsForUserParams, SearchEventsParams};
 use reservation::{IReservationRepo, PostgresReservationRepo};
 use schedule::{IScheduleRepo, PostgresScheduleRepo};
 use service::{IServiceRepo, PostgresServiceRepo};

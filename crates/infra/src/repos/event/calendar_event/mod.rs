@@ -1,7 +1,7 @@
 mod postgres;
 
 use chrono::{DateTime, Utc};
-use nittei_domain::{CalendarEvent, DateTimeQuery, IDQuery, TimeSpan, ID};
+use nittei_domain::{CalendarEvent, DateTimeQuery, IDQuery, StringQuery, TimeSpan, ID};
 pub use postgres::PostgresEventRepo;
 
 use crate::repos::shared::query_structs::MetadataFindQuery;
@@ -13,14 +13,26 @@ pub struct MostRecentCreatedServiceEvents {
 }
 
 #[derive(Debug, Clone)]
-pub struct SearchEventsParams {
+pub struct SearchEventsForUserParams {
     pub user_id: ID,
     pub calendar_ids: Option<Vec<ID>>,
-    pub parent_id: Option<IDQuery>,
-    pub group_id: Option<ID>,
+    pub search_events_params: SearchEventsParams,
+}
+
+#[derive(Debug, Clone)]
+pub struct SearchEventsForAccountParams {
+    pub account_id: ID,
+    pub search_events_params: SearchEventsParams,
+}
+
+#[derive(Debug, Clone)]
+pub struct SearchEventsParams {
+    pub parent_id: Option<StringQuery>,
+    pub group_id: Option<IDQuery>,
     pub start_time: Option<DateTimeQuery>,
     pub end_time: Option<DateTimeQuery>,
-    pub status: Option<Vec<String>>,
+    pub status: Option<StringQuery>,
+    pub event_type: Option<StringQuery>,
     pub updated_at: Option<DateTimeQuery>,
     pub metadata: Option<serde_json::Value>,
 }
@@ -47,9 +59,13 @@ pub trait IEventRepo: Send + Sync {
         calendar_ids: Vec<ID>,
         timespan: &TimeSpan,
     ) -> anyhow::Result<Vec<CalendarEvent>>;
-    async fn search_events(
+    async fn search_events_for_user(
         &self,
-        search_events_params: SearchEventsParams,
+        params: SearchEventsForUserParams,
+    ) -> anyhow::Result<Vec<CalendarEvent>>;
+    async fn search_events_for_account(
+        &self,
+        params: SearchEventsForAccountParams,
     ) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn find_most_recently_created_service_events(
         &self,

@@ -297,7 +297,7 @@ pub mod get_events_by_calendars {
 }
 
 pub mod search_events {
-    use nittei_domain::{DateTimeQuery, IDQuery};
+    use nittei_domain::{DateTimeQuery, IDQuery, StringQuery};
 
     use super::*;
 
@@ -315,13 +315,13 @@ pub mod search_events {
         #[ts(optional)]
         pub calendar_ids: Option<Vec<ID>>,
 
-        /// Optional query on parent ID
+        /// Optional query on parent ID (which is a string as it's an ID from an external system)
         #[ts(optional)]
-        pub parent_id: Option<IDQuery>,
+        pub parent_id: Option<StringQuery>,
 
         /// Optional query on group ID
         #[ts(optional)]
-        pub group_id: Option<ID>,
+        pub group_id: Option<IDQuery>,
 
         /// Optional query on start time - "lower than or equal", or "great than or equal" (UTC)
         #[ts(optional)]
@@ -331,9 +331,13 @@ pub mod search_events {
         #[ts(optional)]
         pub end_time: Option<DateTimeQuery>,
 
-        /// Optional list of event status
+        /// Optional query on event type
         #[ts(optional)]
-        pub status: Option<Vec<String>>,
+        pub event_type: Option<StringQuery>,
+
+        /// Optional query on status
+        #[ts(optional)]
+        pub status: Option<StringQuery>,
 
         /// Optioanl query on updated at - "lower than or equal", or "great than or equal" (UTC)
         #[ts(optional)]
@@ -344,7 +348,7 @@ pub mod search_events {
         pub metadata: Option<serde_json::Value>,
     }
 
-    /// API response for getting events by calendars
+    /// API response for searching events for one user
     #[derive(Serialize, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "SearchEventsAPIResponse")]

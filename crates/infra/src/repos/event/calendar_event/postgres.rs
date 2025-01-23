@@ -11,8 +11,18 @@ use sqlx::{
 };
 use tracing::{error, instrument};
 
-use super::{IEventRepo, MostRecentCreatedServiceEvents, SearchEventsParams};
-use crate::repos::shared::query_structs::MetadataFindQuery;
+use super::{
+    IEventRepo,
+    MostRecentCreatedServiceEvents,
+    SearchEventsForAccountParams,
+    SearchEventsForUserParams,
+};
+use crate::repos::{
+    apply_datetime_query,
+    apply_id_query,
+    apply_string_query,
+    shared::query_structs::MetadataFindQuery,
+};
 
 #[derive(Debug)]
 pub struct PostgresEventRepo {
@@ -456,13 +466,13 @@ impl IEventRepo for PostgresEventRepo {
     }
 
     /// Search events
-    /// This method is used to search events based on the given parameters
+    /// This method is used to search events based on the given parameters for one specific user:
     /// The parameters are optional and can be used to filter the events
     ///
-    /// Warning: performance of this method is not optimal
-    async fn search_events(
+    /// Warning: performance of this method might not optimal
+    async fn search_events_for_user(
         &self,
-        search_events_params: SearchEventsParams,
+        params: SearchEventsForUserParams,
     ) -> anyhow::Result<Vec<CalendarEvent>> {
         let mut query = QueryBuilder::new(
             r#"
@@ -474,9 +484,9 @@ impl IEventRepo for PostgresEventRepo {
             WHERE u.user_uid = "#,
         );
 
-        query.push_bind::<Uuid>(search_events_params.user_id.into());
+        query.push_bind::<Uuid>(params.user_id.into());
 
-        if let Some(calendar_ids) = search_events_params.calendar_ids {
+        if let Some(calendar_ids) = params.calendar_ids {
             query.push(" AND c.calendar_uid IN (");
             let mut separated = query.separated(", ");
             for value_type in calendar_ids.iter() {
@@ -485,67 +495,130 @@ impl IEventRepo for PostgresEventRepo {
             separated.push_unseparated(") ");
         }
 
-        if let Some(parent_id) = search_events_params.parent_id {
-            if let Some(eq) = parent_id.eq {
-                query.push(" AND e.parent_id = ");
-                query.push_bind(eq.to_string());
-            } else if let Some(exists) = parent_id.exists {
-                if exists {
-                    query.push(" AND e.parent_id IS NOT NULL");
-                } else {
-                    query.push(" AND e.parent_id IS NULL");
-                };
-            };
+        apply_string_query(
+            &mut query,
+            "parent_id",
+            &params.search_events_params.parent_id,
+        );
+
+        apply_id_query(
+            &mut query,
+            "group_uid",
+            &params.search_events_params.group_id,
+        );
+
+        apply_datetime_query(
+            &mut query,
+            "start_time",
+            &params.search_events_params.start_time,
+            false,
+        );
+
+        apply_datetime_query(
+            &mut query,
+            "end_time",
+            &params.search_events_params.end_time,
+            false,
+        );
+
+        apply_string_query(
+            &mut query,
+            "event_type",
+            &params.search_events_params.event_type,
+        );
+
+        apply_string_query(&mut query, "status", &params.search_events_params.status);
+
+        apply_datetime_query(
+            &mut query,
+            "updated",
+            &params.search_events_params.updated_at,
+            true,
+        );
+
+        if let Some(metadata) = params.search_events_params.metadata {
+            query.push(" AND e.metadata @> ");
+            query.push_bind(Json(metadata.clone()));
         }
 
-        if let Some(group_id) = search_events_params.group_id {
-            query.push(" AND e.group_uid = ");
-            query.push_bind::<Uuid>(group_id.into());
-        }
+        let rows = query.build().fetch_all(&self.pool).await.inspect_err(|e| {
+            error!("Search events failed. DB returned error: {:?}", e);
+        })?;
 
-        if let Some(start_time) = search_events_params.start_time {
-            if let Some(gte) = start_time.gte {
-                query.push(" AND e.start_time >= ");
-                query.push_bind(gte);
-            }
-            if let Some(lte) = start_time.lte {
-                query.push(" AND e.start_time <= ");
-                query.push_bind(lte);
-            }
-        }
+        let events_raw: Vec<EventRaw> = rows
+            .into_iter()
+            .map(|row| EventRaw::from_row(&row))
+            .collect::<Result<Vec<_>, sqlx::Error>>()?;
 
-        if let Some(end_time) = search_events_params.end_time {
-            if let Some(gte) = end_time.gte {
-                query.push(" AND e.end_time >= ");
-                query.push_bind(gte);
-            }
-            if let Some(lte) = end_time.lte {
-                query.push(" AND e.end_time <= ");
-                query.push_bind(lte);
-            }
-        }
+        events_raw
+            .into_iter()
+            .map(CalendarEvent::try_from)
+            .collect()
+    }
 
-        if let Some(status) = search_events_params.status {
-            query.push(" AND e.status IN (");
-            let mut separated = query.separated(", ");
-            for value_type in status.iter() {
-                separated.push_bind(value_type.clone());
-            }
-            separated.push_unseparated(") ");
-        }
+    /// Search events at the account level
+    /// This method is used to search events for all users of an account based on the given parameters
+    /// The parameters are optional and can be used to filter the events
+    ///
+    /// Warning: performance of this method might not optimal
+    async fn search_events_for_account(
+        &self,
+        params: SearchEventsForAccountParams,
+    ) -> anyhow::Result<Vec<CalendarEvent>> {
+        let mut query = QueryBuilder::new(
+            r#"
+            SELECT e.*, c.user_uid, u.account_uid FROM calendar_events AS e
+            INNER JOIN calendars AS c
+                ON c.calendar_uid = e.calendar_uid
+            INNER JOIN users AS u
+                ON u.user_uid = c.user_uid
+            WHERE u.account_uid = "#,
+        );
 
-        if let Some(updated_at) = search_events_params.updated_at {
-            if let Some(gte) = updated_at.gte {
-                query.push(" AND e.updated >= ");
-                query.push_bind(gte.timestamp_millis());
-            }
-            if let Some(lte) = updated_at.lte {
-                query.push(" AND e.updated <= ");
-                query.push_bind(lte.timestamp_millis());
-            }
-        }
+        query.push_bind::<Uuid>(params.account_id.into());
 
-        if let Some(metadata) = search_events_params.metadata {
+        apply_string_query(
+            &mut query,
+            "parent_id",
+            &params.search_events_params.parent_id,
+        );
+
+        apply_id_query(
+            &mut query,
+            "group_uid",
+            &params.search_events_params.group_id,
+        );
+
+        apply_datetime_query(
+            &mut query,
+            "start_time",
+            &params.search_events_params.start_time,
+            false,
+        );
+
+        apply_datetime_query(
+            &mut query,
+            "end_time",
+            &params.search_events_params.end_time,
+            false,
+        );
+
+        apply_string_query(
+            &mut query,
+            "event_type",
+            &params.search_events_params.event_type,
+        );
+
+        apply_string_query(&mut query, "status", &params.search_events_params.status);
+
+        apply_datetime_query(
+            &mut query,
+            "updated",
+            &params.search_events_params.updated_at,
+            true,
+        );
+
+        if let Some(metadata) = params.search_events_params.metadata {
             query.push(" AND e.metadata @> ");
             query.push_bind(Json(metadata.clone()));
         }
