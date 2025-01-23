@@ -51,7 +51,7 @@ impl From<MostRecentCreatedServiceEventsRaw> for MostRecentCreatedServiceEvents 
     }
 }
 
-#[derive(Debug, FromRow, Clone, sqlx::Type)]
+#[derive(Debug, FromRow, Clone)]
 struct EventRaw {
     event_uid: Uuid,
     calendar_uid: Uuid,
