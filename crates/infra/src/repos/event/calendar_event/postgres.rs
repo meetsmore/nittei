@@ -1,6 +1,7 @@
 use std::convert::{TryFrom, TryInto};
 
 use chrono::{DateTime, Utc};
+use futures::future;
 use nittei_domain::{CalendarEvent, CalendarEventReminder, RRuleOptions, ID};
 use serde_json::Value;
 use sqlx::{
@@ -284,33 +285,59 @@ impl IEventRepo for PostgresEventRepo {
         include_groups: bool,
     ) -> anyhow::Result<Vec<CalendarEvent>> {
         if include_groups {
-            sqlx::query_as!(
+            // Define two queries and merge the results
+            let query_calendar_event = sqlx::query_as!(
                 EventRaw,
                 r#"
-            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
-            INNER JOIN calendars AS c
-                ON c.calendar_uid = e.calendar_uid
-            INNER JOIN users AS u
-                ON u.user_uid = c.user_uid
-            LEFT JOIN events_groups AS g
-                ON g.group_uid = e.group_uid AND g.calendar_uid = e.calendar_uid
-            WHERE u.account_uid = $1
-                AND (e.external_id = $2 OR g.external_id = $2)
-            "#,
+        SELECT e.*, u.user_uid, account_uid 
+        FROM calendar_events AS e
+        INNER JOIN calendars AS c
+            ON c.calendar_uid = e.calendar_uid
+        INNER JOIN users AS u
+            ON u.user_uid = c.user_uid
+        WHERE u.account_uid = $1 AND e.external_id = $2
+        "#,
                 account_uid.as_ref(),
-                external_id,
+                external_id
+            );
+
+            let query_calendar_events_from_group = sqlx::query_as!(
+                EventRaw,
+                r#"
+        SELECT e.*, u.user_uid, account_uid 
+        FROM calendar_events AS e
+        INNER JOIN calendars AS c
+            ON c.calendar_uid = e.calendar_uid
+        INNER JOIN users AS u
+            ON u.user_uid = c.user_uid
+        LEFT JOIN events_groups AS g
+            ON g.group_uid = e.group_uid AND g.calendar_uid = e.calendar_uid
+        WHERE u.account_uid = $1 AND g.external_id = $2
+        "#,
+                account_uid.as_ref(),
+                external_id
+            );
+
+            // Execute both queries in parallel
+            let (result1, result2) = future::try_join(
+                query_calendar_event.fetch_all(&self.pool),
+                query_calendar_events_from_group.fetch_all(&self.pool),
             )
-            .fetch_all(&self.pool)
             .await
             .inspect_err(|err| {
                 error!(
-                    "Find calendar event with external_id: {:?} failed. DB returned error: {:?}",
+                    "Find calendar event (with group) with external_id: {:?} failed. DB returned error: {:?}",
                     external_id, err
                 );
-            })?
-            .into_iter()
-            .map(|e| e.try_into())
-            .collect()
+            })?;
+
+            // Merge the results
+            let mut all_events = Vec::with_capacity(result1.len() + result2.len());
+            all_events.extend(result1);
+            all_events.extend(result2);
+
+            // Convert the results to CalendarEvent
+            all_events.into_iter().map(|e| e.try_into()).collect()
         } else {
             sqlx::query_as!(
                 EventRaw,
