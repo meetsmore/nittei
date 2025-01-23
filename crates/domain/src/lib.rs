@@ -38,11 +38,12 @@ pub use service::{
     TimePlan,
 };
 pub use shared::{
-    datetime_query::DateTimeQuery,
+    datetime_query::{DateTimeQuery, DateTimeQueryRange},
     entity::{Entity, ID},
     id_query::IDQuery,
     metadata::{Meta, Metadata},
     recurrence::{RRuleFrequency, RRuleOptions, WeekDayRecurrence},
+    string_query::StringQuery,
 };
 pub use timespan::TimeSpan;
 pub use user::{IntegrationProvider, User, UserIntegration};
