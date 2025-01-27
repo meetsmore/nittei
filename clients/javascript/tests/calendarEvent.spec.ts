@@ -177,9 +177,26 @@ describe('CalendarEvent API', () => {
         calendarId,
         duration: 1000,
         startTime: new Date(1000),
+        eventType: 'job',
       })
       expect(res.event).toBeDefined()
       expect(res.event.calendarId).toBe(calendarId)
+      expect(res.event.eventType).toBe('job')
+    })
+
+    it('should be able to create event with a predefined "created" and "updated"', async () => {
+      const res = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+        created: new Date(0),
+        updated: new Date(0),
+      })
+      expect(res.event).toBeDefined()
+      expect(res.event.calendarId).toBe(calendarId)
+
+      expect(res.event.created).toEqual(new Date(0).getTime())
+      expect(res.event.updated).toEqual(new Date(0).getTime())
     })
 
     it('should be able to update event', async () => {
@@ -196,24 +213,112 @@ describe('CalendarEvent API', () => {
         title: 'new title',
         startTime: new Date(2000),
         duration: 2000,
+        created: new Date(0),
+        updated: new Date(0),
       })
       expect(res2.event.title).toBe('new title')
       expect(dayjs(res2.event.startTime)).toEqual(dayjs(2000))
       expect(res2.event.duration).toEqual(2000)
       expect(dayjs(res2.event.endTime)).toEqual(dayjs(4000))
+
+      expect(res2.event.created).toEqual(new Date(0).getTime())
+      expect(res2.event.updated).toEqual(new Date(0).getTime())
     })
 
     it('should be able to query on external ID', async () => {
       const externalId = crypto.randomUUID()
-      const res = await adminClient.events.create(userId, {
+      const resEvent1 = await adminClient.events.create(userId, {
         calendarId,
         duration: 1000,
         startTime: new Date(1000),
         externalId: externalId,
       })
-      const eventId = res.event.id
-      const res2 = await adminClient.events.getByExternalId(externalId)
-      expect(res2.event.id).toBe(eventId)
+
+      const resGroup1 = await adminClient.eventGroups.create(userId, {
+        calendarId,
+        externalId: externalId,
+      })
+
+      const resEvent2 = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+        groupId: resGroup1.eventGroup.id,
+      })
+
+      const eventId1 = resEvent1.event.id
+      const eventId2 = resEvent2.event.id
+      const resExternalId = await adminClient.events.getByExternalId(externalId)
+
+      expect(resExternalId.events).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: eventId1,
+          }),
+        ])
+      )
+
+      expect(resExternalId.events).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: eventId2,
+          }),
+        ])
+      )
+    })
+
+    it('should be able to query on external ID (include groups)', async () => {
+      const resUnrelatedEvent = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+      })
+
+      const externalId = crypto.randomUUID()
+      const resEvent1 = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+        externalId: externalId,
+      })
+
+      const resGroup = await adminClient.eventGroups.create(userId, {
+        calendarId,
+        externalId: externalId,
+      })
+
+      const resEvent2 = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+        groupId: resGroup.eventGroup.id,
+      })
+      const eventId1 = resEvent1.event.id
+      const eventId2 = resEvent2.event.id
+      const resExternalId = await adminClient.events.getByExternalId(
+        externalId,
+        {
+          includeGroups: true,
+        }
+      )
+      expect(resExternalId.events).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: eventId1,
+          }),
+          expect.objectContaining({
+            id: eventId2,
+          }),
+        ])
+      )
+
+      expect(resExternalId.events).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: resUnrelatedEvent.event.id,
+          }),
+        ])
+      )
     })
 
     it('should update event (externalId and parentId)', async () => {
@@ -223,6 +328,7 @@ describe('CalendarEvent API', () => {
         calendarId,
         duration: 1000,
         startTime: new Date(1000),
+        eventType: 'job',
         externalId: externalId,
         parentId: parentId,
       })
@@ -231,12 +337,15 @@ describe('CalendarEvent API', () => {
       expect(res.event.parentId).toBe(parentId)
 
       const getRes = await adminClient.events.getByExternalId(externalId)
-      expect(getRes.event.externalId).toBe(externalId)
-      expect(getRes.event.parentId).toBe(parentId)
+      expect(getRes.events[0].externalId).toBe(externalId)
+      expect(getRes.events[0].parentId).toBe(parentId)
+
+      expect(getRes.events[0].eventType).toBe('job')
 
       const externalId2 = crypto.randomUUID()
       const parentId2 = crypto.randomUUID()
       const res2 = await adminClient.events.update(eventId, {
+        eventType: 'block',
         parentId: parentId2,
         externalId: externalId2,
       })
@@ -244,8 +353,9 @@ describe('CalendarEvent API', () => {
       expect(res2.event.parentId).toBe(parentId2)
 
       const getRes2 = await adminClient.events.getByExternalId(externalId2)
-      expect(getRes2.event.externalId).toBe(externalId2)
-      expect(getRes2.event.parentId).toBe(parentId2)
+      expect(getRes2.events[0].externalId).toBe(externalId2)
+      expect(getRes2.events[0].parentId).toBe(parentId2)
+      expect(getRes2.events[0].eventType).toBe('block')
     })
 
     it('should not overwrite externalId and parentId when updating event', async () => {
@@ -412,7 +522,10 @@ describe('CalendarEvent API', () => {
         const res = await adminClient.events.searchEvents({
           userId: userId,
           startTime: {
-            gte: new Date(500),
+            range: {
+              lte: new Date(2000),
+              gte: new Date(500),
+            },
           },
         })
         expect(res.events.length).toBe(3)
@@ -422,7 +535,9 @@ describe('CalendarEvent API', () => {
         const res = await adminClient.events.searchEvents({
           userId: userId,
           startTime: {
-            gte: new Date(2000),
+            range: {
+              gte: new Date(2000),
+            },
           },
         })
         expect(res.events.length).toBe(0)
@@ -432,7 +547,9 @@ describe('CalendarEvent API', () => {
         const res = await adminClient.events.searchEvents({
           userId: userId,
           endTime: {
-            lte: new Date(2000),
+            range: {
+              lte: new Date(2000),
+            },
           },
         })
         expect(res.events.length).toBe(3)
@@ -442,7 +559,9 @@ describe('CalendarEvent API', () => {
         const res = await adminClient.events.searchEvents({
           userId: userId,
           endTime: {
-            lte: new Date(500),
+            range: {
+              lte: new Date(500),
+            },
           },
         })
         expect(res.events.length).toBe(0)
@@ -451,7 +570,9 @@ describe('CalendarEvent API', () => {
       it('should be able to search for events (status)', async () => {
         const res = await adminClient.events.searchEvents({
           userId: userId,
-          status: ['tentative'],
+          status: {
+            in: ['tentative'],
+          },
         })
         expect(res.events.length).toBe(2)
       })
@@ -459,7 +580,9 @@ describe('CalendarEvent API', () => {
       it('should be able to search for events (multiple status)', async () => {
         const res = await adminClient.events.searchEvents({
           userId: userId,
-          status: ['confirmed', 'tentative'],
+          status: {
+            in: ['confirmed', 'tentative'],
+          },
         })
         expect(res.events.length).toBe(3)
       })
@@ -493,7 +616,9 @@ describe('CalendarEvent API', () => {
             eq: 'parentId',
           },
           startTime: {
-            gte: new Date(500),
+            range: {
+              gte: new Date(500),
+            },
           },
         })
         expect(res.events.length).toBe(1)
@@ -507,7 +632,9 @@ describe('CalendarEvent API', () => {
             eq: 'parentId',
           },
           startTime: {
-            gte: new Date(2000),
+            range: {
+              gte: new Date(2000),
+            },
           },
         })
         expect(res.events.length).toBe(0)
@@ -517,7 +644,9 @@ describe('CalendarEvent API', () => {
         const res = await adminClient.events.searchEvents({
           userId: userId,
           updatedAt: {
-            gte: new Date(0),
+            range: {
+              gte: new Date(0),
+            },
           },
         })
         expect(res.events.length).toBe(3)
@@ -527,7 +656,9 @@ describe('CalendarEvent API', () => {
         const res = await adminClient.events.searchEvents({
           userId: userId,
           updatedAt: {
-            gte: new Date(new Date().getTime() + 10000),
+            range: {
+              gte: new Date(new Date().getTime() + 10000),
+            },
           },
         })
         expect(res.events.length).toBe(0)
@@ -573,7 +704,9 @@ describe('CalendarEvent API', () => {
 
         const resSearch = await adminClient.events.searchEvents({
           userId,
-          groupId: group.eventGroup.id,
+          groupId: {
+            eq: group.eventGroup.id,
+          },
         })
 
         expect(resSearch.events.length).toBe(1)

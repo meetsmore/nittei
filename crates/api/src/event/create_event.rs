@@ -36,6 +36,7 @@ pub async fn create_event_admin_controller(
         external_id: body.external_id,
         title: body.title,
         description: body.description,
+        event_type: body.event_type,
         location: body.location,
         status: body.status,
         busy: body.busy.unwrap_or(false),
@@ -49,6 +50,8 @@ pub async fn create_event_admin_controller(
         service_id: body.service_id,
         group_id: body.group_id,
         metadata: body.metadata,
+        created: body.created,
+        updated: body.updated,
     };
 
     execute(usecase, &ctx)
@@ -70,6 +73,7 @@ pub async fn create_event_controller(
         external_id: body.external_id,
         title: body.title,
         description: body.description,
+        event_type: body.event_type,
         location: body.location,
         status: body.status,
         busy: body.busy.unwrap_or(false),
@@ -83,6 +87,8 @@ pub async fn create_event_controller(
         service_id: body.service_id,
         group_id: body.group_id,
         metadata: body.metadata,
+        created: body.created,
+        updated: body.updated,
     };
 
     execute_with_policy(usecase, &policy, &ctx)
@@ -97,6 +103,7 @@ pub struct CreateEventUseCase {
     pub user: User,
     pub title: Option<String>,
     pub description: Option<String>,
+    pub event_type: Option<String>,
     pub parent_id: Option<String>,
     pub external_id: Option<String>,
     pub location: Option<String>,
@@ -110,6 +117,8 @@ pub struct CreateEventUseCase {
     pub service_id: Option<ID>,
     pub group_id: Option<ID>,
     pub metadata: Option<serde_json::Value>,
+    pub created: Option<DateTime<Utc>>,
+    pub updated: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -170,14 +179,13 @@ impl UseCase for CreateEventUseCase {
             external_id: self.external_id.clone(),
             title: self.title.clone(),
             description: self.description.clone(),
+            event_type: self.event_type.clone(),
             location: self.location.clone(),
             status: self.status.clone(),
             all_day: self.all_day,
             busy: self.busy,
             start_time: self.start_time,
             duration: self.duration,
-            created: ctx.sys.get_timestamp_millis(),
-            updated: ctx.sys.get_timestamp_millis(),
             recurrence: None,
             end_time: self.start_time + TimeDelta::milliseconds(self.duration), // default, if recurrence changes, this will be updated
             exdates: Vec::new(),
@@ -188,6 +196,14 @@ impl UseCase for CreateEventUseCase {
             service_id: self.service_id.clone(),
             group_id: self.group_id.clone(),
             metadata: self.metadata.clone(),
+            created: self
+                .created
+                .map(|c| c.timestamp_millis())
+                .unwrap_or(ctx.sys.get_timestamp_millis()),
+            updated: self
+                .updated
+                .map(|c| c.timestamp_millis())
+                .unwrap_or(ctx.sys.get_timestamp_millis()),
         };
 
         if let Some(rrule_opts) = self.recurrence.clone() {

@@ -53,6 +53,14 @@ pub mod create_event {
         #[validate(length(min = 1))]
         pub description: Option<String>,
 
+        /// Optional type of the event
+        /// e.g. "meeting", "reminder", "birthday"
+        /// Default is None
+        #[serde(default)]
+        #[ts(optional)]
+        #[validate(length(min = 1))]
+        pub event_type: Option<String>,
+
         /// Optional parent event ID
         /// This is useful for external applications that need to link Nittei's events to a wider data model (e.g. a project, an order, etc.)
         #[serde(default)]
@@ -126,6 +134,18 @@ pub mod create_event {
         #[serde(default)]
         #[ts(optional)]
         pub metadata: Option<serde_json::Value>,
+
+        /// Optional created date
+        /// Defaults to the current date and time
+        #[serde(default)]
+        #[ts(optional, type = "Date")]
+        pub created: Option<DateTime<Utc>>,
+
+        /// Optional updated date
+        /// Defaults to the current date and time
+        #[serde(default)]
+        #[ts(optional, type = "Date")]
+        pub updated: Option<DateTime<Utc>>,
     }
 
     pub type APIResponse = CalendarEventResponse;
@@ -199,7 +219,31 @@ pub mod get_event_by_external_id {
         pub external_id: String,
     }
 
-    pub type APIResponse = CalendarEventResponse;
+    /// Query parameters that can be used when getting an event by external ID
+    #[derive(Deserialize, Serialize, TS)]
+    #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "GetEventsByExternalIdQueryParams")]
+    pub struct QueryParams {
+        /// Optional flag to include the events that are from a group with the same external ID
+        #[serde(default)]
+        #[ts(optional)]
+        pub include_groups: Option<bool>,
+    }
+
+    #[derive(Serialize, TS)]
+    #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "GetEventsByExternalIdAPIResponse")]
+    pub struct APIResponse {
+        /// Calendar events retrieved
+        pub events: Vec<CalendarEventDTO>,
+    }
+
+    /// API response for getting events by calendars
+    impl APIResponse {
+        pub fn new(events: Vec<CalendarEventDTO>) -> Self {
+            Self { events }
+        }
+    }
 }
 
 pub mod get_events_by_calendars {
@@ -253,7 +297,7 @@ pub mod get_events_by_calendars {
 }
 
 pub mod search_events {
-    use nittei_domain::{DateTimeQuery, IDQuery};
+    use nittei_domain::{DateTimeQuery, IDQuery, StringQuery};
 
     use super::*;
 
@@ -271,13 +315,13 @@ pub mod search_events {
         #[ts(optional)]
         pub calendar_ids: Option<Vec<ID>>,
 
-        /// Optional query on parent ID
+        /// Optional query on parent ID (which is a string as it's an ID from an external system)
         #[ts(optional)]
-        pub parent_id: Option<IDQuery>,
+        pub parent_id: Option<StringQuery>,
 
         /// Optional query on group ID
         #[ts(optional)]
-        pub group_id: Option<ID>,
+        pub group_id: Option<IDQuery>,
 
         /// Optional query on start time - "lower than or equal", or "great than or equal" (UTC)
         #[ts(optional)]
@@ -287,9 +331,13 @@ pub mod search_events {
         #[ts(optional)]
         pub end_time: Option<DateTimeQuery>,
 
-        /// Optional list of event status
+        /// Optional query on event type
         #[ts(optional)]
-        pub status: Option<Vec<String>>,
+        pub event_type: Option<StringQuery>,
+
+        /// Optional query on status
+        #[ts(optional)]
+        pub status: Option<StringQuery>,
 
         /// Optioanl query on updated at - "lower than or equal", or "great than or equal" (UTC)
         #[ts(optional)]
@@ -300,7 +348,7 @@ pub mod search_events {
         pub metadata: Option<serde_json::Value>,
     }
 
-    /// API response for getting events by calendars
+    /// API response for searching events for one user
     #[derive(Serialize, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "SearchEventsAPIResponse")]
@@ -374,6 +422,14 @@ pub mod update_event {
         #[ts(optional)]
         #[validate(length(min = 1))]
         pub description: Option<String>,
+
+        /// Optional type of the event
+        /// e.g. "meeting", "reminder", "birthday"
+        /// Default is None
+        #[serde(default)]
+        #[ts(optional)]
+        #[validate(length(min = 1))]
+        pub event_type: Option<String>,
 
         /// Optional parent event ID
         /// This is useful for external applications that need to link Nittei's events to a wider data model (e.g. a project, an order, etc.)
@@ -449,6 +505,16 @@ pub mod update_event {
         #[serde(default)]
         #[ts(optional)]
         pub metadata: Option<serde_json::Value>,
+
+        /// Optional created date to use to replace the current one
+        #[serde(default)]
+        #[ts(optional, type = "Date")]
+        pub created: Option<DateTime<Utc>>,
+
+        /// Optional updated date to use to replace the current one
+        #[serde(default)]
+        #[ts(optional, type = "Date")]
+        pub updated: Option<DateTime<Utc>>,
     }
 
     #[derive(Deserialize)]

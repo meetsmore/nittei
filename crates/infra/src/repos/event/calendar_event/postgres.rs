@@ -1,6 +1,7 @@
 use std::convert::{TryFrom, TryInto};
 
 use chrono::{DateTime, Utc};
+use futures::future;
 use nittei_domain::{CalendarEvent, CalendarEventReminder, RRuleOptions, ID};
 use serde_json::Value;
 use sqlx::{
@@ -11,8 +12,18 @@ use sqlx::{
 };
 use tracing::{error, instrument};
 
-use super::{IEventRepo, MostRecentCreatedServiceEvents, SearchEventsParams};
-use crate::repos::shared::query_structs::MetadataFindQuery;
+use super::{
+    IEventRepo,
+    MostRecentCreatedServiceEvents,
+    SearchEventsForAccountParams,
+    SearchEventsForUserParams,
+};
+use crate::repos::{
+    apply_datetime_query,
+    apply_id_query,
+    apply_string_query,
+    shared::query_structs::MetadataFindQuery,
+};
 
 #[derive(Debug)]
 pub struct PostgresEventRepo {
@@ -50,6 +61,7 @@ struct EventRaw {
     external_id: Option<String>,
     title: Option<String>,
     description: Option<String>,
+    event_type: Option<String>,
     location: Option<String>,
     all_day: bool,
     status: String,
@@ -89,6 +101,7 @@ impl TryFrom<EventRaw> for CalendarEvent {
             external_id: e.external_id,
             title: e.title,
             description: e.description,
+            event_type: e.event_type,
             location: e.location,
             all_day: e.all_day,
             status: e.status.try_into()?,
@@ -122,6 +135,7 @@ impl IEventRepo for PostgresEventRepo {
                 external_id,
                 title,
                 description,
+                event_type,
                 location,
                 status,
                 all_day,
@@ -138,7 +152,7 @@ impl IEventRepo for PostgresEventRepo {
                 group_uid,
                 metadata
             )
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
             "#,
             e.id.as_ref(),
             e.calendar_id.as_ref(),
@@ -146,6 +160,7 @@ impl IEventRepo for PostgresEventRepo {
             e.external_id,
             e.title,
             e.description,
+            e.event_type,
             e.location,
             status,
             e.all_day,
@@ -184,21 +199,22 @@ impl IEventRepo for PostgresEventRepo {
                 external_id = $3,
                 title = $4,
                 description = $5,
-                location = $6,
-                status = $7,
-                all_day = $8,
-                start_time = $9,
-                duration = $10,
-                end_time = $11,
-                busy = $12,
-                created = $13,
-                updated = $14,
-                recurrence = $15,
-                exdates = $16,
-                reminders = $17,
-                service_uid = $18,
-                group_uid = $19,
-                metadata = $20
+                event_type = $6,
+                location = $7,
+                status = $8,
+                all_day = $9,
+                start_time = $10,
+                duration = $11,
+                end_time = $12,
+                busy = $13,
+                created = $14,
+                updated = $15,
+                recurrence = $16,
+                exdates = $17,
+                reminders = $18,
+                service_uid = $19,
+                group_uid = $20,
+                metadata = $21
             WHERE event_uid = $1
             "#,
             e.id.as_ref(),
@@ -206,6 +222,7 @@ impl IEventRepo for PostgresEventRepo {
             e.external_id,
             e.title,
             e.description,
+            e.event_type,
             e.location,
             status,
             e.all_day,
@@ -261,29 +278,92 @@ impl IEventRepo for PostgresEventRepo {
     }
 
     #[instrument]
-    async fn get_by_external_id(&self, external_id: &str) -> anyhow::Result<Option<CalendarEvent>> {
-        sqlx::query_as!(
-            EventRaw,
-            r#"
+    async fn get_by_external_id(
+        &self,
+        account_uid: &ID,
+        external_id: &str,
+        include_groups: bool,
+    ) -> anyhow::Result<Vec<CalendarEvent>> {
+        if include_groups {
+            // Define two queries and merge the results
+            let query_calendar_event = sqlx::query_as!(
+                EventRaw,
+                r#"
+        SELECT e.*, u.user_uid, account_uid 
+        FROM calendar_events AS e
+        INNER JOIN calendars AS c
+            ON c.calendar_uid = e.calendar_uid
+        INNER JOIN users AS u
+            ON u.user_uid = c.user_uid
+        WHERE u.account_uid = $1 AND e.external_id = $2
+        "#,
+                account_uid.as_ref(),
+                external_id
+            );
+
+            let query_calendar_events_from_group = sqlx::query_as!(
+                EventRaw,
+                r#"
+        SELECT e.*, u.user_uid, account_uid 
+        FROM calendar_events AS e
+        INNER JOIN calendars AS c
+            ON c.calendar_uid = e.calendar_uid
+        INNER JOIN users AS u
+            ON u.user_uid = c.user_uid
+        LEFT JOIN events_groups AS g
+            ON g.group_uid = e.group_uid AND g.calendar_uid = e.calendar_uid
+        WHERE u.account_uid = $1 AND g.external_id = $2
+        "#,
+                account_uid.as_ref(),
+                external_id
+            );
+
+            // Execute both queries in parallel
+            let (result1, result2) = future::try_join(
+                query_calendar_event.fetch_all(&self.pool),
+                query_calendar_events_from_group.fetch_all(&self.pool),
+            )
+            .await
+            .inspect_err(|err| {
+                error!(
+                    "Find calendar event (with group) with external_id: {:?} failed. DB returned error: {:?}",
+                    external_id, err
+                );
+            })?;
+
+            // Merge the results
+            let mut all_events = Vec::with_capacity(result1.len() + result2.len());
+            all_events.extend(result1);
+            all_events.extend(result2);
+
+            // Convert the results to CalendarEvent
+            all_events.into_iter().map(|e| e.try_into()).collect()
+        } else {
+            sqlx::query_as!(
+                EventRaw,
+                r#"
             SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
             INNER JOIN calendars AS c
                 ON c.calendar_uid = e.calendar_uid
             INNER JOIN users AS u
                 ON u.user_uid = c.user_uid
-            WHERE e.external_id = $1
+            WHERE u.account_uid = $1 AND e.external_id = $2
             "#,
-            external_id,
-        )
-        .fetch_optional(&self.pool)
-        .await
-        .inspect_err(|err| {
-            error!(
-                "Find calendar event with external_id: {:?} failed. DB returned error: {:?}",
-                external_id, err
-            );
-        })?
-        .map(|e| e.try_into())
-        .transpose()
+                account_uid.as_ref(),
+                external_id,
+            )
+            .fetch_all(&self.pool)
+            .await
+            .inspect_err(|err| {
+                error!(
+                    "Find calendar event with external_id: {:?} failed. DB returned error: {:?}",
+                    external_id, err
+                );
+            })?
+            .into_iter()
+            .map(|e| e.try_into())
+            .collect()
+        }
     }
 
     #[instrument]
@@ -413,13 +493,13 @@ impl IEventRepo for PostgresEventRepo {
     }
 
     /// Search events
-    /// This method is used to search events based on the given parameters
+    /// This method is used to search events based on the given parameters for one specific user:
     /// The parameters are optional and can be used to filter the events
     ///
-    /// Warning: performance of this method is not optimal
-    async fn search_events(
+    /// Warning: performance of this method might not optimal
+    async fn search_events_for_user(
         &self,
-        search_events_params: SearchEventsParams,
+        params: SearchEventsForUserParams,
     ) -> anyhow::Result<Vec<CalendarEvent>> {
         let mut query = QueryBuilder::new(
             r#"
@@ -431,9 +511,9 @@ impl IEventRepo for PostgresEventRepo {
             WHERE u.user_uid = "#,
         );
 
-        query.push_bind::<Uuid>(search_events_params.user_id.into());
+        query.push_bind::<Uuid>(params.user_id.into());
 
-        if let Some(calendar_ids) = search_events_params.calendar_ids {
+        if let Some(calendar_ids) = params.calendar_ids {
             query.push(" AND c.calendar_uid IN (");
             let mut separated = query.separated(", ");
             for value_type in calendar_ids.iter() {
@@ -442,67 +522,130 @@ impl IEventRepo for PostgresEventRepo {
             separated.push_unseparated(") ");
         }
 
-        if let Some(parent_id) = search_events_params.parent_id {
-            if let Some(eq) = parent_id.eq {
-                query.push(" AND e.parent_id = ");
-                query.push_bind(eq.to_string());
-            } else if let Some(exists) = parent_id.exists {
-                if exists {
-                    query.push(" AND e.parent_id IS NOT NULL");
-                } else {
-                    query.push(" AND e.parent_id IS NULL");
-                };
-            };
+        apply_string_query(
+            &mut query,
+            "parent_id",
+            &params.search_events_params.parent_id,
+        );
+
+        apply_id_query(
+            &mut query,
+            "group_uid",
+            &params.search_events_params.group_id,
+        );
+
+        apply_datetime_query(
+            &mut query,
+            "start_time",
+            &params.search_events_params.start_time,
+            false,
+        );
+
+        apply_datetime_query(
+            &mut query,
+            "end_time",
+            &params.search_events_params.end_time,
+            false,
+        );
+
+        apply_string_query(
+            &mut query,
+            "event_type",
+            &params.search_events_params.event_type,
+        );
+
+        apply_string_query(&mut query, "status", &params.search_events_params.status);
+
+        apply_datetime_query(
+            &mut query,
+            "updated",
+            &params.search_events_params.updated_at,
+            true,
+        );
+
+        if let Some(metadata) = params.search_events_params.metadata {
+            query.push(" AND e.metadata @> ");
+            query.push_bind(Json(metadata.clone()));
         }
 
-        if let Some(group_id) = search_events_params.group_id {
-            query.push(" AND e.group_uid = ");
-            query.push_bind::<Uuid>(group_id.into());
-        }
+        let rows = query.build().fetch_all(&self.pool).await.inspect_err(|e| {
+            error!("Search events failed. DB returned error: {:?}", e);
+        })?;
 
-        if let Some(start_time) = search_events_params.start_time {
-            if let Some(gte) = start_time.gte {
-                query.push(" AND e.start_time >= ");
-                query.push_bind(gte);
-            }
-            if let Some(lte) = start_time.lte {
-                query.push(" AND e.start_time <= ");
-                query.push_bind(lte);
-            }
-        }
+        let events_raw: Vec<EventRaw> = rows
+            .into_iter()
+            .map(|row| EventRaw::from_row(&row))
+            .collect::<Result<Vec<_>, sqlx::Error>>()?;
 
-        if let Some(end_time) = search_events_params.end_time {
-            if let Some(gte) = end_time.gte {
-                query.push(" AND e.end_time >= ");
-                query.push_bind(gte);
-            }
-            if let Some(lte) = end_time.lte {
-                query.push(" AND e.end_time <= ");
-                query.push_bind(lte);
-            }
-        }
+        events_raw
+            .into_iter()
+            .map(CalendarEvent::try_from)
+            .collect()
+    }
 
-        if let Some(status) = search_events_params.status {
-            query.push(" AND e.status IN (");
-            let mut separated = query.separated(", ");
-            for value_type in status.iter() {
-                separated.push_bind(value_type.clone());
-            }
-            separated.push_unseparated(") ");
-        }
+    /// Search events at the account level
+    /// This method is used to search events for all users of an account based on the given parameters
+    /// The parameters are optional and can be used to filter the events
+    ///
+    /// Warning: performance of this method might not optimal
+    async fn search_events_for_account(
+        &self,
+        params: SearchEventsForAccountParams,
+    ) -> anyhow::Result<Vec<CalendarEvent>> {
+        let mut query = QueryBuilder::new(
+            r#"
+            SELECT e.*, c.user_uid, u.account_uid FROM calendar_events AS e
+            INNER JOIN calendars AS c
+                ON c.calendar_uid = e.calendar_uid
+            INNER JOIN users AS u
+                ON u.user_uid = c.user_uid
+            WHERE u.account_uid = "#,
+        );
 
-        if let Some(updated_at) = search_events_params.updated_at {
-            if let Some(gte) = updated_at.gte {
-                query.push(" AND e.updated >= ");
-                query.push_bind(gte.timestamp_millis());
-            }
-            if let Some(lte) = updated_at.lte {
-                query.push(" AND e.updated <= ");
-                query.push_bind(lte.timestamp_millis());
-            }
-        }
+        query.push_bind::<Uuid>(params.account_id.into());
 
-        if let Some(metadata) = search_events_params.metadata {
+        apply_string_query(
+            &mut query,
+            "parent_id",
+            &params.search_events_params.parent_id,
+        );
+
+        apply_id_query(
+            &mut query,
+            "group_uid",
+            &params.search_events_params.group_id,
+        );
+
+        apply_datetime_query(
+            &mut query,
+            "start_time",
+            &params.search_events_params.start_time,
+            false,
+        );
+
+        apply_datetime_query(
+            &mut query,
+            "end_time",
+            &params.search_events_params.end_time,
+            false,
+        );
+
+        apply_string_query(
+            &mut query,
+            "event_type",
+            &params.search_events_params.event_type,
+        );
+
+        apply_string_query(&mut query, "status", &params.search_events_params.status);
+
+        apply_datetime_query(
+            &mut query,
+            "updated",
+            &params.search_events_params.updated_at,
+            true,
+        );
+
+        if let Some(metadata) = params.search_events_params.metadata {
             query.push(" AND e.metadata @> ");
             query.push_bind(Json(metadata.clone()));
         }

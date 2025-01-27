@@ -43,6 +43,7 @@ pub async fn update_event_admin_controller(
         event_id: e.id,
         title: body.title,
         description: body.description,
+        event_type: body.event_type,
         parent_id: body.parent_id,
         external_id: body.external_id,
         location: body.location,
@@ -57,6 +58,8 @@ pub async fn update_event_admin_controller(
         group_id: body.group_id,
         exdates: body.exdates,
         metadata: body.metadata,
+        created: body.created,
+        updated: body.updated,
     };
 
     execute(usecase, &ctx)
@@ -79,6 +82,7 @@ pub async fn update_event_controller(
         event_id: path_params.event_id.clone(),
         title: body.title,
         description: body.description,
+        event_type: body.event_type,
         parent_id: body.parent_id,
         external_id: body.external_id,
         location: body.location,
@@ -93,6 +97,8 @@ pub async fn update_event_controller(
         group_id: body.group_id,
         exdates: body.exdates,
         metadata: body.metadata,
+        created: body.created,
+        updated: body.updated,
     };
 
     execute_with_policy(usecase, &policy, &ctx)
@@ -108,6 +114,7 @@ pub struct UpdateEventUseCase {
 
     pub title: Option<String>,
     pub description: Option<String>,
+    pub event_type: Option<String>,
     pub parent_id: Option<String>,
     pub external_id: Option<String>,
     pub location: Option<String>,
@@ -122,6 +129,8 @@ pub struct UpdateEventUseCase {
     pub group_id: Option<ID>,
     pub exdates: Option<Vec<DateTime<Utc>>>,
     pub metadata: Option<serde_json::Value>,
+    pub created: Option<DateTime<Utc>>,
+    pub updated: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug)]
@@ -164,6 +173,7 @@ impl UseCase for UpdateEventUseCase {
             event_id,
             title,
             description,
+            event_type,
             parent_id,
             external_id,
             location,
@@ -178,6 +188,8 @@ impl UseCase for UpdateEventUseCase {
             service_id,
             group_id,
             metadata,
+            created,
+            updated,
         } = self;
 
         let mut e = match ctx.repos.events.find(event_id).await {
@@ -275,6 +287,10 @@ impl UseCase for UpdateEventUseCase {
             e.description.clone_from(description);
         }
 
+        if event_type.is_some() {
+            e.event_type.clone_from(event_type);
+        }
+
         if parent_id.is_some() {
             e.parent_id.clone_from(parent_id);
         }
@@ -299,7 +315,15 @@ impl UseCase for UpdateEventUseCase {
             e.all_day = *all_day;
         }
 
-        e.updated = ctx.sys.get_timestamp_millis();
+        if let Some(created) = created {
+            e.created = created.timestamp_millis();
+        }
+
+        if let Some(updated) = updated {
+            e.updated = updated.timestamp_millis();
+        } else {
+            e.updated = ctx.sys.get_timestamp_millis();
+        }
 
         ctx.repos
             .events

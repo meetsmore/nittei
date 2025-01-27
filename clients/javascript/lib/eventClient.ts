@@ -1,5 +1,7 @@
 import { NitteiBaseClient } from './baseClient'
 import type {
+  GetEventsByExternalIdAPIResponse,
+  GetEventsByExternalIdQueryParams,
   SearchEventsAPIResponse,
   SearchEventsRequestBody,
 } from './gen_types'
@@ -41,6 +43,12 @@ export class NitteiEventClient extends NitteiBaseClient {
     }
   }
 
+  /**
+   * Create a new calendar event
+   * @param userId - id of the user
+   * @param data - data of the event
+   * @returns - the created CalendarEvent
+   */
   public async create(
     userId: ID,
     data: CreateEventRequestBody
@@ -55,6 +63,11 @@ export class NitteiEventClient extends NitteiBaseClient {
     }
   }
 
+  /**
+   * Get an event by its id
+   * @param eventId - id of the event
+   * @returns - the event
+   */
   public async getById(eventId: ID): Promise<CalendarEventResponse> {
     const res = await this.get<CalendarEventResponse>(`/user/events/${eventId}`)
 
@@ -63,15 +76,25 @@ export class NitteiEventClient extends NitteiBaseClient {
     }
   }
 
+  /**
+   * Get events by external id
+   * This returns an array of events
+   * It can be empty if no events are found
+   * @param externalId - external id of the event
+   * @param queryParams - query params (optional) - allow to specify that the events from groups should be included
+   * @returns - the events found
+   */
   public async getByExternalId(
-    externalId: string
-  ): Promise<CalendarEventResponse> {
-    const res = await this.get<CalendarEventResponse>(
-      `/user/events/external_id/${externalId}`
+    externalId: string,
+    queryParams?: GetEventsByExternalIdQueryParams
+  ): Promise<GetEventsByExternalIdAPIResponse> {
+    const res = await this.get<GetEventsByExternalIdAPIResponse>(
+      `/user/events/external_id/${externalId}`,
+      queryParams
     )
 
     return {
-      event: convertEventDates(res.event),
+      events: res.events.map(convertEventDates),
     }
   }
 

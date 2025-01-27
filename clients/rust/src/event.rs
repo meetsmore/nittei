@@ -30,9 +30,13 @@ pub struct CreateEventInput {
     #[serde(default)]
     pub description: Option<String>,
     #[serde(default)]
+    pub event_type: Option<String>,
+    #[serde(default)]
     pub parent_id: Option<String>,
     #[serde(default)]
     pub external_id: Option<String>,
+    #[serde(default)]
+    pub group_id: Option<ID>,
     #[serde(default)]
     pub location: Option<String>,
     #[serde(default)]
@@ -67,8 +71,10 @@ pub struct UpdateEventInput {
     pub event_id: ID,
     pub title: Option<String>,
     pub description: Option<String>,
+    pub event_type: Option<String>,
     pub parent_id: Option<String>,
     pub external_id: Option<String>,
+    pub group_id: Option<ID>,
     pub location: Option<String>,
     pub status: Option<CalendarEventStatus>,
     pub all_day: Option<bool>,
@@ -122,6 +128,7 @@ impl CalendarEventClient {
             external_id: input.external_id,
             title: input.title,
             description: input.description,
+            event_type: input.event_type,
             location: input.location,
             status: input.status,
             all_day: input.all_day,
@@ -132,9 +139,10 @@ impl CalendarEventClient {
             recurrence: input.recurrence,
             reminders: input.reminders,
             service_id: input.service_id,
-            // TODO
-            group_id: None,
+            group_id: input.group_id,
             metadata: input.metadata,
+            created: None,
+            updated: None,
         };
 
         self.base
@@ -164,6 +172,7 @@ impl CalendarEventClient {
         let body = update_event::RequestBody {
             title: input.title,
             description: input.description,
+            event_type: input.event_type,
             location: input.location,
             all_day: input.all_day,
             status: input.status,
@@ -176,9 +185,10 @@ impl CalendarEventClient {
             recurrence: input.rrule_options,
             reminders: input.reminders,
             service_id: input.service_id,
-            // TODO
-            group_id: None,
+            group_id: input.group_id,
             metadata: input.metadata,
+            created: None,
+            updated: None,
         };
         self.base
             .put(body, format!("user/events/{}", event_id), StatusCode::OK)
