@@ -151,7 +151,7 @@ export const createAxiosInstanceFrontend = (
   credentials: ICredentials
 ): AxiosInstance => {
   const config: AxiosRequestConfig = {
-    timeout: 5000, // Default timeout of 5 seconds
+    timeout: 5_000, // Default timeout of 5 seconds
     baseURL: args.baseUrl,
     headers: credentials.createAuthHeaders(),
     validateStatus: () => true, // allow all status codes without throwing error
@@ -189,7 +189,7 @@ export const createAxiosInstanceBackend = async (
   credentials: ICredentials
 ): Promise<AxiosInstance> => {
   const config: AxiosRequestConfig = {
-    timeout: 5000, // Default timeout of 5 seconds
+    timeout: 5_000, // Default timeout of 5 seconds
     baseURL: args.baseUrl,
     headers: credentials.createAuthHeaders(),
     validateStatus: () => true, // allow all status codes without throwing error
