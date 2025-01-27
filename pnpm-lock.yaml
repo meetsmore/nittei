@@ -55,8 +55,8 @@ importers:
         specifier: 5.7.2
         version: 5.7.2
       uuid:
-        specifier: 11.0.3
-        version: 11.0.3
+        specifier: 11.0.5
+        version: 11.0.5
 
 packages:
 
@@ -1833,8 +1833,8 @@ packages:
     peerDependencies:
       browserslist: '>= 4.21.0'
 
-  uuid@11.0.3:
-    resolution: {integrity: sha512-d0z310fCWv5dJwnX1Y/MncBAqGMKEzlBb1AOf7z9K8ALnd0utBX/msg/fA0+sbyN1ihbMsLhrBlnl1ak7Wa0rg==}
+  uuid@11.0.5:
+    resolution: {integrity: sha512-508e6IcKLrhxKdBbcA2b4KQZlLVp2+J5UwQ6F7Drckkc5N9ZJwFa4TgWtsww9UG8fGHbm6gbV19TdM5pQ4GaIA==}
     hasBin: true
 
   v8-compile-cache-lib@3.0.1:
@@ -3821,7 +3821,7 @@ snapshots:
       escalade: 3.2.0
       picocolors: 1.1.0
 
-  uuid@11.0.3: {}
+  uuid@11.0.5: {}
 
   v8-compile-cache-lib@3.0.1: {}
 
