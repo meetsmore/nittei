@@ -1,3 +1,4 @@
+mod account_search_events;
 mod add_account_integration;
 mod create_account;
 mod delete_account_webhook;
@@ -6,6 +7,7 @@ mod remove_account_integration;
 mod set_account_pub_key;
 mod set_account_webhook;
 
+use account_search_events::account_search_events_controller;
 use actix_web::web;
 use add_account_integration::add_account_integration_controller;
 use create_account::create_account_controller;
@@ -51,5 +53,11 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.route(
         "/account/integration/{provider}",
         web::delete().to(remove_account_integration_controller),
+    );
+
+    // Search events across all users for the account
+    cfg.route(
+        "/account/events/search",
+        web::post().to(account_search_events_controller),
     );
 }

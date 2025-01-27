@@ -17,9 +17,7 @@ validator = { version = "0.18", features = ["derive"] }
 chrono = { version = "0.4.19", features = ["serde"] }
 chrono-tz = { version = "0.8.1", features = ["serde"] }
 uuid = { version = "1.1.2", features = ["serde"] }
-# TODO: Adapt this once a release is done with the JSON value changes
-# https://github.com/Aleph-Alpha/ts-rs/pull/358 and https://github.com/Aleph-Alpha/ts-rs/pull/359
-ts-rs = { git = "https://github.com/Aleph-Alpha/ts-rs.git", rev = "4aea173270f5de8490ec9bfd43d58fc0758089c0", features = [
+ts-rs = { version = "10.1.0", features = [
   "uuid-impl",
   "chrono-impl",
   "serde-json-impl",

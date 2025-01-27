@@ -57,6 +57,7 @@ pub struct CalendarEvent {
     pub external_id: Option<String>,
     pub title: Option<String>,
     pub description: Option<String>,
+    pub event_type: Option<String>,
     pub location: Option<String>,
     pub all_day: bool,
     pub status: CalendarEventStatus,

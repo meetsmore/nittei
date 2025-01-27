@@ -1,5 +1,8 @@
 name: Server test
 
+env:
+  RUST_VERSION: 1.84.0
+
 on:
   pull_request:
   push:
@@ -12,7 +15,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-22.04, ubuntu-22.04-arm]
 
     services:
       postgres:
@@ -39,6 +42,9 @@ jobs:
           toolchain: nightly
           components: rustfmt
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          components: clippy
 
       - uses: actions/cache@v4
         with:
@@ -48,7 +54,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       # Install Nextest
       - name: Install nextest

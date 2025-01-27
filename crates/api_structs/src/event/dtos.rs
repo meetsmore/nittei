@@ -24,6 +24,10 @@ pub struct CalendarEventDTO {
     /// Optional description of the event
     pub description: Option<String>,
 
+    /// Optional type of the event
+    /// e.g. "meeting", "reminder", "birthday"
+    pub event_type: Option<String>,
+
     /// Optional location of the event
     pub location: Option<String>,
 
@@ -93,6 +97,7 @@ impl CalendarEventDTO {
             id: event.id,
             title: event.title,
             description: event.description,
+            event_type: event.event_type,
             location: event.location,
             all_day: event.all_day,
             status: event.status,

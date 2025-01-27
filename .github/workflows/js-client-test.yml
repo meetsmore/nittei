@@ -1,13 +1,14 @@
 name: JavaScript client tests
 
+env:
+  RUST_VERSION: 1.84.0
+  RUST_BACKTRACE: 1
+
 on:
   pull_request:
   push:
     branches:
       - master
-
-env:
-  RUST_BACKTRACE: 1
 
 jobs:
   test:
@@ -16,7 +17,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-22.04, ubuntu-22.04-arm]
         node-version: [20]
 
     services:
@@ -40,6 +41,8 @@ jobs:
 
       # Setup Rust as we need to run the server
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
 
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
@@ -54,7 +57,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}--${{ runner.arch }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Start server
         run: |

@@ -1,18 +1,22 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
-use validator::Validate;
 
-/// Query parameters for searching on an ID
-#[derive(Deserialize, Serialize, TS, Debug, Validate, Clone)]
+use crate::ID;
+
+/// Query parameters for searching on an ID (or list of IDs)
+#[derive(Deserialize, Serialize, TS, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 #[ts(export, rename = "IDQuery")]
-pub struct IDQuery {
-    /// Optional String (equality test)
-    /// This is not a UUID, but a string as we allow any type of ID in this field
-    #[ts(optional)]
-    pub eq: Option<String>,
-    /// Optional bool (existence test)
-    /// If "eq" is provided, this field is ignored
-    #[ts(optional)]
-    pub exists: Option<bool>,
+pub enum IDQuery {
+    /// ID (equality test)
+    Eq(ID),
+
+    /// ID (inequality test)
+    Ne(ID),
+
+    /// Bool (existence test)
+    Exists(bool),
+
+    /// List of IDs (equality test)
+    In(Vec<ID>),
 }

@@ -22,6 +22,12 @@ export type CreateEventRequestBody = {
    */
   description?: string
   /**
+   * Optional type of the event
+   * e.g. "meeting", "reminder", "birthday"
+   * Default is None
+   */
+  eventType?: string
+  /**
    * Optional parent event ID
    * This is useful for external applications that need to link Nittei's events to a wider data model (e.g. a project, an order, etc.)
    */
@@ -81,4 +87,14 @@ export type CreateEventRequestBody = {
    * Optional metadata (e.g. {"key": "value"})
    */
   metadata?: JsonValue
+  /**
+   * Optional created date
+   * Defaults to the current date and time
+   */
+  created?: Date
+  /**
+   * Optional updated date
+   * Defaults to the current date and time
+   */
+  updated?: Date
 }
