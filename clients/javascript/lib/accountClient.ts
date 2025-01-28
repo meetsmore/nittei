@@ -1,8 +1,13 @@
 import { NitteiBaseClient } from './baseClient'
+import type {
+  AccountSearchEventsRequestBody,
+  SearchEventsAPIResponse,
+} from './gen_types'
 import type { AccountResponse } from './gen_types/AccountResponse'
 import type { AddAccountIntegrationRequestBody } from './gen_types/AddAccountIntegrationRequestBody'
 import type { CreateAccountRequestBody } from './gen_types/CreateAccountRequestBody'
 import type { CreateAccountResponseBody } from './gen_types/CreateAccountResponseBody'
+import { convertEventDates } from './helpers/datesConverters'
 
 /**
  * Client for the account endpoints
@@ -71,5 +76,21 @@ export class NitteiAccountClient extends NitteiBaseClient {
    */
   public async me() {
     return await this.get<AccountResponse>('/account')
+  }
+
+  /**
+   * Search events in the account
+   * @param params - search parameters, check {@link AccountSearchEventsRequestBody} for more details
+   * @returns - the events found
+   */
+  public async searchEventsInAccount(params: AccountSearchEventsRequestBody) {
+    const res = await this.post<SearchEventsAPIResponse>(
+      '/account/events/search',
+      params
+    )
+
+    return {
+      events: res.events.map(convertEventDates),
+    }
   }
 }
