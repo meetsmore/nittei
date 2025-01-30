@@ -63,13 +63,13 @@ export type CalendarEventDTO = {
    */
   busy: boolean
   /**
-   * Last updated timestamp
+   * Last updated timestamp (UTC)
    */
-  updated: number
+  updated: Date
   /**
-   * Created timestamp
+   * Created tiemstamp (UTC)
    */
-  created: number
+  created: Date
   /**
    * Recurrence rule
    */

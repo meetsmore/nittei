@@ -195,8 +195,8 @@ describe('CalendarEvent API', () => {
       expect(res.event).toBeDefined()
       expect(res.event.calendarId).toBe(calendarId)
 
-      expect(res.event.created).toEqual(new Date(0).getTime())
-      expect(res.event.updated).toEqual(new Date(0).getTime())
+      expect(res.event.created).toEqual(new Date(0))
+      expect(res.event.updated).toEqual(new Date(0))
     })
 
     it('should be able to update event', async () => {
@@ -221,8 +221,8 @@ describe('CalendarEvent API', () => {
       expect(res2.event.duration).toEqual(2000)
       expect(dayjs(res2.event.endTime)).toEqual(dayjs(4000))
 
-      expect(res2.event.created).toEqual(new Date(0).getTime())
-      expect(res2.event.updated).toEqual(new Date(0).getTime())
+      expect(res2.event.created).toEqual(new Date(0))
+      expect(res2.event.updated).toEqual(new Date(0))
     })
 
     it('should be able to query on external ID', async () => {

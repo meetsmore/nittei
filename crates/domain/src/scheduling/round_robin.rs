@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use itertools::Itertools;
 use rand::{thread_rng, Rng};
 use serde::{Deserialize, Serialize};
@@ -37,7 +38,7 @@ pub struct RoundRobinAvailabilityAssignment {
     /// List of members with a corresponding timestamp stating
     /// when the they were assigned a `Service Event` last time, if they have
     /// been assigned
-    pub members: Vec<(ID, Option<i64>)>,
+    pub members: Vec<(ID, Option<DateTime<Utc>>)>,
 }
 
 impl RoundRobinAvailabilityAssignment {
@@ -46,7 +47,7 @@ impl RoundRobinAvailabilityAssignment {
             return None;
         }
         self.members.sort_by_key(|m| m.1);
-        let mut least_recently_booked_members: Vec<(ID, Option<i64>)> = Vec::new();
+        let mut least_recently_booked_members: Vec<(ID, Option<DateTime<Utc>>)> = Vec::new();
         for member in self.members {
             if least_recently_booked_members.is_empty()
                 || member.1 == least_recently_booked_members[0].1
@@ -142,13 +143,31 @@ mod tests {
         let none_user_4 = ID::default();
         let members = vec![
             (none_user_4.clone(), None),
-            (ID::default(), Some(10)),
+            (
+                ID::default(),
+                Some(DateTime::from_timestamp_millis(10).unwrap()),
+            ),
             (none_user_1.clone(), None),
-            (ID::default(), Some(6)),
-            (ID::default(), Some(12)),
-            (ID::default(), Some(20)),
-            (ID::default(), Some(0)),
-            (ID::default(), Some(-28)),
+            (
+                ID::default(),
+                Some(DateTime::from_timestamp_millis(6).unwrap()),
+            ),
+            (
+                ID::default(),
+                Some(DateTime::from_timestamp_millis(12).unwrap()),
+            ),
+            (
+                ID::default(),
+                Some(DateTime::from_timestamp_millis(20).unwrap()),
+            ),
+            (
+                ID::default(),
+                Some(DateTime::from_timestamp_millis(0).unwrap()),
+            ),
+            (
+                ID::default(),
+                Some(DateTime::from_timestamp_millis(-28).unwrap()),
+            ),
             (none_user_2.clone(), None),
             (none_user_3.clone(), None),
         ];
@@ -175,13 +194,34 @@ mod tests {
     fn round_robin_availability_assignment_2() {
         let user_1 = ID::default();
         let members = vec![
-            (ID::default(), Some(10)),
-            (user_1.clone(), Some(4)),
-            (ID::default(), Some(6)),
-            (ID::default(), Some(12)),
-            (ID::default(), Some(20)),
-            (ID::default(), Some(100)),
-            (ID::default(), Some(28)),
+            (
+                ID::default(),
+                Some(DateTime::from_timestamp_millis(10).unwrap()),
+            ),
+            (
+                user_1.clone(),
+                Some(DateTime::from_timestamp_millis(4).unwrap()),
+            ),
+            (
+                ID::default(),
+                Some(DateTime::from_timestamp_millis(6).unwrap()),
+            ),
+            (
+                ID::default(),
+                Some(DateTime::from_timestamp_millis(12).unwrap()),
+            ),
+            (
+                ID::default(),
+                Some(DateTime::from_timestamp_millis(20).unwrap()),
+            ),
+            (
+                ID::default(),
+                Some(DateTime::from_timestamp_millis(100).unwrap()),
+            ),
+            (
+                ID::default(),
+                Some(DateTime::from_timestamp_millis(28).unwrap()),
+            ),
         ];
         let query = RoundRobinAvailabilityAssignment { members };
         assert!(query.clone().assign().is_some());

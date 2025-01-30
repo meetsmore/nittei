@@ -196,14 +196,8 @@ impl UseCase for CreateEventUseCase {
             service_id: self.service_id.clone(),
             group_id: self.group_id.clone(),
             metadata: self.metadata.clone(),
-            created: self
-                .created
-                .map(|c| c.timestamp_millis())
-                .unwrap_or(ctx.sys.get_timestamp_millis()),
-            updated: self
-                .updated
-                .map(|c| c.timestamp_millis())
-                .unwrap_or(ctx.sys.get_timestamp_millis()),
+            created: self.created.unwrap_or_else(Utc::now),
+            updated: self.updated.unwrap_or_else(Utc::now),
         };
 
         if let Some(rrule_opts) = self.recurrence.clone() {

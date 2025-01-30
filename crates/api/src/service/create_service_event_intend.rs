@@ -194,7 +194,7 @@ impl UseCase for CreateServiceEventIntendUseCase {
                                         members: events
                                             .into_iter()
                                             .map(|e| (e.user_id, e.created))
-                                            .collect(),
+                                            .collect::<Vec<(ID, Option<DateTime<Utc>>)>>(),
                                     };
                                     let selected_user_id = query.assign().ok_or_else(|| {
                                         warn!("At least one host can be picked when there are at least one host available");

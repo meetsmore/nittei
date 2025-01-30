@@ -42,12 +42,23 @@ struct MostRecentCreatedServiceEventsRaw {
     created: Option<i64>,
 }
 
-impl From<MostRecentCreatedServiceEventsRaw> for MostRecentCreatedServiceEvents {
-    fn from(e: MostRecentCreatedServiceEventsRaw) -> Self {
-        Self {
+impl TryFrom<MostRecentCreatedServiceEventsRaw> for MostRecentCreatedServiceEvents {
+    type Error = anyhow::Error;
+
+    fn try_from(e: MostRecentCreatedServiceEventsRaw) -> anyhow::Result<Self> {
+        Ok(Self {
             user_id: e.user_uid.into(),
-            created: e.created,
-        }
+            created: e
+                .created
+                .map(|c| {
+                    DateTime::from_timestamp_millis(c).ok_or(anyhow::anyhow!(
+                        "Unable to convert created timestamp to DateTime"
+                    ))
+                })
+                // If the created timestamp is None, return None
+                // If we got an error in the internal Result, return it
+                .transpose()?,
+        })
     }
 }
 
@@ -109,8 +120,12 @@ impl TryFrom<EventRaw> for CalendarEvent {
             duration: e.duration,
             busy: e.busy,
             end_time: e.end_time,
-            created: e.created,
-            updated: e.updated,
+            created: DateTime::from_timestamp_millis(e.created).ok_or(anyhow::anyhow!(
+                "Unable to convert created timestamp to DateTime"
+            ))?,
+            updated: DateTime::from_timestamp_millis(e.updated).ok_or(anyhow::anyhow!(
+                "Unable to convert updated timestamp to DateTime"
+            ))?,
             recurrence,
             exdates: e.exdates,
             reminders,
@@ -168,8 +183,8 @@ impl IEventRepo for PostgresEventRepo {
             e.duration,
             e.end_time,
             e.busy,
-            e.created,
-            e.updated,
+            e.created.timestamp_millis(),
+            e.updated.timestamp_millis(),
             Json(&e.recurrence) as _,
             &e.exdates,
             Json(&e.reminders) as _,
@@ -230,8 +245,8 @@ impl IEventRepo for PostgresEventRepo {
             e.duration,
             e.end_time,
             e.busy,
-            e.created,
-            e.updated,
+            e.created.timestamp_millis(),
+            e.updated.timestamp_millis(),
             Json(&e.recurrence) as _,
             &e.exdates,
             Json(&e.reminders) as _,
@@ -698,10 +713,10 @@ impl IEventRepo for PostgresEventRepo {
                 );
             })?;
 
-        Ok(most_recent_created_service_events
+        most_recent_created_service_events
             .into_iter()
-            .map(|e| e.into())
-            .collect())
+            .map(MostRecentCreatedServiceEvents::try_from)
+            .collect()
     }
 
     #[instrument]

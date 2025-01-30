@@ -316,13 +316,13 @@ impl UseCase for UpdateEventUseCase {
         }
 
         if let Some(created) = created {
-            e.created = created.timestamp_millis();
+            e.created = *created;
         }
 
         if let Some(updated) = updated {
-            e.updated = updated.timestamp_millis();
+            e.updated = *updated;
         } else {
-            e.updated = ctx.sys.get_timestamp_millis();
+            e.updated = Utc::now();
         }
 
         ctx.repos
