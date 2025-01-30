@@ -9,7 +9,7 @@ use crate::repos::shared::query_structs::MetadataFindQuery;
 #[derive(Debug)]
 pub struct MostRecentCreatedServiceEvents {
     pub user_id: ID,
-    pub created: Option<i64>,
+    pub created: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Clone)]
@@ -96,7 +96,7 @@ pub trait IEventRepo: Send + Sync {
 
 #[cfg(test)]
 mod tests {
-    use chrono::{DateTime, Utc};
+    use chrono::{DateTime, TimeDelta, Utc};
     use nittei_domain::{Account, Calendar, CalendarEvent, Entity, Service, TimeSpan, User, ID};
 
     use crate::{setup_context, NitteiContext};
@@ -179,7 +179,10 @@ mod tests {
         // Insert
         assert!(ctx.repos.events.insert(&event).await.is_ok());
 
-        event.updated += 1;
+        event.updated = event
+            .updated
+            .checked_add_signed(TimeDelta::seconds(0))
+            .unwrap();
 
         // Save
         assert!(ctx.repos.events.save(&event).await.is_ok());
@@ -262,7 +265,7 @@ mod tests {
         calendar_id: &ID,
         user_id: &ID,
         service_id: &ID,
-        created: i64,
+        created: DateTime<Utc>,
         ctx: &NitteiContext,
     ) -> CalendarEvent {
         let mut event = generate_default_event(account_id, calendar_id, user_id);
@@ -505,13 +508,15 @@ mod tests {
         ctx.repos.calendars.insert(&calendar3).await.unwrap();
 
         // User 1 has three events
-        let user_1_recent_created_event = 100;
+        let user_1_recent_created_event = DateTime::from_timestamp_millis(100).unwrap();
         generate_event_with_time_2(
             &account.id,
             &calendar1.id,
             &user1.id,
             &service.id,
-            user_1_recent_created_event - 10,
+            user_1_recent_created_event
+                .checked_add_signed(TimeDelta::milliseconds(-10))
+                .unwrap(),
             &ctx,
         )
         .await;
@@ -529,13 +534,15 @@ mod tests {
             &calendar1.id,
             &user1.id,
             &service.id,
-            user_1_recent_created_event - 5,
+            user_1_recent_created_event
+                .checked_add_signed(TimeDelta::milliseconds(-5))
+                .unwrap(),
             &ctx,
         )
         .await;
 
         // User 2 has one event on this service and one in another service
-        let user_2_recent_created_event = 70;
+        let user_2_recent_created_event = DateTime::from_timestamp_millis(70).unwrap();
         generate_event_with_time_2(
             &account.id,
             &calendar2.id,
@@ -551,7 +558,9 @@ mod tests {
             &calendar1.id,
             &user1.id,
             &other_service.id,
-            user_2_recent_created_event + 5,
+            user_2_recent_created_event
+                .checked_add_signed(TimeDelta::milliseconds(5))
+                .unwrap(),
             &ctx,
         )
         .await;

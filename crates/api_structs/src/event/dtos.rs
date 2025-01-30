@@ -58,13 +58,13 @@ pub struct CalendarEventDTO {
     /// Busy flag
     pub busy: bool,
 
-    /// Last updated timestamp
-    #[ts(type = "number")]
-    pub updated: i64,
+    /// Last updated timestamp (UTC)
+    #[ts(type = "Date")]
+    pub updated: DateTime<Utc>,
 
-    /// Created timestamp
-    #[ts(type = "number")]
-    pub created: i64,
+    /// Created tiemstamp (UTC)
+    #[ts(type = "Date")]
+    pub created: DateTime<Utc>,
 
     /// Recurrence rule
     #[ts(optional)]

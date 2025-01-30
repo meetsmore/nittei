@@ -415,14 +415,38 @@ async fn test_round_robin_availability_scheduling() {
     let admin_client = NitteiSDK::new(address, res.secret_api_key);
 
     // Each test case is a list of timestamps for the least recently assigned event for a host
-    let test_cases: Vec<Vec<i64>> = vec![
-        vec![3, 0, 1, 5],
-        vec![0],
+    let test_cases: Vec<Vec<DateTime<Utc>>> = vec![
+        vec![
+            DateTime::from_timestamp_millis(3).unwrap(),
+            DateTime::from_timestamp_millis(0).unwrap(),
+            DateTime::from_timestamp_millis(1).unwrap(),
+            DateTime::from_timestamp_millis(5).unwrap(),
+        ],
+        vec![DateTime::from_timestamp_millis(0).unwrap()],
         Vec::new(),
-        vec![2, 1, 1, 1, 1, 4],
-        vec![1, 1, 0],
-        vec![2, 7, 4],
-        vec![1, 1, 1],
+        vec![
+            DateTime::from_timestamp_millis(2).unwrap(),
+            DateTime::from_timestamp_millis(1).unwrap(),
+            DateTime::from_timestamp_millis(1).unwrap(),
+            DateTime::from_timestamp_millis(1).unwrap(),
+            DateTime::from_timestamp_millis(1).unwrap(),
+            DateTime::from_timestamp_millis(4).unwrap(),
+        ],
+        vec![
+            DateTime::from_timestamp_millis(1).unwrap(),
+            DateTime::from_timestamp_millis(1).unwrap(),
+            DateTime::from_timestamp_millis(0).unwrap(),
+        ],
+        vec![
+            DateTime::from_timestamp_millis(2).unwrap(),
+            DateTime::from_timestamp_millis(7).unwrap(),
+            DateTime::from_timestamp_millis(4).unwrap(),
+        ],
+        vec![
+            DateTime::from_timestamp_millis(1).unwrap(),
+            DateTime::from_timestamp_millis(1).unwrap(),
+            DateTime::from_timestamp_millis(1).unwrap(),
+        ],
     ];
 
     for last_assigned_service_event_per_host in test_cases {
