@@ -81,4 +81,93 @@ describe('Account API', () => {
       })
     ).rejects.toThrow()
   })
+
+  describe('accountSearchEvents', () => {
+    let adminClient: INitteiClient
+    let userId: string
+    let calendarId: string
+    let calendarId2: string
+
+    let eventId1: string
+    let metadataEventId1: string
+    let eventId2: string
+    beforeAll(async () => {
+      const data = await setupAccount()
+      adminClient = data.client
+      const userRes = await adminClient.user.create()
+      userId = userRes.user.id
+
+      const calendarRes = await adminClient.calendar.create(userId, {
+        timezone: 'UTC',
+      })
+      calendarId = calendarRes.calendar.id
+
+      const calendarRes2 = await adminClient.calendar.create(userId, {
+        timezone: 'UTC',
+      })
+      calendarId2 = calendarRes2.calendar.id
+
+      const eventRes1 = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+      })
+
+      eventId1 = eventRes1.event.id
+
+      const metadataEventRes1 = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+        metadata: {
+          string: 'string',
+          number: 1,
+          boolean: true,
+          null: null,
+          object: {
+            string: 'string',
+            number: 1,
+            boolean: true,
+            null: null,
+          },
+        },
+      })
+      metadataEventId1 = metadataEventRes1.event.id
+
+      const eventRes2 = await adminClient.events.create(userId, {
+        calendarId: calendarId2,
+        duration: 1000,
+        startTime: new Date(1000),
+        status: 'confirmed',
+        parentId: 'parentId',
+      })
+
+      eventId2 = eventRes2.event.id
+    })
+
+    it('should be able to search for events in the account (by startTime, for multiple users)', async () => {
+      const res = await adminClient.account.searchEventsInAccount({
+        startTime: {
+          range: {
+            gte: new Date(0),
+            lte: new Date(2000),
+          },
+        },
+      })
+      expect(res.events.length).toBe(3)
+      expect(res.events).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: metadataEventId1,
+          }),
+          expect.objectContaining({
+            id: eventId1,
+          }),
+          expect.objectContaining({
+            id: eventId2,
+          }),
+        ])
+      )
+    })
+  })
 })
