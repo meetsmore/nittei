@@ -112,6 +112,25 @@ pub mod create_event {
         #[ts(optional)]
         pub recurrence: Option<RRuleOptions>,
 
+        /// Optional list of exclusion dates for the recurrence rule
+        #[serde(default)]
+        #[ts(optional, type = "Array<Date>")]
+        pub exdates: Option<Vec<DateTime<Utc>>>,
+
+        /// Optional recurring event ID
+        /// This is the ID of the recurring event that this event is part of
+        /// Default is None
+        #[serde(default)]
+        #[ts(optional)]
+        pub recurring_event_id: Option<ID>,
+
+        /// Optional original start time of the event
+        /// This is the original start time of the event before it was moved (only for recurring events)
+        /// Default is None
+        #[serde(default)]
+        #[ts(optional, type = "Date")]
+        pub original_start_time: Option<DateTime<Utc>>,
+
         /// Optional list of reminders
         #[serde(default)]
         #[ts(optional, as = "Option<_>")]
@@ -495,6 +514,20 @@ pub mod update_event {
         #[serde(default)]
         #[ts(optional, type = "Array<Date>")]
         pub exdates: Option<Vec<DateTime<Utc>>>,
+
+        /// Optional recurring event ID
+        /// This is the ID of the recurring event that this event is part of
+        /// Default is None
+        #[serde(default)]
+        #[ts(optional)]
+        pub recurring_event_id: Option<ID>,
+
+        /// Optional original start time of the event
+        /// This is the original start time of the event before it was moved (only for recurring events)
+        /// Default is None
+        #[serde(default)]
+        #[ts(optional, type = "Date")]
+        pub original_start_time: Option<DateTime<Utc>>,
 
         /// Optional list of reminders
         #[serde(default)]

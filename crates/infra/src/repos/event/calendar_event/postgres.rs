@@ -84,6 +84,8 @@ struct EventRaw {
     updated: i64,
     recurrence: Option<Value>,
     exdates: Vec<DateTime<Utc>>,
+    recurring_event_uid: Option<Uuid>,
+    original_start_time: Option<DateTime<Utc>>,
     reminders: Option<Value>,
     service_uid: Option<Uuid>,
     group_uid: Option<Uuid>,
@@ -128,6 +130,8 @@ impl TryFrom<EventRaw> for CalendarEvent {
             ))?,
             recurrence,
             exdates: e.exdates,
+            recurring_event_id: e.recurring_event_uid.map(|id| id.into()),
+            original_start_time: e.original_start_time,
             reminders,
             service_id: e.service_uid.map(|id| id.into()),
             group_id: e.group_uid.map(|id| id.into()),
@@ -162,12 +166,14 @@ impl IEventRepo for PostgresEventRepo {
                 updated,
                 recurrence,
                 exdates,
+                recurring_event_uid,
+                original_start_time,
                 reminders,
                 service_uid,
                 group_uid,
                 metadata
             )
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
             "#,
             e.id.as_ref(),
             e.calendar_id.as_ref(),
@@ -187,6 +193,8 @@ impl IEventRepo for PostgresEventRepo {
             e.updated.timestamp_millis(),
             Json(&e.recurrence) as _,
             &e.exdates,
+            e.recurring_event_id.as_ref().map(|id| id.as_ref()),
+            e.original_start_time,
             Json(&e.reminders) as _,
             e.service_id.as_ref().map(|id| id.as_ref()),
             e.group_id.as_ref().map(|id| id.as_ref()),
@@ -226,10 +234,12 @@ impl IEventRepo for PostgresEventRepo {
                 updated = $15,
                 recurrence = $16,
                 exdates = $17,
-                reminders = $18,
-                service_uid = $19,
-                group_uid = $20,
-                metadata = $21
+                recurring_event_uid = $18,
+                original_start_time = $19,
+                reminders = $20,
+                service_uid = $21,
+                group_uid = $22,
+                metadata = $23
             WHERE event_uid = $1
             "#,
             e.id.as_ref(),
@@ -249,6 +259,8 @@ impl IEventRepo for PostgresEventRepo {
             e.updated.timestamp_millis(),
             Json(&e.recurrence) as _,
             &e.exdates,
+            e.recurring_event_id.as_ref().map(|id| id.as_ref()),
+            e.original_start_time,
             Json(&e.reminders) as _,
             e.service_id.as_ref().map(|id| id.as_ref()),
             e.group_id.as_ref().map(|id| id.as_ref()),
