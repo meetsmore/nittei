@@ -52,11 +52,13 @@ pub async fn update_event_admin_controller(
         duration: body.duration,
         start_time: body.start_time,
         reminders: body.reminders,
-        recurrence: body.recurrence,
         busy: body.busy,
         service_id: body.service_id,
         group_id: body.group_id,
+        recurrence: body.recurrence,
         exdates: body.exdates,
+        recurring_event_id: body.recurring_event_id,
+        original_start_time: body.original_start_time,
         metadata: body.metadata,
         created: body.created,
         updated: body.updated,
@@ -91,11 +93,13 @@ pub async fn update_event_controller(
         duration: body.duration,
         start_time: body.start_time,
         reminders: body.reminders,
-        recurrence: body.recurrence,
         busy: body.busy,
         service_id: body.service_id,
         group_id: body.group_id,
+        recurrence: body.recurrence,
         exdates: body.exdates,
+        recurring_event_id: body.recurring_event_id,
+        original_start_time: body.original_start_time,
         metadata: body.metadata,
         created: body.created,
         updated: body.updated,
@@ -124,10 +128,12 @@ pub struct UpdateEventUseCase {
     pub busy: Option<bool>,
     pub duration: Option<i64>,
     pub reminders: Option<Vec<CalendarEventReminder>>,
-    pub recurrence: Option<RRuleOptions>,
     pub service_id: Option<ID>,
     pub group_id: Option<ID>,
+    pub recurrence: Option<RRuleOptions>,
     pub exdates: Option<Vec<DateTime<Utc>>>,
+    pub recurring_event_id: Option<ID>,
+    pub original_start_time: Option<DateTime<Utc>>,
     pub metadata: Option<serde_json::Value>,
     pub created: Option<DateTime<Utc>>,
     pub updated: Option<DateTime<Utc>>,
@@ -184,6 +190,8 @@ impl UseCase for UpdateEventUseCase {
             duration,
             recurrence,
             exdates,
+            recurring_event_id,
+            original_start_time,
             reminders,
             service_id,
             group_id,
@@ -278,6 +286,15 @@ impl UseCase for UpdateEventUseCase {
         if !valid_recurrence {
             return Err(UseCaseError::InvalidRecurrenceRule);
         };
+
+        if let Some(recurring_event_id) = recurring_event_id {
+            // Check if the recurring event exists
+            e.recurring_event_id = Some(recurring_event_id.clone());
+        }
+
+        if let Some(original_start_time) = original_start_time {
+            e.original_start_time = Some(*original_start_time);
+        }
 
         if title.is_some() {
             e.title.clone_from(title);

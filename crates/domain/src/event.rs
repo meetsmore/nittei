@@ -69,6 +69,8 @@ pub struct CalendarEvent {
     pub updated: DateTime<Utc>,
     pub recurrence: Option<RRuleOptions>,
     pub exdates: Vec<DateTime<Utc>>,
+    pub recurring_event_id: Option<ID>,
+    pub original_start_time: Option<DateTime<Utc>>,
     pub calendar_id: ID,
     pub user_id: ID,
     pub account_id: ID,

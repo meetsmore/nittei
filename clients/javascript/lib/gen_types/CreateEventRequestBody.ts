@@ -69,6 +69,22 @@ export type CreateEventRequestBody = {
    */
   recurrence?: RRuleOptions
   /**
+   * Optional list of exclusion dates for the recurrence rule
+   */
+  exdates?: Array<Date>
+  /**
+   * Optional recurring event ID
+   * This is the ID of the recurring event that this event is part of
+   * Default is None
+   */
+  recurringEventId?: ID
+  /**
+   * Optional original start time of the event
+   * This is the original start time of the event before it was moved (only for recurring events)
+   * Default is None
+   */
+  originalStartTime?: Date
+  /**
    * Optional list of reminders
    */
   reminders?: Array<CalendarEventReminder>

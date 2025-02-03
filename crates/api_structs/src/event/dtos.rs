@@ -74,6 +74,17 @@ pub struct CalendarEventDTO {
     #[ts(type = "Array<Date>")]
     pub exdates: Vec<DateTime<Utc>>,
 
+    /// Optional recurring event ID
+    /// This is the ID of the recurring event that this event is part of
+    /// Default is None
+    pub recurring_event_id: Option<ID>,
+
+    /// Optional original start time of the event
+    /// This is the original start time of the event before it was moved (only for recurring events)
+    /// Default is None
+    #[ts(type = "Date")]
+    pub original_start_time: Option<DateTime<Utc>>,
+
     /// UUID of the calendar
     pub calendar_id: ID,
 
@@ -111,6 +122,8 @@ impl CalendarEventDTO {
             created: event.created,
             recurrence: event.recurrence,
             exdates: event.exdates,
+            recurring_event_id: event.recurring_event_id,
+            original_start_time: event.original_start_time,
             calendar_id: event.calendar_id,
             user_id: event.user_id,
             group_id: event.group_id,
