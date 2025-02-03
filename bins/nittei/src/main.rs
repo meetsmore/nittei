@@ -30,8 +30,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Listen for SIGINT (Ctrl+C) to shutdown the service
     // This sends a message on the channel to shutdown the server gracefully
-    // By doing so, it makes the app return failed status on the status API endpoint (useful for k8s)
-    // It waits for a configurable amount of seconds (in order for the readiness probe to fail)
+    // It waits for a configurable amount of seconds (in order for the pod to be removed from the k8s service)
     // And then waits for the server to finish processing the current requests before shutting down
     tokio::spawn(async move {
         if let Err(e) = signal::ctrl_c().await {

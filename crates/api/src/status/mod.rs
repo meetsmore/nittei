@@ -2,21 +2,8 @@ use actix_web::{web, HttpResponse};
 use nittei_api_structs::get_service_health::*;
 use nittei_infra::NitteiContext;
 
-use crate::ServerSharedState;
-
 /// Get the status of the service
-async fn status(
-    ctx: web::Data<NitteiContext>,
-    shared_state: web::Data<ServerSharedState>,
-) -> HttpResponse {
-    let is_shutting_down = shared_state.is_shutting_down.lock().await;
-
-    if *is_shutting_down {
-        return HttpResponse::ServiceUnavailable().json(APIResponse {
-            message: "Service is shutting down".into(),
-        });
-    }
-
+async fn status(ctx: web::Data<NitteiContext>) -> HttpResponse {
     match ctx.repos.status.check_connection().await {
         Ok(_) => HttpResponse::Ok().json(APIResponse {
             message: "Ok!\r\n".into(),
