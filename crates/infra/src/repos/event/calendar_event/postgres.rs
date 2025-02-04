@@ -305,6 +305,36 @@ impl IEventRepo for PostgresEventRepo {
     }
 
     #[instrument]
+    async fn find_by_id_and_recurring_event_id(
+        &self,
+        event_id: &ID,
+    ) -> anyhow::Result<Vec<CalendarEvent>> {
+        sqlx::query_as!(
+            EventRaw,
+            r#"
+            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+            INNER JOIN calendars AS c
+                ON c.calendar_uid = e.calendar_uid
+            INNER JOIN users AS u
+                ON u.user_uid = c.user_uid
+            WHERE e.event_uid = $1 OR e.recurring_event_uid = $1
+            "#,
+            event_id.as_ref(),
+        )
+        .fetch_all(&self.pool)
+        .await
+        .inspect_err(|err| {
+            error!(
+                "Find calendar event with id and recurring_event_id: {:?} failed. DB returned error: {:?}",
+                event_id, err
+            );
+        })?
+        .into_iter()
+        .map(|e| e.try_into())
+        .collect()
+    }
+
+    #[instrument]
     async fn get_by_external_id(
         &self,
         account_uid: &ID,

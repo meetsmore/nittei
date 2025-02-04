@@ -42,6 +42,10 @@ pub trait IEventRepo: Send + Sync {
     async fn insert(&self, e: &CalendarEvent) -> anyhow::Result<()>;
     async fn save(&self, e: &CalendarEvent) -> anyhow::Result<()>;
     async fn find(&self, event_id: &ID) -> anyhow::Result<Option<CalendarEvent>>;
+    async fn find_by_id_and_recurring_event_id(
+        &self,
+        event_id: &ID,
+    ) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn get_by_external_id(
         &self,
         account_uid: &ID,

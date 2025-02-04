@@ -1,7 +1,14 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::{DateTime, Utc};
 use nittei_api_structs::get_calendar_events::{APIResponse, PathParams, QueryParams};
-use nittei_domain::{Calendar, EventWithInstances, TimeSpan, ID};
+use nittei_domain::{
+    expand_event_and_remove_exceptions,
+    generate_map_exceptions_start_times,
+    Calendar,
+    EventWithInstances,
+    TimeSpan,
+    ID,
+};
 use nittei_infra::NitteiContext;
 use tracing::error;
 
@@ -128,18 +135,44 @@ impl UseCase for GetCalendarEventsUseCase {
                         UseCaseError::IntervalServerError
                     })?;
 
+                // let calendar_hashmap = vec![(calendar.id.to_string(), &calendar)]
+                //     .into_iter()
+                //     .collect::<HashMap<_, _>>();
+                // let instances = expand_all_events_and_remove_exceptions(
+                //     &calendar_hashmap,
+                //     &calendar_events,
+                //     &timespan,
+                // );
+
+                // Create a map of recurrence_id to events (exceptions)
+                // This is used to remove exceptions from the expanded events
+                let map_recurring_event_id_to_exceptions =
+                    generate_map_exceptions_start_times(&calendar_events);
+
+                // For each event, expand it and keep the instances next to the event
                 let events = calendar_events
                     .into_iter()
                     .map(|event| {
-                        // Todo: handle error
-                        let instances = event
-                            .expand(Some(&timespan), &calendar.settings)
-                            .unwrap_or_default();
-                        EventWithInstances { event, instances }
+                        let exceptions = map_recurring_event_id_to_exceptions
+                            .get(&event.id)
+                            .map(Vec::as_slice)
+                            .unwrap_or(&[]);
+
+                        let instances = expand_event_and_remove_exceptions(
+                            &calendar, &event, exceptions, &timespan,
+                        )
+                        .map_err(|e| {
+                            error!("Got an error while expanding an event {:?}", e);
+                            UseCaseError::IntervalServerError
+                        })?;
+
+                        Ok(EventWithInstances { event, instances })
                     })
-                    // Also it is possible that there are no instances in the expanded event, should remove them
+                    .collect::<Result<Vec<_>, _>>()?
+                    .into_iter()
+                    // // Also it is possible that there are no instances in the expanded event, should remove them
                     .filter(|data| !data.instances.is_empty())
-                    .collect();
+                    .collect::<Vec<_>>();
 
                 Ok(UseCaseResponse { calendar, events })
             }

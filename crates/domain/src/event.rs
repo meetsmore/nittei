@@ -259,20 +259,16 @@ impl CalendarEvent {
     pub fn remove_changed_instances(
         &self,
         instances: Vec<EventInstance>,
-        changed_instances: Vec<CalendarEvent>,
+        exceptions_start_times: &[DateTime<Utc>],
     ) -> Vec<EventInstance> {
-        let map_of_original_start_time_to_changed_instance: std::collections::HashMap<
+        let map_of_original_start_time_to_changed_instance: std::collections::HashSet<
             DateTime<Utc>,
-            &CalendarEvent,
-        > = changed_instances
-            .iter()
-            .map(|event| (event.original_start_time.unwrap_or(event.start_time), event))
-            .collect();
+        > = exceptions_start_times.iter().cloned().collect();
 
         instances
             .iter()
             .filter(|instance| {
-                !map_of_original_start_time_to_changed_instance.contains_key(&instance.start_time)
+                !map_of_original_start_time_to_changed_instance.contains(&instance.start_time)
             })
             .cloned()
             .collect()
@@ -294,8 +290,6 @@ mod test {
             timezone: UTC,
             week_start: Weekday::Mon,
         };
-        // let start_time = DateTime::from_timestamp_millis(1738631410000).unwrap();
-        // let start_time = DateTime::from_timestamp_millis(1521317491239).unwrap();
         let start_time = DateTime::from_timestamp_millis(1521317491000).unwrap();
         let event = CalendarEvent {
             start_time,
@@ -492,8 +486,13 @@ mod test {
             ..Default::default()
         };
 
-        let oc_filtered = event
-            .remove_changed_instances(oc, vec![event_override_changed, event_override_cancelled]);
+        let oc_filtered = event.remove_changed_instances(
+            oc,
+            &[
+                event_override_changed.original_start_time.unwrap(),
+                event_override_cancelled.original_start_time.unwrap(),
+            ],
+        );
 
         // We expect 1 occurrences, as the count is 4, we have 1 exdate and 2 overrides
         // The overrides are not included in the occurrences, whatever the change is

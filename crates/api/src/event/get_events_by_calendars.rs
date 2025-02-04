@@ -1,8 +1,15 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::{DateTime, Utc};
 use nittei_api_structs::get_events_by_calendars::*;
-use nittei_domain::{EventWithInstances, TimeSpan, ID};
+use nittei_domain::{
+    expand_event_and_remove_exceptions,
+    generate_map_exceptions_start_times,
+    EventWithInstances,
+    TimeSpan,
+    ID,
+};
 use nittei_infra::NitteiContext;
+use tracing::error;
 
 use crate::{
     error::NitteiError,
@@ -122,19 +129,36 @@ impl UseCase for GetEventsByCalendarsUseCase {
             .await;
         match res {
             Ok(events) => {
+                // Create a map of recurrence_id to events (exceptions)
+                // This is used to remove exceptions from the expanded events
+                let map_recurring_event_id_to_exceptions =
+                    generate_map_exceptions_start_times(&events);
+
                 let events = events
                     .into_iter()
                     .map(|event| {
                         let calendar = &calendars_map[&event.calendar_id];
-                        // Todo: handle error
-                        let instances = event
-                            .expand(Some(&timespan), &calendar.settings)
-                            .unwrap_or_default();
-                        EventWithInstances { event, instances }
+
+                        let exceptions = map_recurring_event_id_to_exceptions
+                            .get(&event.id)
+                            .map(Vec::as_slice)
+                            .unwrap_or(&[]);
+
+                        let instances = expand_event_and_remove_exceptions(
+                            calendar, &event, exceptions, &timespan,
+                        )
+                        .map_err(|e| {
+                            error!("Got an error while expanding an event {:?}", e);
+                            UseCaseError::InternalError
+                        })?;
+
+                        Ok(EventWithInstances { event, instances })
                     })
-                    // Also it is possible that there are no instances in the expanded event, should remove them
+                    .collect::<Result<Vec<_>, _>>()?
+                    .into_iter()
+                    // // Also it is possible that there are no instances in the expanded event, should remove them
                     .filter(|data| !data.instances.is_empty())
-                    .collect();
+                    .collect::<Vec<_>>();
 
                 Ok(UseCaseResponse { events })
             }

@@ -1,7 +1,15 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use nittei_api_structs::get_event_instances::*;
-use nittei_domain::{CalendarEvent, EventInstance, TimeSpan, ID};
+use nittei_domain::{
+    expand_event_and_remove_exceptions,
+    generate_map_exceptions_start_times,
+    CalendarEvent,
+    EventInstance,
+    TimeSpan,
+    ID,
+};
 use nittei_infra::NitteiContext;
+use tracing::error;
 
 use crate::{
     error::NitteiError,
@@ -100,39 +108,62 @@ impl UseCase for GetEventInstancesUseCase {
     const NAME: &'static str = "GetEventInstances";
 
     async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
-        let e = ctx
+        let event_and_exceptions = ctx
             .repos
             .events
-            .find(&self.event_id)
+            .find_by_id_and_recurring_event_id(&self.event_id)
             .await
             .map_err(|_| UseCaseError::InternalError)?;
-        match e {
-            Some(event) if self.user_id == event.user_id => {
-                let calendar = match ctx.repos.calendars.find(&event.calendar_id).await {
-                    Ok(Some(cal)) => cal,
-                    Ok(None) => {
-                        return Err(UseCaseError::NotFound("Calendar".into(), event.calendar_id))
-                    }
-                    Err(_) => {
-                        return Err(UseCaseError::InternalError);
-                    }
-                };
 
-                let timespan = TimeSpan::new(self.timespan.start_time, self.timespan.end_time);
-                if timespan.greater_than(ctx.config.event_instances_query_duration_limit) {
-                    return Err(UseCaseError::InvalidTimespan);
-                }
+        let main_event = event_and_exceptions.iter().find(|e| e.id == self.event_id);
 
-                // Todo: handle error
-                let instances = event
-                    .expand(Some(&timespan), &calendar.settings)
-                    .unwrap_or_default();
-                Ok(UseCaseResponse { event, instances })
-            }
-            _ => Err(UseCaseError::NotFound(
-                "Calendar Event".into(),
+        let main_event = main_event.ok_or(UseCaseError::NotFound(
+            "CalendarEvent".into(),
+            self.event_id.clone(),
+        ))?;
+
+        if self.user_id != main_event.user_id {
+            return Err(UseCaseError::NotFound(
+                "CalendarEvent".into(),
                 self.event_id.clone(),
-            )),
+            ));
         }
+
+        let calendar = match ctx.repos.calendars.find(&main_event.calendar_id).await {
+            Ok(Some(cal)) => cal,
+            Ok(None) => {
+                return Err(UseCaseError::NotFound(
+                    "Calendar".into(),
+                    main_event.calendar_id.clone(),
+                ))
+            }
+            Err(_) => {
+                return Err(UseCaseError::InternalError);
+            }
+        };
+
+        let timespan = TimeSpan::new(self.timespan.start_time, self.timespan.end_time);
+        if timespan.greater_than(ctx.config.event_instances_query_duration_limit) {
+            return Err(UseCaseError::InvalidTimespan);
+        }
+
+        let map_exceptions = generate_map_exceptions_start_times(&event_and_exceptions);
+
+        let exceptions = map_exceptions
+            .get(&main_event.id)
+            .map(Vec::as_slice)
+            .unwrap_or(&[]);
+
+        let instances =
+            expand_event_and_remove_exceptions(&calendar, main_event, exceptions, &timespan)
+                .map_err(|e| {
+                    error!("Got an error while expanding an event {:?}", e);
+                    UseCaseError::InternalError
+                })?;
+
+        Ok(UseCaseResponse {
+            event: main_event.clone(),
+            instances,
+        })
     }
 }
