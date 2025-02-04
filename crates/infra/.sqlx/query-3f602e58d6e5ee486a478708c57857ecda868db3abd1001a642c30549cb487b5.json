@@ -115,11 +115,21 @@
       },
       {
         "ordinal": 22,
-        "name": "user_uid",
+        "name": "recurring_event_uid",
         "type_info": "Uuid"
       },
       {
         "ordinal": 23,
+        "name": "original_start_time",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 24,
+        "name": "user_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 25,
         "name": "account_uid",
         "type_info": "Uuid"
       }
@@ -149,6 +159,8 @@
       true,
       true,
       false,
+      true,
+      true,
       true,
       true,
       true,
