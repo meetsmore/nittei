@@ -38,6 +38,8 @@ IS_FREE=$(netstat -taln | grep $PORT)
 while [[ -n "$IS_FREE" ]]; do
   PORT=$((PORT + INCREMENT))
   IS_FREE=$(netstat -taln | grep $PORT)
+  # Sleep 100ms
+  sleep 0.1
 done
 
 # Generate a random name for the temporary PG container
@@ -80,6 +82,12 @@ done
 
 # Run the migrations
 cd crates/infra && sqlx migrate run && cd ../..
+
+echo ""
+echo "########################"
+echo "Running backend tests..."
+echo "########################"
+echo ""
 
 # Run the tests
 # Argument

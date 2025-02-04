@@ -270,10 +270,12 @@ impl UseCase for UpdateEventUseCase {
         let valid_recurrence = if let Some(rrule_opts) = recurrence.clone() {
             // ? should exdates be deleted when rrules are updated
             e.set_recurrence(rrule_opts, &calendar.settings, true)
+                .map_err(|_| UseCaseError::InvalidRecurrenceRule)?
         } else if start_or_duration_change && e.recurrence.is_some() {
             // This unwrap is safe as we have checked that recurrence "is_some"
             #[allow(clippy::unwrap_used)]
             e.set_recurrence(e.recurrence.clone().unwrap(), &calendar.settings, true)
+                .map_err(|_| UseCaseError::InvalidRecurrenceRule)?
         } else if start_or_duration_change {
             e.end_time = e.start_time + TimeDelta::milliseconds(e.duration);
             e.recurrence = None;

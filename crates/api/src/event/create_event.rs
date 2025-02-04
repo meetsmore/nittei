@@ -212,7 +212,7 @@ impl UseCase for CreateEventUseCase {
         };
 
         if let Some(rrule_opts) = self.recurrence.clone() {
-            if !e.set_recurrence(rrule_opts, &calendar.settings, true) {
+            if !(e.set_recurrence(rrule_opts, &calendar.settings, true)?) {
                 return Err(UseCaseError::InvalidRecurrenceRule);
             };
         }

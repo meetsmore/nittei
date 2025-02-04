@@ -92,10 +92,12 @@ impl RRuleOptions {
         &self,
         start_time: DateTime<Utc>,
         calendar_settings: &CalendarSettings,
-    ) -> RRuleSet {
-        let until = self.until;
-
-        let dtstart = start_time;
+    ) -> anyhow::Result<RRuleSet> {
+        let timezone = calendar_settings.timezone;
+        let until = self
+            .until
+            .map(|u| u.with_timezone(&rrule::Tz::Tz(timezone)));
+        let dtstart = start_time.with_timezone(&rrule::Tz::Tz(timezone));
 
         let count = self.count.map(|c| std::cmp::max(c, 0) as u32);
 
@@ -128,7 +130,6 @@ impl RRuleOptions {
         let mut rule = RRule::new(freq_convert(&self.freq))
             .by_month(&self.bymonth.clone().unwrap_or_default())
             .by_month_day(bymonthday.into_iter().map(|d| *d as i8).collect::<Vec<_>>())
-            // .bynmonthday(bynmonthday) // TODO: TO FIX
             .by_weekday(bynweekday)
             .by_year_day(
                 self.byyearday
@@ -165,37 +166,10 @@ impl RRuleOptions {
         }
 
         if let Some(until) = until {
-            rule = rule.until(until.with_timezone(&rrule::Tz::Tz(chrono_tz::UTC)));
+            rule = rule.until(until);
         }
 
-        // TODO: to fix
-        #[allow(clippy::unwrap_used)]
-        rule.build(dtstart.with_timezone(&rrule::Tz::Tz(chrono_tz::UTC)))
-            .unwrap()
-
-        //     dtstart
-        //     bymonth: self
-        //         .bymonth
-        //         .unwrap_or_default()
-        //         .into_iter()
-        //         .map(|m| m as usize)
-        //         .collect::<Vec<_>>(),
-        //     bymonthday,
-        //     bynmonthday,
-        //     byweekday,
-        //     bynweekday,
-        //     byyearday: self.byyearday.unwrap_or_default(),
-        //     bysetpos: self.bysetpos.unwrap_or_default(),
-        //     byweekno: self.byweekno.unwrap_or_default(),
-        //     byhour: vec![dtstart.hour() as usize],
-        //     byminute: vec![dtstart.minute() as usize],
-        //     bysecond: vec![dtstart.second() as usize],
-        //     until,
-        //     wkst: calendar_settings.week_start as usize,
-        //     tzid: timezone,
-        //     interval: self.interval as usize,
-        //     byeaster: None,
-        // }
+        Ok(rule.build(dtstart)?)
     }
 }
 

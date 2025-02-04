@@ -239,11 +239,11 @@ mod tests {
             recurrence: Some(Default::default()),
             reminders: vec![
                 CalendarEventReminder {
-                    delta: -10,
+                    delta: -10, // 10 minutes before start
                     identifier: "".into(),
                 },
                 CalendarEventReminder {
-                    delta: 10,
+                    delta: 10, // 10 minutes after start
                     identifier: "".into(),
                 },
             ],
@@ -259,7 +259,7 @@ mod tests {
             start_time: sys3.get_timestamp() + TimeDelta::milliseconds(1000 * 60 * 5),
             duration: 1000 * 60 * 60 * 2,
             reminders: vec![CalendarEventReminder {
-                delta: -10,
+                delta: -10, // 10 minutes before start
                 identifier: "".into(),
             }],
             ..Default::default()
@@ -269,7 +269,7 @@ mod tests {
 
         ctx.sys = Arc::new(StaticTimeSys1 {});
         let usecase = GetUpcomingRemindersUseCase {
-            reminders_interval: 1000 * 60,
+            reminders_interval: 1000 * 60, // 1 minute in milliseconds
         };
         let res = execute(usecase, &ctx).await;
         assert!(res.is_ok());

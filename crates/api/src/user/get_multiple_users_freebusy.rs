@@ -6,6 +6,7 @@ use futures::{future::join_all, stream, StreamExt};
 use nittei_api_structs::multiple_freebusy::{APIResponse, RequestBody};
 use nittei_domain::{Calendar, CalendarEvent, EventInstance, TimeSpan, ID};
 use nittei_infra::NitteiContext;
+use tracing::error;
 
 use crate::{
     error::NitteiError,
@@ -179,7 +180,14 @@ impl GetMultipleFreeBusyUseCase {
                 .get(&event.calendar_id.to_string())
                 .ok_or(UseCaseError::InternalError)?;
 
-            let expanded_events = event.expand(Some(timespan), &calendar.settings);
+            let expanded_events =
+                event
+                    .expand(Some(timespan), &calendar.settings)
+                    .map_err(|e| {
+                        // To improve
+                        error!("{:?}", e);
+                        UseCaseError::InternalError
+                    })?;
 
             instances.extend(expanded_events);
         }
@@ -218,7 +226,12 @@ mod test {
             count: Some(100),
             ..Default::default()
         };
-        e1.set_recurrence(e1rr, &calendar.settings, true);
+        match e1.set_recurrence(e1rr, &calendar.settings, true) {
+            Ok(_) => {}
+            Err(e) => {
+                panic!("{:?}", e);
+            }
+        };
 
         let mut e2 = CalendarEvent {
             calendar_id: calendar.id.clone(),
@@ -234,7 +247,12 @@ mod test {
             count: Some(100),
             ..Default::default()
         };
-        e2.set_recurrence(e2rr, &calendar.settings, true);
+        match e2.set_recurrence(e2rr, &calendar.settings, true) {
+            Ok(_) => {}
+            Err(e) => {
+                panic!("{:?}", e);
+            }
+        };
 
         let mut e3 = CalendarEvent {
             calendar_id: calendar.id.clone(),
@@ -250,7 +268,12 @@ mod test {
             interval: 2,
             ..Default::default()
         };
-        e3.set_recurrence(e3rr, &calendar.settings, true);
+        match e3.set_recurrence(e3rr, &calendar.settings, true) {
+            Ok(_) => {}
+            Err(e) => {
+                panic!("{:?}", e);
+            }
+        };
 
         ctx.repos.events.insert(&e1).await.unwrap();
         ctx.repos.events.insert(&e2).await.unwrap();

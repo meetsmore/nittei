@@ -126,7 +126,10 @@ impl UseCase for GetEventsByCalendarsUseCase {
                     .into_iter()
                     .map(|event| {
                         let calendar = &calendars_map[&event.calendar_id];
-                        let instances = event.expand(Some(&timespan), &calendar.settings);
+                        // Todo: handle error
+                        let instances = event
+                            .expand(Some(&timespan), &calendar.settings)
+                            .unwrap_or_default();
                         EventWithInstances { event, instances }
                     })
                     // Also it is possible that there are no instances in the expanded event, should remove them

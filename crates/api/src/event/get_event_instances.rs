@@ -123,7 +123,10 @@ impl UseCase for GetEventInstancesUseCase {
                     return Err(UseCaseError::InvalidTimespan);
                 }
 
-                let instances = event.expand(Some(&timespan), &calendar.settings);
+                // Todo: handle error
+                let instances = event
+                    .expand(Some(&timespan), &calendar.settings)
+                    .unwrap_or_default();
                 Ok(UseCaseResponse { event, instances })
             }
             _ => Err(UseCaseError::NotFound(

@@ -118,7 +118,7 @@ impl UseCase for GetCalendarEventsUseCase {
 
         match calendar {
             Some(calendar) if calendar.user_id == self.user_id => {
-                let events = ctx
+                let calendar_events = ctx
                     .repos
                     .events
                     .find_by_calendar(&calendar.id, Some(&timespan))
@@ -126,10 +126,15 @@ impl UseCase for GetCalendarEventsUseCase {
                     .map_err(|e| {
                         error!("{:?}", e);
                         UseCaseError::IntervalServerError
-                    })?
+                    })?;
+
+                let events = calendar_events
                     .into_iter()
                     .map(|event| {
-                        let instances = event.expand(Some(&timespan), &calendar.settings);
+                        // Todo: handle error
+                        let instances = event
+                            .expand(Some(&timespan), &calendar.settings)
+                            .unwrap_or_default();
                         EventWithInstances { event, instances }
                     })
                     // Also it is possible that there are no instances in the expanded event, should remove them

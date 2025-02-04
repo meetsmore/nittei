@@ -250,7 +250,11 @@ impl GetServiceBookingSlotsUseCase {
 
                 let all_event_instances = all_calendar_events
                     .iter()
-                    .flat_map(|e| e.expand(Some(timespan), &calendar.settings))
+                    // Todo: handle error
+                    .flat_map(|e| {
+                        e.expand(Some(timespan), &calendar.settings)
+                            .unwrap_or_default()
+                    })
                     .collect::<Vec<_>>();
 
                 Ok(get_free_busy(all_event_instances).free)
@@ -344,7 +348,9 @@ impl GetServiceBookingSlotsUseCase {
                         .into_iter()
                         .filter(|e| e.busy)
                         .flat_map(|e| {
-                            let mut instances = e.expand(Some(timespan), &cal.settings);
+                            let mut instances =
+                            // Todo: handle error
+                                e.expand(Some(timespan), &cal.settings).unwrap_or_default();
 
                             // Add buffer to instances if event is a service event
                             if let Some(service_id) = e.service_id {
@@ -619,7 +625,10 @@ mod test {
             ..Default::default()
         };
         let recurrence = RRuleOptions::default();
-        availability_event3.set_recurrence(recurrence, &calendar_user_2.settings, true);
+        match availability_event3.set_recurrence(recurrence, &calendar_user_2.settings, true) {
+            Ok(_) => {}
+            Err(e) => panic!("Error setting recurrence: {:?}", e),
+        };
 
         ctx.repos.events.insert(&availability_event1).await.unwrap();
         ctx.repos.events.insert(&availability_event2).await.unwrap();

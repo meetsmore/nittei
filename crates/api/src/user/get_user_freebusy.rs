@@ -155,7 +155,7 @@ impl GetFreeBusyUseCase {
                             .ok_or_else(|| {
                                 anyhow::anyhow!("Calendar with id: {} not found", event.calendar_id)
                             })?;
-                        let expanded_events = event.expand(Some(timespan), &calendar.settings);
+                        let expanded_events = event.expand(Some(timespan), &calendar.settings)?;
 
                         all_expanded_events.extend(expanded_events);
                     }
@@ -219,7 +219,12 @@ mod test {
             count: Some(100),
             ..Default::default()
         };
-        e1.set_recurrence(e1rr, &calendar.settings, true);
+        match e1.set_recurrence(e1rr, &calendar.settings, true) {
+            Ok(_) => {}
+            Err(e) => {
+                panic!("Error setting recurrence: {:?}", e);
+            }
+        };
 
         let mut e2 = CalendarEvent {
             calendar_id: calendar.id.clone(),
@@ -235,7 +240,12 @@ mod test {
             count: Some(100),
             ..Default::default()
         };
-        e2.set_recurrence(e2rr, &calendar.settings, true);
+        match e2.set_recurrence(e2rr, &calendar.settings, true) {
+            Ok(_) => {}
+            Err(e) => {
+                panic!("Error setting recurrence: {:?}", e);
+            }
+        };
 
         let mut e3 = CalendarEvent {
             calendar_id: calendar.id.clone(),
@@ -251,7 +261,12 @@ mod test {
             interval: 2,
             ..Default::default()
         };
-        e3.set_recurrence(e3rr, &calendar.settings, true);
+        match e3.set_recurrence(e3rr, &calendar.settings, true) {
+            Ok(_) => {}
+            Err(e) => {
+                panic!("Error setting recurrence: {:?}", e);
+            }
+        };
 
         ctx.repos.events.insert(&e1).await.unwrap();
         ctx.repos.events.insert(&e2).await.unwrap();
