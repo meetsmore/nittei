@@ -68,17 +68,14 @@ pub fn expand_all_events_and_remove_exceptions(
         let calendar = calendars
             .get(&event.calendar_id.to_string())
             .ok_or_else(|| anyhow::anyhow!("Calendar with id: {} not found", event.calendar_id))?;
-        let expanded_events = event.expand(Some(timespan), &calendar.settings)?;
 
-        // Get the exceptions for this event
-        let exceptions = map_recurring_event_id_to_exceptions.get(&event.id);
+        let exceptions = map_recurring_event_id_to_exceptions
+            .get(&event.id)
+            .map(Vec::as_slice)
+            .unwrap_or(&[]);
 
-        // If we have exceptions, remove them from the expanded events
-        let expanded_events = if let Some(exceptions) = exceptions {
-            event.remove_changed_instances(expanded_events, exceptions)
-        } else {
-            expanded_events
-        };
+        let expanded_events =
+            expand_event_and_remove_exceptions(calendar, event, exceptions, timespan)?;
 
         all_expanded_events.extend(expanded_events);
     }
@@ -88,6 +85,8 @@ pub fn expand_all_events_and_remove_exceptions(
 
 #[cfg(test)]
 mod test {
+    use std::collections::HashMap;
+
     use chrono::Utc;
 
     use super::expand_event_and_remove_exceptions;
@@ -239,5 +238,38 @@ mod test {
                 .unwrap();
 
         assert_eq!(instances.len(), 0);
+    }
+
+    #[test]
+    fn text_expand_all_events_and_remove_exceptions() {
+        let calendar = Calendar {
+            id: ID::default(),
+            ..Default::default()
+        };
+
+        let now = Utc::now();
+        let event = CalendarEvent {
+            id: ID::default(),
+            start_time: now,
+            duration: 1000 * 60 * 60,
+            calendar_id: calendar.id.clone(),
+            ..Default::default()
+        };
+
+        let timespan = TimeSpan::new(
+            now,
+            now.checked_add_signed(chrono::Duration::days(1)).unwrap(),
+        );
+
+        let events = vec![event.clone()];
+
+        let calendars = vec![(calendar.id.to_string(), &calendar)]
+            .into_iter()
+            .collect::<HashMap<_, _>>();
+
+        let instances =
+            super::expand_all_events_and_remove_exceptions(&calendars, &events, &timespan).unwrap();
+
+        assert_eq!(instances.len(), 1);
     }
 }
