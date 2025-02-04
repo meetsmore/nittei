@@ -85,3 +85,159 @@ pub fn expand_all_events_and_remove_exceptions(
 
     Ok(all_expanded_events)
 }
+
+#[cfg(test)]
+mod test {
+    use chrono::Utc;
+
+    use super::expand_event_and_remove_exceptions;
+    use crate::{generate_map_exceptions_start_times, Calendar, CalendarEvent, TimeSpan, ID};
+
+    #[test]
+    fn test_generate_map_exceptions_start_times() {
+        let id = ID::default();
+        let id2 = ID::default();
+        let id3 = ID::default();
+
+        let recurring_event_id = ID::default();
+        let recurring_event_id2 = ID::default();
+
+        let events = vec![
+            CalendarEvent {
+                id: recurring_event_id.clone(),
+                ..Default::default()
+            },
+            CalendarEvent {
+                id: recurring_event_id2.clone(),
+                ..Default::default()
+            },
+            CalendarEvent {
+                id: id.clone(),
+                recurring_event_id: Some(recurring_event_id.clone()),
+                original_start_time: Some(Utc::now()),
+                ..Default::default()
+            },
+            CalendarEvent {
+                id: id2.clone(),
+                recurring_event_id: Some(recurring_event_id.clone()),
+                original_start_time: Some(Utc::now()),
+                ..Default::default()
+            },
+            CalendarEvent {
+                id: id3.clone(),
+                recurring_event_id: Some(recurring_event_id2.clone()),
+                original_start_time: Some(
+                    Utc::now()
+                        .checked_add_signed(chrono::Duration::days(1))
+                        .unwrap(),
+                ),
+                ..Default::default()
+            },
+        ];
+
+        let map = generate_map_exceptions_start_times(&events);
+
+        assert_eq!(map.len(), 2);
+        assert_eq!(map.get(&recurring_event_id).unwrap().len(), 2);
+        assert_eq!(map.get(&recurring_event_id2).unwrap().len(), 1);
+    }
+
+    #[test]
+    fn test_generate_map_exceptions_start_times_no_original_start_time() {
+        let id = ID::default();
+        let id2 = ID::default();
+        let id3 = ID::default();
+
+        let recurring_event_id = ID::default();
+        let recurring_event_id2 = ID::default();
+
+        let events = vec![
+            CalendarEvent {
+                id: recurring_event_id.clone(),
+                ..Default::default()
+            },
+            CalendarEvent {
+                id: recurring_event_id2.clone(),
+                ..Default::default()
+            },
+            CalendarEvent {
+                id: id.clone(),
+                recurring_event_id: Some(recurring_event_id.clone()),
+                ..Default::default()
+            },
+            CalendarEvent {
+                id: id2.clone(),
+                recurring_event_id: Some(recurring_event_id.clone()),
+                ..Default::default()
+            },
+            CalendarEvent {
+                id: id3.clone(),
+                recurring_event_id: Some(recurring_event_id2.clone()),
+                ..Default::default()
+            },
+        ];
+
+        let map = generate_map_exceptions_start_times(&events);
+
+        assert_eq!(map.len(), 0);
+    }
+
+    #[test]
+    fn test_expand_event_and_remove_exceptions_for_normal_event() {
+        let calendar = Calendar {
+            id: ID::default(),
+            ..Default::default()
+        };
+
+        let event = CalendarEvent {
+            id: ID::default(),
+            ..Default::default()
+        };
+
+        let exceptions = vec![];
+
+        let timespan = TimeSpan::new(
+            Utc::now(),
+            Utc::now()
+                .checked_add_signed(chrono::Duration::days(1))
+                .unwrap(),
+        );
+
+        let instances =
+            expand_event_and_remove_exceptions(&calendar, &event, exceptions.as_slice(), &timespan)
+                .unwrap();
+
+        assert_eq!(instances.len(), 1);
+
+        let instance = &instances[0];
+        assert_eq!(instance.start_time, event.start_time);
+        assert_eq!(instance.end_time, event.end_time);
+    }
+
+    #[test]
+    fn test_expand_event_and_remove_exceptions_for_exception_event() {
+        let calendar = Calendar {
+            id: ID::default(),
+            ..Default::default()
+        };
+
+        let now = Utc::now();
+        let event = CalendarEvent {
+            id: ID::default(),
+            start_time: now,
+            duration: 1000 * 60 * 60,
+            ..Default::default()
+        };
+
+        let timespan = TimeSpan::new(
+            now,
+            now.checked_add_signed(chrono::Duration::days(1)).unwrap(),
+        );
+
+        let instances =
+            expand_event_and_remove_exceptions(&calendar, &event, vec![now].as_slice(), &timespan)
+                .unwrap();
+
+        assert_eq!(instances.len(), 0);
+    }
+}
