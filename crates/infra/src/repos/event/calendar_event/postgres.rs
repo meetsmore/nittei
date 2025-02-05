@@ -304,6 +304,10 @@ impl IEventRepo for PostgresEventRepo {
         .transpose()
     }
 
+    /// Find a calendar event by its id or recurring_event_id
+    /// For normal events, this will return a Vec with one element
+    /// For recurring event, this can return the event + the exceptions
+    /// If the event is an exception, it will only return a Vec with the exception
     #[instrument]
     async fn find_by_id_and_recurring_event_id(
         &self,

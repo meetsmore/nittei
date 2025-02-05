@@ -8,7 +8,7 @@ use crate::{Calendar, CalendarEvent, EventInstance, TimeSpan, ID};
 /// Generate a map of recurring_event_id to original_start_time
 /// This is used to remove exceptions from the expanded events
 /// The key is the recurring_event_id (as string) and the value is a vector of original_start_time
-pub fn generate_map_exceptions_start_times(
+pub fn generate_map_exceptions_original_start_times(
     events: &Vec<CalendarEvent>,
 ) -> HashMap<ID, Vec<DateTime<Utc>>> {
     let mut map_recurring_event_id_to_exceptions = HashMap::new();
@@ -60,7 +60,7 @@ pub fn expand_all_events_and_remove_exceptions(
     events: &Vec<CalendarEvent>,
     timespan: &TimeSpan,
 ) -> anyhow::Result<Vec<EventInstance>> {
-    let map_recurring_event_id_to_exceptions = generate_map_exceptions_start_times(events);
+    let map_recurring_event_id_to_exceptions = generate_map_exceptions_original_start_times(events);
 
     let mut all_expanded_events = Vec::new();
     // For each event, expand it and add the instances to the all_expanded_events
@@ -90,7 +90,13 @@ mod test {
     use chrono::Utc;
 
     use super::expand_event_and_remove_exceptions;
-    use crate::{generate_map_exceptions_start_times, Calendar, CalendarEvent, TimeSpan, ID};
+    use crate::{
+        generate_map_exceptions_original_start_times,
+        Calendar,
+        CalendarEvent,
+        TimeSpan,
+        ID,
+    };
 
     #[test]
     fn test_generate_map_exceptions_start_times() {
@@ -134,7 +140,7 @@ mod test {
             },
         ];
 
-        let map = generate_map_exceptions_start_times(&events);
+        let map = generate_map_exceptions_original_start_times(&events);
 
         assert_eq!(map.len(), 2);
         assert_eq!(map.get(&recurring_event_id).unwrap().len(), 2);
@@ -176,7 +182,7 @@ mod test {
             },
         ];
 
-        let map = generate_map_exceptions_start_times(&events);
+        let map = generate_map_exceptions_original_start_times(&events);
 
         assert_eq!(map.len(), 0);
     }

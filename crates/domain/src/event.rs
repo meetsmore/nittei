@@ -261,15 +261,12 @@ impl CalendarEvent {
         instances: Vec<EventInstance>,
         exceptions_start_times: &[DateTime<Utc>],
     ) -> Vec<EventInstance> {
-        let map_of_original_start_time_to_changed_instance: std::collections::HashSet<
-            DateTime<Utc>,
-        > = exceptions_start_times.iter().cloned().collect();
+        let original_start_times_set: std::collections::HashSet<DateTime<Utc>> =
+            exceptions_start_times.iter().cloned().collect();
 
         instances
             .iter()
-            .filter(|instance| {
-                !map_of_original_start_time_to_changed_instance.contains(&instance.start_time)
-            })
+            .filter(|instance| !original_start_times_set.contains(&instance.start_time))
             .cloned()
             .collect()
     }
@@ -432,7 +429,7 @@ mod test {
     }
 
     #[test]
-    fn dailyy_calendar_event_with_some_overrides() {
+    fn daily_calendar_event_with_some_overrides() {
         let settings = CalendarSettings {
             timezone: UTC,
             week_start: Weekday::Mon,

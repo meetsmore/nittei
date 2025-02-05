@@ -347,10 +347,8 @@ impl GetServiceBookingSlotsUseCase {
                     let mut calendar_busy_events = calendar_events
                         .into_iter()
                         .filter(|e| e.busy)
-                        .flat_map(|e| {
-                            let mut instances =
-                            // Todo: handle error
-                                e.expand(Some(timespan), &cal.settings).unwrap_or_default();
+                        .map(|e| -> anyhow::Result<Vec<EventInstance>> {
+                            let mut instances = e.expand(Some(timespan), &cal.settings)?;
 
                             // Add buffer to instances if event is a service event
                             if let Some(service_id) = e.service_id {
@@ -370,8 +368,11 @@ impl GetServiceBookingSlotsUseCase {
                                     }
                                 }
                             }
-                            instances
+                            Ok(instances)
                         })
+                        .collect::<Result<Vec<_>, _>>()?
+                        .into_iter()
+                        .flatten()
                         .collect::<Vec<_>>();
 
                     busy_events.append(&mut calendar_busy_events);

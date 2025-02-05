@@ -43,7 +43,7 @@ pub use shared::{
     expand_events::{
         expand_all_events_and_remove_exceptions,
         expand_event_and_remove_exceptions,
-        generate_map_exceptions_start_times,
+        generate_map_exceptions_original_start_times,
     },
     id_query::IDQuery,
     metadata::{Meta, Metadata},

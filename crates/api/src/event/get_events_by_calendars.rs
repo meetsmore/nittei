@@ -3,7 +3,7 @@ use chrono::{DateTime, Utc};
 use nittei_api_structs::get_events_by_calendars::*;
 use nittei_domain::{
     expand_event_and_remove_exceptions,
-    generate_map_exceptions_start_times,
+    generate_map_exceptions_original_start_times,
     EventWithInstances,
     TimeSpan,
     ID,
@@ -132,18 +132,26 @@ impl UseCase for GetEventsByCalendarsUseCase {
                 // Create a map of recurrence_id to events (exceptions)
                 // This is used to remove exceptions from the expanded events
                 let map_recurring_event_id_to_exceptions =
-                    generate_map_exceptions_start_times(&events);
+                    generate_map_exceptions_original_start_times(&events);
 
+                // For each event, expand it and keep the instances next to the event
                 let events = events
                     .into_iter()
                     .map(|event| {
-                        let calendar = &calendars_map[&event.calendar_id];
+                        let calendar = calendars_map.get(&event.calendar_id).ok_or_else(|| {
+                            UseCaseError::NotFound(
+                                "Calendar".to_string(),
+                                event.calendar_id.to_string(),
+                            )
+                        })?;
 
+                        // Get the exceptions of the event
                         let exceptions = map_recurring_event_id_to_exceptions
                             .get(&event.id)
                             .map(Vec::as_slice)
                             .unwrap_or(&[]);
 
+                        // Expand the event and remove the exceptions
                         let instances = expand_event_and_remove_exceptions(
                             calendar, &event, exceptions, &timespan,
                         )
