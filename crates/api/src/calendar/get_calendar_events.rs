@@ -145,11 +145,13 @@ impl UseCase for GetCalendarEventsUseCase {
                 let events = calendar_events
                     .into_iter()
                     .map(|event| {
+                        // Get the exceptions for the event
                         let exceptions = map_recurring_event_id_to_exceptions
                             .get(&event.id)
                             .map(Vec::as_slice)
                             .unwrap_or(&[]);
 
+                        // Expand the event and remove the exceptions
                         let instances = expand_event_and_remove_exceptions(
                             &calendar, &event, exceptions, &timespan,
                         )
@@ -162,7 +164,7 @@ impl UseCase for GetCalendarEventsUseCase {
                     })
                     .collect::<Result<Vec<_>, _>>()?
                     .into_iter()
-                    // // Also it is possible that there are no instances in the expanded event, should remove them
+                    // Also it is possible that there are no instances in the expanded event, should remove them
                     .filter(|data| !data.instances.is_empty())
                     .collect::<Vec<_>>();
 
