@@ -1,7 +1,7 @@
 use nittei_domain::{CalendarEvent, CalendarEventReminder, EventInstance, RRuleOptions, ID};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
-use validator::Validate;
+use validator::{Validate, ValidationError};
 
 use crate::dtos::CalendarEventDTO;
 
@@ -33,10 +33,25 @@ pub mod create_event {
         pub user_id: ID,
     }
 
+    /// Validate that recurring_event_id and original_start_time are both provided or both omitted
+    fn validate_recurring_event_id_and_original_start_time(
+        body: &RequestBody,
+    ) -> Result<(), ValidationError> {
+        if (body.recurring_event_id.is_some() && body.original_start_time.is_none())
+            || (body.recurring_event_id.is_none() && body.original_start_time.is_some())
+        {
+            return Err(ValidationError::new(
+            "Both recurring_event_id and original_start_time must be provided, or must be omitted",
+        ));
+        }
+        Ok(())
+    }
+
     /// Request body for creating an event
     #[derive(Serialize, Deserialize, Validate, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "CreateEventRequestBody")]
+    #[validate(schema(function = "validate_recurring_event_id_and_original_start_time"))]
     pub struct RequestBody {
         /// UUID of the calendar where the event will be created
         pub calendar_id: ID,
@@ -420,10 +435,25 @@ pub mod update_event {
 
     use super::*;
 
+    /// Validate that recurring_event_id and original_start_time are both provided or both omitted
+    fn validate_recurring_event_id_and_original_start_time(
+        body: &RequestBody,
+    ) -> Result<(), ValidationError> {
+        if (body.recurring_event_id.is_some() && body.original_start_time.is_none())
+            || (body.recurring_event_id.is_none() && body.original_start_time.is_some())
+        {
+            return Err(ValidationError::new(
+            "Both recurring_event_id and original_start_time must be provided, or must be omitted",
+        ));
+        }
+        Ok(())
+    }
+
     /// Request body for updating an event
     #[derive(Deserialize, Serialize, Validate, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "UpdateEventRequestBody")]
+    #[validate(schema(function = "validate_recurring_event_id_and_original_start_time"))]
     pub struct RequestBody {
         /// Optional start time of the event (UTC)
         #[serde(default)]
