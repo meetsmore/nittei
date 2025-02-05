@@ -3,15 +3,10 @@ mod telemetry;
 use nittei_api::Application;
 use nittei_infra::setup_context;
 use telemetry::init_subscriber;
-#[cfg(all(target_env = "musl", target_pointer_width = "64"))]
 use tikv_jemallocator::Jemalloc;
 use tokio::signal;
 use tracing::{error, info};
 
-// Use Jemalloc only for musl-64 bits platforms
-// The default MUSL allocator is known to be slower than Jemalloc
-// E.g. https://github.com/BurntSushi/ripgrep/commit/03bf37ff4a29361c47843369f7d3dc5689b8fdac
-#[cfg(all(target_env = "musl", target_pointer_width = "64"))]
 #[global_allocator]
 static GLOBAL: Jemalloc = Jemalloc;
 
