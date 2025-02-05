@@ -5,7 +5,7 @@ use tracing::warn;
 
 use crate::{Calendar, CalendarEvent, EventInstance, TimeSpan, ID};
 
-/// Generate a map of recurring_event_id to original_start_time
+/// Generate a map of recurring_event_id to original_start_times (vector)
 /// This is used to remove exceptions from the expanded events
 /// The key is the recurring_event_id (as string) and the value is a vector of original_start_time
 pub fn generate_map_exceptions_original_start_times(
