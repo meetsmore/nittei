@@ -279,7 +279,7 @@ mod test {
         let res = usecase.execute(&ctx).await;
         assert!(res.is_ok());
         let instances = res.unwrap().busy.inner();
-        assert_eq!(instances.len(), 2);
+        assert_eq!(instances.len(), 3);
         assert_eq!(
             instances[0],
             EventInstance {

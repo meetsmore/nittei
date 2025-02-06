@@ -1,6 +1,6 @@
 use std::convert::TryFrom;
 
-use chrono::{prelude::*, Duration, TimeDelta};
+use chrono::{prelude::*, TimeDelta};
 use rrule::RRuleSet;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
@@ -212,17 +212,12 @@ impl CalendarEvent {
 
                         let timespan = timespan.as_datetime(&chrono_tz);
 
-                        // Also take the duration of events into consideration as the rrule library
-                        // does not support duration on events.
-                        let end = timespan.end - Duration::milliseconds(self.duration);
-
-                        // RRule v0.5.5 is not inclusive on start, so just by subtracting one millisecond
-                        // will make it inclusive
-                        let start = timespan.start - Duration::milliseconds(1);
+                        let end_with_timezone = timespan.end.with_timezone(&tzid);
+                        let start_with_timezone = timespan.start.with_timezone(&tzid);
 
                         rrule_set
-                            .before(end.with_timezone(&tzid))
-                            .after(start.with_timezone(&tzid))
+                            .after(start_with_timezone)
+                            .before(end_with_timezone)
                             .all(100)
                     }
                     None => rrule_set.all(100), // TODO: change
@@ -276,6 +271,7 @@ impl CalendarEvent {
 mod test {
     use core::panic;
 
+    use chrono::Duration;
     use chrono_tz::UTC;
 
     use super::*;
