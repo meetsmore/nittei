@@ -150,9 +150,10 @@ describe('User API', () => {
       calendarIds: [calendarId],
     })
 
-    // Event1 is daily from 0:00, so it should be busy the first 0:00 and the last 0:00 (total = 5)
-    // Event2 is daily from 4:00, so it should be busy the first 4:00 and the last 4:00 (total = 4)
-    // Event3 is daily from 0:00, but it's free, so it should
+    // Event1 is daily from 0:00, so it should be busy everyday at 0:00,
+    //  including the very first 0:00 and the very last 0:00 (total = 5)
+    // Event2 is daily from 4:00, so it should be busy everyday, including the first 4:00 and the last 4:00 (total = 4)
+    // Event3 is daily from 0:00, but it's not busy, so it should not be included in the busy list
     expect(res.busy.length).toBe(9)
 
     for (const e of [event1, event2, event3]) {
