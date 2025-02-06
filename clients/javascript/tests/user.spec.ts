@@ -90,7 +90,7 @@ describe('User API', () => {
   it('should show correct freebusy with a single event in calendar', async () => {
     const event = await client.events.create({
       calendarId,
-      duration: 1000 * 60 * 60,
+      duration: 1000 * 60 * 60, // 1 hour
       startTime: new Date(0),
       busy: true,
       recurrence: {
@@ -101,11 +101,11 @@ describe('User API', () => {
     })
 
     const res = await unauthClient.user.freebusy(userId, {
-      endTime: new Date(1000 * 60 * 60 * 24 * 4),
-      startTime: new Date(10),
+      endTime: new Date(1000 * 60 * 60 * 24 * 4), // 4 days
+      startTime: new Date(10), // 10ms
       calendarIds: [calendarId],
     })
-    expect(res.busy.length).toBe(3)
+    expect(res.busy.length).toBe(4)
 
     await client.events.remove(event.event.id)
   })
@@ -113,7 +113,7 @@ describe('User API', () => {
   it('should show correct freebusy with multiple events in calendar', async () => {
     const event1 = await client.events.create({
       calendarId,
-      duration: 1000 * 60 * 60,
+      duration: 1000 * 60 * 60, // 1 hour
       startTime: new Date(0),
       busy: true,
       recurrence: {
@@ -124,8 +124,8 @@ describe('User API', () => {
     })
     const event2 = await client.events.create({
       calendarId,
-      duration: 1000 * 60 * 60,
-      startTime: new Date(1000 * 60 * 60 * 4),
+      duration: 1000 * 60 * 60, // 1 hour
+      startTime: new Date(1000 * 60 * 60 * 4), // 4 hours
       busy: true,
       recurrence: {
         freq: Frequency.Daily,
@@ -135,7 +135,7 @@ describe('User API', () => {
     })
     const event3 = await client.events.create({
       calendarId,
-      duration: 1000 * 60 * 60,
+      duration: 1000 * 60 * 60, // 1 hour
       startTime: new Date(0),
       busy: false,
       recurrence: {
@@ -145,12 +145,15 @@ describe('User API', () => {
       },
     })
     const res = await unauthClient.user.freebusy(userId, {
-      endTime: new Date(1000 * 60 * 60 * 24 * 4),
+      endTime: new Date(1000 * 60 * 60 * 24 * 4), // 4 days
       startTime: new Date(0),
       calendarIds: [calendarId],
     })
 
-    expect(res.busy.length).toBe(8)
+    // Event1 is daily from 0:00, so it should be busy the first 0:00 and the last 0:00 (total = 5)
+    // Event2 is daily from 4:00, so it should be busy the first 4:00 and the last 4:00 (total = 4)
+    // Event3 is daily from 0:00, but it's free, so it should
+    expect(res.busy.length).toBe(9)
 
     for (const e of [event1, event2, event3]) {
       await client.events.remove(e.event.id)
