@@ -656,7 +656,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "93698b29de5e97ad0ae26447b344c482a7284c737d9ddc5f9e52b74a336671bb"
 dependencies = [
  "chrono",
- "chrono-tz-build",
+ "chrono-tz-build 0.3.0",
+ "phf",
+]
+
+[[package]]
+name = "chrono-tz"
+version = "0.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9c6ac4f2c0bf0f44e9161aec9675e1050aa4a530663c4a9e37e108fa948bca9f"
+dependencies = [
+ "chrono",
+ "chrono-tz-build 0.4.0",
  "phf",
  "serde",
 ]
@@ -669,6 +680,16 @@ checksum = "0c088aee841df9c3041febbb73934cfc39708749bf96dc827e3359cd39ef11b1"
 dependencies = [
  "parse-zoneinfo",
  "phf",
+ "phf_codegen",
+]
+
+[[package]]
+name = "chrono-tz-build"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e94fea34d77a245229e7746bd2beb786cd2a896f306ff491fb8cecb3074b10a7"
+dependencies = [
+ "parse-zoneinfo",
  "phf_codegen",
 ]
 
@@ -1804,7 +1825,7 @@ dependencies = [
  "actix-web",
  "anyhow",
  "chrono",
- "chrono-tz",
+ "chrono-tz 0.10.1",
  "futures",
  "nittei_api",
  "nittei_domain",
@@ -1836,7 +1857,7 @@ dependencies = [
  "async-trait",
  "awc",
  "chrono",
- "chrono-tz",
+ "chrono-tz 0.10.1",
  "futures",
  "jsonwebtoken",
  "nittei_api_structs",
@@ -1860,7 +1881,7 @@ name = "nittei_api_structs"
 version = "0.3.1"
 dependencies = [
  "chrono",
- "chrono-tz",
+ "chrono-tz 0.10.1",
  "nittei_domain",
  "serde",
  "serde_json",
@@ -1876,7 +1897,7 @@ version = "0.2.1"
 dependencies = [
  "anyhow",
  "chrono",
- "chrono-tz",
+ "chrono-tz 0.10.1",
  "itertools",
  "jsonwebtoken",
  "nittei_utils",
@@ -1899,7 +1920,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "chrono",
- "chrono-tz",
+ "chrono-tz 0.10.1",
  "futures",
  "nittei_domain",
  "nittei_utils",
@@ -1918,7 +1939,7 @@ name = "nittei_sdk"
 version = "0.4.1"
 dependencies = [
  "chrono",
- "chrono-tz",
+ "chrono-tz 0.10.1",
  "nittei_api_structs",
  "nittei_domain",
  "reqwest 0.12.4",
@@ -2740,7 +2761,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cff1ca93145ff07cdc878b5f6bb90391a299cc8712538af0ad73ebf37613e46a"
 dependencies = [
  "chrono",
- "chrono-tz",
+ "chrono-tz 0.9.0",
  "lazy_static",
  "log",
  "regex",
