@@ -497,6 +497,9 @@ async fn test_crud_events() {
             reminders: Vec::new(),
             busy: None,
             recurrence: None,
+            exdates: None,
+            recurring_event_id: None,
+            original_start_time: None,
             service_id: None,
             start_time: DateTime::from_timestamp_millis(0).unwrap(),
             metadata: None,
@@ -537,11 +540,13 @@ async fn test_crud_events() {
             all_day: None,
             parent_id: None,
             external_id: None,
-            exdates: Some(vec![DateTime::from_timestamp_millis(0).unwrap()]),
             busy: None,
             duration: None,
             reminders: None,
-            rrule_options: None,
+            recurrence: None,
+            exdates: Some(vec![DateTime::from_timestamp_millis(0).unwrap()]),
+            recurring_event_id: None,
+            original_start_time: None,
             service_id: None,
             start_time: None,
             metadata: None,
@@ -569,6 +574,71 @@ async fn test_crud_events() {
     assert_eq!(event.calendar_id, calendar.id);
 
     assert!(admin_client.event.get(event.id.clone()).await.is_err())
+}
+
+#[actix_web::main]
+#[test]
+async fn test_create_event_validation() {
+    let (app, sdk, address) = spawn_app().await;
+    let res = sdk
+        .account
+        .create(&app.config.create_account_secret_code)
+        .await
+        .expect("Expected to create account");
+    let admin_client = NitteiSDK::new(address, res.secret_api_key);
+    let user = admin_client
+        .user
+        .create(CreateUserInput {
+            metadata: None,
+            external_id: None,
+            user_id: None,
+        })
+        .await
+        .unwrap()
+        .user;
+
+    let calendar = admin_client
+        .calendar
+        .create(CreateCalendarInput {
+            user_id: user.id.clone(),
+            timezone: chrono_tz::UTC,
+            name: None,
+            key: None,
+            week_start: Weekday::Mon,
+            metadata: None,
+        })
+        .await
+        .unwrap()
+        .calendar;
+
+    let event = admin_client
+        .event
+        .create(CreateEventInput {
+            parent_id: None,
+            external_id: None,
+            group_id: None,
+            title: None,
+            description: None,
+            event_type: None,
+            location: None,
+            status: nittei_domain::CalendarEventStatus::Tentative,
+            all_day: None,
+            user_id: user.id.clone(),
+            calendar_id: calendar.id.clone(),
+            duration: 1000 * 60 * 60,
+            reminders: Vec::new(),
+            busy: None,
+            recurrence: None,
+            exdates: None,
+            recurring_event_id: Some(ID::default()),
+            original_start_time: None,
+            service_id: None,
+            start_time: DateTime::from_timestamp_millis(0).unwrap(),
+            metadata: None,
+        })
+        .await;
+    // We expect an error because recurring_event_id is set, but original_start_time is not
+    assert!(event.is_err());
 }
 
 #[actix_web::main]
@@ -775,6 +845,9 @@ async fn test_freebusy_multiple() {
             reminders: Vec::new(),
             busy: None,
             recurrence: None,
+            exdates: None,
+            recurring_event_id: None,
+            original_start_time: None,
             service_id: None,
             start_time: DateTime::from_timestamp_millis(0).unwrap(),
             metadata: None,
@@ -800,6 +873,9 @@ async fn test_freebusy_multiple() {
             reminders: Vec::new(),
             busy: None,
             recurrence: None,
+            exdates: None,
+            recurring_event_id: None,
+            original_start_time: None,
             service_id: None,
             start_time: DateTime::from_timestamp_millis(1000 * 60 * 60).unwrap(),
             metadata: None,

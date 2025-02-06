@@ -4,7 +4,13 @@ use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::{DateTime, Utc};
 use futures::future::join_all;
 use nittei_api_structs::get_user_freebusy::{APIResponse, PathParams, QueryParams};
-use nittei_domain::{CompatibleInstances, EventInstance, TimeSpan, ID};
+use nittei_domain::{
+    expand_all_events_and_remove_exceptions,
+    CompatibleInstances,
+    EventInstance,
+    TimeSpan,
+    ID,
+};
 use nittei_infra::NitteiContext;
 
 use crate::{
@@ -145,28 +151,19 @@ impl GetFreeBusyUseCase {
         let events: Vec<Result<Vec<nittei_domain::CalendarEvent>, anyhow::Error>> =
             join_all(all_events_futures).await.into_iter().collect();
 
-        let mut all_expanded_events = Vec::new();
-        for events in events {
-            match events {
-                Ok(events) => {
-                    for event in events {
-                        let calendar = calendars_lookup
-                            .get(&event.calendar_id.to_string())
-                            .ok_or_else(|| {
-                                anyhow::anyhow!("Calendar with id: {} not found", event.calendar_id)
-                            })?;
-                        let expanded_events = event.expand(Some(timespan), &calendar.settings);
+        // If we got an error,throw, otherwise collect the events
+        let events = events.into_iter().collect::<Result<Vec<_>, _>>()?;
 
-                        all_expanded_events.extend(expanded_events);
-                    }
-                }
-                Err(e) => {
-                    return Err(e);
-                }
-            }
+        // Flatten them into a single vec
+        let events: Vec<_> = events.into_iter().flatten().collect();
+
+        // If we have no events, return early
+        if events.is_empty() {
+            return Ok(Vec::new());
         }
 
-        Ok(all_expanded_events)
+        // Expand the events, remove the exceptions and return the expanded events
+        expand_all_events_and_remove_exceptions(&calendars_lookup, &events, timespan)
     }
 }
 
@@ -219,7 +216,12 @@ mod test {
             count: Some(100),
             ..Default::default()
         };
-        e1.set_recurrence(e1rr, &calendar.settings, true);
+        match e1.set_recurrence(e1rr, &calendar.settings, true) {
+            Ok(_) => {}
+            Err(e) => {
+                panic!("Error setting recurrence: {:?}", e);
+            }
+        };
 
         let mut e2 = CalendarEvent {
             calendar_id: calendar.id.clone(),
@@ -235,7 +237,12 @@ mod test {
             count: Some(100),
             ..Default::default()
         };
-        e2.set_recurrence(e2rr, &calendar.settings, true);
+        match e2.set_recurrence(e2rr, &calendar.settings, true) {
+            Ok(_) => {}
+            Err(e) => {
+                panic!("Error setting recurrence: {:?}", e);
+            }
+        };
 
         let mut e3 = CalendarEvent {
             calendar_id: calendar.id.clone(),
@@ -251,7 +258,12 @@ mod test {
             interval: 2,
             ..Default::default()
         };
-        e3.set_recurrence(e3rr, &calendar.settings, true);
+        match e3.set_recurrence(e3rr, &calendar.settings, true) {
+            Ok(_) => {}
+            Err(e) => {
+                panic!("Error setting recurrence: {:?}", e);
+            }
+        };
 
         ctx.repos.events.insert(&e1).await.unwrap();
         ctx.repos.events.insert(&e2).await.unwrap();

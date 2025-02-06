@@ -120,15 +120,15 @@ impl CalendarEventReminder {
 }
 
 impl CalendarEvent {
-    fn update_endtime(&mut self, calendar_settings: &CalendarSettings) -> bool {
+    fn update_endtime(&mut self, calendar_settings: &CalendarSettings) -> anyhow::Result<bool> {
         match self.recurrence.clone() {
             Some(recurrence) => {
                 let rrule_options =
-                    recurrence.get_parsed_options(self.start_time, calendar_settings);
+                    recurrence.get_parsed_options(self.start_time, calendar_settings)?;
                 let options = rrule_options.get_rrule().first();
                 if let Some(options) = options {
                     if (options.get_count().unwrap_or(0) > 0) || options.get_until().is_some() {
-                        let expand = self.expand(None, calendar_settings);
+                        let expand = self.expand(None, calendar_settings)?;
                         self.end_time = expand
                             .last()
                             .map(|l| l.end_time)
@@ -139,9 +139,9 @@ impl CalendarEvent {
                 } else {
                     self.end_time = DateTime::<Utc>::MAX_UTC;
                 }
-                true
+                Ok(true)
             }
-            None => true,
+            None => Ok(true),
         }
     }
 
@@ -150,32 +150,41 @@ impl CalendarEvent {
         recurrence: RRuleOptions,
         calendar_settings: &CalendarSettings,
         update_endtime: bool,
-    ) -> bool {
+    ) -> anyhow::Result<bool> {
         let valid_recurrence = recurrence.is_valid(self.start_time);
         if !valid_recurrence {
-            return false;
+            return Ok(false);
         }
 
         self.recurrence = Some(recurrence);
         if update_endtime {
             return self.update_endtime(calendar_settings);
         }
-        true
+        Ok(true)
     }
 
-    pub fn get_rrule_set(&self, calendar_settings: &CalendarSettings) -> Option<RRuleSet> {
+    pub fn get_rrule_set(
+        &self,
+        calendar_settings: &CalendarSettings,
+    ) -> anyhow::Result<Option<RRuleSet>> {
         if let Some(recurrence) = self.recurrence.clone() {
-            let rrule_options = recurrence.get_parsed_options(self.start_time, calendar_settings);
+            let rrule_options =
+                recurrence.get_parsed_options(self.start_time, calendar_settings)?;
             let tzid = rrule_options.get_dt_start().timezone();
             let mut rrule_set = RRuleSet::new(*rrule_options.get_dt_start());
             for exdate in &self.exdates {
                 rrule_set = rrule_set.exdate(exdate.with_timezone(&tzid));
             }
-            let rrule = rrule_options.get_rrule().first()?;
-            rrule_set = rrule_set.rrule(rrule.clone());
-            Some(rrule_set)
+            let rrule = rrule_options.get_rrule().first();
+            match rrule {
+                Some(rrule) => {
+                    rrule_set = rrule_set.rrule(rrule.clone());
+                    Ok(Some(rrule_set))
+                }
+                None => Ok(None),
+            }
         } else {
-            None
+            Ok(None)
         }
     }
 
@@ -183,15 +192,15 @@ impl CalendarEvent {
         &self,
         timespan: Option<&TimeSpan>,
         calendar_settings: &CalendarSettings,
-    ) -> Vec<EventInstance> {
+    ) -> anyhow::Result<Vec<EventInstance>> {
         match &self.recurrence {
             Some(recurrence) => {
                 let rrule_options =
-                    recurrence.get_parsed_options(self.start_time, calendar_settings);
+                    recurrence.get_parsed_options(self.start_time, calendar_settings)?;
                 let tzid = rrule_options.get_dt_start().timezone();
-                let rrule_set = match self.get_rrule_set(calendar_settings) {
+                let rrule_set = match self.get_rrule_set(calendar_settings)? {
                     Some(rrule_set) => rrule_set,
-                    None => return Vec::new(),
+                    None => return Ok(Vec::new()),
                 };
 
                 let instances = match timespan {
@@ -200,6 +209,7 @@ impl CalendarEvent {
                             rrule::Tz::Tz(tz) => tz,
                             rrule::Tz::Local(_) => chrono_tz::UTC,
                         };
+
                         let timespan = timespan.as_datetime(&chrono_tz);
 
                         // Also take the duration of events into consideration as the rrule library
@@ -218,7 +228,7 @@ impl CalendarEvent {
                     None => rrule_set.all(100), // TODO: change
                 };
 
-                instances
+                Ok(instances
                     .dates
                     .iter()
                     .map(|occurrence| EventInstance {
@@ -227,25 +237,45 @@ impl CalendarEvent {
                             + TimeDelta::milliseconds(self.duration),
                         busy: self.busy,
                     })
-                    .collect()
+                    .collect())
             }
             None => {
                 if self.exdates.contains(&self.start_time) {
-                    Vec::new()
+                    Ok(Vec::new())
                 } else {
-                    vec![EventInstance {
+                    Ok(vec![EventInstance {
                         start_time: self.start_time,
                         end_time: self.start_time + TimeDelta::milliseconds(self.duration),
                         busy: self.busy,
-                    }]
+                    }])
                 }
             }
         }
+    }
+
+    /// Filters the instances based on the changed instances, and returns the instances that are not changed
+    /// The changed instances are actual event calendars (contrary to normal instances)
+    /// They need to be removed from the default instances list, as they are not part of the recurrence anymore
+    pub fn remove_changed_instances(
+        &self,
+        instances: Vec<EventInstance>,
+        exceptions_start_times: &[DateTime<Utc>],
+    ) -> Vec<EventInstance> {
+        let original_start_times_set: std::collections::HashSet<DateTime<Utc>> =
+            exceptions_start_times.iter().cloned().collect();
+
+        instances
+            .iter()
+            .filter(|instance| !original_start_times_set.contains(&instance.start_time))
+            .cloned()
+            .collect()
     }
 }
 
 #[cfg(test)]
 mod test {
+    use core::panic;
+
     use chrono_tz::UTC;
 
     use super::*;
@@ -257,8 +287,9 @@ mod test {
             timezone: UTC,
             week_start: Weekday::Mon,
         };
+        let start_time = DateTime::from_timestamp_millis(1521317491000).unwrap();
         let event = CalendarEvent {
-            start_time: DateTime::from_timestamp_millis(1521317491239).unwrap(),
+            start_time,
             duration: 1000 * 60 * 60,
             recurrence: Some(RRuleOptions {
                 freq: RRuleFrequency::Daily,
@@ -267,17 +298,19 @@ mod test {
                 ..Default::default()
             }),
             end_time: DateTime::from_timestamp_millis(2521317491239).unwrap(),
-            exdates: vec![DateTime::from_timestamp_millis(1521317491239).unwrap()],
+            exdates: vec![start_time],
             ..Default::default()
         };
 
-        let oc = event.expand(None, &settings);
+        let oc = match event.expand(None, &settings) {
+            Ok(oc) => oc,
+            Err(e) => {
+                panic!("Error: {:?}", e);
+            }
+        };
 
-        // To double check, it was 3 before
-        // Imo it makes sense to have 4, as count is 4 and the end_time is very far away
-        // The argument is maybe that the exdate == start_time, but if now, it removes it from the count
-        // Then it's due to a change in RRULE library
-        assert_eq!(oc.len(), 4);
+        // We expect 3 occurrences, as the count is 4 and 1 is removed due to exdate
+        assert_eq!(oc.len(), 3);
     }
 
     #[test]
@@ -293,12 +326,22 @@ mod test {
             ..Default::default()
         };
 
-        let oc = event.expand(None, &settings);
+        let oc = match event.expand(None, &settings) {
+            Ok(oc) => oc,
+            Err(e) => {
+                panic!("Error: {:?}", e);
+            }
+        };
         assert_eq!(oc.len(), 1);
 
         // Without recurrence but with exdate at start time
         event.exdates = vec![event.start_time];
-        let oc = event.expand(None, &settings);
+        let oc = match event.expand(None, &settings) {
+            Ok(oc) => oc,
+            Err(e) => {
+                panic!("Error: {:?}", e);
+            }
+        };
         assert_eq!(oc.len(), 0);
     }
 
@@ -331,7 +374,13 @@ mod test {
                 ..Default::default()
             };
 
-            assert!(!event.set_recurrence(rrule, &settings, true));
+            let valid = match event.set_recurrence(rrule, &settings, true) {
+                Ok(valid) => valid,
+                Err(e) => {
+                    panic!("Error: {:?}", e);
+                }
+            };
+            assert!(!valid);
         }
     }
 
@@ -369,7 +418,82 @@ mod test {
                 ..Default::default()
             };
 
-            assert!(event.set_recurrence(rrule, &settings, true));
+            let valid = match event.set_recurrence(rrule, &settings, true) {
+                Ok(valid) => valid,
+                Err(e) => {
+                    panic!("Error: {:?}", e);
+                }
+            };
+            assert!(valid);
         }
+    }
+
+    #[test]
+    fn daily_calendar_event_with_some_overrides() {
+        let settings = CalendarSettings {
+            timezone: UTC,
+            week_start: Weekday::Mon,
+        };
+        let start_time = DateTime::parse_from_rfc3339("2025-02-02T10:00:00+00:00")
+            .unwrap()
+            .to_utc();
+
+        let event = CalendarEvent {
+            start_time,
+            duration: 1000 * 60 * 60,
+            recurrence: Some(RRuleOptions {
+                freq: RRuleFrequency::Daily,
+                interval: 1,
+                count: Some(4),
+                ..Default::default()
+            }),
+            end_time: DateTime::parse_from_rfc3339("2026-02-02T10:00:00+00:00")
+                .unwrap()
+                .to_utc(),
+            exdates: vec![start_time],
+            ..Default::default()
+        };
+
+        let oc = match event.expand(None, &settings) {
+            Ok(oc) => oc,
+            Err(e) => {
+                panic!("Error: {:?}", e);
+            }
+        };
+
+        // We expect 3 occurrences, as the count is 4, and 1 is removed due to exdate
+        assert_eq!(oc.len(), 3);
+
+        let event_override_changed = CalendarEvent {
+            start_time: start_time + Duration::days(1) + Duration::hours(1),
+            duration: 1000 * 60 * 60,
+            end_time: start_time + Duration::days(1) + Duration::hours(2),
+            original_start_time: Some(start_time + Duration::days(1)),
+            recurring_event_id: Some(event.id.clone()),
+            ..Default::default()
+        };
+
+        let event_override_cancelled = CalendarEvent {
+            start_time: start_time + Duration::days(2),
+            duration: 1000 * 60 * 60,
+            end_time: start_time + Duration::days(2) + Duration::hours(1),
+            original_start_time: Some(start_time + Duration::days(2)),
+            recurring_event_id: Some(event.id.clone()),
+            status: CalendarEventStatus::Cancelled,
+            ..Default::default()
+        };
+
+        let oc_filtered = event.remove_changed_instances(
+            oc,
+            &[
+                event_override_changed.original_start_time.unwrap(),
+                event_override_cancelled.original_start_time.unwrap(),
+            ],
+        );
+
+        // We expect 1 occurrences, as the count is 4, we have 1 exdate and 2 overrides
+        // The overrides are not included in the occurrences, whatever the change is
+        // As they, by themselves, already "represent" these instances
+        assert_eq!(oc_filtered.len(), 1);
     }
 }

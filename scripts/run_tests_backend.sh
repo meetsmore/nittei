@@ -38,12 +38,20 @@ IS_FREE=$(netstat -taln | grep $PORT)
 while [[ -n "$IS_FREE" ]]; do
   PORT=$((PORT + INCREMENT))
   IS_FREE=$(netstat -taln | grep $PORT)
+  # Sleep 100ms
+  sleep 0.1
 done
 
 # Generate a random name for the temporary PG container
 RANDOM_NAME="pg_test_$(date +%s)"
 
 LABEL="nittei_testing=true"
+
+echo ""
+echo "###############"
+echo "Building app..."
+echo "###############"
+echo ""
 
 cargo build --workspace
 
@@ -61,6 +69,12 @@ TIMEOUT=60
 ) | nc localhost 8080 &
 >/dev/null 2>&1
 NC_PID=$!
+
+echo ""
+echo "#######################"
+echo "Launching containers..."
+echo "#######################"
+echo ""
 
 # Launch a PG container
 docker run --rm -d -l ${LABEL} --name $RANDOM_NAME -p $PORT:5432 -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=nittei postgres:13 >/dev/null 2>&1
@@ -80,6 +94,12 @@ done
 
 # Run the migrations
 cd crates/infra && sqlx migrate run && cd ../..
+
+echo ""
+echo "########################"
+echo "Running backend tests..."
+echo "########################"
+echo ""
 
 # Run the tests
 # Argument

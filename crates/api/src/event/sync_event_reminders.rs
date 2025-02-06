@@ -42,7 +42,14 @@ async fn create_event_reminders(
     let timestamp_now_millis = ctx.sys.get_timestamp();
     let threshold_millis = timestamp_now_millis + TimeDelta::milliseconds(61 * 1000); // Now + 61 seconds
 
-    let rrule_set = event.get_rrule_set(&calendar.settings);
+    let rrule_set = event.get_rrule_set(&calendar.settings).map_err(|e| {
+        error!(
+            "Unable to parse rrule set for event: {}. Err: {:?}",
+            event.id, e
+        );
+        UseCaseError::StorageError
+    })?;
+
     let reminders: Vec<Reminder> = match rrule_set {
         Some(rrule_set) => {
             let rrule_set_iter = rrule_set.into_iter();
@@ -194,7 +201,15 @@ impl UseCase for SyncEventRemindersUseCase<'_> {
                     .map_err(|_| UseCaseError::StorageError)?
                     .ok_or(UseCaseError::CalendarNotFound)?;
 
-                create_event_reminders(calendar_event, &calendar, version, ctx).await
+                create_event_reminders(calendar_event, &calendar, version, ctx)
+                    .await
+                    .map_err(|e| {
+                        error!(
+                            "Unable to create event reminders for event {:?}. Err: {:?}",
+                            calendar_event, e
+                        );
+                        e
+                    })
             }
             SyncEventRemindersTrigger::JobScheduler => {
                 let jobs = ctx

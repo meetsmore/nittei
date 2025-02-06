@@ -8,7 +8,7 @@ use crate::{
     Weekday,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Calendar {
     pub id: ID,
     pub user_id: ID,

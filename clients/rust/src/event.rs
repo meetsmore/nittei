@@ -54,6 +54,12 @@ pub struct CreateEventInput {
     #[serde(default)]
     pub recurrence: Option<RRuleOptions>,
     #[serde(default)]
+    pub exdates: Option<Vec<DateTime<Utc>>>,
+    #[serde(default)]
+    pub recurring_event_id: Option<ID>,
+    #[serde(default)]
+    pub original_start_time: Option<DateTime<Utc>>,
+    #[serde(default)]
     pub reminders: Vec<CalendarEventReminder>,
     #[serde(default)]
     pub service_id: Option<ID>,
@@ -82,7 +88,9 @@ pub struct UpdateEventInput {
     pub duration: Option<i64>,
     pub busy: Option<bool>,
     pub reminders: Option<Vec<CalendarEventReminder>>,
-    pub rrule_options: Option<RRuleOptions>,
+    pub recurrence: Option<RRuleOptions>,
+    pub recurring_event_id: Option<ID>,
+    pub original_start_time: Option<DateTime<Utc>>,
     pub service_id: Option<ID>,
     pub exdates: Option<Vec<DateTime<Utc>>>,
     pub metadata: Option<serde_json::Value>,
@@ -137,9 +145,9 @@ impl CalendarEventClient {
             duration: input.duration,
             busy: input.busy,
             recurrence: input.recurrence,
-            exdates: None,
-            recurring_event_id: None,
-            original_start_time: None,
+            exdates: input.exdates,
+            recurring_event_id: input.recurring_event_id,
+            original_start_time: input.original_start_time,
             reminders: input.reminders,
             service_id: input.service_id,
             group_id: input.group_id,
@@ -185,9 +193,9 @@ impl CalendarEventClient {
             start_time: input.start_time,
             duration: input.duration,
             exdates: input.exdates,
-            recurrence: input.rrule_options,
-            recurring_event_id: None,
-            original_start_time: None,
+            recurrence: input.recurrence,
+            recurring_event_id: input.recurring_event_id,
+            original_start_time: input.original_start_time,
             reminders: input.reminders,
             service_id: input.service_id,
             group_id: input.group_id,

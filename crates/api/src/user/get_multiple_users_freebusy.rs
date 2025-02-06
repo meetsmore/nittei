@@ -1,11 +1,19 @@
-use std::collections::{HashMap, VecDeque};
+use std::collections::HashMap;
 
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::{DateTime, Utc};
 use futures::{future::join_all, stream, StreamExt};
 use nittei_api_structs::multiple_freebusy::{APIResponse, RequestBody};
-use nittei_domain::{Calendar, CalendarEvent, EventInstance, TimeSpan, ID};
+use nittei_domain::{
+    expand_all_events_and_remove_exceptions,
+    Calendar,
+    CalendarEvent,
+    EventInstance,
+    TimeSpan,
+    ID,
+};
 use nittei_infra::NitteiContext;
+use tracing::error;
 
 use crate::{
     error::NitteiError,
@@ -155,9 +163,16 @@ impl GetMultipleFreeBusyUseCase {
             for event_result in events_res {
                 match event_result {
                     Ok((user_id, events)) => {
-                        let expanded_events =
-                            self.expand_events(events, timespan, &calendars_lookup)?;
-                        events_per_user.insert(user_id, expanded_events.into());
+                        let expanded_events = expand_all_events_and_remove_exceptions(
+                            &calendars_lookup,
+                            &events,
+                            timespan,
+                        )
+                        .map_err(|e| {
+                            error!("Got an error when expanding events {:?}", e);
+                            UseCaseError::InternalError
+                        })?;
+                        events_per_user.insert(user_id, expanded_events);
                     }
                     Err(e) => return Err(e),
                 }
@@ -165,25 +180,6 @@ impl GetMultipleFreeBusyUseCase {
         }
 
         Ok(events_per_user)
-    }
-
-    fn expand_events(
-        &self,
-        events: Vec<CalendarEvent>,
-        timespan: &TimeSpan,
-        calendars_lookup: &HashMap<String, &Calendar>,
-    ) -> Result<VecDeque<EventInstance>, UseCaseError> {
-        let mut instances = VecDeque::new();
-        for event in &events {
-            let calendar = calendars_lookup
-                .get(&event.calendar_id.to_string())
-                .ok_or(UseCaseError::InternalError)?;
-
-            let expanded_events = event.expand(Some(timespan), &calendar.settings);
-
-            instances.extend(expanded_events);
-        }
-        Ok(instances)
     }
 }
 
@@ -218,7 +214,12 @@ mod test {
             count: Some(100),
             ..Default::default()
         };
-        e1.set_recurrence(e1rr, &calendar.settings, true);
+        match e1.set_recurrence(e1rr, &calendar.settings, true) {
+            Ok(_) => {}
+            Err(e) => {
+                panic!("{:?}", e);
+            }
+        };
 
         let mut e2 = CalendarEvent {
             calendar_id: calendar.id.clone(),
@@ -234,7 +235,12 @@ mod test {
             count: Some(100),
             ..Default::default()
         };
-        e2.set_recurrence(e2rr, &calendar.settings, true);
+        match e2.set_recurrence(e2rr, &calendar.settings, true) {
+            Ok(_) => {}
+            Err(e) => {
+                panic!("{:?}", e);
+            }
+        };
 
         let mut e3 = CalendarEvent {
             calendar_id: calendar.id.clone(),
@@ -250,7 +256,12 @@ mod test {
             interval: 2,
             ..Default::default()
         };
-        e3.set_recurrence(e3rr, &calendar.settings, true);
+        match e3.set_recurrence(e3rr, &calendar.settings, true) {
+            Ok(_) => {}
+            Err(e) => {
+                panic!("{:?}", e);
+            }
+        };
 
         ctx.repos.events.insert(&e1).await.unwrap();
         ctx.repos.events.insert(&e2).await.unwrap();
