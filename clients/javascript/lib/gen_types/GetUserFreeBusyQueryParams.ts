@@ -22,5 +22,5 @@ export type GetUserFreeBusyQueryParams = {
    * Optional flag to include tentative events
    * Default is false
    */
-  includeTentative: boolean | null
+  includeTentative?: boolean
 }

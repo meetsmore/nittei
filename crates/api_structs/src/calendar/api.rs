@@ -355,6 +355,8 @@ pub mod get_user_freebusy {
 
         /// Optional flag to include tentative events
         /// Default is false
+        #[serde(default)]
+        #[ts(optional)]
         pub include_tentative: Option<bool>,
     }
 
