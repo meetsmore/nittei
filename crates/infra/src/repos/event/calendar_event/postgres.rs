@@ -558,6 +558,12 @@ impl IEventRepo for PostgresEventRepo {
         .collect()
     }
 
+    /// Find events and recurring events for calendars
+    /// Events need to be "busy" and with the status "confirmed"
+    ///
+    /// The parameter `include_tentative` is used to include events with the status "tentative"
+    ///
+    /// This is useful for the free/busy query
     async fn find_busy_events_and_recurring_events_for_calendars(
         &self,
         calendar_ids: &[ID],
