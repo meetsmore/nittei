@@ -538,8 +538,11 @@ impl IEventRepo for PostgresEventRepo {
                     INNER JOIN users AS u
                         ON u.user_uid = c.user_uid
                     WHERE e.calendar_uid  = any($1)
-                    AND ((e.start_time <= $2 AND e.end_time >= $3)
-                        OR (e.start_time < $2 AND e.recurrence IS NOT NULL))
+                    AND (
+                        (e.start_time <= $2 AND e.end_time >= $3)
+                        OR 
+                        (e.start_time < $2 AND e.recurrence::text <> 'null')
+                    )
                     "#,
             &calendar_ids,
             timespan.end(),
@@ -591,8 +594,11 @@ impl IEventRepo for PostgresEventRepo {
                     INNER JOIN users AS u
                         ON u.user_uid = c.user_uid
                     WHERE e.calendar_uid  = any($1)
-                    AND ((e.start_time < $2 AND e.end_time > $3)
-                        OR (e.start_time < $2 AND e.recurrence IS NOT NULL))
+                    AND (
+                        (e.start_time < $2 AND e.end_time > $3)
+                        OR
+                        (e.start_time < $2 AND e.recurrence::text <> 'null')
+                    )
                     AND busy = true
                     AND status = any($4)
                     "#,
