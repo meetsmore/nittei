@@ -17,6 +17,9 @@ use crate::{
     Meta,
 };
 
+// Maximum number of instances to return
+const MAX_INSTANCES: u16 = 100;
+
 #[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
@@ -209,9 +212,9 @@ impl CalendarEvent {
                         rrule_set
                             .after(start_with_timezone)
                             .before(end_with_timezone)
-                            .all(100)
+                            .all(MAX_INSTANCES)
                     }
-                    None => rrule_set.all(100),
+                    None => rrule_set.all(MAX_INSTANCES),
                 };
 
                 Ok(instances
