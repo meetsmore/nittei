@@ -60,8 +60,14 @@ pub trait IEventRepo: Send + Sync {
     ) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn find_by_calendars(
         &self,
-        calendar_ids: Vec<ID>,
+        calendar_ids: &[ID],
         timespan: &TimeSpan,
+    ) -> anyhow::Result<Vec<CalendarEvent>>;
+    async fn find_busy_events_and_recurring_events_for_calendars(
+        &self,
+        calendar_ids: &[ID],
+        timespan: &TimeSpan,
+        include_tentative: bool,
     ) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn search_events_for_user(
         &self,
@@ -305,6 +311,7 @@ mod tests {
             &ctx,
         )
         .await;
+        println!("{:?}", event_1);
         let event_2 = generate_event_with_time(
             &account.id,
             &calendar.id,
@@ -458,6 +465,31 @@ mod tests {
             .await
             .expect("To get events");
 
+        println!(
+            "{:?}",
+            TimeSpan::new(
+                DateTime::from_timestamp_millis(start_ts).unwrap(),
+                DateTime::from_timestamp_millis(end_ts).unwrap(),
+            )
+        );
+        println!(
+            "{:?}",
+            events_in_calendar_and_timespan
+                .iter()
+                .map(|e| (e.start_time, e.end_time, e.recurrence.clone()))
+                .collect::<Vec<_>>()
+        );
+        println!(
+            "{:?}",
+            actual_events_in_timespan
+                .iter()
+                .map(|e| (e.start_time, e.end_time, e.recurrence.clone()))
+                .collect::<Vec<_>>()
+        );
+
+        // Sleep for 5 min
+        // std::thread::sleep(std::time::Duration::from_secs(300));
+
         assert_eq!(
             events_in_calendar_and_timespan.len(),
             actual_events_in_timespan.len()
@@ -474,6 +506,7 @@ mod tests {
             .find_by_calendar(&calendar.id, None)
             .await
             .expect("To get events");
+
         assert_eq!(actual_events_in_calendar.len(), events_in_calendar.len());
         for actual_event in actual_events_in_calendar {
             assert!(events_in_calendar

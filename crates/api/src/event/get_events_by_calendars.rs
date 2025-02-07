@@ -125,7 +125,7 @@ impl UseCase for GetEventsByCalendarsUseCase {
         let res = ctx
             .repos
             .events
-            .find_by_calendars(self.calendar_ids.clone(), &timespan)
+            .find_by_calendars(&self.calendar_ids, &timespan)
             .await;
         match res {
             Ok(events) => {

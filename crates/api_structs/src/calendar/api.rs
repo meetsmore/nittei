@@ -343,13 +343,19 @@ pub mod get_user_freebusy {
         /// Start time for the query (UTC)
         #[ts(type = "Date")]
         pub start_time: DateTime<Utc>,
+
         /// End time for the query (UTC)
         #[ts(type = "Date")]
         pub end_time: DateTime<Utc>,
+
         /// Optional list of calendar UUIDs to query
         /// If not provided, all calendars of the user will be queried
         #[serde(default, deserialize_with = "deserialize_stringified_uuids_list")]
         pub calendar_ids: Option<Vec<ID>>,
+
+        /// Optional flag to include tentative events
+        /// Default is false
+        pub include_tentative: Option<bool>,
     }
 
     /// API response for getting user free/busy

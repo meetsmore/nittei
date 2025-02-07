@@ -2,7 +2,6 @@ use std::collections::HashMap;
 
 use actix_web::{web, HttpRequest, HttpResponse};
 use chrono::{DateTime, Utc};
-use futures::future::join_all;
 use nittei_api_structs::get_user_freebusy::{APIResponse, PathParams, QueryParams};
 use nittei_domain::{
     expand_all_events_and_remove_exceptions,
@@ -44,6 +43,7 @@ pub async fn get_freebusy_controller(
         calendar_ids: query_params.calendar_ids.take(),
         start_time: query_params.start_time,
         end_time: query_params.end_time,
+        include_tentative: query_params.include_tentative,
     };
 
     execute(usecase, &ctx)
@@ -63,6 +63,7 @@ pub struct GetFreeBusyUseCase {
     pub calendar_ids: Option<Vec<ID>>,
     pub start_time: DateTime<Utc>,
     pub end_time: DateTime<Utc>,
+    pub include_tentative: Option<bool>,
 }
 
 #[derive(Debug)]
@@ -125,13 +126,13 @@ impl GetFreeBusyUseCase {
         timespan: &TimeSpan,
         ctx: &NitteiContext,
     ) -> anyhow::Result<Vec<EventInstance>> {
-        let calendar_ids = match &self.calendar_ids {
-            Some(ids) if !ids.is_empty() => ids,
-            _ => return Ok(Vec::new()),
-        };
-
         // can probably make query to event repo instead
         let mut calendars = ctx.repos.calendars.find_by_user(&self.user_id).await?;
+
+        let calendar_ids = match &self.calendar_ids {
+            Some(ids) if !ids.is_empty() => ids.to_owned(),
+            _ => calendars.iter().map(|cal| cal.id.clone()).collect(),
+        };
 
         if !calendar_ids.is_empty() {
             calendars.retain(|cal| calendar_ids.contains(&cal.id));
@@ -142,20 +143,15 @@ impl GetFreeBusyUseCase {
             .map(|cal| (cal.id.to_string(), cal))
             .collect();
 
-        let all_events_futures = calendars.iter().map(|calendar| {
-            ctx.repos
-                .events
-                .find_by_calendar(&calendar.id, Some(timespan))
-        });
-
-        let events: Vec<Result<Vec<nittei_domain::CalendarEvent>, anyhow::Error>> =
-            join_all(all_events_futures).await.into_iter().collect();
-
-        // If we got an error,throw, otherwise collect the events
-        let events = events.into_iter().collect::<Result<Vec<_>, _>>()?;
-
-        // Flatten them into a single vec
-        let events: Vec<_> = events.into_iter().flatten().collect();
+        let events = ctx
+            .repos
+            .events
+            .find_busy_events_and_recurring_events_for_calendars(
+                &calendar_ids,
+                timespan,
+                self.include_tentative.unwrap_or(false),
+            )
+            .await?;
 
         // If we have no events, return early
         if events.is_empty() {
@@ -194,7 +190,7 @@ mod test {
 
     #[actix_web::main]
     #[test]
-    async fn freebusy_works() {
+    async fn test_freebusy_recurring() {
         let ctx = setup_context().await.unwrap();
         let account = Account::default();
         ctx.repos.accounts.insert(&account).await.unwrap();
@@ -203,97 +199,202 @@ mod test {
         let calendar = Calendar::new(&user.id(), &user.account_id, None, None);
         ctx.repos.calendars.insert(&calendar).await.unwrap();
         let one_hour = 1000 * 60 * 60;
-        let mut e1 = CalendarEvent {
+
+        let daily_recurring_event = CalendarEvent {
             calendar_id: calendar.id.clone(),
             user_id: user.id.clone(),
             account_id: user.account_id.clone(),
             busy: true,
+            status: nittei_domain::CalendarEventStatus::Confirmed,
+            start_time: DateTime::parse_from_rfc3339("2025-01-05T11:00:00Z")
+                .unwrap()
+                .to_utc(),
+            end_time: DateTime::parse_from_rfc3339("2025-01-05T12:00:00Z")
+                .unwrap()
+                .to_utc(),
             duration: one_hour,
-            end_time: DateTime::<Utc>::MAX_UTC,
+            recurrence: Some(RRuleOptions {
+                // Everyday - infinitely
+                freq: nittei_domain::RRuleFrequency::Daily,
+                interval: 1,
+                ..Default::default()
+            }),
             ..Default::default()
         };
-        let e1rr = RRuleOptions {
-            count: Some(100),
-            ..Default::default()
-        };
-        match e1.set_recurrence(e1rr, &calendar.settings, true) {
-            Ok(_) => {}
-            Err(e) => {
-                panic!("Error setting recurrence: {:?}", e);
-            }
-        };
+        ctx.repos
+            .events
+            .insert(&daily_recurring_event)
+            .await
+            .unwrap();
 
-        let mut e2 = CalendarEvent {
+        let daily_recurring_event_finished = CalendarEvent {
             calendar_id: calendar.id.clone(),
             user_id: user.id.clone(),
             account_id: user.account_id.clone(),
             busy: true,
+            status: nittei_domain::CalendarEventStatus::Confirmed,
+            start_time: DateTime::parse_from_rfc3339("2025-01-05T18:00:00Z")
+                .unwrap()
+                .to_utc(),
+            end_time: DateTime::parse_from_rfc3339("2025-01-05T19:00:00Z")
+                .unwrap()
+                .to_utc(),
             duration: one_hour,
-            end_time: DateTime::<Utc>::MAX_UTC,
-            start_time: DateTime::from_timestamp_millis(one_hour * 4).unwrap(),
+            recurrence: Some(RRuleOptions {
+                // Everyday until 2025-01-08
+                freq: nittei_domain::RRuleFrequency::Daily,
+                interval: 1,
+                until: Some(
+                    DateTime::parse_from_rfc3339("2025-01-08T19:00:00Z")
+                        .unwrap()
+                        .to_utc(),
+                ),
+                ..Default::default()
+            }),
             ..Default::default()
         };
-        let e2rr = RRuleOptions {
-            count: Some(100),
-            ..Default::default()
-        };
-        match e2.set_recurrence(e2rr, &calendar.settings, true) {
-            Ok(_) => {}
-            Err(e) => {
-                panic!("Error setting recurrence: {:?}", e);
-            }
-        };
+        ctx.repos
+            .events
+            .insert(&daily_recurring_event_finished)
+            .await
+            .unwrap();
 
-        let mut e3 = CalendarEvent {
+        let weekly_recurring_event = CalendarEvent {
             calendar_id: calendar.id.clone(),
             user_id: user.id.clone(),
             account_id: user.account_id.clone(),
             busy: true,
+            status: nittei_domain::CalendarEventStatus::Confirmed,
+            start_time: DateTime::parse_from_rfc3339("2025-01-09T14:00:00Z")
+                .unwrap()
+                .to_utc(),
+            end_time: DateTime::parse_from_rfc3339("2025-01-09T15:00:00Z")
+                .unwrap()
+                .to_utc(),
             duration: one_hour,
-            end_time: DateTime::from_timestamp_millis(one_hour).unwrap(),
+            recurrence: Some(RRuleOptions {
+                // Every week - infinitely
+                freq: nittei_domain::RRuleFrequency::Weekly,
+                interval: 1,
+                ..Default::default()
+            }),
             ..Default::default()
         };
-        let e3rr = RRuleOptions {
-            count: Some(100),
-            interval: 2,
-            ..Default::default()
-        };
-        match e3.set_recurrence(e3rr, &calendar.settings, true) {
-            Ok(_) => {}
-            Err(e) => {
-                panic!("Error setting recurrence: {:?}", e);
-            }
-        };
+        ctx.repos
+            .events
+            .insert(&weekly_recurring_event)
+            .await
+            .unwrap();
 
-        ctx.repos.events.insert(&e1).await.unwrap();
-        ctx.repos.events.insert(&e2).await.unwrap();
-        ctx.repos.events.insert(&e3).await.unwrap();
-
-        let mut usecase = GetFreeBusyUseCase {
+        let mut freebusy_params: GetFreeBusyUseCase = GetFreeBusyUseCase {
             user_id: user.id().clone(),
             calendar_ids: Some(vec![calendar.id.clone()]),
-            start_time: DateTime::from_timestamp_millis(86400000).unwrap(),
-            end_time: DateTime::from_timestamp_millis(172800000).unwrap(),
+            start_time: DateTime::parse_from_rfc3339("2025-01-09T00:00:00Z")
+                .unwrap()
+                .to_utc(),
+            end_time: DateTime::parse_from_rfc3339("2025-01-15T00:00:00Z")
+                .unwrap()
+                .to_utc(),
+            include_tentative: None,
         };
 
-        let res = usecase.execute(&ctx).await;
-        assert!(res.is_ok());
-        let instances = res.unwrap().busy.inner();
-        assert_eq!(instances.len(), 3);
+        let freebusy = freebusy_params.execute(&ctx).await.unwrap();
+
+        let dates = freebusy.busy.inner();
+
+        assert_eq!(dates.len(), 7);
+
+        // Expect 6 dates from the recurring daily (event 1)
+        // And expect 1 date from the recurring weekly (event 2)
         assert_eq!(
-            instances[0],
+            // Daily n1
+            dates[0],
             EventInstance {
                 busy: true,
-                start_time: DateTime::from_timestamp_millis(86400000).unwrap(),
-                end_time: DateTime::from_timestamp_millis(90000000).unwrap(),
+                start_time: DateTime::parse_from_rfc3339("2025-01-09T11:00:00Z")
+                    .unwrap()
+                    .to_utc(),
+                end_time: DateTime::parse_from_rfc3339("2025-01-09T12:00:00Z")
+                    .unwrap()
+                    .to_utc(),
             }
         );
+        // Weekly n1
         assert_eq!(
-            instances[1],
+            dates[1],
             EventInstance {
                 busy: true,
-                start_time: DateTime::from_timestamp_millis(100800000).unwrap(),
-                end_time: DateTime::from_timestamp_millis(104400000).unwrap(),
+                start_time: DateTime::parse_from_rfc3339("2025-01-09T14:00:00Z")
+                    .unwrap()
+                    .to_utc(),
+                end_time: DateTime::parse_from_rfc3339("2025-01-09T15:00:00Z")
+                    .unwrap()
+                    .to_utc(),
+            }
+        );
+        // Daily n2
+        assert_eq!(
+            dates[2],
+            EventInstance {
+                busy: true,
+                start_time: DateTime::parse_from_rfc3339("2025-01-10T11:00:00Z")
+                    .unwrap()
+                    .to_utc(),
+                end_time: DateTime::parse_from_rfc3339("2025-01-10T12:00:00Z")
+                    .unwrap()
+                    .to_utc(),
+            }
+        );
+        // Daily n3
+        assert_eq!(
+            dates[3],
+            EventInstance {
+                busy: true,
+                start_time: DateTime::parse_from_rfc3339("2025-01-11T11:00:00Z")
+                    .unwrap()
+                    .to_utc(),
+                end_time: DateTime::parse_from_rfc3339("2025-01-11T12:00:00Z")
+                    .unwrap()
+                    .to_utc(),
+            }
+        );
+        // Daily n4
+        assert_eq!(
+            dates[4],
+            EventInstance {
+                busy: true,
+                start_time: DateTime::parse_from_rfc3339("2025-01-12T11:00:00Z")
+                    .unwrap()
+                    .to_utc(),
+                end_time: DateTime::parse_from_rfc3339("2025-01-12T12:00:00Z")
+                    .unwrap()
+                    .to_utc(),
+            }
+        );
+        // Daily n5
+        assert_eq!(
+            dates[5],
+            EventInstance {
+                busy: true,
+                start_time: DateTime::parse_from_rfc3339("2025-01-13T11:00:00Z")
+                    .unwrap()
+                    .to_utc(),
+                end_time: DateTime::parse_from_rfc3339("2025-01-13T12:00:00Z")
+                    .unwrap()
+                    .to_utc(),
+            }
+        );
+        // Daily n6
+        assert_eq!(
+            dates[6],
+            EventInstance {
+                busy: true,
+                start_time: DateTime::parse_from_rfc3339("2025-01-14T11:00:00Z")
+                    .unwrap()
+                    .to_utc(),
+                end_time: DateTime::parse_from_rfc3339("2025-01-14T12:00:00Z")
+                    .unwrap()
+                    .to_utc(),
             }
         );
     }

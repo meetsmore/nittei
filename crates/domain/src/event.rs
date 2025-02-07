@@ -194,10 +194,8 @@ impl CalendarEvent {
         calendar_settings: &CalendarSettings,
     ) -> anyhow::Result<Vec<EventInstance>> {
         match &self.recurrence {
-            Some(recurrence) => {
-                let rrule_options =
-                    recurrence.get_parsed_options(self.start_time, calendar_settings)?;
-                let tzid = rrule_options.get_dt_start().timezone();
+            Some(_) => {
+                let tzid = rrule::Tz::Tz(calendar_settings.timezone);
                 let rrule_set = match self.get_rrule_set(calendar_settings)? {
                     Some(rrule_set) => rrule_set,
                     None => return Ok(Vec::new()),
@@ -205,22 +203,15 @@ impl CalendarEvent {
 
                 let instances = match timespan {
                     Some(timespan) => {
-                        let chrono_tz = match tzid {
-                            rrule::Tz::Tz(tz) => tz,
-                            rrule::Tz::Local(_) => chrono_tz::UTC,
-                        };
-
-                        let timespan = timespan.as_datetime(&chrono_tz);
-
-                        let end_with_timezone = timespan.end.with_timezone(&tzid);
-                        let start_with_timezone = timespan.start.with_timezone(&tzid);
+                        let end_with_timezone = timespan.end().with_timezone(&tzid);
+                        let start_with_timezone = timespan.start().with_timezone(&tzid);
 
                         rrule_set
                             .after(start_with_timezone)
                             .before(end_with_timezone)
                             .all(100)
                     }
-                    None => rrule_set.all(100), // TODO: change
+                    None => rrule_set.all(100),
                 };
 
                 Ok(instances
