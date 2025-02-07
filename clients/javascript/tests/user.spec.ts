@@ -93,6 +93,7 @@ describe('User API', () => {
       duration: 1000 * 60 * 60, // 1 hour
       startTime: new Date(0),
       busy: true,
+      status: 'confirmed',
       recurrence: {
         freq: Frequency.Daily,
         interval: 1,
@@ -116,6 +117,7 @@ describe('User API', () => {
       duration: 1000 * 60 * 60, // 1 hour
       startTime: new Date(0),
       busy: true,
+      status: 'confirmed',
       recurrence: {
         freq: Frequency.Daily,
         interval: 1,
@@ -127,6 +129,7 @@ describe('User API', () => {
       duration: 1000 * 60 * 60, // 1 hour
       startTime: new Date(1000 * 60 * 60 * 4), // 4 hours
       busy: true,
+      status: 'confirmed',
       recurrence: {
         freq: Frequency.Daily,
         interval: 1,
@@ -138,6 +141,7 @@ describe('User API', () => {
       duration: 1000 * 60 * 60, // 1 hour
       startTime: new Date(0),
       busy: false,
+      status: 'confirmed',
       recurrence: {
         freq: Frequency.Daily,
         interval: 2,
