@@ -465,31 +465,6 @@ mod tests {
             .await
             .expect("To get events");
 
-        println!(
-            "{:?}",
-            TimeSpan::new(
-                DateTime::from_timestamp_millis(start_ts).unwrap(),
-                DateTime::from_timestamp_millis(end_ts).unwrap(),
-            )
-        );
-        println!(
-            "{:?}",
-            events_in_calendar_and_timespan
-                .iter()
-                .map(|e| (e.start_time, e.end_time, e.recurrence.clone()))
-                .collect::<Vec<_>>()
-        );
-        println!(
-            "{:?}",
-            actual_events_in_timespan
-                .iter()
-                .map(|e| (e.start_time, e.end_time, e.recurrence.clone()))
-                .collect::<Vec<_>>()
-        );
-
-        // Sleep for 5 min
-        // std::thread::sleep(std::time::Duration::from_secs(300));
-
         assert_eq!(
             events_in_calendar_and_timespan.len(),
             actual_events_in_timespan.len()
