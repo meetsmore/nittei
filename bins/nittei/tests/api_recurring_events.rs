@@ -482,7 +482,7 @@ async fn test_expand_recurring_event_and_remove_exceptions() {
             recurring_event_id: Some(event.id.clone()),
             original_start_time: Some(
                 DateTime::from_timestamp_millis(
-                    0 + 1000 * 60 * 60 * 24 * 1, // 1 day later
+                    1000 * 60 * 60 * 24, // 1 day later
                 )
                 .unwrap(),
             ),

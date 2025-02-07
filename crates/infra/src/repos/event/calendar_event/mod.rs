@@ -311,7 +311,6 @@ mod tests {
             &ctx,
         )
         .await;
-        println!("{:?}", event_1);
         let event_2 = generate_event_with_time(
             &account.id,
             &calendar.id,
