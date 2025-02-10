@@ -65,4 +65,4 @@ USER appuser
 COPY --from=builder /bin/server /bin/
 COPY --from=builder /ddprof /ddprof
 
-CMD ["/ddprof", "/bin/server"]
+CMD ["/ddprof", "--preset", "cpu_live_heap", "/bin/server"]
