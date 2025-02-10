@@ -6,6 +6,7 @@ import axios, {
 import type { ICredentials } from './helpers/credentials'
 import {
   BadRequestError,
+  ConflictError,
   NotFoundError,
   UnauthorizedError,
 } from './helpers/errors'
@@ -116,7 +117,9 @@ export abstract class NitteiBaseClient {
    */
   private handleStatusCode(res: AxiosResponse): void {
     if (res.status >= 500) {
-      throw new Error('Internal server error, please try again later')
+      throw new Error(
+        `Internal server error, please try again later (${res.status})`
+      )
     }
 
     if (res.status >= 400) {
@@ -128,6 +131,9 @@ export abstract class NitteiBaseClient {
       }
       if (res.status === 404) {
         throw new NotFoundError(res.data)
+      }
+      if (res.status === 409) {
+        throw new ConflictError(res.data)
       }
       throw new Error(`Request failed with status code ${res.status}`)
     }
