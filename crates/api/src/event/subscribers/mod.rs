@@ -45,7 +45,6 @@ pub struct CreateSyncedEventsOnEventCreated;
 #[async_trait::async_trait(?Send)]
 impl Subscriber<CreateEventUseCase> for CreateSyncedEventsOnEventCreated {
     async fn notify(&self, e: &CalendarEvent, ctx: &nittei_infra::NitteiContext) {
-        info!("Calendar event created, going to insert into synced calendars.");
         let synced_calendars = match ctx
             .repos
             .calendar_synced
@@ -137,8 +136,6 @@ impl Subscriber<CreateEventUseCase> for CreateSyncedEventsOnEventCreated {
                         continue;
                     }
                 };
-
-                info!("Going to insert google synced events");
 
                 let synced_event = SyncedCalendarEvent {
                     calendar_id: e.calendar_id.clone(),
