@@ -179,6 +179,11 @@ impl GetMultipleFreeBusyUseCase {
             }
         }
 
+        // Sort the events by start time
+        for (_, events) in events_per_user.iter_mut() {
+            events.sort_by(|a, b| a.start_time.cmp(&b.start_time));
+        }
+
         Ok(events_per_user)
     }
 }
@@ -293,16 +298,16 @@ mod test {
             instances[1],
             EventInstance {
                 busy: true,
-                start_time: DateTime::from_timestamp_millis(172800000).unwrap(),
-                end_time: DateTime::from_timestamp_millis(176400000).unwrap(),
+                start_time: DateTime::from_timestamp_millis(100800000).unwrap(),
+                end_time: DateTime::from_timestamp_millis(104400000).unwrap(),
             }
         );
         assert_eq!(
             instances[2],
             EventInstance {
                 busy: true,
-                start_time: DateTime::from_timestamp_millis(100800000).unwrap(),
-                end_time: DateTime::from_timestamp_millis(104400000).unwrap(),
+                start_time: DateTime::from_timestamp_millis(172800000).unwrap(),
+                end_time: DateTime::from_timestamp_millis(176400000).unwrap(),
             }
         );
         assert_eq!(

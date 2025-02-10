@@ -159,7 +159,13 @@ impl GetFreeBusyUseCase {
         }
 
         // Expand the events, remove the exceptions and return the expanded events
-        expand_all_events_and_remove_exceptions(&calendars_lookup, &events, timespan)
+        let mut events =
+            expand_all_events_and_remove_exceptions(&calendars_lookup, &events, timespan)?;
+
+        // Sort the events by start_time
+        events.sort_by(|a, b| a.start_time.cmp(&b.start_time));
+
+        Ok(events)
     }
 }
 
