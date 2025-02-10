@@ -18,4 +18,9 @@ export type GetUserFreeBusyQueryParams = {
    * If not provided, all calendars of the user will be queried
    */
   calendarIds: Array<ID> | null
+  /**
+   * Optional flag to include tentative events
+   * Default is false
+   */
+  includeTentative?: boolean
 }

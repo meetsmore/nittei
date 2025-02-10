@@ -274,12 +274,13 @@ mod test {
         };
 
         let res = usecase.execute(&ctx).await;
+
         assert!(res.is_ok());
         let map_instances = res.unwrap().0;
         assert_eq!(map_instances.len(), 1);
         assert!(map_instances.contains_key(&user.id()));
         let instances = map_instances.get(&user.id()).unwrap();
-        assert_eq!(instances.len(), 2);
+        assert_eq!(instances.len(), 4);
         assert_eq!(
             instances[0],
             EventInstance {
@@ -292,8 +293,24 @@ mod test {
             instances[1],
             EventInstance {
                 busy: true,
+                start_time: DateTime::from_timestamp_millis(172800000).unwrap(),
+                end_time: DateTime::from_timestamp_millis(176400000).unwrap(),
+            }
+        );
+        assert_eq!(
+            instances[2],
+            EventInstance {
+                busy: true,
                 start_time: DateTime::from_timestamp_millis(100800000).unwrap(),
                 end_time: DateTime::from_timestamp_millis(104400000).unwrap(),
+            }
+        );
+        assert_eq!(
+            instances[3],
+            EventInstance {
+                busy: true,
+                start_time: DateTime::from_timestamp_millis(172800000).unwrap(),
+                end_time: DateTime::from_timestamp_millis(176400000).unwrap(),
             }
         );
     }

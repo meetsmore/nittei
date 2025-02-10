@@ -424,6 +424,7 @@ describe('Requirements', () => {
           calendarId: user1Calendar1.id,
           duration: 1000 * 60 * 60,
           startTime: new Date(0),
+          status: 'confirmed',
           busy: true,
         })
         user1Calendar1Event1 = resEvent?.event
@@ -497,6 +498,7 @@ describe('Requirements', () => {
           calendarId: user1Calendar1.id,
           duration: 1000 * 60 * 60,
           startTime: new Date(0),
+          status: 'confirmed',
           busy: true,
         })
         user1Calendar1Event1 = res?.event
@@ -527,6 +529,7 @@ describe('Requirements', () => {
           calendarId: user1Calendar2.id,
           duration: 1000 * 60 * 60, // 1h
           startTime: new Date(1000 * 60 * 61), // 1h01
+          status: 'confirmed',
           busy: true,
         })
         user1Calendar2Event1 = res?.event
@@ -568,6 +571,7 @@ describe('Requirements', () => {
           calendarId: user1Calendar2.id,
           duration: 1000 * 60, // 1min
           startTime: new Date(1000 * 60 * 60), // 1h
+          status: 'confirmed',
           busy: true,
         })
         user1Calendar2Event2 = res?.event
@@ -829,6 +833,7 @@ describe('Requirements', () => {
           calendarId: user1Calendar1.id,
           duration: 1000 * 60 * 60, // 1h
           startTime: date1.toDate(), // 1st January 2024 at 0h00 in JST
+          status: 'confirmed',
           busy: true,
         })
         expect(res?.event.calendarId).toBe(user1Calendar1.id)
@@ -855,6 +860,7 @@ describe('Requirements', () => {
           calendarId: user1Calendar1.id,
           duration: 1000 * 60 * 60, // 1h
           startTime: date2.toDate(), // 1st January 2024 at 0h00 in UTC
+          status: 'confirmed',
           busy: true,
         })
         expect(res?.event.calendarId).toBe(user1Calendar1.id)

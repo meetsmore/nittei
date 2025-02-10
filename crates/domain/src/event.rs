@@ -1,6 +1,6 @@
 use std::convert::TryFrom;
 
-use chrono::{prelude::*, Duration, TimeDelta};
+use chrono::{prelude::*, TimeDelta};
 use rrule::RRuleSet;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
@@ -16,6 +16,9 @@ use crate::{
     IntegrationProvider,
     Meta,
 };
+
+// Maximum number of instances to return
+const MAX_INSTANCES: u16 = 100;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq, TS)]
 #[serde(rename_all = "camelCase")]
@@ -194,10 +197,8 @@ impl CalendarEvent {
         calendar_settings: &CalendarSettings,
     ) -> anyhow::Result<Vec<EventInstance>> {
         match &self.recurrence {
-            Some(recurrence) => {
-                let rrule_options =
-                    recurrence.get_parsed_options(self.start_time, calendar_settings)?;
-                let tzid = rrule_options.get_dt_start().timezone();
+            Some(_) => {
+                let tzid = rrule::Tz::Tz(calendar_settings.timezone);
                 let rrule_set = match self.get_rrule_set(calendar_settings)? {
                     Some(rrule_set) => rrule_set,
                     None => return Ok(Vec::new()),
@@ -205,27 +206,15 @@ impl CalendarEvent {
 
                 let instances = match timespan {
                     Some(timespan) => {
-                        let chrono_tz = match tzid {
-                            rrule::Tz::Tz(tz) => tz,
-                            rrule::Tz::Local(_) => chrono_tz::UTC,
-                        };
-
-                        let timespan = timespan.as_datetime(&chrono_tz);
-
-                        // Also take the duration of events into consideration as the rrule library
-                        // does not support duration on events.
-                        let end = timespan.end - Duration::milliseconds(self.duration);
-
-                        // RRule v0.5.5 is not inclusive on start, so just by subtracting one millisecond
-                        // will make it inclusive
-                        let start = timespan.start - Duration::milliseconds(1);
+                        let end_with_timezone = timespan.end().with_timezone(&tzid);
+                        let start_with_timezone = timespan.start().with_timezone(&tzid);
 
                         rrule_set
-                            .before(end.with_timezone(&tzid))
-                            .after(start.with_timezone(&tzid))
-                            .all(100)
+                            .after(start_with_timezone)
+                            .before(end_with_timezone)
+                            .all(MAX_INSTANCES)
                     }
-                    None => rrule_set.all(100), // TODO: change
+                    None => rrule_set.all(MAX_INSTANCES),
                 };
 
                 Ok(instances
@@ -276,6 +265,7 @@ impl CalendarEvent {
 mod test {
     use core::panic;
 
+    use chrono::Duration;
     use chrono_tz::UTC;
 
     use super::*;

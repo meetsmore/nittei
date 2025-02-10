@@ -60,8 +60,14 @@ pub trait IEventRepo: Send + Sync {
     ) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn find_by_calendars(
         &self,
-        calendar_ids: Vec<ID>,
+        calendar_ids: &[ID],
         timespan: &TimeSpan,
+    ) -> anyhow::Result<Vec<CalendarEvent>>;
+    async fn find_busy_events_and_recurring_events_for_calendars(
+        &self,
+        calendar_ids: &[ID],
+        timespan: &TimeSpan,
+        include_tentative: bool,
     ) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn search_events_for_user(
         &self,
@@ -474,6 +480,7 @@ mod tests {
             .find_by_calendar(&calendar.id, None)
             .await
             .expect("To get events");
+
         assert_eq!(actual_events_in_calendar.len(), events_in_calendar.len());
         for actual_event in actual_events_in_calendar {
             assert!(events_in_calendar

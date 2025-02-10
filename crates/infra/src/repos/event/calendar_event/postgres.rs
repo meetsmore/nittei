@@ -2,7 +2,7 @@ use std::convert::{TryFrom, TryInto};
 
 use chrono::{DateTime, Utc};
 use futures::future;
-use nittei_domain::{CalendarEvent, CalendarEventReminder, RRuleOptions, ID};
+use nittei_domain::{CalendarEvent, CalendarEventReminder, CalendarEventStatus, RRuleOptions, ID};
 use serde_json::Value;
 use sqlx::{
     types::{Json, Uuid},
@@ -470,8 +470,12 @@ impl IEventRepo for PostgresEventRepo {
                         ON c.calendar_uid = e.calendar_uid
                     INNER JOIN users AS u
                         ON u.user_uid = c.user_uid
-                    WHERE e.calendar_uid = $1 AND
-                    e.start_time <= $2 AND e.end_time >= $3
+                    WHERE e.calendar_uid = $1
+                    AND (
+                        (e.start_time <= $2 AND e.end_time >= $3)
+                        OR
+                        (e.start_time < $2 AND e.recurrence::text <> 'null')
+                    )
                     "#,
                 calendar_id.as_ref(),
                 timespan.end(),
@@ -518,13 +522,13 @@ impl IEventRepo for PostgresEventRepo {
     #[instrument]
     async fn find_by_calendars(
         &self,
-        calendar_ids: Vec<ID>,
+        calendar_ids: &[ID],
         timespan: &nittei_domain::TimeSpan,
     ) -> anyhow::Result<Vec<CalendarEvent>> {
-        let calendar_ids: Vec<Uuid> = calendar_ids
-            .into_iter()
-            .map(|id| id.clone().into())
-            .collect();
+        let calendar_ids = calendar_ids
+            .iter()
+            .map(|id| *id.as_ref())
+            .collect::<Vec<_>>();
         sqlx::query_as!(
             EventRaw,
             r#"
@@ -533,12 +537,75 @@ impl IEventRepo for PostgresEventRepo {
                         ON c.calendar_uid = e.calendar_uid
                     INNER JOIN users AS u
                         ON u.user_uid = c.user_uid
-                    WHERE e.calendar_uid  = any($1) AND
-                    e.start_time <= $2 AND e.end_time >= $3
+                    WHERE e.calendar_uid  = any($1)
+                    AND (
+                        (e.start_time <= $2 AND e.end_time >= $3)
+                        OR 
+                        (e.start_time < $2 AND e.recurrence::text <> 'null')
+                    )
                     "#,
-            calendar_ids.as_slice(),
+            &calendar_ids,
             timespan.end(),
             timespan.start()
+        )
+        .fetch_all(&self.pool)
+        .await
+        .inspect_err(|e| {
+            error!(
+                "Find calendar events for calendar ids: {:?} failed. DB returned error: {:?}",
+                calendar_ids, e
+            );
+        })?
+        .into_iter()
+        .map(|e| e.try_into())
+        .collect()
+    }
+
+    /// Find events and recurring events for calendars
+    /// Events need to be "busy" and with the status "confirmed"
+    ///
+    /// The parameter `include_tentative` is used to include events with the status "tentative"
+    ///
+    /// This is useful for the free/busy query
+    async fn find_busy_events_and_recurring_events_for_calendars(
+        &self,
+        calendar_ids: &[ID],
+        timespan: &nittei_domain::TimeSpan,
+        include_tentative: bool,
+    ) -> anyhow::Result<Vec<CalendarEvent>> {
+        let calendar_ids = calendar_ids
+            .iter()
+            .map(|id| *id.as_ref())
+            .collect::<Vec<_>>();
+        let expected_status: Vec<String> = if include_tentative {
+            vec![
+                CalendarEventStatus::Tentative.into(),
+                CalendarEventStatus::Confirmed.into(),
+            ]
+        } else {
+            vec![CalendarEventStatus::Confirmed.into()]
+        };
+        sqlx::query_as!(
+            EventRaw,
+            r#"
+                    SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+                    INNER JOIN calendars AS c
+                        ON c.calendar_uid = e.calendar_uid
+                    INNER JOIN users AS u
+                        ON u.user_uid = c.user_uid
+                    WHERE e.calendar_uid  = any($1)
+                    AND (
+                        (e.start_time < $2 AND e.end_time > $3)
+                        OR
+                        (e.start_time < $2 AND e.recurrence::text <> 'null')
+                    )
+                    AND busy = true
+                    AND status = any($4)
+                    "#,
+            &calendar_ids,
+            timespan.end(),
+            timespan.start(),
+            expected_status.as_slice()
         )
         .fetch_all(&self.pool)
         .await

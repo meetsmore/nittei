@@ -125,7 +125,7 @@ impl UseCase for GetEventsByCalendarsUseCase {
         let res = ctx
             .repos
             .events
-            .find_by_calendars(self.calendar_ids.clone(), &timespan)
+            .find_by_calendars(&self.calendar_ids, &timespan)
             .await;
         match res {
             Ok(events) => {
@@ -164,7 +164,7 @@ impl UseCase for GetEventsByCalendarsUseCase {
                     })
                     .collect::<Result<Vec<_>, _>>()?
                     .into_iter()
-                    // // Also it is possible that there are no instances in the expanded event, should remove them
+                    // Also it is possible that there are no instances in the expanded event, should remove them
                     .filter(|data| !data.instances.is_empty())
                     .collect::<Vec<_>>();
 
