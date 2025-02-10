@@ -5,6 +5,7 @@ import {
   type INitteiUserClient,
   NitteiClient,
 } from '../lib'
+import { ConflictError } from '../lib/helpers/errors'
 import { setupUserClient } from './helpers/fixtures'
 
 describe('User API', () => {
@@ -76,6 +77,25 @@ describe('User API', () => {
     await expect(() =>
       accountClient.user.getByExternalId(res.user.externalId ?? '')
     ).rejects.toThrow()
+  })
+
+  it('should try to create a 4th user, and fail due to same external ID', async () => {
+    const externalId = v4()
+
+    // Create the user
+    const res = await accountClient.user.create({
+      externalId: externalId,
+    })
+
+    // Try to create the same user again
+    await expect(() =>
+      accountClient.user.create({
+        externalId: externalId,
+      })
+    ).rejects.toThrow(ConflictError)
+
+    // Clean up
+    await accountClient.user.remove(res.user.id)
   })
 
   it('should not show any freebusy with no events', async () => {

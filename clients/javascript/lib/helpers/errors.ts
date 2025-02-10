@@ -33,3 +33,16 @@ export class UnauthorizedError extends Error {
     super('Unauthorized')
   }
 }
+
+/**
+ * Error thrown when a request is made to the server and the server responds with a 409 status code
+ */
+export class ConflictError extends Error {
+  /**
+   *
+   * @param apiMessage - error message from the server
+   */
+  constructor(public apiMessage: string) {
+    super('Conflict')
+  }
+}

@@ -1,4 +1,5 @@
 use actix_web::{web, HttpRequest, HttpResponse};
+use futures::{try_join, FutureExt};
 use nittei_api_structs::create_user::*;
 use nittei_domain::{User, ID};
 use nittei_infra::NitteiContext;
@@ -72,13 +73,16 @@ impl UseCase for CreateUserUseCase {
         user.metadata = self.metadata.clone();
         user.external_id = self.external_id.clone();
 
-        let existing_user = ctx
-            .repos
-            .users
-            .find(&user.id)
-            .await
-            .map_err(|_| UseCaseError::StorageError)?;
-        if let Some(_existing_user) = existing_user {
+        let find_user = ctx.repos.users.find(&user.id);
+        let find_by_external_id = match &user.external_id {
+            Some(external_id) => ctx.repos.users.get_by_external_id(external_id),
+            None => async { Ok(None) }.boxed(), // Dummy future if there's no external ID
+        };
+
+        let (existing_user, existing_user_by_external_id) =
+            try_join!(find_user, find_by_external_id).map_err(|_| UseCaseError::StorageError)?;
+
+        if existing_user.is_some() || existing_user_by_external_id.is_some() {
             return Err(UseCaseError::UserAlreadyExists);
         }
 
