@@ -125,11 +125,7 @@ export const NitteiClient = async (
 }
 
 // Errors
-export {
-  BadRequestError,
-  NotFoundError,
-  UnauthorizedError,
-} from './helpers/errors'
+export * from './helpers/errors'
 
 // Enums
 export * from './gen_types'
