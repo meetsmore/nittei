@@ -4,7 +4,7 @@ use actix_web::rt::time::{interval, sleep_until, Instant};
 use awc::Client;
 use nittei_api_structs::send_event_reminders::AccountRemindersDTO;
 use nittei_infra::NitteiContext;
-use tracing::{error, info};
+use tracing::{debug, error};
 
 use crate::{
     event::{
@@ -70,7 +70,7 @@ async fn send_reminders(context: NitteiContext) {
 
     let send_instant = account_reminders.1;
     sleep_until(send_instant).await;
-    info!(
+    debug!(
         "Reminders to send at {} : {:?}",
         context.sys.get_timestamp_millis(),
         account_reminders
