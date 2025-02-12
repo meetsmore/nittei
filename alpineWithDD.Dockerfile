@@ -46,4 +46,4 @@ ENV APP_NAME=${APP_NAME}
 COPY --from=builder /${APP_NAME} /${APP_NAME}
 COPY --from=builder /ddprof /ddprof
 
-CMD ["/bin/sh", "-c", "exec /ddprof /${APP_NAME}"]
+CMD ["/bin/sh", "-c", "exec /ddprof --preset cpu_live_heap /${APP_NAME}"]
