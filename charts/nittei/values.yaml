@@ -91,10 +91,12 @@ livenessProbe:
   httpGet:
     path: /api/v1/healthcheck
     port: 5000
+  initialDelaySeconds: 2
 readinessProbe:
   httpGet:
     path: /api/v1/healthcheck
     port: 5000
+  initialDelaySeconds: 2
 
 autoscaling:
   enabled: false
