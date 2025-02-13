@@ -191,7 +191,7 @@ impl Default for RRuleOptions {
 }
 
 #[derive(Clone, Debug, PartialEq, TS)]
-#[ts(export)]
+#[ts(export, type = "string")]
 pub struct WeekDayRecurrence {
     n: Option<isize>,
     weekday: Weekday,

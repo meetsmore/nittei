@@ -184,6 +184,31 @@ describe('CalendarEvent API', () => {
       expect(res.event.eventType).toBe('job')
     })
 
+    it('should be able to create event with recurring schedule', async () => {
+      const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+      const res = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+        recurrence: {
+          freq: 'daily',
+          interval: 1,
+          count: 10,
+          byweekday: weekdays,
+        },
+      })
+      expect(res.event).toBeDefined()
+      expect(res.event.calendarId).toBe(calendarId)
+      expect(res.event.recurrence).toEqual(
+        expect.objectContaining({
+          freq: 'daily',
+          interval: 1,
+          count: 10,
+          byweekday: weekdays,
+        })
+      )
+    })
+
     it('should be able to create event with a predefined "created" and "updated"', async () => {
       const res = await adminClient.events.create(userId, {
         calendarId,
