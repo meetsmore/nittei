@@ -94,9 +94,7 @@ impl RRuleOptions {
         calendar_settings: &CalendarSettings,
     ) -> anyhow::Result<RRuleSet> {
         let timezone = calendar_settings.timezone;
-        let until = self
-            .until
-            .map(|u| u.with_timezone(&rrule::Tz::Tz(timezone)));
+        let until = self.until.map(|u| u.with_timezone(&rrule::Tz::UTC));
         let dtstart = start_time.with_timezone(&rrule::Tz::Tz(timezone));
 
         let count = self.count.map(|c| std::cmp::max(c, 0) as u32);

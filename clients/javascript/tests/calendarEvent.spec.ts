@@ -1,10 +1,15 @@
 import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
+import timezone from 'dayjs/plugin/timezone'
 import {
   type INitteiClient,
   type INitteiUserClient,
   NitteiClient,
 } from '../lib'
 import { setupAccount, setupUserClient } from './helpers/fixtures'
+
+dayjs.extend(utc)
+dayjs.extend(timezone)
 
 describe('CalendarEvent API', () => {
   let calendarId: string
@@ -159,6 +164,7 @@ describe('CalendarEvent API', () => {
 
   describe('Admin API', () => {
     let calendarId: string
+    let calendarTokyoId: string
     let userId: string
     let adminClient: INitteiClient
     beforeAll(async () => {
@@ -168,8 +174,14 @@ describe('CalendarEvent API', () => {
       userId = userRes.user.id
       const calendarRes = await adminClient.calendar.create(userId, {
         timezone: 'UTC',
+        key: 'test',
       })
       calendarId = calendarRes.calendar.id
+      const calendarTokyoRes = await adminClient.calendar.create(userId, {
+        timezone: 'Asia/Tokyo',
+        key: 'test-tokyo',
+      })
+      calendarTokyoId = calendarTokyoRes.calendar.id
     })
 
     it('should be able to create event', async () => {
@@ -205,6 +217,32 @@ describe('CalendarEvent API', () => {
           interval: 1,
           count: 10,
           byweekday: weekdays,
+        })
+      )
+
+      const resEventTokyo = await adminClient.events.create(userId, {
+        calendarId: calendarTokyoId,
+        duration: 1800000,
+        startTime: dayjs('2024-11-29T07:00:00.000Z').toDate(),
+        eventType: 'gcal',
+        recurrence: {
+          freq: 'weekly',
+          interval: 2,
+          until: dayjs('2024-12-12T14:59:59.000Z').toISOString(),
+          byweekday: ['Fri'],
+          bymonthday: [],
+        },
+      })
+
+      expect(resEventTokyo.event).toBeDefined()
+      expect(resEventTokyo.event.calendarId).toBe(calendarTokyoId)
+      expect(resEventTokyo.event.recurrence).toEqual(
+        expect.objectContaining({
+          freq: 'weekly',
+          interval: 2,
+          until: '2024-12-12T14:59:59Z',
+          byweekday: ['Fri'],
+          bymonthday: [],
         })
       )
     })
