@@ -157,7 +157,8 @@ impl From<UseCaseError> for NitteiError {
 }
 
 impl From<anyhow::Error> for UseCaseError {
-    fn from(_: anyhow::Error) -> Self {
+    fn from(error: anyhow::Error) -> Self {
+        tracing::error!("[create_event] Unexpected error: {:?}", error);
         UseCaseError::StorageError
     }
 }

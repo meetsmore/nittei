@@ -243,7 +243,7 @@ impl UseCase for UpdateEventUseCase {
                 ))
             }
             Err(e) => {
-                tracing::error!("Failed to get one calendar {:?}", e);
+                tracing::error!("[update_event] Failed to get one calendar {:?}", e);
                 return Err(UseCaseError::StorageError);
             }
         };
@@ -270,12 +270,18 @@ impl UseCase for UpdateEventUseCase {
         let valid_recurrence = if let Some(rrule_opts) = recurrence.clone() {
             // ? should exdates be deleted when rrules are updated
             e.set_recurrence(rrule_opts, &calendar.settings, true)
-                .map_err(|_| UseCaseError::InvalidRecurrenceRule)?
+                .map_err(|e| {
+                    tracing::error!("[update_event] Failed to set recurrence {:?}", e);
+                    UseCaseError::InvalidRecurrenceRule
+                })?
         } else if start_or_duration_change && e.recurrence.is_some() {
             // This unwrap is safe as we have checked that recurrence "is_some"
             #[allow(clippy::unwrap_used)]
             e.set_recurrence(e.recurrence.clone().unwrap(), &calendar.settings, true)
-                .map_err(|_| UseCaseError::InvalidRecurrenceRule)?
+                .map_err(|e| {
+                    tracing::error!("[update_event] Failed to set recurrence {:?}", e);
+                    UseCaseError::InvalidRecurrenceRule
+                })?
         } else if start_or_duration_change {
             e.end_time = e.start_time + TimeDelta::milliseconds(e.duration);
             e.recurrence = None;
@@ -349,7 +355,10 @@ impl UseCase for UpdateEventUseCase {
             .save(&e)
             .await
             .map(|_| e.clone())
-            .map_err(|_| UseCaseError::StorageError)
+            .map_err(|e| {
+                tracing::error!("[update_event] Failed to save event {:?}", e);
+                UseCaseError::StorageError
+            })
     }
 
     fn subscribers() -> Vec<Box<dyn Subscriber<Self>>> {
