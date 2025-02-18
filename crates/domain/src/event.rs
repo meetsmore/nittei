@@ -154,7 +154,7 @@ impl CalendarEvent {
         calendar_settings: &CalendarSettings,
         update_endtime: bool,
     ) -> anyhow::Result<bool> {
-        let valid_recurrence = recurrence.is_valid(self.start_time);
+        let valid_recurrence = recurrence.is_valid();
         if !valid_recurrence {
             return Ok(false);
         }
@@ -344,10 +344,6 @@ mod test {
         let mut invalid_rrules = Vec::new();
         invalid_rrules.push(RRuleOptions {
             count: Some(1000), // too big count
-            ..Default::default()
-        });
-        invalid_rrules.push(RRuleOptions {
-            until: Some(Utc.with_ymd_and_hms(2150, 1, 1, 0, 0, 0).unwrap()), // too big until
             ..Default::default()
         });
         invalid_rrules.push(RRuleOptions {

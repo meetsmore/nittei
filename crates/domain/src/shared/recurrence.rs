@@ -1,6 +1,6 @@
 use std::{cmp::Ordering, fmt::Display, str::FromStr};
 
-use chrono::{prelude::*, TimeDelta};
+use chrono::prelude::*;
 use rrule::{Frequency, RRule, RRuleSet};
 use serde::{de::Visitor, Deserialize, Serialize};
 use thiserror::Error;
@@ -58,19 +58,12 @@ fn is_none_or_empty<T>(v: &Option<Vec<T>>) -> bool {
 }
 
 impl RRuleOptions {
-    pub fn is_valid(&self, start_time: DateTime<Utc>) -> bool {
+    pub fn is_valid(&self) -> bool {
         if let Some(count) = self.count {
             if !(1..740).contains(&count) {
                 return false;
             }
         }
-        let two_years_in_millis = TimeDelta::milliseconds(1000 * 60 * 60 * 24 * 366 * 2);
-        if let Some(until) = self.until {
-            if until < start_time || until - start_time > two_years_in_millis {
-                return false;
-            }
-        }
-
         if let Some(bysetpos) = &self.bysetpos {
             // Check that bysetpos is used with some other by* rule
             if !bysetpos.is_empty()
