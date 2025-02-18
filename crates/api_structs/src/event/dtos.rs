@@ -38,9 +38,16 @@ pub struct CalendarEventDTO {
     pub status: CalendarEventStatus,
 
     /// Optional parent event ID
+    /// This is useful for external applications that need to link Nittei's events to a wider data model (e.g. a project, an order, etc.)
+    /// Example: If the event is a meeting, the parent ID could be the project ID (ObjectId, UUID or any other string)
     pub external_parent_id: Option<String>,
 
     /// Optional external ID
+    /// This is useful for external applications that need to link Nittei's events to their own data models
+    /// Example: If the event is a meeting, the external ID could be the meeting ID in the external system
+    ///
+    /// Note that nothing prevents multiple events from having the same external ID
+    /// This can also be a way to link events together
     pub external_id: Option<String>,
 
     /// Start time of the event (UTC)
