@@ -77,10 +77,9 @@ export class NitteiEventClient extends NitteiBaseClient {
 
   /**
    * Get events by external id
-   * This returns an array of events
-   * It can be empty if no events are found
-   * @param externalId - external id of the event
-   * @param queryParams - query params (optional) - allow to specify that the events from groups should be included
+   *
+   * This returns an array of events (it can match zero, one or more events)
+   * @param externalId - external id of the event(s) to search
    * @returns - the events found
    */
   public async getByExternalId(
