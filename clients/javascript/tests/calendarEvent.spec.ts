@@ -320,81 +320,26 @@ describe('CalendarEvent API', () => {
     })
 
     it('should be able to query on external ID', async () => {
-      const externalId = crypto.randomUUID()
+      const commonExternalId = crypto.randomUUID()
       const resEvent1 = await adminClient.events.create(userId, {
         calendarId,
         duration: 1000,
         startTime: new Date(1000),
-        externalId: externalId,
-      })
-
-      const resGroup1 = await adminClient.eventGroups.create(userId, {
-        calendarId,
-        externalId: externalId,
+        externalId: commonExternalId,
       })
 
       const resEvent2 = await adminClient.events.create(userId, {
         calendarId,
         duration: 1000,
         startTime: new Date(1000),
-        groupId: resGroup1.eventGroup.id,
+        externalId: commonExternalId,
       })
 
       const eventId1 = resEvent1.event.id
       const eventId2 = resEvent2.event.id
-      const resExternalId = await adminClient.events.getByExternalId(externalId)
+      const resExternalId =
+        await adminClient.events.getByExternalId(commonExternalId)
 
-      expect(resExternalId.events).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            id: eventId1,
-          }),
-        ])
-      )
-
-      expect(resExternalId.events).not.toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            id: eventId2,
-          }),
-        ])
-      )
-    })
-
-    it('should be able to query on external ID (include groups)', async () => {
-      const resUnrelatedEvent = await adminClient.events.create(userId, {
-        calendarId,
-        duration: 1000,
-        startTime: new Date(1000),
-      })
-
-      const externalId = crypto.randomUUID()
-      const resEvent1 = await adminClient.events.create(userId, {
-        calendarId,
-        duration: 1000,
-        startTime: new Date(1000),
-        externalId: externalId,
-      })
-
-      const resGroup = await adminClient.eventGroups.create(userId, {
-        calendarId,
-        externalId: externalId,
-      })
-
-      const resEvent2 = await adminClient.events.create(userId, {
-        calendarId,
-        duration: 1000,
-        startTime: new Date(1000),
-        groupId: resGroup.eventGroup.id,
-      })
-      const eventId1 = resEvent1.event.id
-      const eventId2 = resEvent2.event.id
-      const resExternalId = await adminClient.events.getByExternalId(
-        externalId,
-        {
-          includeGroups: true,
-        }
-      )
       expect(resExternalId.events).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -405,72 +350,64 @@ describe('CalendarEvent API', () => {
           }),
         ])
       )
-
-      expect(resExternalId.events).not.toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            id: resUnrelatedEvent.event.id,
-          }),
-        ])
-      )
     })
 
-    it('should update event (externalId and parentId)', async () => {
+    it('should update event (externalId and externalParentId)', async () => {
       const externalId = crypto.randomUUID()
-      const parentId = crypto.randomUUID()
+      const externalParentId = crypto.randomUUID()
       const res = await adminClient.events.create(userId, {
         calendarId,
         duration: 1000,
         startTime: new Date(1000),
         eventType: 'job',
         externalId: externalId,
-        parentId: parentId,
+        externalParentId: externalParentId,
       })
       const eventId = res.event.id
       expect(res.event.externalId).toBe(externalId)
-      expect(res.event.parentId).toBe(parentId)
+      expect(res.event.externalParentId).toBe(externalParentId)
 
       const getRes = await adminClient.events.getByExternalId(externalId)
       expect(getRes.events[0].externalId).toBe(externalId)
-      expect(getRes.events[0].parentId).toBe(parentId)
+      expect(getRes.events[0].externalParentId).toBe(externalParentId)
 
       expect(getRes.events[0].eventType).toBe('job')
 
       const externalId2 = crypto.randomUUID()
-      const parentId2 = crypto.randomUUID()
+      const externalParentId2 = crypto.randomUUID()
       const res2 = await adminClient.events.update(eventId, {
         eventType: 'block',
-        parentId: parentId2,
+        parentId: externalParentId2,
         externalId: externalId2,
       })
       expect(res2.event.externalId).toBe(externalId2)
-      expect(res2.event.parentId).toBe(parentId2)
+      expect(res2.event.externalParentId).toBe(externalParentId2)
 
       const getRes2 = await adminClient.events.getByExternalId(externalId2)
       expect(getRes2.events[0].externalId).toBe(externalId2)
-      expect(getRes2.events[0].parentId).toBe(parentId2)
+      expect(getRes2.events[0].externalParentId).toBe(externalParentId2)
       expect(getRes2.events[0].eventType).toBe('block')
     })
 
     it('should not overwrite externalId and parentId when updating event', async () => {
       const externalId = crypto.randomUUID()
-      const parentId = crypto.randomUUID()
+      const externalParentId = crypto.randomUUID()
       const res = await adminClient.events.create(userId, {
         calendarId,
         duration: 1000,
         startTime: new Date(1000),
         externalId: externalId,
-        parentId: parentId,
+        externalParentId: externalParentId,
       })
       const eventId = res.event.id
       expect(res.event.externalId).toBe(externalId)
-      expect(res.event.parentId).toBe(parentId)
+      expect(res.event.externalParentId).toBe(externalParentId)
 
       const res2 = await adminClient.events.update(eventId, {
         title: 'new title',
       })
       expect(res2.event.externalId).toBe(externalId)
-      expect(res2.event.parentId).toBe(parentId)
+      expect(res2.event.externalParentId).toBe(externalParentId)
     })
 
     let metadataEventId: string
@@ -577,7 +514,7 @@ describe('CalendarEvent API', () => {
           duration: 1000,
           startTime: new Date(1000),
           status: 'confirmed',
-          parentId: 'parentId',
+          externalParentId: 'parentId',
         })
 
         eventId2 = eventRes2.event.id
@@ -684,7 +621,7 @@ describe('CalendarEvent API', () => {
       it('should be able to search by parentId (equality)', async () => {
         const res = await adminClient.events.searchEvents({
           userId: userId,
-          parentId: {
+          externalParentId: {
             eq: 'parentId',
           },
         })
@@ -695,7 +632,7 @@ describe('CalendarEvent API', () => {
       it('should be able to search by parentId (existence)', async () => {
         const res = await adminClient.events.searchEvents({
           userId: userId,
-          parentId: {
+          externalParentId: {
             exists: true,
           },
         })
@@ -706,7 +643,7 @@ describe('CalendarEvent API', () => {
       it('should be able to search by parentId and startTime', async () => {
         const res = await adminClient.events.searchEvents({
           userId: userId,
-          parentId: {
+          externalParentId: {
             eq: 'parentId',
           },
           startTime: {
@@ -722,7 +659,7 @@ describe('CalendarEvent API', () => {
       it('should fail to find something when searching by parentId and wrong startTime', async () => {
         const res = await adminClient.events.searchEvents({
           userId: userId,
-          parentId: {
+          externalParentId: {
             eq: 'parentId',
           },
           startTime: {
@@ -780,32 +717,6 @@ describe('CalendarEvent API', () => {
         })
         expect(res.events.length).toBe(1)
         expect(res.events[0].id).toBe(metadataEventId1)
-      })
-
-      it('should be search events on event group id', async () => {
-        const group = await adminClient.eventGroups.create(userId, {
-          calendarId,
-        })
-
-        const resCreate = await adminClient.events.create(userId, {
-          calendarId,
-          duration: 1000,
-          startTime: new Date(1000),
-          groupId: group.eventGroup.id,
-        })
-        expect(resCreate.event).toBeDefined()
-        expect(resCreate.event.calendarId).toBe(calendarId)
-
-        const resSearch = await adminClient.events.searchEvents({
-          userId,
-          groupId: {
-            eq: group.eventGroup.id,
-          },
-        })
-
-        expect(resSearch.events.length).toBe(1)
-        expect(resSearch.events[0].id).toBe(resCreate.event.id)
-        expect(resSearch.events[0].groupId).toBe(group.eventGroup.id)
       })
     })
 

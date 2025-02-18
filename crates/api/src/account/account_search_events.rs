@@ -1,6 +1,6 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use nittei_api_structs::{account_search_events::*, dtos::CalendarEventDTO};
-use nittei_domain::{DateTimeQuery, IDQuery, StringQuery, ID};
+use nittei_domain::{DateTimeQuery, StringQuery, ID};
 use nittei_infra::{NitteiContext, SearchEventsForAccountParams, SearchEventsParams};
 
 use crate::{
@@ -21,8 +21,7 @@ pub async fn account_search_events_controller(
     let body = body.0;
     let usecase = AccountSearchEventsUseCase {
         account_id: account.id,
-        parent_id: body.parent_id,
-        group_id: body.group_id,
+        external_parent_id: body.parent_id,
         start_time: body.start_time,
         end_time: body.end_time,
         status: body.status,
@@ -43,10 +42,7 @@ pub struct AccountSearchEventsUseCase {
     pub account_id: ID,
 
     /// Optional query on parent ID (which is a string as it's an ID from an external system)
-    pub parent_id: Option<StringQuery>,
-
-    /// Optional query on the group ID
-    pub group_id: Option<IDQuery>,
+    pub external_parent_id: Option<StringQuery>,
 
     /// Optional query on start time - "lower than or equal", or "great than or equal" (UTC)
     pub start_time: Option<DateTimeQuery>,
@@ -100,8 +96,7 @@ impl UseCase for AccountSearchEventsUseCase {
             .search_events_for_account(SearchEventsForAccountParams {
                 account_id: self.account_id.clone(),
                 search_events_params: SearchEventsParams {
-                    parent_id: self.parent_id.take(),
-                    group_id: self.group_id.take(),
+                    external_parent_id: self.external_parent_id.take(),
                     start_time: self.start_time.take(),
                     end_time: self.end_time.take(),
                     status: self.status.take(),

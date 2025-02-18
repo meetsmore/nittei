@@ -95,9 +95,8 @@ async fn create_300_events_1_month(
             .create(CreateEventInput {
                 user_id: user_id.clone(),
                 calendar_id: calendar_id.clone(),
-                parent_id: None,
+                external_parent_id: None,
                 external_id: None,
-                group_id: None,
                 title: None,
                 description: None,
                 event_type: None,

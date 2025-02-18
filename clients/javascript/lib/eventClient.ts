@@ -1,7 +1,6 @@
 import { NitteiBaseClient } from './baseClient'
 import type {
   GetEventsByExternalIdAPIResponse,
-  GetEventsByExternalIdQueryParams,
   SearchEventsAPIResponse,
   SearchEventsRequestBody,
 } from './gen_types'
@@ -85,12 +84,10 @@ export class NitteiEventClient extends NitteiBaseClient {
    * @returns - the events found
    */
   public async getByExternalId(
-    externalId: string,
-    queryParams?: GetEventsByExternalIdQueryParams
+    externalId: string
   ): Promise<GetEventsByExternalIdAPIResponse> {
     const res = await this.get<GetEventsByExternalIdAPIResponse>(
-      `/user/events/external_id/${externalId}`,
-      queryParams
+      `/user/events/external_id/${externalId}`
     )
 
     return {

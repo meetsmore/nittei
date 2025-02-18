@@ -38,7 +38,7 @@ pub struct CalendarEventDTO {
     pub status: CalendarEventStatus,
 
     /// Optional parent event ID
-    pub parent_id: Option<String>,
+    pub external_parent_id: Option<String>,
 
     /// Optional external ID
     pub external_id: Option<String>,
@@ -91,9 +91,6 @@ pub struct CalendarEventDTO {
     /// UUID of the user
     pub user_id: ID,
 
-    /// Optional group ID
-    pub group_id: Option<ID>,
-
     /// List of reminders
     pub reminders: Vec<CalendarEventReminder>,
 
@@ -112,7 +109,7 @@ impl CalendarEventDTO {
             location: event.location,
             all_day: event.all_day,
             status: event.status,
-            parent_id: event.parent_id,
+            external_parent_id: event.external_parent_id,
             external_id: event.external_id,
             start_time: event.start_time,
             end_time: event.end_time,
@@ -126,7 +123,6 @@ impl CalendarEventDTO {
             original_start_time: event.original_start_time,
             calendar_id: event.calendar_id,
             user_id: event.user_id,
-            group_id: event.group_id,
             reminders: event.reminders,
             metadata: event.metadata,
         }

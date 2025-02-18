@@ -44,7 +44,7 @@ pub async fn update_event_admin_controller(
         title: body.title,
         description: body.description,
         event_type: body.event_type,
-        parent_id: body.parent_id,
+        external_parent_id: body.parent_id,
         external_id: body.external_id,
         location: body.location,
         status: body.status,
@@ -54,7 +54,6 @@ pub async fn update_event_admin_controller(
         reminders: body.reminders,
         busy: body.busy,
         service_id: body.service_id,
-        group_id: body.group_id,
         recurrence: body.recurrence,
         exdates: body.exdates,
         recurring_event_id: body.recurring_event_id,
@@ -85,7 +84,7 @@ pub async fn update_event_controller(
         title: body.title,
         description: body.description,
         event_type: body.event_type,
-        parent_id: body.parent_id,
+        external_parent_id: body.parent_id,
         external_id: body.external_id,
         location: body.location,
         status: body.status,
@@ -95,7 +94,6 @@ pub async fn update_event_controller(
         reminders: body.reminders,
         busy: body.busy,
         service_id: body.service_id,
-        group_id: body.group_id,
         recurrence: body.recurrence,
         exdates: body.exdates,
         recurring_event_id: body.recurring_event_id,
@@ -119,7 +117,7 @@ pub struct UpdateEventUseCase {
     pub title: Option<String>,
     pub description: Option<String>,
     pub event_type: Option<String>,
-    pub parent_id: Option<String>,
+    pub external_parent_id: Option<String>,
     pub external_id: Option<String>,
     pub location: Option<String>,
     pub status: Option<CalendarEventStatus>,
@@ -129,7 +127,6 @@ pub struct UpdateEventUseCase {
     pub duration: Option<i64>,
     pub reminders: Option<Vec<CalendarEventReminder>>,
     pub service_id: Option<ID>,
-    pub group_id: Option<ID>,
     pub recurrence: Option<RRuleOptions>,
     pub exdates: Option<Vec<DateTime<Utc>>>,
     pub recurring_event_id: Option<ID>,
@@ -180,7 +177,7 @@ impl UseCase for UpdateEventUseCase {
             title,
             description,
             event_type,
-            parent_id,
+            external_parent_id,
             external_id,
             location,
             status,
@@ -194,7 +191,6 @@ impl UseCase for UpdateEventUseCase {
             original_start_time,
             reminders,
             service_id,
-            group_id,
             metadata,
             created,
             updated,
@@ -316,16 +312,12 @@ impl UseCase for UpdateEventUseCase {
             e.event_type.clone_from(event_type);
         }
 
-        if parent_id.is_some() {
-            e.parent_id.clone_from(parent_id);
+        if external_parent_id.is_some() {
+            e.external_parent_id.clone_from(external_parent_id);
         }
 
         if external_id.is_some() {
             e.external_id.clone_from(external_id);
-        }
-
-        if group_id.is_some() {
-            e.group_id.clone_from(group_id);
         }
 
         if location.is_some() {

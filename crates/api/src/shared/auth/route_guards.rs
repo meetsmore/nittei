@@ -1,14 +1,6 @@
 use actix_web::HttpRequest;
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
-use nittei_domain::{
-    event_group::EventGroup,
-    Account,
-    Calendar,
-    CalendarEvent,
-    Schedule,
-    User,
-    ID,
-};
+use nittei_domain::{Account, Calendar, CalendarEvent, Schedule, User, ID};
 use nittei_infra::NitteiContext;
 use serde::{Deserialize, Serialize};
 use tracing::log::warn;
@@ -258,23 +250,6 @@ pub async fn account_can_modify_event(
         Ok(_) => Err(NitteiError::NotFound(format!(
             "Calendar event with id: {} was not found",
             event_id
-        ))),
-        Err(_) => Err(NitteiError::InternalError),
-    }
-}
-
-/// Used for account admin routes by checking that account
-/// is not modifying an event group in another account
-pub async fn account_can_modify_event_group(
-    account: &Account,
-    event_group_id: &ID,
-    ctx: &NitteiContext,
-) -> Result<EventGroup, NitteiError> {
-    match ctx.repos.event_groups.find(event_group_id).await {
-        Ok(Some(event_group)) if event_group.account_id == account.id => Ok(event_group),
-        Ok(_) => Err(NitteiError::NotFound(format!(
-            "Event group with id: {} was not found",
-            event_group_id
         ))),
         Err(_) => Err(NitteiError::InternalError),
     }

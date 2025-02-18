@@ -41,7 +41,7 @@ export type CalendarEventDTO = {
   /**
    * Optional parent event ID
    */
-  parentId: string | null
+  externalParentId: string | null
   /**
    * Optional external ID
    */
@@ -98,10 +98,6 @@ export type CalendarEventDTO = {
    * UUID of the user
    */
   userId: ID
-  /**
-   * Optional group ID
-   */
-  groupId: ID | null
   /**
    * List of reminders
    */

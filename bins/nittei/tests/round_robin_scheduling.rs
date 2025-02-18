@@ -191,9 +191,8 @@ async fn test_round_robin_scheduling_simple_test() {
 
                 // Create service event
                 let service_event = CreateEventInput {
-                    parent_id: None,
+                    external_parent_id: None,
                     external_id: None,
-                    group_id: None,
                     title: None,
                     description: None,
                     event_type: None,
@@ -315,9 +314,8 @@ async fn test_round_robin_equal_distribution_scheduling() {
             for _ in 0..*upcoming_service_events {
                 // Create service event
                 let service_event = CreateEventInput {
-                    parent_id: None,
+                    external_parent_id: None,
                     external_id: None,
-                    group_id: None,
                     title: None,
                     description: None,
                     event_type: None,
@@ -380,9 +378,8 @@ async fn test_round_robin_equal_distribution_scheduling() {
                 .find(|(h, _)| h.id == booking_intend.selected_hosts[0].id)
                 .expect("To find selected host");
             let service_event = CreateEventInput {
-                parent_id: None,
+                external_parent_id: None,
                 external_id: None,
-                group_id: None,
                 title: None,
                 description: None,
                 event_type: None,
@@ -514,9 +511,8 @@ async fn test_round_robin_availability_scheduling() {
         {
             // Create service event
             let service_event = CreateEventInput {
-                parent_id: None,
+                external_parent_id: None,
                 external_id: None,
-                group_id: None,
                 title: None,
                 description: None,
                 event_type: None,
@@ -598,9 +594,8 @@ async fn test_round_robin_availability_scheduling() {
                 .expect("To find selected host");
 
             let service_event = CreateEventInput {
-                parent_id: None,
+                external_parent_id: None,
                 external_id: None,
-                group_id: None,
                 title: None,
                 description: None,
                 event_type: None,

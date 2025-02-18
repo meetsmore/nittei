@@ -5,7 +5,6 @@ pub use policy::{Permission, Policy};
 pub use route_guards::{
     account_can_modify_calendar,
     account_can_modify_event,
-    account_can_modify_event_group,
     account_can_modify_schedule,
     account_can_modify_user,
     protect_account_route,

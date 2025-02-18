@@ -1,7 +1,6 @@
 use std::convert::{TryFrom, TryInto};
 
 use chrono::{DateTime, Utc};
-use futures::future;
 use nittei_domain::{CalendarEvent, CalendarEventReminder, CalendarEventStatus, RRuleOptions, ID};
 use serde_json::Value;
 use sqlx::{
@@ -20,7 +19,6 @@ use super::{
 };
 use crate::repos::{
     apply_datetime_query,
-    apply_id_query,
     apply_string_query,
     shared::query_structs::MetadataFindQuery,
 };
@@ -68,7 +66,7 @@ struct EventRaw {
     calendar_uid: Uuid,
     user_uid: Uuid,
     account_uid: Uuid,
-    parent_id: Option<String>,
+    external_parent_id: Option<String>,
     external_id: Option<String>,
     title: Option<String>,
     description: Option<String>,
@@ -88,7 +86,6 @@ struct EventRaw {
     original_start_time: Option<DateTime<Utc>>,
     reminders: Option<Value>,
     service_uid: Option<Uuid>,
-    group_uid: Option<Uuid>,
     metadata: Value,
 }
 
@@ -110,7 +107,7 @@ impl TryFrom<EventRaw> for CalendarEvent {
             user_id: e.user_uid.into(),
             account_id: e.account_uid.into(),
             calendar_id: e.calendar_uid.into(),
-            parent_id: e.parent_id,
+            external_parent_id: e.external_parent_id,
             external_id: e.external_id,
             title: e.title,
             description: e.description,
@@ -134,7 +131,6 @@ impl TryFrom<EventRaw> for CalendarEvent {
             original_start_time: e.original_start_time,
             reminders,
             service_id: e.service_uid.map(|id| id.into()),
-            group_id: e.group_uid.map(|id| id.into()),
             metadata: serde_json::from_value(e.metadata)?,
         })
     }
@@ -150,7 +146,7 @@ impl IEventRepo for PostgresEventRepo {
             INSERT INTO calendar_events(
                 event_uid,
                 calendar_uid,
-                parent_id,
+                external_parent_id,
                 external_id,
                 title,
                 description,
@@ -170,14 +166,13 @@ impl IEventRepo for PostgresEventRepo {
                 original_start_time,
                 reminders,
                 service_uid,
-                group_uid,
                 metadata
             )
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
             "#,
             e.id.as_ref(),
             e.calendar_id.as_ref(),
-            e.parent_id,
+            e.external_parent_id,
             e.external_id,
             e.title,
             e.description,
@@ -197,7 +192,6 @@ impl IEventRepo for PostgresEventRepo {
             e.original_start_time,
             Json(&e.reminders) as _,
             e.service_id.as_ref().map(|id| id.as_ref()),
-            e.group_id.as_ref().map(|id| id.as_ref()),
             Json(&e.metadata) as _,
         )
         .execute(&self.pool)
@@ -218,7 +212,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query!(
             r#"
             UPDATE calendar_events SET
-                parent_id = $2,
+                external_parent_id = $2,
                 external_id = $3,
                 title = $4,
                 description = $5,
@@ -238,12 +232,11 @@ impl IEventRepo for PostgresEventRepo {
                 original_start_time = $19,
                 reminders = $20,
                 service_uid = $21,
-                group_uid = $22,
-                metadata = $23
+                metadata = $22
             WHERE event_uid = $1
             "#,
             e.id.as_ref(),
-            e.parent_id,
+            e.external_parent_id,
             e.external_id,
             e.title,
             e.description,
@@ -263,7 +256,6 @@ impl IEventRepo for PostgresEventRepo {
             e.original_start_time,
             Json(&e.reminders) as _,
             e.service_id.as_ref().map(|id| id.as_ref()),
-            e.group_id.as_ref().map(|id| id.as_ref()),
             Json(&e.metadata) as _,
         )
         .execute(&self.pool)
@@ -343,66 +335,10 @@ impl IEventRepo for PostgresEventRepo {
         &self,
         account_uid: &ID,
         external_id: &str,
-        include_groups: bool,
     ) -> anyhow::Result<Vec<CalendarEvent>> {
-        if include_groups {
-            // Define two queries and merge the results
-            let query_calendar_event = sqlx::query_as!(
-                EventRaw,
-                r#"
-        SELECT e.*, u.user_uid, account_uid 
-        FROM calendar_events AS e
-        INNER JOIN calendars AS c
-            ON c.calendar_uid = e.calendar_uid
-        INNER JOIN users AS u
-            ON u.user_uid = c.user_uid
-        WHERE u.account_uid = $1 AND e.external_id = $2
-        "#,
-                account_uid.as_ref(),
-                external_id
-            );
-
-            let query_calendar_events_from_group = sqlx::query_as!(
-                EventRaw,
-                r#"
-        SELECT e.*, u.user_uid, account_uid 
-        FROM calendar_events AS e
-        INNER JOIN calendars AS c
-            ON c.calendar_uid = e.calendar_uid
-        INNER JOIN users AS u
-            ON u.user_uid = c.user_uid
-        LEFT JOIN events_groups AS g
-            ON g.group_uid = e.group_uid AND g.calendar_uid = e.calendar_uid
-        WHERE u.account_uid = $1 AND g.external_id = $2
-        "#,
-                account_uid.as_ref(),
-                external_id
-            );
-
-            // Execute both queries in parallel
-            let (result1, result2) = future::try_join(
-                query_calendar_event.fetch_all(&self.pool),
-                query_calendar_events_from_group.fetch_all(&self.pool),
-            )
-            .await
-            .inspect_err(|err| {
-                error!(
-                    "Find calendar event (with group) with external_id: {:?} failed. DB returned error: {:?}",
-                    external_id, err
-                );
-            })?;
-
-            // Merge the results
-            let mut all_events = Vec::with_capacity(result1.len() + result2.len());
-            all_events.extend(result1);
-            all_events.extend(result2);
-
-            // Convert the results to CalendarEvent
-            all_events.into_iter().map(|e| e.try_into()).collect()
-        } else {
-            sqlx::query_as!(
-                EventRaw,
-                r#"
+        sqlx::query_as!(
+            EventRaw,
+            r#"
             SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
             INNER JOIN calendars AS c
                 ON c.calendar_uid = e.calendar_uid
@@ -410,21 +346,20 @@ impl IEventRepo for PostgresEventRepo {
                 ON u.user_uid = c.user_uid
             WHERE u.account_uid = $1 AND e.external_id = $2
             "#,
-                account_uid.as_ref(),
-                external_id,
-            )
-            .fetch_all(&self.pool)
-            .await
-            .inspect_err(|err| {
-                error!(
-                    "Find calendar event with external_id: {:?} failed. DB returned error: {:?}",
-                    external_id, err
-                );
-            })?
-            .into_iter()
-            .map(|e| e.try_into())
-            .collect()
-        }
+            account_uid.as_ref(),
+            external_id,
+        )
+        .fetch_all(&self.pool)
+        .await
+        .inspect_err(|err| {
+            error!(
+                "Find calendar event with external_id: {:?} failed. DB returned error: {:?}",
+                external_id, err
+            );
+        })?
+        .into_iter()
+        .map(|e| e.try_into())
+        .collect()
     }
 
     #[instrument]
@@ -652,14 +587,8 @@ impl IEventRepo for PostgresEventRepo {
 
         apply_string_query(
             &mut query,
-            "parent_id",
-            &params.search_events_params.parent_id,
-        );
-
-        apply_id_query(
-            &mut query,
-            "group_uid",
-            &params.search_events_params.group_id,
+            "external_parent_id",
+            &params.search_events_params.external_parent_id,
         );
 
         apply_datetime_query(
@@ -734,14 +663,8 @@ impl IEventRepo for PostgresEventRepo {
 
         apply_string_query(
             &mut query,
-            "parent_id",
-            &params.search_events_params.parent_id,
-        );
-
-        apply_id_query(
-            &mut query,
-            "group_uid",
-            &params.search_events_params.group_id,
+            "external_parent_id",
+            &params.search_events_params.external_parent_id,
         );
 
         apply_datetime_query(
