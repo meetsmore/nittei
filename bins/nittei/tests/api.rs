@@ -482,9 +482,8 @@ async fn test_crud_events() {
     let event = admin_client
         .event
         .create(CreateEventInput {
-            parent_id: None,
+            external_parent_id: None,
             external_id: None,
-            group_id: None,
             title: None,
             description: None,
             event_type: None,
@@ -533,12 +532,11 @@ async fn test_crud_events() {
             event_id: event.id.clone(),
             title: None,
             description: None,
-            group_id: None,
             event_type: None,
             location: None,
             status: None,
             all_day: None,
-            parent_id: None,
+            external_parent_id: None,
             external_id: None,
             busy: None,
             duration: None,
@@ -765,9 +763,8 @@ async fn test_freebusy_multiple() {
     let _event1 = admin_client
         .event
         .create(CreateEventInput {
-            parent_id: None,
+            external_parent_id: None,
             external_id: None,
-            group_id: None,
             title: None,
             description: None,
             event_type: None,
@@ -793,9 +790,8 @@ async fn test_freebusy_multiple() {
     let _event2 = admin_client
         .event
         .create(CreateEventInput {
-            parent_id: None,
+            external_parent_id: None,
             external_id: None,
-            group_id: None,
             title: None,
             description: None,
             event_type: None,

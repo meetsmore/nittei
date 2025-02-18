@@ -52,9 +52,8 @@ async fn test_create_event_validation() {
     let event = admin_client
         .event
         .create(CreateEventInput {
-            parent_id: None,
+            external_parent_id: None,
             external_id: None,
-            group_id: None,
             title: None,
             description: None,
             event_type: None,
@@ -117,9 +116,8 @@ async fn test_expand_daily_recurring_event() {
     let event = admin_client
         .event
         .create(CreateEventInput {
-            parent_id: None,
+            external_parent_id: None,
             external_id: None,
-            group_id: None,
             title: None,
             description: None,
             event_type: None,
@@ -214,9 +212,8 @@ async fn test_expand_weekly_recurring_event() {
     let event = admin_client
         .event
         .create(CreateEventInput {
-            parent_id: None,
+            external_parent_id: None,
             external_id: None,
-            group_id: None,
             title: None,
             description: None,
             event_type: None,
@@ -307,9 +304,8 @@ async fn test_expand_monthly_recurring_event() {
     let event = admin_client
         .event
         .create(CreateEventInput {
-            parent_id: None,
+            external_parent_id: None,
             external_id: None,
-            group_id: None,
             title: None,
             description: None,
             event_type: None,
@@ -395,9 +391,8 @@ async fn test_expand_recurring_event_and_remove_exceptions() {
     let event = admin_client
         .event
         .create(CreateEventInput {
-            parent_id: None,
+            external_parent_id: None,
             external_id: None,
-            group_id: None,
             title: None,
             description: None,
             event_type: None,
@@ -432,9 +427,8 @@ async fn test_expand_recurring_event_and_remove_exceptions() {
     let exception_changed = admin_client
         .event
         .create(CreateEventInput {
-            parent_id: None,
+            external_parent_id: None,
             external_id: None,
-            group_id: None,
             title: None,
             description: None,
             event_type: None,
@@ -462,9 +456,8 @@ async fn test_expand_recurring_event_and_remove_exceptions() {
     let exception_removed = admin_client
         .event
         .create(CreateEventInput {
-            parent_id: None,
+            external_parent_id: None,
             external_id: None,
-            group_id: None,
             title: None,
             description: None,
             event_type: None,

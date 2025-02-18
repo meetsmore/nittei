@@ -21,12 +21,10 @@ use anyhow::Context;
 use calendar::{ICalendarRepo, PostgresCalendarRepo};
 use calendar_synced::{ICalendarSyncedRepo, PostgresCalendarSyncedRepo};
 use event::{
-    IEventGroupRepo,
     IEventRemindersGenerationJobsRepo,
     IEventRepo,
     IEventSyncedRepo,
     IReminderRepo,
-    PostgresEventGroupRepo,
     PostgresEventReminderGenerationJobsRepo,
     PostgresEventRepo,
     PostgresEventSyncedRepo,
@@ -58,7 +56,6 @@ pub struct Repos {
     pub events: Arc<dyn IEventRepo>,
     pub event_reminders_generation_jobs: Arc<dyn IEventRemindersGenerationJobsRepo>,
     pub event_synced: Arc<dyn IEventSyncedRepo>,
-    pub event_groups: Arc<dyn IEventGroupRepo>,
     pub schedules: Arc<dyn IScheduleRepo>,
     pub reminders: Arc<dyn IReminderRepo>,
     pub reservations: Arc<dyn IReservationRepo>,
@@ -114,7 +111,6 @@ impl Repos {
             calendar_synced: Arc::new(PostgresCalendarSyncedRepo::new(pool.clone())),
             events: Arc::new(PostgresEventRepo::new(pool.clone())),
             event_synced: Arc::new(PostgresEventSyncedRepo::new(pool.clone())),
-            event_groups: Arc::new(PostgresEventGroupRepo::new(pool.clone())),
             users: Arc::new(PostgresUserRepo::new(pool.clone())),
             user_integrations: Arc::new(PostgresUserIntegrationRepo::new(pool.clone())),
             services: Arc::new(PostgresServiceRepo::new(pool.clone())),

@@ -14,7 +14,6 @@ use crate::{
 pub async fn get_event_by_external_id_admin_controller(
     http_req: HttpRequest,
     path_params: web::Path<PathParams>,
-    query_params: web::Query<QueryParams>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
     let account = protect_account_route(&http_req, &ctx).await?;
@@ -22,7 +21,6 @@ pub async fn get_event_by_external_id_admin_controller(
     let usecase = GetEventByExternalIdUseCase {
         account_id: account.id,
         external_id: path_params.external_id.clone(),
-        include_groups: query_params.include_groups,
     };
 
     execute(usecase, &ctx)
@@ -35,7 +33,6 @@ pub async fn get_event_by_external_id_admin_controller(
 pub struct GetEventByExternalIdUseCase {
     pub external_id: String,
     pub account_id: ID,
-    pub include_groups: Option<bool>,
 }
 
 #[derive(Debug)]
@@ -63,11 +60,7 @@ impl UseCase for GetEventByExternalIdUseCase {
         let events = ctx
             .repos
             .events
-            .get_by_external_id(
-                &self.account_id,
-                &self.external_id,
-                self.include_groups.unwrap_or(false),
-            )
+            .get_by_external_id(&self.account_id, &self.external_id)
             .await
             .map_err(|_| UseCaseError::InternalError)?;
 

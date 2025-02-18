@@ -2,7 +2,6 @@ mod account;
 mod calendar;
 mod error;
 mod event;
-mod event_group;
 mod http_logger;
 mod job_schedulers;
 mod schedule;
@@ -42,7 +41,6 @@ pub fn configure_server_api(cfg: &mut web::ServiceConfig) {
     account::configure_routes(cfg);
     calendar::configure_routes(cfg);
     event::configure_routes(cfg);
-    event_group::configure_routes(cfg);
     schedule::configure_routes(cfg);
     service::configure_routes(cfg);
     status::configure_routes(cfg);

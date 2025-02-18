@@ -186,9 +186,8 @@ async fn test_group_team_scheduling() {
             assert!(booking_intend.create_event_for_hosts);
             for (host, calendar) in hosts_with_calendar {
                 let service_event = CreateEventInput {
-                    parent_id: None,
+                    external_parent_id: None,
                     external_id: None,
-                    group_id: None,
                     title: None,
                     description: None,
                     event_type: None,
@@ -524,9 +523,8 @@ async fn test_group_team_scheduling_increase_max_count() {
         );
         assert!(booking_intend.create_event_for_hosts);
         let service_event = CreateEventInput {
-            parent_id: None,
+            external_parent_id: None,
             external_id: None,
-            group_id: None,
             title: None,
             description: None,
             event_type: None,
@@ -959,9 +957,8 @@ async fn test_group_team_scheduling_decrease_max_count() {
         );
         assert!(booking_intend.create_event_for_hosts);
         let service_event = CreateEventInput {
-            parent_id: None,
+            external_parent_id: None,
             external_id: None,
-            group_id: None,
             title: None,
             description: None,
             event_type: None,
@@ -1176,9 +1173,8 @@ async fn test_combination_of_services() {
 
     // And then create service event which is not busy
     let service_event = CreateEventInput {
-        parent_id: None,
+        external_parent_id: None,
         external_id: None,
-        group_id: None,
         title: None,
         description: None,
         event_type: None,

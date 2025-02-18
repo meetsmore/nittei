@@ -1,5 +1,4 @@
 mod calendar_event;
-mod event_group;
 mod event_reminders_expansion_jobs;
 mod event_synced;
 mod reminder;
@@ -11,7 +10,6 @@ pub use calendar_event::{
     SearchEventsForUserParams,
     SearchEventsParams,
 };
-pub use event_group::{IEventGroupRepo, PostgresEventGroupRepo};
 pub use event_reminders_expansion_jobs::{
     IEventRemindersGenerationJobsRepo,
     PostgresEventReminderGenerationJobsRepo,

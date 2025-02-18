@@ -139,7 +139,7 @@ describe('Account API', () => {
         duration: 1000,
         startTime: new Date(1000),
         status: 'confirmed',
-        parentId: 'parentId',
+        externalParentId: 'parentId',
       })
 
       eventId2 = eventRes2.event.id

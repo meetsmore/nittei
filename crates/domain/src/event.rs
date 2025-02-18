@@ -56,7 +56,7 @@ impl TryFrom<String> for CalendarEventStatus {
 #[serde(rename_all = "camelCase")]
 pub struct CalendarEvent {
     pub id: ID,
-    pub parent_id: Option<String>,
+    pub external_parent_id: Option<String>,
     pub external_id: Option<String>,
     pub title: Option<String>,
     pub description: Option<String>,
@@ -79,7 +79,6 @@ pub struct CalendarEvent {
     pub account_id: ID,
     pub reminders: Vec<CalendarEventReminder>,
     pub service_id: Option<ID>,
-    pub group_id: Option<ID>,
     pub metadata: Option<serde_json::Value>,
 }
 
