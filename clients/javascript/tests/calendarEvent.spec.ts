@@ -1,6 +1,6 @@
 import dayjs from 'dayjs'
-import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
+import utc from 'dayjs/plugin/utc'
 import {
   type INitteiClient,
   type INitteiUserClient,
@@ -242,6 +242,37 @@ describe('CalendarEvent API', () => {
           interval: 2,
           until: '2024-12-12T14:59:59Z',
           byweekday: ['Fri'],
+          bymonthday: [],
+        })
+      )
+
+      const resEventUntilFarAway = await adminClient.events.create(userId, {
+        calendarId: calendarTokyoId,
+        startTime: dayjs('2022-03-10T09:30:00.000Z').toDate(),
+        duration: 1800000,
+        eventType: 'gcal',
+        recurrence: {
+          freq: 'weekly',
+          interval: 2,
+          count: undefined,
+          until: '2024-10-16T14:59:59.000Z',
+          bysetpos: undefined,
+          byweekday: ['Thu'],
+          bymonthday: [],
+          bymonth: undefined,
+          byyearday: undefined,
+          byweekno: undefined,
+        },
+      })
+
+      expect(resEventUntilFarAway.event).toBeDefined()
+      expect(resEventUntilFarAway.event.calendarId).toBe(calendarTokyoId)
+      expect(resEventUntilFarAway.event.recurrence).toEqual(
+        expect.objectContaining({
+          freq: 'weekly',
+          interval: 2,
+          until: '2024-10-16T14:59:59Z',
+          byweekday: ['Thu'],
           bymonthday: [],
         })
       )

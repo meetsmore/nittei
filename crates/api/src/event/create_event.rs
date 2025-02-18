@@ -213,9 +213,18 @@ impl UseCase for CreateEventUseCase {
         };
 
         if let Some(rrule_opts) = self.recurrence.clone() {
-            if !(e.set_recurrence(rrule_opts, &calendar.settings, true)?) {
-                return Err(UseCaseError::InvalidRecurrenceRule);
-            };
+            let result = e.set_recurrence(rrule_opts, &calendar.settings, false);
+            match result {
+                Ok(res) => {
+                    if !res {
+                        return Err(UseCaseError::InvalidRecurrenceRule);
+                    }
+                }
+                Err(err) => {
+                    tracing::error!("[create_event] Error setting recurrence: {:?}", err);
+                    return Err(UseCaseError::InvalidRecurrenceRule);
+                }
+            }
         }
 
         // TODO: maybe have reminders length restriction
@@ -246,7 +255,7 @@ impl PermissionBoundary for CreateEventUseCase {
 
 #[cfg(test)]
 mod test {
-    use chrono::{prelude::*, Utc};
+    use chrono::prelude::*;
     use nittei_domain::{Account, Calendar, User};
     use nittei_infra::setup_context;
 
@@ -356,10 +365,6 @@ mod test {
         let mut invalid_rrules = Vec::new();
         invalid_rrules.push(RRuleOptions {
             count: Some(1000), // too big count
-            ..Default::default()
-        });
-        invalid_rrules.push(RRuleOptions {
-            until: Some(Utc.with_ymd_and_hms(2150, 1, 1, 0, 0, 0).unwrap()), // too big until
             ..Default::default()
         });
         for rrule in invalid_rrules {
