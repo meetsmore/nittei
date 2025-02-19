@@ -16,20 +16,20 @@ export type CalendarEventDTO = {
   /**
    * Optional title of the event
    */
-  title: string | null
+  title?: string
   /**
    * Optional description of the event
    */
-  description: string | null
+  description?: string
   /**
    * Optional type of the event
    * e.g. "meeting", "reminder", "birthday"
    */
-  eventType: string | null
+  eventType?: string
   /**
    * Optional location of the event
    */
-  location: string | null
+  location?: string
   /**
    * Flag to indicate if the event is all day, default is false
    */
@@ -43,7 +43,7 @@ export type CalendarEventDTO = {
    * This is useful for external applications that need to link Nittei's events to a wider data model (e.g. a project, an order, etc.)
    * Example: If the event is a meeting, the parent ID could be the project ID (ObjectId, UUID or any other string)
    */
-  externalParentId: string | null
+  externalParentId?: string
   /**
    * Optional external ID
    * This is useful for external applications that need to link Nittei's events to their own data models
@@ -52,7 +52,7 @@ export type CalendarEventDTO = {
    * Note that nothing prevents multiple events from having the same external ID
    * This can also be a way to link events together
    */
-  externalId: string | null
+  externalId?: string
   /**
    * Start time of the event (UTC)
    */
@@ -90,13 +90,13 @@ export type CalendarEventDTO = {
    * This is the ID of the recurring event that this event is part of
    * Default is None
    */
-  recurringEventId: ID | null
+  recurringEventId?: ID
   /**
    * Optional original start time of the event
    * This is the original start time of the event before it was moved (only for recurring events)
    * Default is None
    */
-  originalStartTime: Date
+  originalStartTime?: Date
   /**
    * UUID of the calendar
    */

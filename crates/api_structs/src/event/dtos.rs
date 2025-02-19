@@ -19,16 +19,20 @@ pub struct CalendarEventDTO {
     pub id: ID,
 
     /// Optional title of the event
+    #[ts(optional)]
     pub title: Option<String>,
 
     /// Optional description of the event
+    #[ts(optional)]
     pub description: Option<String>,
 
     /// Optional type of the event
     /// e.g. "meeting", "reminder", "birthday"
+    #[ts(optional)]
     pub event_type: Option<String>,
 
     /// Optional location of the event
+    #[ts(optional)]
     pub location: Option<String>,
 
     /// Flag to indicate if the event is all day, default is false
@@ -40,6 +44,7 @@ pub struct CalendarEventDTO {
     /// Optional parent event ID
     /// This is useful for external applications that need to link Nittei's events to a wider data model (e.g. a project, an order, etc.)
     /// Example: If the event is a meeting, the parent ID could be the project ID (ObjectId, UUID or any other string)
+    #[ts(optional)]
     pub external_parent_id: Option<String>,
 
     /// Optional external ID
@@ -48,6 +53,7 @@ pub struct CalendarEventDTO {
     ///
     /// Note that nothing prevents multiple events from having the same external ID
     /// This can also be a way to link events together
+    #[ts(optional)]
     pub external_id: Option<String>,
 
     /// Start time of the event (UTC)
@@ -84,12 +90,13 @@ pub struct CalendarEventDTO {
     /// Optional recurring event ID
     /// This is the ID of the recurring event that this event is part of
     /// Default is None
+    #[ts(optional)]
     pub recurring_event_id: Option<ID>,
 
     /// Optional original start time of the event
     /// This is the original start time of the event before it was moved (only for recurring events)
     /// Default is None
-    #[ts(type = "Date")]
+    #[ts(type = "Date", optional)]
     pub original_start_time: Option<DateTime<Utc>>,
 
     /// UUID of the calendar

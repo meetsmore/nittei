@@ -36,5 +36,5 @@ export type ServiceResourceDTO = {
   /**
    * Optional furthest booking time in minutes
    */
-  furthestBookingTime: bigint | null
+  furthestBookingTime?: bigint
 }

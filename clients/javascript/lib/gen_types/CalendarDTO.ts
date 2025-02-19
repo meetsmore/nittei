@@ -18,12 +18,12 @@ export type CalendarDTO = {
   /**
    * Name of the calendar (optional)
    */
-  name: string | null
+  name?: string
   /**
    * Key of the calendar (optional)
    * When defined, this is unique per user
    */
-  key: string | null
+  key?: string
   /**
    * Calendar settings
    */
