@@ -15,7 +15,7 @@ export type AccountSearchEventsRequestBody = {
   /**
    * Optional query on parent ID (which is a string as it's an ID from an external system)
    */
-  parentId?: StringQuery
+  externalParentId?: StringQuery
   /**
    * Optional query on the group ID
    */

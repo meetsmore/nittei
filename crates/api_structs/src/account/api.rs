@@ -166,7 +166,7 @@ pub mod account_search_events {
 
         /// Optional query on parent ID (which is a string as it's an ID from an external system)
         #[ts(optional)]
-        pub parent_id: Option<StringQuery>,
+        pub external_parent_id: Option<StringQuery>,
 
         /// Optional query on the group ID
         #[ts(optional)]
