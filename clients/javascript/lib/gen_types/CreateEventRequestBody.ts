@@ -30,11 +30,16 @@ export type CreateEventRequestBody = {
   /**
    * Optional parent event ID
    * This is useful for external applications that need to link Nittei's events to a wider data model (e.g. a project, an order, etc.)
+   * Example: If the event is a meeting, the parent ID could be the project ID (ObjectId, UUID or any other string)
    */
-  parentId?: string
+  externalParentId?: string
   /**
    * Optional external event ID
    * This is useful for external applications that need to link Nittei's events to their own data models
+   * Example: If the event is a meeting, the external ID could be the meeting ID in the external system
+   *
+   * Note that nothing prevents multiple events from having the same external ID
+   * This can also be a way to link events together
    */
   externalId?: string
   /**
@@ -93,12 +98,6 @@ export type CreateEventRequestBody = {
    * This is automatically set when the event is created from a service
    */
   serviceId?: ID
-  /**
-   * Optional group UUID
-   * Allows to group events together (e.g. a project, a team, etc.)
-   * Default is None
-   */
-  groupId?: ID
   /**
    * Optional metadata (e.g. {"key": "value"})
    */

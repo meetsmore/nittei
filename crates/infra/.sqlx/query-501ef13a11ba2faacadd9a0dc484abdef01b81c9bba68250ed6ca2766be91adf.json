@@ -15,7 +15,7 @@
       },
       {
         "ordinal": 2,
-        "name": "parent_id",
+        "name": "external_parent_id",
         "type_info": "Text"
       },
       {
@@ -105,21 +105,16 @@
       },
       {
         "ordinal": 20,
-        "name": "group_uid",
-        "type_info": "Uuid"
-      },
-      {
-        "ordinal": 21,
         "name": "event_type",
         "type_info": "Text"
       },
       {
-        "ordinal": 22,
+        "ordinal": 21,
         "name": "recurring_event_uid",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 23,
+        "ordinal": 22,
         "name": "original_start_time",
         "type_info": "Timestamptz"
       }
@@ -149,7 +144,6 @@
       true,
       true,
       false,
-      true,
       true,
       true,
       true,

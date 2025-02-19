@@ -32,7 +32,7 @@ pub async fn create_event_admin_controller(
 
     let body = body.0;
     let usecase = CreateEventUseCase {
-        parent_id: body.parent_id,
+        external_parent_id: body.external_parent_id,
         external_id: body.external_id,
         title: body.title,
         description: body.description,
@@ -51,7 +51,6 @@ pub async fn create_event_admin_controller(
         original_start_time: body.original_start_time,
         reminders: body.reminders,
         service_id: body.service_id,
-        group_id: body.group_id,
         metadata: body.metadata,
         created: body.created,
         updated: body.updated,
@@ -72,7 +71,7 @@ pub async fn create_event_controller(
 
     let body = body.0;
     let usecase = CreateEventUseCase {
-        parent_id: body.parent_id,
+        external_parent_id: body.external_parent_id,
         external_id: body.external_id,
         title: body.title,
         description: body.description,
@@ -91,7 +90,6 @@ pub async fn create_event_controller(
         user,
         reminders: body.reminders,
         service_id: body.service_id,
-        group_id: body.group_id,
         metadata: body.metadata,
         created: body.created,
         updated: body.updated,
@@ -110,7 +108,7 @@ pub struct CreateEventUseCase {
     pub title: Option<String>,
     pub description: Option<String>,
     pub event_type: Option<String>,
-    pub parent_id: Option<String>,
+    pub external_parent_id: Option<String>,
     pub external_id: Option<String>,
     pub location: Option<String>,
     pub status: CalendarEventStatus,
@@ -124,7 +122,6 @@ pub struct CreateEventUseCase {
     pub original_start_time: Option<DateTime<Utc>>,
     pub reminders: Vec<CalendarEventReminder>,
     pub service_id: Option<ID>,
-    pub group_id: Option<ID>,
     pub metadata: Option<serde_json::Value>,
     pub created: Option<DateTime<Utc>>,
     pub updated: Option<DateTime<Utc>>,
@@ -185,7 +182,7 @@ impl UseCase for CreateEventUseCase {
 
         let mut e = CalendarEvent {
             id: Default::default(),
-            parent_id: self.parent_id.clone(),
+            external_parent_id: self.external_parent_id.clone(),
             external_id: self.external_id.clone(),
             title: self.title.clone(),
             description: self.description.clone(),
@@ -206,7 +203,6 @@ impl UseCase for CreateEventUseCase {
             account_id: self.user.account_id.clone(),
             reminders: self.reminders.clone(),
             service_id: self.service_id.take(),
-            group_id: self.group_id.take(),
             metadata: self.metadata.take(),
             created: self.created.unwrap_or_else(Utc::now),
             updated: self.updated.unwrap_or_else(Utc::now),

@@ -78,13 +78,18 @@ pub mod create_event {
 
         /// Optional parent event ID
         /// This is useful for external applications that need to link Nittei's events to a wider data model (e.g. a project, an order, etc.)
+        /// Example: If the event is a meeting, the parent ID could be the project ID (ObjectId, UUID or any other string)
         #[serde(default)]
         #[ts(optional)]
         #[validate(length(min = 1))]
-        pub parent_id: Option<String>,
+        pub external_parent_id: Option<String>,
 
         /// Optional external event ID
         /// This is useful for external applications that need to link Nittei's events to their own data models
+        /// Example: If the event is a meeting, the external ID could be the meeting ID in the external system
+        ///
+        /// Note that nothing prevents multiple events from having the same external ID
+        /// This can also be a way to link events together
         #[serde(default)]
         #[ts(optional)]
         #[validate(length(min = 1))]
@@ -156,13 +161,6 @@ pub mod create_event {
         #[serde(default)]
         #[ts(optional)]
         pub service_id: Option<ID>,
-
-        /// Optional group UUID
-        /// Allows to group events together (e.g. a project, a team, etc.)
-        /// Default is None
-        #[serde(default)]
-        #[ts(optional)]
-        pub group_id: Option<ID>,
 
         /// Optional metadata (e.g. {"key": "value"})
         #[serde(default)]
@@ -253,17 +251,6 @@ pub mod get_event_by_external_id {
         pub external_id: String,
     }
 
-    /// Query parameters that can be used when getting an event by external ID
-    #[derive(Deserialize, Serialize, TS)]
-    #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "GetEventsByExternalIdQueryParams")]
-    pub struct QueryParams {
-        /// Optional flag to include the events that are from a group with the same external ID
-        #[serde(default)]
-        #[ts(optional)]
-        pub include_groups: Option<bool>,
-    }
-
     #[derive(Serialize, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "GetEventsByExternalIdAPIResponse")]
@@ -331,7 +318,7 @@ pub mod get_events_by_calendars {
 }
 
 pub mod search_events {
-    use nittei_domain::{DateTimeQuery, IDQuery, StringQuery};
+    use nittei_domain::{DateTimeQuery, StringQuery};
 
     use super::*;
 
@@ -351,11 +338,7 @@ pub mod search_events {
 
         /// Optional query on parent ID (which is a string as it's an ID from an external system)
         #[ts(optional)]
-        pub parent_id: Option<StringQuery>,
-
-        /// Optional query on group ID
-        #[ts(optional)]
-        pub group_id: Option<IDQuery>,
+        pub external_parent_id: Option<StringQuery>,
 
         /// Optional query on start time - "lower than or equal", or "great than or equal" (UTC)
         #[ts(optional)]
@@ -532,13 +515,6 @@ pub mod update_event {
         #[serde(default)]
         #[ts(optional)]
         pub service_id: Option<ID>,
-
-        /// Optional group UUID
-        /// Allows to group events together (e.g. a project, a team, etc.)
-        /// Default is None
-        #[serde(default)]
-        #[ts(optional)]
-        pub group_id: Option<ID>,
 
         /// Optional list of exclusion dates for the recurrence rule
         #[serde(default)]
