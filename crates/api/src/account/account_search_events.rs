@@ -21,7 +21,7 @@ pub async fn account_search_events_controller(
     let body = body.0;
     let usecase = AccountSearchEventsUseCase {
         account_id: account.id,
-        external_parent_id: body.parent_id,
+        external_parent_id: body.external_parent_id,
         start_time: body.start_time,
         end_time: body.end_time,
         status: body.status,
