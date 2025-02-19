@@ -11,6 +11,7 @@ pub struct UserDTO {
     pub id: ID,
 
     /// External id
+    #[ts(optional)]
     pub external_id: Option<String>,
 
     /// Metadata (e.g. {"key": "value"})

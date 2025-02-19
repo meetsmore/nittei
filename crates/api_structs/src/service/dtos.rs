@@ -23,6 +23,7 @@ pub struct ServiceResourceDTO {
     /// Closest booking time in minutes
     pub closest_booking_time: i64,
     /// Optional furthest booking time in minutes
+    #[ts(optional)]
     pub furthest_booking_time: Option<i64>,
 }
 

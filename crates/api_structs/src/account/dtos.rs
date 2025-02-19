@@ -10,6 +10,7 @@ pub struct AccountDTO {
     /// The unique identifier for the account
     pub id: ID,
     /// Optional public key for JWT verification
+    #[ts(optional)]
     pub public_jwt_key: Option<PEMKey>,
     /// Account settings
     pub settings: AccountSettingsDTO,
