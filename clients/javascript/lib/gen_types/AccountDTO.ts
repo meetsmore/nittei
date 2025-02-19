@@ -14,7 +14,7 @@ export type AccountDTO = {
   /**
    * Optional public key for JWT verification
    */
-  publicJwtKey: PEMKey | null
+  publicJwtKey?: PEMKey
   /**
    * Account settings
    */

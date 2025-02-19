@@ -13,7 +13,7 @@ export type UserDTO = {
   /**
    * External id
    */
-  externalId: string | null
+  externalId?: string
   /**
    * Metadata (e.g. {"key": "value"})
    */
