@@ -19,7 +19,13 @@ pub use calendar::{Calendar, CalendarSettings, SyncedCalendar};
 pub use chrono::{Month, Weekday};
 pub use chrono_tz::Tz;
 pub use date::format_date;
-pub use event::{CalendarEvent, CalendarEventReminder, CalendarEventStatus, SyncedCalendarEvent};
+pub use event::{
+    CalendarEvent,
+    CalendarEventReminder,
+    CalendarEventSort,
+    CalendarEventStatus,
+    SyncedCalendarEvent,
+};
 pub use event_instance::{
     get_free_busy,
     CompatibleInstances,

@@ -21,7 +21,6 @@ pub struct MetadataFindQuery {
 /// This can only be used for fields that are UUIDs
 ///
 /// This effectively mutates the query_builder !
-#[allow(dead_code)]
 pub fn apply_id_query(
     query_builder: &mut sqlx::QueryBuilder<'_, Postgres>,
     field_name: &str,
