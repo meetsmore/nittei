@@ -77,7 +77,7 @@ pub struct SearchEventsUseCase {
     pub sort: Option<CalendarEventSort>,
 
     /// Optional limit
-    pub limit: Option<u32>,
+    pub limit: Option<u16>,
 }
 
 #[derive(Debug)]

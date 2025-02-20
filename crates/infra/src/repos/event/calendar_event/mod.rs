@@ -26,7 +26,7 @@ pub struct SearchEventsForUserParams {
     pub calendar_ids: Option<Vec<ID>>,
     pub search_events_params: SearchEventsParams,
     pub sort: Option<CalendarEventSort>,
-    pub limit: Option<u32>,
+    pub limit: Option<u16>,
 }
 
 #[derive(Debug, Clone)]
@@ -34,7 +34,7 @@ pub struct SearchEventsForAccountParams {
     pub account_id: ID,
     pub search_events_params: SearchEventsParams,
     pub sort: Option<CalendarEventSort>,
-    pub limit: Option<u32>,
+    pub limit: Option<u16>,
 }
 
 #[derive(Debug, Clone)]

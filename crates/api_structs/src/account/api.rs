@@ -167,9 +167,9 @@ pub mod account_search_events {
         #[ts(optional)]
         pub sort: Option<CalendarEventSort>,
 
-        /// Optional limit to use when searching events
+        /// Optional limit to use when searching events (u16)
         #[ts(optional)]
-        pub limit: Option<u32>,
+        pub limit: Option<u16>,
     }
 
     /// Request body for searching events for a whole account (across all users)
