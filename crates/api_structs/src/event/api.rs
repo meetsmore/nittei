@@ -279,7 +279,6 @@ pub mod get_events_by_calendars {
 
     /// Path parameters for getting events by calendars
     #[derive(Deserialize, Serialize)]
-    #[serde(rename_all = "camelCase")]
     pub struct PathParams {
         /// ID of the user to fetch the events
         pub user_id: ID,
