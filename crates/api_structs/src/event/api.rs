@@ -277,6 +277,14 @@ pub mod get_events_by_calendars {
         helpers::deserialize_uuids_list::deserialize_stringified_uuids_list,
     };
 
+    /// Path parameters for getting events by calendars
+    #[derive(Deserialize, Serialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct PathParams {
+        /// ID of the user to fetch the events
+        pub user_id: ID,
+    }
+
     /// Query parameters for getting events by calendars
     #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
