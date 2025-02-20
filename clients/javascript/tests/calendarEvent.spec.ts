@@ -522,7 +522,9 @@ describe('CalendarEvent API', () => {
 
       it('should be able to search for events (only user)', async () => {
         const res = await adminClient.events.searchEvents({
-          userId: userId,
+          filter: {
+            userId: userId,
+          },
         })
         expect(res.events.length).toBe(3)
         expect(res.events).toEqual(
@@ -542,8 +544,10 @@ describe('CalendarEvent API', () => {
 
       it('should be able to search for events (calendarId)', async () => {
         const res = await adminClient.events.searchEvents({
-          userId: userId,
-          calendarIds: [calendarId2],
+          filter: {
+            userId: userId,
+            calendarIds: [calendarId2],
+          },
         })
         expect(res.events.length).toBe(1)
         expect(res.events[0].id).toBe(eventId2)
@@ -551,11 +555,13 @@ describe('CalendarEvent API', () => {
 
       it('should be able to search for events (startTime)', async () => {
         const res = await adminClient.events.searchEvents({
-          userId: userId,
-          startTime: {
-            range: {
-              lte: new Date(2000),
-              gte: new Date(500),
+          filter: {
+            userId: userId,
+            startTime: {
+              range: {
+                lte: new Date(2000),
+                gte: new Date(500),
+              },
             },
           },
         })
@@ -564,10 +570,12 @@ describe('CalendarEvent API', () => {
 
       it('should receive nothing when querying on wrong startTime', async () => {
         const res = await adminClient.events.searchEvents({
-          userId: userId,
-          startTime: {
-            range: {
-              gte: new Date(2000),
+          filter: {
+            userId: userId,
+            startTime: {
+              range: {
+                gte: new Date(2000),
+              },
             },
           },
         })
@@ -576,10 +584,12 @@ describe('CalendarEvent API', () => {
 
       it('should be able to search for events (endTime)', async () => {
         const res = await adminClient.events.searchEvents({
-          userId: userId,
-          endTime: {
-            range: {
-              lte: new Date(2000),
+          filter: {
+            userId: userId,
+            endTime: {
+              range: {
+                lte: new Date(2000),
+              },
             },
           },
         })
@@ -588,10 +598,12 @@ describe('CalendarEvent API', () => {
 
       it('should receive nothing when querying on wrong endTime', async () => {
         const res = await adminClient.events.searchEvents({
-          userId: userId,
-          endTime: {
-            range: {
-              lte: new Date(500),
+          filter: {
+            userId: userId,
+            endTime: {
+              range: {
+                lte: new Date(500),
+              },
             },
           },
         })
@@ -600,9 +612,11 @@ describe('CalendarEvent API', () => {
 
       it('should be able to search for events (status)', async () => {
         const res = await adminClient.events.searchEvents({
-          userId: userId,
-          status: {
-            in: ['tentative'],
+          filter: {
+            userId: userId,
+            status: {
+              in: ['tentative'],
+            },
           },
         })
         expect(res.events.length).toBe(2)
@@ -610,9 +624,11 @@ describe('CalendarEvent API', () => {
 
       it('should be able to search for events (multiple status)', async () => {
         const res = await adminClient.events.searchEvents({
-          userId: userId,
-          status: {
-            in: ['confirmed', 'tentative'],
+          filter: {
+            userId: userId,
+            status: {
+              in: ['confirmed', 'tentative'],
+            },
           },
         })
         expect(res.events.length).toBe(3)
@@ -620,9 +636,11 @@ describe('CalendarEvent API', () => {
 
       it('should be able to search by parentId (equality)', async () => {
         const res = await adminClient.events.searchEvents({
-          userId: userId,
-          externalParentId: {
-            eq: 'parentId',
+          filter: {
+            userId: userId,
+            externalParentId: {
+              eq: 'parentId',
+            },
           },
         })
         expect(res.events.length).toBe(1)
@@ -631,9 +649,11 @@ describe('CalendarEvent API', () => {
 
       it('should be able to search by parentId (existence)', async () => {
         const res = await adminClient.events.searchEvents({
-          userId: userId,
-          externalParentId: {
-            exists: true,
+          filter: {
+            userId: userId,
+            externalParentId: {
+              exists: true,
+            },
           },
         })
         expect(res.events.length).toBe(1)
@@ -642,13 +662,15 @@ describe('CalendarEvent API', () => {
 
       it('should be able to search by parentId and startTime', async () => {
         const res = await adminClient.events.searchEvents({
-          userId: userId,
-          externalParentId: {
-            eq: 'parentId',
-          },
-          startTime: {
-            range: {
-              gte: new Date(500),
+          filter: {
+            userId: userId,
+            externalParentId: {
+              eq: 'parentId',
+            },
+            startTime: {
+              range: {
+                gte: new Date(500),
+              },
             },
           },
         })
@@ -658,13 +680,15 @@ describe('CalendarEvent API', () => {
 
       it('should fail to find something when searching by parentId and wrong startTime', async () => {
         const res = await adminClient.events.searchEvents({
-          userId: userId,
-          externalParentId: {
-            eq: 'parentId',
-          },
-          startTime: {
-            range: {
-              gte: new Date(2000),
+          filter: {
+            userId: userId,
+            externalParentId: {
+              eq: 'parentId',
+            },
+            startTime: {
+              range: {
+                gte: new Date(2000),
+              },
             },
           },
         })
@@ -673,10 +697,12 @@ describe('CalendarEvent API', () => {
 
       it('should be able to search by updatedAt', async () => {
         const res = await adminClient.events.searchEvents({
-          userId: userId,
-          updatedAt: {
-            range: {
-              gte: new Date(0),
+          filter: {
+            userId: userId,
+            updatedAt: {
+              range: {
+                gte: new Date(0),
+              },
             },
           },
         })
@@ -685,10 +711,12 @@ describe('CalendarEvent API', () => {
 
       it('should not find anything when searching by wrong updatedAt', async () => {
         const res = await adminClient.events.searchEvents({
-          userId: userId,
-          updatedAt: {
-            range: {
-              gte: new Date(new Date().getTime() + 10000),
+          filter: {
+            userId: userId,
+            updatedAt: {
+              range: {
+                gte: new Date(new Date().getTime() + 10000),
+              },
             },
           },
         })
@@ -697,9 +725,11 @@ describe('CalendarEvent API', () => {
 
       it('should receive empty array when querying on wrong metadata', async () => {
         const res = await adminClient.events.searchEvents({
-          userId: userId,
-          metadata: {
-            string: 'stringg',
+          filter: {
+            userId: userId,
+            metadata: {
+              string: 'stringg',
+            },
           },
         })
         expect(res.events.length).toBe(0)
@@ -707,12 +737,14 @@ describe('CalendarEvent API', () => {
 
       it('should be able to search for events (metadata)', async () => {
         const res = await adminClient.events.searchEvents({
-          userId: userId,
-          metadata: {
-            string: 'string',
-            number: 1,
-            boolean: true,
-            null: null,
+          filter: {
+            userId: userId,
+            metadata: {
+              string: 'string',
+              number: 1,
+              boolean: true,
+              null: null,
+            },
           },
         })
         expect(res.events.length).toBe(1)

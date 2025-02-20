@@ -19,6 +19,7 @@ use super::{
 };
 use crate::repos::{
     apply_datetime_query,
+    apply_id_query,
     apply_string_query,
     shared::query_structs::MetadataFindQuery,
 };
@@ -625,6 +626,23 @@ impl IEventRepo for PostgresEventRepo {
             query.push_bind(Json(metadata.clone()));
         }
 
+        // Sort if needed
+        if let Some(sort) = params.sort {
+            query.push(" ORDER BY ");
+            query.push(match sort {
+                nittei_domain::CalendarEventSort::StartTimeAsc => "start_time ASC",
+                nittei_domain::CalendarEventSort::StartTimeDesc => "start_time DESC",
+                nittei_domain::CalendarEventSort::EndTimeAsc => "end_time ASC",
+                nittei_domain::CalendarEventSort::EndTimeDesc => "end_time DESC",
+            });
+        }
+
+        // Limit if needed
+        if let Some(limit) = params.limit {
+            query.push(" LIMIT ");
+            query.push(format!("{}", limit));
+        }
+
         let rows = query.build().fetch_all(&self.pool).await.inspect_err(|e| {
             error!("Search events failed. DB returned error: {:?}", e);
         })?;
@@ -660,6 +678,8 @@ impl IEventRepo for PostgresEventRepo {
         );
 
         query.push_bind::<Uuid>(params.account_id.into());
+
+        apply_id_query(&mut query, "user_uid", &params.search_events_params.user_id);
 
         apply_string_query(
             &mut query,
@@ -699,6 +719,23 @@ impl IEventRepo for PostgresEventRepo {
         if let Some(metadata) = params.search_events_params.metadata {
             query.push(" AND e.metadata @> ");
             query.push_bind(Json(metadata.clone()));
+        }
+
+        // Sort if needed
+        if let Some(sort) = params.sort {
+            query.push(" ORDER BY ");
+            query.push(match sort {
+                nittei_domain::CalendarEventSort::StartTimeAsc => "start_time ASC",
+                nittei_domain::CalendarEventSort::StartTimeDesc => "start_time DESC",
+                nittei_domain::CalendarEventSort::EndTimeAsc => "end_time ASC",
+                nittei_domain::CalendarEventSort::EndTimeDesc => "end_time DESC",
+            });
+        }
+
+        // Limit if needed
+        if let Some(limit) = params.limit {
+            query.push(" LIMIT ");
+            query.push(format!("{}", limit));
         }
 
         let rows = query.build().fetch_all(&self.pool).await.inspect_err(|e| {

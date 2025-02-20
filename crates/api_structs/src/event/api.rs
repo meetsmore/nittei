@@ -325,15 +325,33 @@ pub mod get_events_by_calendars {
 }
 
 pub mod search_events {
-    use nittei_domain::{DateTimeQuery, StringQuery};
+    use nittei_domain::{CalendarEventSort, DateTimeQuery, StringQuery};
 
     use super::*;
 
-    /// Query parameters for searching events
+    /// Request body for searching events for one user
     #[derive(Deserialize, Serialize, Validate, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "SearchEventsRequestBody")]
     pub struct RequestBody {
+        /// Filter to use for searching events
+        pub filter: RequestBodyFilter,
+
+        /// Optional sort to use when searching events
+        #[ts(optional)]
+        pub sort: Option<CalendarEventSort>,
+
+        /// Optional limit to use when searching events (u16)
+        #[ts(optional)]
+        pub limit: Option<u16>,
+    }
+
+    /// Part of the Request body for searching events for a user
+    /// This is the filter
+    #[derive(Deserialize, Serialize, Validate, TS)]
+    #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "SearchEventsRequestBodyFilter")]
+    pub struct RequestBodyFilter {
         /// User ID
         pub user_id: ID,
 

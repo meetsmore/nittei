@@ -1,6 +1,6 @@
 use actix_web::{web, HttpRequest, HttpResponse};
 use nittei_api_structs::{dtos::CalendarEventDTO, search_events::*};
-use nittei_domain::{DateTimeQuery, StringQuery, ID};
+use nittei_domain::{CalendarEventSort, DateTimeQuery, IDQuery, StringQuery, ID};
 use nittei_infra::{NitteiContext, SearchEventsForUserParams, SearchEventsParams};
 
 use crate::{
@@ -21,15 +21,17 @@ pub async fn search_events_controller(
     let body = body.0;
     let usecase = SearchEventsUseCase {
         account_id: account.id,
-        user_id: body.user_id,
-        calendar_ids: body.calendar_ids,
-        external_parent_id: body.external_parent_id,
-        start_time: body.start_time,
-        end_time: body.end_time,
-        event_type: body.event_type,
-        status: body.status,
-        updated_at: body.updated_at,
-        metadata: body.metadata,
+        user_id: body.filter.user_id,
+        calendar_ids: body.filter.calendar_ids,
+        external_parent_id: body.filter.external_parent_id,
+        start_time: body.filter.start_time,
+        end_time: body.filter.end_time,
+        event_type: body.filter.event_type,
+        status: body.filter.status,
+        updated_at: body.filter.updated_at,
+        metadata: body.filter.metadata,
+        sort: body.sort,
+        limit: body.limit,
     };
 
     execute(usecase, &ctx)
@@ -70,6 +72,12 @@ pub struct SearchEventsUseCase {
 
     /// Optional list of metadata key-value pairs
     pub metadata: Option<serde_json::Value>,
+
+    /// Optional sort
+    pub sort: Option<CalendarEventSort>,
+
+    /// Optional limit
+    pub limit: Option<u16>,
 }
 
 #[derive(Debug)]
@@ -145,6 +153,8 @@ impl UseCase for SearchEventsUseCase {
                 user_id: self.user_id.clone(),
                 calendar_ids: self.calendar_ids.take(),
                 search_events_params: SearchEventsParams {
+                    // Force user_id to be the same as the one in the search
+                    user_id: Some(IDQuery::Eq(self.user_id.clone())),
                     external_parent_id: self.external_parent_id.take(),
                     start_time: self.start_time.take(),
                     end_time: self.end_time.take(),
@@ -153,6 +163,8 @@ impl UseCase for SearchEventsUseCase {
                     updated_at: self.updated_at.take(),
                     metadata: self.metadata.take(),
                 },
+                sort: self.sort.take(),
+                limit: self.limit.take(),
             })
             .await;
 

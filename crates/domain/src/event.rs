@@ -52,6 +52,22 @@ impl TryFrom<String> for CalendarEventStatus {
     }
 }
 
+/// Enum used for know which sort to use when searching events
+#[derive(Default, Deserialize, Serialize, Debug, Clone, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export, rename = "CalendarEventSort")]
+pub enum CalendarEventSort {
+    /// Sort by start time (asc)
+    #[default]
+    StartTimeAsc,
+    /// Sort by start time (desc)
+    StartTimeDesc,
+    /// Sort by end time (asc)
+    EndTimeAsc,
+    /// Sort by end time (desc)
+    EndTimeDesc,
+}
+
 #[derive(Debug, Clone, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CalendarEvent {

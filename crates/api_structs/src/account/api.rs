@@ -148,7 +148,7 @@ pub mod remove_account_integration {
 
 /// Request body for searching events for a whole account (across all users)
 pub mod account_search_events {
-    use nittei_domain::{DateTimeQuery, IDQuery, StringQuery};
+    use nittei_domain::{CalendarEventSort, DateTimeQuery, IDQuery, StringQuery};
     use serde::{Deserialize, Serialize};
     use ts_rs::TS;
     use validator::Validate;
@@ -160,6 +160,23 @@ pub mod account_search_events {
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "AccountSearchEventsRequestBody")]
     pub struct RequestBody {
+        /// Filter to use for searching events
+        pub filter: RequestBodyFilter,
+
+        /// Optional sort to use when searching events
+        #[ts(optional)]
+        pub sort: Option<CalendarEventSort>,
+
+        /// Optional limit to use when searching events (u16)
+        #[ts(optional)]
+        pub limit: Option<u16>,
+    }
+
+    /// Request body for searching events for a whole account (across all users)
+    #[derive(Deserialize, Serialize, Validate, TS)]
+    #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "AccountSearchEventsRequestBodyFilter")]
+    pub struct RequestBodyFilter {
         /// Optional query on user ID, or list of user IDs
         #[ts(optional)]
         pub user_id: Option<IDQuery>,

@@ -118,7 +118,7 @@ describe('Account API', () => {
       const metadataEventRes1 = await adminClient.events.create(userId, {
         calendarId,
         duration: 1000,
-        startTime: new Date(1000),
+        startTime: new Date(1100),
         metadata: {
           string: 'string',
           number: 1,
@@ -137,7 +137,7 @@ describe('Account API', () => {
       const eventRes2 = await adminClient.events.create(userId, {
         calendarId: calendarId2,
         duration: 1000,
-        startTime: new Date(1000),
+        startTime: new Date(1200),
         status: 'confirmed',
         externalParentId: 'parentId',
       })
@@ -147,10 +147,12 @@ describe('Account API', () => {
 
     it('should be able to search for events in the account (by startTime, for multiple users)', async () => {
       const res = await adminClient.account.searchEventsInAccount({
-        startTime: {
-          range: {
-            gte: new Date(0),
-            lte: new Date(2000),
+        filter: {
+          startTime: {
+            range: {
+              gte: new Date(0),
+              lte: new Date(2000),
+            },
           },
         },
       })
@@ -168,6 +170,55 @@ describe('Account API', () => {
           }),
         ])
       )
+    })
+
+    it('should be able to search for events in the account (by startTime, for multiple users, sorted)', async () => {
+      const res = await adminClient.account.searchEventsInAccount({
+        filter: {
+          startTime: {
+            range: {
+              gte: new Date(0),
+              lte: new Date(2000),
+            },
+          },
+        },
+        sort: 'startTimeAsc',
+      })
+      expect(res.events.length).toBe(3)
+      // Expect this order explicitly as we sort by startTimeAsc
+      expect(res.events).toEqual([
+        expect.objectContaining({
+          id: eventId1,
+        }),
+        expect.objectContaining({
+          id: metadataEventId1,
+        }),
+        expect.objectContaining({
+          id: eventId2,
+        }),
+      ])
+    })
+
+    it('should be able to search for events in the account (by startTime, for multiple users, sorted, limited)', async () => {
+      const res = await adminClient.account.searchEventsInAccount({
+        filter: {
+          startTime: {
+            range: {
+              gte: new Date(0),
+              lte: new Date(2000),
+            },
+          },
+        },
+        sort: 'startTimeDesc',
+        limit: 1,
+      })
+      expect(res.events.length).toBe(1)
+      // Expect only the last one, as we explicitly sorted by startTimeDesc and limited to 1
+      expect(res.events).toEqual([
+        expect.objectContaining({
+          id: eventId2,
+        }),
+      ])
     })
   })
 })
