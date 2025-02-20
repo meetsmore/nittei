@@ -15,7 +15,7 @@ export type SearchEventsRequestBody = {
    */
   sort?: CalendarEventSort
   /**
-   * Optional limit to use when searching events
+   * Optional limit to use when searching events (u16)
    */
   limit?: number
 }
