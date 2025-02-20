@@ -21,6 +21,7 @@ use crate::{
 
 pub async fn get_events_by_calendars_controller(
     http_req: HttpRequest,
+    path_params: web::Path<PathParams>,
     query: web::Query<QueryParams>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
@@ -33,6 +34,7 @@ pub async fn get_events_by_calendars_controller(
 
     let usecase = GetEventsByCalendarsUseCase {
         account_id: account.id,
+        user_id: path_params.user_id.clone(),
         calendar_ids,
         start_time: query.start_time,
         end_time: query.end_time,
@@ -47,6 +49,7 @@ pub async fn get_events_by_calendars_controller(
 #[derive(Debug)]
 pub struct GetEventsByCalendarsUseCase {
     pub account_id: ID,
+    pub user_id: ID,
     pub calendar_ids: Vec<ID>,
     pub start_time: DateTime<Utc>,
     pub end_time: DateTime<Utc>,
@@ -88,30 +91,46 @@ impl UseCase for GetEventsByCalendarsUseCase {
     const NAME: &'static str = "GetEventsByCalendars";
 
     async fn execute(&mut self, ctx: &NitteiContext) -> Result<UseCaseResponse, UseCaseError> {
-        let calendars = ctx
-            .repos
-            .calendars
-            .find_multiple(self.calendar_ids.iter().collect::<Vec<_>>())
-            .await
-            .map_err(|_| UseCaseError::InternalError)?;
+        let calendars = if self.calendar_ids.is_empty() {
+            // If no calendar_ids are provided, fetch all calendars for the user
+            ctx.repos
+                .calendars
+                .find_by_user(&self.user_id)
+                .await
+                .map_err(|_| {
+                    error!("Error while fetching calendars by user_id");
+                    UseCaseError::InternalError
+                })?
+        } else {
+            // Else, fetch the calendars by the provided calendar_ids
+            let calendars = ctx
+                .repos
+                .calendars
+                .find_multiple(self.calendar_ids.iter().collect::<Vec<_>>())
+                .await
+                .map_err(|_| UseCaseError::InternalError)?;
 
-        // Check that all calendars exist and belong to the same account
-        if calendars.is_empty()
-            || calendars.len() != self.calendar_ids.len()
-            || !calendars
-                .iter()
-                .all(|cal| cal.account_id == self.account_id)
-        {
-            return Err(UseCaseError::NotFound(
-                "Calendars not found".to_string(),
-                self.calendar_ids
+            // Check that all calendars exist and belong to the same account
+            if calendars.is_empty()
+                || calendars.len() != self.calendar_ids.len()
+                || !calendars
                     .iter()
-                    .map(|c| c.to_string())
-                    .collect::<Vec<String>>()
-                    .join(","),
-            ));
-        }
+                    .all(|cal| cal.account_id == self.account_id)
+            {
+                return Err(UseCaseError::NotFound(
+                    "Calendars not found".to_string(),
+                    self.calendar_ids
+                        .iter()
+                        .map(|c| c.to_string())
+                        .collect::<Vec<String>>()
+                        .join(","),
+                ));
+            }
 
+            calendars
+        };
+
+        // Create a map of calendar_id to calendar
         let calendars_map = calendars
             .into_iter()
             .map(|cal| (cal.id.clone(), cal))
@@ -122,11 +141,14 @@ impl UseCase for GetEventsByCalendarsUseCase {
             return Err(UseCaseError::InvalidTimespan);
         }
 
+        // Get the events for the calendars
         let res = ctx
             .repos
             .events
             .find_by_calendars(&self.calendar_ids, &timespan)
             .await;
+
+        // If the events are found, expand them and remove the exceptions
         match res {
             Ok(events) => {
                 // Create a map of recurrence_id to events (exceptions)
