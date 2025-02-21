@@ -8,5 +8,5 @@ export type CalendarEventSort =
   | 'startTimeDesc'
   | 'endTimeAsc'
   | 'endTimeDesc'
-  | 'createdTimeAsc'
-  | 'createdTimeDesc'
+  | 'createdAsc'
+  | 'createdDesc'

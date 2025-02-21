@@ -67,9 +67,9 @@ pub enum CalendarEventSort {
     /// Sort by end time (desc)
     EndTimeDesc,
     // Sort by created time (asc)
-    CreatedTimeAsc,
+    CreatedAsc,
     // Sort by created time (desc)
-    CreatedTimeDesc,
+    CreatedDesc,
 }
 
 #[derive(Debug, Clone, Default, Serialize)]
