@@ -634,6 +634,8 @@ impl IEventRepo for PostgresEventRepo {
                 nittei_domain::CalendarEventSort::StartTimeDesc => "start_time DESC",
                 nittei_domain::CalendarEventSort::EndTimeAsc => "end_time ASC",
                 nittei_domain::CalendarEventSort::EndTimeDesc => "end_time DESC",
+                nittei_domain::CalendarEventSort::CreatedTimeAsc => "created ASC",
+                nittei_domain::CalendarEventSort::CreatedTimeDesc => "created DESC",
             });
         }
 
@@ -729,6 +731,8 @@ impl IEventRepo for PostgresEventRepo {
                 nittei_domain::CalendarEventSort::StartTimeDesc => "start_time DESC",
                 nittei_domain::CalendarEventSort::EndTimeAsc => "end_time ASC",
                 nittei_domain::CalendarEventSort::EndTimeDesc => "end_time DESC",
+                nittei_domain::CalendarEventSort::CreatedTimeAsc => "created ASC",
+                nittei_domain::CalendarEventSort::CreatedTimeDesc => "created DESC",
             });
         }
 
