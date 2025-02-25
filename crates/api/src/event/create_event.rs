@@ -1,13 +1,13 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use chrono::{DateTime, TimeDelta, Utc};
 use nittei_api_structs::create_event::*;
 use nittei_domain::{
     CalendarEvent,
     CalendarEventReminder,
     CalendarEventStatus,
+    ID,
     RRuleOptions,
     User,
-    ID,
 };
 use nittei_infra::NitteiContext;
 
@@ -16,8 +16,8 @@ use crate::{
     error::NitteiError,
     event::subscribers::CreateSyncedEventsOnEventCreated,
     shared::{
-        auth::{account_can_modify_user, protect_account_route, protect_route, Permission},
-        usecase::{execute, execute_with_policy, PermissionBoundary, Subscriber, UseCase},
+        auth::{Permission, account_can_modify_user, protect_account_route, protect_route},
+        usecase::{PermissionBoundary, Subscriber, UseCase, execute, execute_with_policy},
     },
 };
 

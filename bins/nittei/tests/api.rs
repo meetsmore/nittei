@@ -14,6 +14,7 @@ use nittei_sdk::{
     GetEventsInstancesInput,
     GetServiceBookingSlotsInput,
     GetUserFreeBusyInput,
+    ID,
     KVMetadata,
     MetadataFindInput,
     MultipleFreeBusyRequestBody,
@@ -23,7 +24,6 @@ use nittei_sdk::{
     UpdateEventInput,
     UpdateScheduleInput,
     UpdateServiceUserInput,
-    ID,
 };
 
 #[actix_web::main]
@@ -37,11 +37,12 @@ async fn test_status_ok() {
 #[test]
 async fn test_create_account() {
     let (app, sdk, _) = spawn_app().await;
-    assert!(sdk
-        .account
-        .create(&app.config.create_account_secret_code)
-        .await
-        .is_ok());
+    assert!(
+        sdk.account
+            .create(&app.config.create_account_secret_code)
+            .await
+            .is_ok()
+    );
 }
 
 #[actix_web::main]
@@ -230,17 +231,21 @@ async fn test_crud_schedule() {
     assert_eq!(get_schedule.rules.len(), 0);
     assert_eq!(get_schedule.timezone, chrono_tz::Europe::Oslo.to_string());
 
-    assert!(admin_client
-        .schedule
-        .delete(schedule.id.clone())
-        .await
-        .is_ok());
+    assert!(
+        admin_client
+            .schedule
+            .delete(schedule.id.clone())
+            .await
+            .is_ok()
+    );
 
-    assert!(admin_client
-        .schedule
-        .get(schedule.id.clone())
-        .await
-        .is_err());
+    assert!(
+        admin_client
+            .schedule
+            .get(schedule.id.clone())
+            .await
+            .is_err()
+    );
 }
 
 #[actix_web::main]
@@ -430,18 +435,22 @@ async fn test_crud_calendars() {
     assert_eq!(calendar_with_new_settings.settings.week_start, week_start);
 
     // Delete calendar
-    assert!(admin_client
-        .calendar
-        .delete(calendar.id.clone())
-        .await
-        .is_ok());
+    assert!(
+        admin_client
+            .calendar
+            .delete(calendar.id.clone())
+            .await
+            .is_ok()
+    );
 
     // Get now returns 404
-    assert!(admin_client
-        .calendar
-        .get(calendar.id.clone())
-        .await
-        .is_err());
+    assert!(
+        admin_client
+            .calendar
+            .get(calendar.id.clone())
+            .await
+            .is_err()
+    );
 }
 
 #[actix_web::main]
@@ -526,31 +535,33 @@ async fn test_crud_events() {
         .unwrap()
         .instances;
     assert_eq!(event_instances.len(), 1);
-    assert!(admin_client
-        .event
-        .update(UpdateEventInput {
-            event_id: event.id.clone(),
-            title: None,
-            description: None,
-            event_type: None,
-            location: None,
-            status: None,
-            all_day: None,
-            external_parent_id: None,
-            external_id: None,
-            busy: None,
-            duration: None,
-            reminders: None,
-            recurrence: None,
-            exdates: Some(vec![DateTime::from_timestamp_millis(0).unwrap()]),
-            recurring_event_id: None,
-            original_start_time: None,
-            service_id: None,
-            start_time: None,
-            metadata: None,
-        })
-        .await
-        .is_ok());
+    assert!(
+        admin_client
+            .event
+            .update(UpdateEventInput {
+                event_id: event.id.clone(),
+                title: None,
+                description: None,
+                event_type: None,
+                location: None,
+                status: None,
+                all_day: None,
+                external_parent_id: None,
+                external_id: None,
+                busy: None,
+                duration: None,
+                reminders: None,
+                recurrence: None,
+                exdates: Some(vec![DateTime::from_timestamp_millis(0).unwrap()]),
+                recurring_event_id: None,
+                original_start_time: None,
+                service_id: None,
+                start_time: None,
+                metadata: None,
+            })
+            .await
+            .is_ok()
+    );
     let event_instances = admin_client
         .event
         .get_instances(GetEventsInstancesInput {
@@ -692,11 +703,13 @@ async fn test_crud_service() {
     assert!(booking_slots.is_empty());
 
     // Delete service
-    assert!(admin_client
-        .service
-        .delete(service.id.clone())
-        .await
-        .is_ok());
+    assert!(
+        admin_client
+            .service
+            .delete(service.id.clone())
+            .await
+            .is_ok()
+    );
 
     // Get now returns 404
     assert!(admin_client.service.get(service.id.clone()).await.is_err());

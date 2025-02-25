@@ -1,13 +1,13 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use nittei_api_structs::remove_busy_calendar::*;
-use nittei_domain::{Account, BusyCalendarProvider, IntegrationProvider, ID};
+use nittei_domain::{Account, BusyCalendarProvider, ID, IntegrationProvider};
 use nittei_infra::{BusyCalendarIdentifier, ExternalBusyCalendarIdentifier, NitteiContext};
 
 use crate::{
     error::NitteiError,
     shared::{
         auth::protect_account_route,
-        usecase::{execute, UseCase},
+        usecase::{UseCase, execute},
     },
 };
 

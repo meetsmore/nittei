@@ -5,10 +5,10 @@ use nittei_domain::{
     CalendarEvent,
     CalendarEventSort,
     DateTimeQuery,
+    ID,
     IDQuery,
     StringQuery,
     TimeSpan,
-    ID,
 };
 pub use postgres::PostgresEventRepo;
 
@@ -118,9 +118,9 @@ pub trait IEventRepo: Send + Sync {
 #[cfg(test)]
 mod tests {
     use chrono::{DateTime, TimeDelta, Utc};
-    use nittei_domain::{Account, Calendar, CalendarEvent, Entity, Service, TimeSpan, User, ID};
+    use nittei_domain::{Account, Calendar, CalendarEvent, Entity, ID, Service, TimeSpan, User};
 
-    use crate::{setup_context, NitteiContext};
+    use crate::{NitteiContext, setup_context};
 
     fn generate_default_event(account_id: &ID, calendar_id: &ID, user_id: &ID) -> CalendarEvent {
         CalendarEvent {
@@ -209,14 +209,15 @@ mod tests {
         assert!(ctx.repos.events.save(&event).await.is_ok());
 
         // Find
-        assert!(ctx
-            .repos
-            .events
-            .find(&event.id)
-            .await
-            .unwrap()
-            .expect("To be event")
-            .eq(&event));
+        assert!(
+            ctx.repos
+                .events
+                .find(&event.id)
+                .await
+                .unwrap()
+                .expect("To be event")
+                .eq(&event)
+        );
     }
 
     #[tokio::test]
@@ -480,9 +481,11 @@ mod tests {
             actual_events_in_timespan.len()
         );
         for actual_event in actual_events_in_timespan {
-            assert!(events_in_calendar_and_timespan
-                .iter()
-                .any(|e| e.id() == actual_event.id()));
+            assert!(
+                events_in_calendar_and_timespan
+                    .iter()
+                    .any(|e| e.id() == actual_event.id())
+            );
         }
 
         let events_in_calendar = ctx
@@ -494,9 +497,11 @@ mod tests {
 
         assert_eq!(actual_events_in_calendar.len(), events_in_calendar.len());
         for actual_event in actual_events_in_calendar {
-            assert!(events_in_calendar
-                .iter()
-                .any(|e| e.id() == actual_event.id()));
+            assert!(
+                events_in_calendar
+                    .iter()
+                    .any(|e| e.id() == actual_event.id())
+            );
         }
     }
 
@@ -809,9 +814,11 @@ mod tests {
             actual_events_in_timespan.len()
         );
         for actual_event in actual_events_in_timespan {
-            assert!(events_in_service_and_timespan
-                .iter()
-                .any(|e| e.id() == actual_event.id()));
+            assert!(
+                events_in_service_and_timespan
+                    .iter()
+                    .any(|e| e.id() == actual_event.id())
+            );
         }
 
         let events_in_service_with_no_users = ctx

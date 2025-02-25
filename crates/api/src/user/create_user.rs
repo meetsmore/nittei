@@ -1,14 +1,14 @@
-use actix_web::{web, HttpRequest, HttpResponse};
-use futures::{try_join, FutureExt};
+use actix_web::{HttpRequest, HttpResponse, web};
+use futures::{FutureExt, try_join};
 use nittei_api_structs::create_user::*;
-use nittei_domain::{User, ID};
+use nittei_domain::{ID, User};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
         auth::protect_account_route,
-        usecase::{execute, UseCase},
+        usecase::{UseCase, execute},
     },
 };
 

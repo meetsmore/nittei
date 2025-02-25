@@ -1,6 +1,9 @@
 use chrono::{DateTime, SecondsFormat, Utc};
 use futures::future::join_all;
 use nittei_domain::{
+    CalendarEvent,
+    CompatibleInstances,
+    EventInstance,
     providers::outlook::{
         OutlookCalendar,
         OutlookCalendarEvent,
@@ -11,9 +14,6 @@ use nittei_domain::{
         OutlookCalendarEventTime,
         OutlookOnlineMeetingProvider,
     },
-    CalendarEvent,
-    CompatibleInstances,
-    EventInstance,
 };
 use reqwest::Client;
 use serde::{Deserialize, Serialize};

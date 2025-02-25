@@ -1,13 +1,13 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use nittei_api_structs::delete_schedule::*;
-use nittei_domain::{Schedule, ID};
+use nittei_domain::{ID, Schedule};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_schedule, protect_account_route, protect_route, Permission},
-        usecase::{execute, execute_with_policy, PermissionBoundary, UseCase},
+        auth::{Permission, account_can_modify_schedule, protect_account_route, protect_route},
+        usecase::{PermissionBoundary, UseCase, execute, execute_with_policy},
     },
 };
 

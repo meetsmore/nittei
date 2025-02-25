@@ -1,13 +1,13 @@
 use std::convert::{TryFrom, TryInto};
 
 use chrono::{DateTime, Utc};
-use nittei_domain::{CalendarEvent, CalendarEventReminder, CalendarEventStatus, RRuleOptions, ID};
+use nittei_domain::{CalendarEvent, CalendarEventReminder, CalendarEventStatus, ID, RRuleOptions};
 use serde_json::Value;
 use sqlx::{
-    types::{Json, Uuid},
     FromRow,
     PgPool,
     QueryBuilder,
+    types::{Json, Uuid},
 };
 use tracing::{error, instrument};
 

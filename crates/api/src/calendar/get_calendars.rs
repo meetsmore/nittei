@@ -1,4 +1,4 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use nittei_api_structs::get_calendars_by_user::{APIResponse, PathParams, QueryParams};
 use nittei_domain::{Calendar, ID};
 use nittei_infra::NitteiContext;
@@ -7,7 +7,7 @@ use crate::{
     error::NitteiError,
     shared::{
         auth::{protect_account_route, protect_route},
-        usecase::{execute, UseCase},
+        usecase::{UseCase, execute},
     },
 };
 

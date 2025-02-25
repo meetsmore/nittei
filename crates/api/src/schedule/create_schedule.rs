@@ -1,14 +1,14 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use chrono_tz::Tz;
 use nittei_api_structs::create_schedule::*;
-use nittei_domain::{Schedule, ScheduleRule, ID};
+use nittei_domain::{ID, Schedule, ScheduleRule};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_user, protect_account_route, protect_route, Permission},
-        usecase::{execute, execute_with_policy, PermissionBoundary, UseCase},
+        auth::{Permission, account_can_modify_user, protect_account_route, protect_route},
+        usecase::{PermissionBoundary, UseCase, execute, execute_with_policy},
     },
 };
 

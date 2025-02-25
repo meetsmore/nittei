@@ -1,4 +1,4 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use chrono::{DateTime, TimeDelta, Utc};
 use event::subscribers::SyncRemindersOnEventUpdated;
 use nittei_api_structs::update_event::*;
@@ -6,9 +6,9 @@ use nittei_domain::{
     CalendarEvent,
     CalendarEventReminder,
     CalendarEventStatus,
+    ID,
     RRuleOptions,
     User,
-    ID,
 };
 use nittei_infra::NitteiContext;
 
@@ -17,13 +17,13 @@ use crate::{
     event::{self, subscribers::UpdateSyncedEventsOnEventUpdated},
     shared::{
         auth::{
+            Permission,
             account_can_modify_event,
             account_can_modify_user,
             protect_account_route,
             protect_route,
-            Permission,
         },
-        usecase::{execute, execute_with_policy, PermissionBoundary, Subscriber, UseCase},
+        usecase::{PermissionBoundary, Subscriber, UseCase, execute, execute_with_policy},
     },
 };
 
@@ -202,7 +202,7 @@ impl UseCase for UpdateEventUseCase {
                 return Err(UseCaseError::NotFound(
                     "Calendar Event".into(),
                     event_id.clone(),
-                ))
+                ));
             }
             Err(e) => {
                 tracing::error!("Failed to get one event {:?}", e);
@@ -236,7 +236,7 @@ impl UseCase for UpdateEventUseCase {
                 return Err(UseCaseError::NotFound(
                     "Calendar".into(),
                     e.calendar_id.clone(),
-                ))
+                ));
             }
             Err(e) => {
                 tracing::error!("[update_event] Failed to get one calendar {:?}", e);

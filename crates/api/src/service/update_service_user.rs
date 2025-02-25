@@ -1,18 +1,18 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use nittei_api_structs::update_service_user::*;
-use nittei_domain::{Account, ServiceResource, TimePlan, ID};
+use nittei_domain::{Account, ID, ServiceResource, TimePlan};
 use nittei_infra::NitteiContext;
 
 use super::add_user_to_service::{
-    update_resource_values,
     ServiceResourceUpdate,
     UpdateServiceResourceError,
+    update_resource_values,
 };
 use crate::{
     error::NitteiError,
     shared::{
         auth::protect_account_route,
-        usecase::{execute, UseCase},
+        usecase::{UseCase, execute},
     },
 };
 

@@ -1,7 +1,7 @@
 mod postgres;
 
 use chrono::{DateTime, Utc};
-use nittei_domain::{Reminder, ID};
+use nittei_domain::{ID, Reminder};
 pub use postgres::PostgresReminderRepo;
 
 #[async_trait::async_trait]

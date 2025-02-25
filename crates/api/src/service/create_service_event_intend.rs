@@ -1,17 +1,17 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use chrono::{DateTime, Duration, TimeDelta, Utc};
 use get_service_bookingslots::GetServiceBookingSlotsUseCase;
 use nittei_api_structs::create_service_event_intend::*;
 use nittei_domain::{
+    ID,
+    ServiceMultiPersonOptions,
+    User,
     format_date,
     scheduling::{
         RoundRobinAlgorithm,
         RoundRobinAvailabilityAssignment,
         RoundRobinEqualDistributionAssignment,
     },
-    ServiceMultiPersonOptions,
-    User,
-    ID,
 };
 use nittei_infra::NitteiContext;
 use tracing::warn;
@@ -21,7 +21,7 @@ use crate::{
     error::NitteiError,
     shared::{
         auth::protect_account_route,
-        usecase::{execute, UseCase},
+        usecase::{UseCase, execute},
     },
 };
 

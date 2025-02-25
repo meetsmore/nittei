@@ -1,4 +1,4 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use nittei_api_structs::set_account_pub_key::{APIResponse, RequestBody};
 use nittei_domain::{Account, PEMKey};
 use nittei_infra::NitteiContext;
@@ -7,7 +7,7 @@ use crate::{
     error::NitteiError,
     shared::{
         auth::protect_account_route,
-        usecase::{execute, UseCase},
+        usecase::{UseCase, execute},
     },
 };
 

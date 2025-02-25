@@ -1,6 +1,6 @@
 mod postgres;
 
-use nittei_domain::{User, ID};
+use nittei_domain::{ID, User};
 pub use postgres::PostgresUserRepo;
 
 use super::shared::query_structs::MetadataFindQuery;
@@ -48,13 +48,14 @@ mod tests {
             skip: 0,
         };
 
-        assert!(ctx
-            .repos
-            .users
-            .find_by_metadata(query.clone())
-            .await
-            .unwrap()
-            .is_empty());
+        assert!(
+            ctx.repos
+                .users
+                .find_by_metadata(query.clone())
+                .await
+                .unwrap()
+                .is_empty()
+        );
 
         // Now add metadata
         let metadata = serde_json::json! ({ "group_id": "123" });
@@ -73,13 +74,14 @@ mod tests {
 
         // Different account id should give no results
         query.account_id = ID::default();
-        assert!(ctx
-            .repos
-            .users
-            .find_by_metadata(query)
-            .await
-            .unwrap()
-            .is_empty());
+        assert!(
+            ctx.repos
+                .users
+                .find_by_metadata(query)
+                .await
+                .unwrap()
+                .is_empty()
+        );
     }
 
     // #[tokio::test]

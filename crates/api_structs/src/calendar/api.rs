@@ -1,4 +1,4 @@
-use nittei_domain::{Calendar, EventInstance, Tz, Weekday, ID};
+use nittei_domain::{Calendar, EventInstance, ID, Tz, Weekday};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 use validator::Validate;

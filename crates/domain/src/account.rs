@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use crate::{
-    shared::entity::{Entity, ID},
     IntegrationProvider,
+    shared::entity::{Entity, ID},
 };
 
 const API_KEY_LEN: usize = 30;

@@ -2,9 +2,9 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use crate::{
+    Meta,
     scheduling::RoundRobinAlgorithm,
     shared::entity::{Entity, ID},
-    Meta,
 };
 
 /// A type that describes a time plan and is either a `Calendar` or a `Schedule`

@@ -1,11 +1,11 @@
 use std::convert::{TryFrom, TryInto};
 
-use nittei_domain::{User, ID};
+use nittei_domain::{ID, User};
 use serde_json::Value;
 use sqlx::{
-    types::{Json, Uuid},
     FromRow,
     PgPool,
+    types::{Json, Uuid},
 };
 use tracing::{error, instrument};
 

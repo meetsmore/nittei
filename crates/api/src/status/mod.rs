@@ -1,4 +1,4 @@
-use actix_web::{web, HttpResponse};
+use actix_web::{HttpResponse, web};
 use nittei_api_structs::get_service_health::*;
 use nittei_infra::NitteiContext;
 

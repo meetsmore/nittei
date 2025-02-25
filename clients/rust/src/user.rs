@@ -10,7 +10,7 @@ use nittei_api_structs::*;
 use nittei_domain::IntegrationProvider;
 use reqwest::StatusCode;
 
-use crate::{shared::MetadataFindInput, APIResponse, BaseClient, ID};
+use crate::{APIResponse, BaseClient, ID, shared::MetadataFindInput};
 
 #[derive(Clone)]
 pub struct UserClient {

@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use chrono::{prelude::*, DateTime};
+use chrono::{DateTime, prelude::*};
 use chrono_tz::Tz;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
@@ -52,7 +52,11 @@ impl Error for InvalidTimeSpanError {}
 
 impl std::fmt::Display for InvalidTimeSpanError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "Provided timespan start_ts: {} and end_ts: {} is invalid. It should be between 1 hour and 40 days.", self.0, self.1)
+        write!(
+            f,
+            "Provided timespan start_ts: {} and end_ts: {} is invalid. It should be between 1 hour and 40 days.",
+            self.0, self.1
+        )
     }
 }
 

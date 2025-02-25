@@ -1,4 +1,4 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use nittei_api_structs::remove_integration::*;
 use nittei_domain::{IntegrationProvider, User};
 use nittei_infra::NitteiContext;
@@ -7,7 +7,7 @@ use crate::{
     error::NitteiError,
     shared::{
         auth::{account_can_modify_user, protect_account_route, protect_route},
-        usecase::{execute, UseCase},
+        usecase::{UseCase, execute},
     },
 };
 

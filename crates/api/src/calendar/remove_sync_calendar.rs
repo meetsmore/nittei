@@ -1,13 +1,13 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use nittei_api_structs::remove_sync_calendar::{APIResponse, PathParams, RequestBody};
-use nittei_domain::{IntegrationProvider, ID};
+use nittei_domain::{ID, IntegrationProvider};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_user, protect_account_route, Permission},
-        usecase::{execute, PermissionBoundary, UseCase},
+        auth::{Permission, account_can_modify_user, protect_account_route},
+        usecase::{PermissionBoundary, UseCase, execute},
     },
 };
 

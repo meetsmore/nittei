@@ -1,7 +1,7 @@
 use actix_web::{
+    Error,
     body::MessageBody,
     dev::{ServiceRequest, ServiceResponse},
-    Error,
 };
 use tracing::{Level, Span};
 use tracing_actix_web::{DefaultRootSpanBuilder, RootSpanBuilder};

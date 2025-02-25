@@ -1,12 +1,12 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use nittei_api_structs::get_event_instances::*;
 use nittei_domain::{
-    expand_event_and_remove_exceptions,
-    generate_map_exceptions_original_start_times,
     CalendarEvent,
     EventInstance,
-    TimeSpan,
     ID,
+    TimeSpan,
+    expand_event_and_remove_exceptions,
+    generate_map_exceptions_original_start_times,
 };
 use nittei_infra::NitteiContext;
 use tracing::error;
@@ -15,7 +15,7 @@ use crate::{
     error::NitteiError,
     shared::{
         auth::{account_can_modify_event, protect_account_route, protect_route},
-        usecase::{execute, UseCase},
+        usecase::{UseCase, execute},
     },
 };
 
@@ -146,7 +146,7 @@ impl UseCase for GetEventInstancesUseCase {
                 return Err(UseCaseError::NotFound(
                     "Calendar".into(),
                     main_event.calendar_id.clone(),
-                ))
+                ));
             }
             Err(_) => {
                 return Err(UseCaseError::InternalError);

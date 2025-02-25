@@ -1,11 +1,11 @@
-use actix_web::{web, HttpResponse};
+use actix_web::{HttpResponse, web};
 use nittei_api_structs::create_account::{APIResponse, RequestBody};
 use nittei_domain::Account;
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
-    shared::usecase::{execute, UseCase},
+    shared::usecase::{UseCase, execute},
 };
 
 pub async fn create_account_controller(

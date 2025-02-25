@@ -1,16 +1,16 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use nittei_api_structs::get_google_calendars::{APIResponse, PathParams, QueryParams};
 use nittei_domain::{
-    providers::google::{GoogleCalendarAccessRole, GoogleCalendarListEntry},
     User,
+    providers::google::{GoogleCalendarAccessRole, GoogleCalendarListEntry},
 };
-use nittei_infra::{google_calendar::GoogleCalendarProvider, NitteiContext};
+use nittei_infra::{NitteiContext, google_calendar::GoogleCalendarProvider};
 
 use crate::{
     error::NitteiError,
     shared::{
         auth::{account_can_modify_user, protect_account_route, protect_route},
-        usecase::{execute, UseCase},
+        usecase::{UseCase, execute},
     },
 };
 

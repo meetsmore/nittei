@@ -5,7 +5,7 @@ use helpers::{
     setup::spawn_app,
     utils::{assert_equal_user_lists, format_datetime},
 };
-use nittei_domain::{BusyCalendarProvider, ServiceMultiPersonOptions, TimePlan, ID};
+use nittei_domain::{BusyCalendarProvider, ID, ServiceMultiPersonOptions, TimePlan};
 use nittei_sdk::{
     AddBusyCalendar,
     AddServiceUserInput,
@@ -567,11 +567,13 @@ async fn test_group_team_scheduling_increase_max_count() {
             .expect("To update service");
 
         // The current service event be deleted
-        assert!(admin_client
-            .event
-            .get(service_event.id.clone())
-            .await
-            .is_err());
+        assert!(
+            admin_client
+                .event
+                .get(service_event.id.clone())
+                .await
+                .is_err()
+        );
 
         for _ in 0..booking_spots_inc - 1 {
             let input = CreateBookingIntendInput {
@@ -1001,11 +1003,13 @@ async fn test_group_team_scheduling_decrease_max_count() {
             .expect("To update service");
 
         // The current service event should still be there
-        assert!(admin_client
-            .event
-            .get(service_event.id.clone())
-            .await
-            .is_ok());
+        assert!(
+            admin_client
+                .event
+                .get(service_event.id.clone())
+                .await
+                .is_ok()
+        );
         let input = CreateBookingIntendInput {
             service_id: service.id.clone(),
             host_user_ids: None,

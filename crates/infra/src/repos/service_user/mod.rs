@@ -1,6 +1,6 @@
 mod postgres;
 
-use nittei_domain::{ServiceResource, ID};
+use nittei_domain::{ID, ServiceResource};
 pub use postgres::{PostgresServiceUserRepo, ServiceUserRaw};
 
 #[async_trait::async_trait]
@@ -74,20 +74,22 @@ mod tests {
         assert_eq!(updated_service_user.service_id, service_user.service_id);
 
         // Delete
-        assert!(ctx
-            .repos
-            .service_users
-            .delete(&service.id, &user.id)
-            .await
-            .is_ok());
+        assert!(
+            ctx.repos
+                .service_users
+                .delete(&service.id, &user.id)
+                .await
+                .is_ok()
+        );
 
         // Find after delete
-        assert!(ctx
-            .repos
-            .service_users
-            .find(&service.id, &user.id)
-            .await
-            .unwrap()
-            .is_none());
+        assert!(
+            ctx.repos
+                .service_users
+                .find(&service.id, &user.id)
+                .await
+                .unwrap()
+                .is_none()
+        );
     }
 }
