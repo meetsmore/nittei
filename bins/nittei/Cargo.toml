@@ -2,7 +2,7 @@
 name = "nittei"
 version = "0.1.0"
 authors = ["Fredrik Meringdal", "Meetsmore"]
-edition = "2021"
+edition = "2024"
 default-run = "nittei"
 
 [lints]
