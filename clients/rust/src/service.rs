@@ -5,7 +5,7 @@ use nittei_api_structs::*;
 use nittei_domain::{BusyCalendarProvider, ServiceMultiPersonOptions};
 use reqwest::StatusCode;
 
-use crate::{shared::MetadataFindInput, APIResponse, BaseClient, TimePlan, Tz, ID};
+use crate::{APIResponse, BaseClient, ID, TimePlan, Tz, shared::MetadataFindInput};
 
 #[derive(Clone)]
 pub struct ServiceClient {

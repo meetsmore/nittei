@@ -2,7 +2,7 @@ use std::{cmp::Ordering, fmt::Display, str::FromStr};
 
 use chrono::prelude::*;
 use rrule::{Frequency, RRule, RRuleSet};
-use serde::{de::Visitor, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::Visitor};
 use thiserror::Error;
 use ts_rs::TS;
 

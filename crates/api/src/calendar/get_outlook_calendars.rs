@@ -1,16 +1,16 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use nittei_api_structs::get_outlook_calendars::{APIResponse, PathParams, QueryParams};
 use nittei_domain::{
-    providers::outlook::{OutlookCalendar, OutlookCalendarAccessRole},
     User,
+    providers::outlook::{OutlookCalendar, OutlookCalendarAccessRole},
 };
-use nittei_infra::{outlook_calendar::OutlookCalendarProvider, NitteiContext};
+use nittei_infra::{NitteiContext, outlook_calendar::OutlookCalendarProvider};
 
 use crate::{
     error::NitteiError,
     shared::{
         auth::{account_can_modify_user, protect_account_route, protect_route},
-        usecase::{execute, UseCase},
+        usecase::{UseCase, execute},
     },
 };
 

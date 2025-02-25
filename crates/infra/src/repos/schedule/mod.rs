@@ -1,6 +1,6 @@
 mod postgres;
 
-use nittei_domain::{Schedule, ID};
+use nittei_domain::{ID, Schedule};
 pub use postgres::PostgresScheduleRepo;
 
 use crate::MetadataFindQuery;
@@ -63,26 +63,28 @@ mod tests {
         assert!(res.is_ok());
 
         // Find
-        assert!(ctx
-            .repos
-            .schedules
-            .find(&schedule.id)
-            .await
-            .unwrap()
-            .is_none());
+        assert!(
+            ctx.repos
+                .schedules
+                .find(&schedule.id)
+                .await
+                .unwrap()
+                .is_none()
+        );
 
         // Insert again
         assert!(ctx.repos.schedules.insert(&schedule).await.is_ok());
 
         // Delete by user
         ctx.repos.users.delete(&user.id).await.expect("Delete user");
-        assert!(ctx
-            .repos
-            .schedules
-            .find(&schedule.id)
-            .await
-            .unwrap()
-            .is_none());
+        assert!(
+            ctx.repos
+                .schedules
+                .find(&schedule.id)
+                .await
+                .unwrap()
+                .is_none()
+        );
     }
 
     #[tokio::test]
@@ -109,14 +111,15 @@ mod tests {
         assert!(ctx.repos.schedules.save(&schedule).await.is_ok());
 
         // Find
-        assert!(ctx
-            .repos
-            .schedules
-            .find(&schedule.id)
-            .await
-            .unwrap()
-            .unwrap()
-            .rules
-            .is_empty());
+        assert!(
+            ctx.repos
+                .schedules
+                .find(&schedule.id)
+                .await
+                .unwrap()
+                .unwrap()
+                .rules
+                .is_empty()
+        );
     }
 }

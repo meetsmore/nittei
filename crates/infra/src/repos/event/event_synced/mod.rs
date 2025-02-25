@@ -1,6 +1,6 @@
 mod postgres;
 
-use nittei_domain::{SyncedCalendarEvent, ID};
+use nittei_domain::{ID, SyncedCalendarEvent};
 pub use postgres::PostgresEventSyncedRepo;
 
 #[async_trait::async_trait]
@@ -82,12 +82,13 @@ mod tests {
                 provider,
                 user_id: user.id.clone(),
             };
-            assert!(ctx
-                .repos
-                .calendar_synced
-                .insert(&sync_calendar)
-                .await
-                .is_ok());
+            assert!(
+                ctx.repos
+                    .calendar_synced
+                    .insert(&sync_calendar)
+                    .await
+                    .is_ok()
+            );
         }
 
         let e = CalendarEvent {
@@ -119,12 +120,16 @@ mod tests {
         assert_eq!(synced_events.len(), 2);
         assert_eq!(synced_events[0].event_id, e.id);
         assert_eq!(synced_events[1].event_id, e.id);
-        assert!(synced_events
-            .iter()
-            .any(|c| c.provider == IntegrationProvider::Google));
-        assert!(synced_events
-            .iter()
-            .any(|c| c.provider == IntegrationProvider::Outlook));
+        assert!(
+            synced_events
+                .iter()
+                .any(|c| c.provider == IntegrationProvider::Google)
+        );
+        assert!(
+            synced_events
+                .iter()
+                .any(|c| c.provider == IntegrationProvider::Outlook)
+        );
 
         // Deleting the sync calendar also deletes all the corresponding sync events for that calendar
         let sync_calendar = SyncedCalendar {
@@ -133,12 +138,13 @@ mod tests {
             provider: IntegrationProvider::Google,
             user_id: user.id.clone(),
         };
-        assert!(ctx
-            .repos
-            .calendar_synced
-            .delete(&sync_calendar)
-            .await
-            .is_ok());
+        assert!(
+            ctx.repos
+                .calendar_synced
+                .delete(&sync_calendar)
+                .await
+                .is_ok()
+        );
 
         let synced_events = ctx
             .repos
@@ -156,12 +162,13 @@ mod tests {
             provider: IntegrationProvider::Outlook,
             user_id: user.id.clone(),
         };
-        assert!(ctx
-            .repos
-            .calendar_synced
-            .delete(&sync_calendar)
-            .await
-            .is_ok());
+        assert!(
+            ctx.repos
+                .calendar_synced
+                .delete(&sync_calendar)
+                .await
+                .is_ok()
+        );
         let synced_events = ctx
             .repos
             .event_synced

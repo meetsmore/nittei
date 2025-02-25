@@ -1,23 +1,23 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use nittei_api_structs::add_sync_calendar::{APIResponse, PathParams, RequestBody};
 use nittei_domain::{
-    providers::{google::GoogleCalendarAccessRole, outlook::OutlookCalendarAccessRole},
+    ID,
     IntegrationProvider,
     SyncedCalendar,
     User,
-    ID,
+    providers::{google::GoogleCalendarAccessRole, outlook::OutlookCalendarAccessRole},
 };
 use nittei_infra::{
+    NitteiContext,
     google_calendar::GoogleCalendarProvider,
     outlook_calendar::OutlookCalendarProvider,
-    NitteiContext,
 };
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_user, protect_account_route, Permission},
-        usecase::{execute, PermissionBoundary, UseCase},
+        auth::{Permission, account_can_modify_user, protect_account_route},
+        usecase::{PermissionBoundary, UseCase, execute},
     },
 };
 

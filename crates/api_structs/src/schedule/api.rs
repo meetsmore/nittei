@@ -1,4 +1,4 @@
-use nittei_domain::{Schedule, Tz, ID};
+use nittei_domain::{ID, Schedule, Tz};
 use serde::{Deserialize, Serialize};
 
 use crate::dtos::ScheduleDTO;

@@ -54,13 +54,14 @@ mod tests {
         assert!(res.unwrap().eq(&account));
 
         // Find
-        assert!(ctx
-            .repos
-            .accounts
-            .find(&account.id)
-            .await
-            .unwrap()
-            .is_none());
+        assert!(
+            ctx.repos
+                .accounts
+                .find(&account.id)
+                .await
+                .unwrap()
+                .is_none()
+        );
     }
 
     #[tokio::test]
@@ -81,13 +82,14 @@ mod tests {
         assert!(ctx.repos.accounts.save(&account).await.is_ok());
 
         // Find
-        assert!(ctx
-            .repos
-            .accounts
-            .find(&account.id)
-            .await
-            .unwrap()
-            .unwrap()
-            .eq(&account));
+        assert!(
+            ctx.repos
+                .accounts
+                .find(&account.id)
+                .await
+                .unwrap()
+                .unwrap()
+                .eq(&account)
+        );
     }
 }

@@ -8,10 +8,10 @@ use nittei_sdk::{
     CreateEventInput,
     CreateUserInput,
     GetEventsInstancesInput,
-    NitteiSDK,
-    RRuleOptions,
     // WeekDayRecurrence,
     ID,
+    NitteiSDK,
+    RRuleOptions,
 };
 
 #[actix_web::main]

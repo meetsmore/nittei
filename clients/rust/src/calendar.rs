@@ -3,17 +3,17 @@ use std::sync::Arc;
 use chrono::{DateTime, Utc};
 use nittei_api_structs::*;
 use nittei_domain::{
-    providers::{google::GoogleCalendarAccessRole, outlook::OutlookCalendarAccessRole},
-    IntegrationProvider,
     ID,
+    IntegrationProvider,
+    providers::{google::GoogleCalendarAccessRole, outlook::OutlookCalendarAccessRole},
 };
 use reqwest::StatusCode;
 
 use crate::{
-    base::{APIResponse, BaseClient},
-    shared::MetadataFindInput,
     Tz,
     Weekday,
+    base::{APIResponse, BaseClient},
+    shared::MetadataFindInput,
 };
 
 #[derive(Clone)]

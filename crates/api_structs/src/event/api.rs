@@ -1,4 +1,4 @@
-use nittei_domain::{CalendarEvent, CalendarEventReminder, EventInstance, RRuleOptions, ID};
+use nittei_domain::{CalendarEvent, CalendarEventReminder, EventInstance, ID, RRuleOptions};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 use validator::{Validate, ValidationError};
@@ -41,8 +41,8 @@ pub mod create_event {
             || (body.recurring_event_id.is_none() && body.original_start_time.is_some())
         {
             return Err(ValidationError::new(
-            "Both recurring_event_id and original_start_time must be provided, or must be omitted",
-        ));
+                "Both recurring_event_id and original_start_time must be provided, or must be omitted",
+            ));
         }
         Ok(())
     }
@@ -451,8 +451,8 @@ pub mod update_event {
             || (body.recurring_event_id.is_none() && body.original_start_time.is_some())
         {
             return Err(ValidationError::new(
-            "Both recurring_event_id and original_start_time must be provided, or must be omitted",
-        ));
+                "Both recurring_event_id and original_start_time must be provided, or must be omitted",
+            ));
         }
         Ok(())
     }

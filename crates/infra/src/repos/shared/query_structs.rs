@@ -1,4 +1,4 @@
-use nittei_domain::{DateTimeQuery, IDQuery, Metadata, StringQuery, ID};
+use nittei_domain::{DateTimeQuery, ID, IDQuery, Metadata, StringQuery};
 use sqlx::Postgres;
 use uuid::Uuid;
 

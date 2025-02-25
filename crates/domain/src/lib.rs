@@ -27,11 +27,11 @@ pub use event::{
     SyncedCalendarEvent,
 };
 pub use event_instance::{
-    get_free_busy,
     CompatibleInstances,
     EventInstance,
     EventWithInstances,
     FreeBusy,
+    get_free_busy,
 };
 pub use reminder::{EventRemindersExpansionJob, Reminder};
 pub use schedule::{Schedule, ScheduleRule};

@@ -1,12 +1,12 @@
 use opentelemetry::global::{self, set_error_handler};
-use opentelemetry_datadog::{new_pipeline, ApiVersion};
+use opentelemetry_datadog::{ApiVersion, new_pipeline};
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::{
     propagation::TraceContextPropagator,
     trace::{self, RandomIdGenerator, Sampler, Tracer},
 };
 use tracing::warn;
-use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
+use tracing_subscriber::{EnvFilter, Registry, layer::SubscriberExt};
 
 /// Register a subscriber as global default to process span data.
 ///
@@ -108,7 +108,9 @@ fn get_tracer(
             service_env,
         )?))
     } else {
-        warn!("No tracing endpoints provided (DATADOG_TRACING_ENDPOINT or OTLP_TRACING_ENDPOINT), tracing will be disabled");
+        warn!(
+            "No tracing endpoints provided (DATADOG_TRACING_ENDPOINT or OTLP_TRACING_ENDPOINT), tracing will be disabled"
+        );
         Ok(None)
     }
 }

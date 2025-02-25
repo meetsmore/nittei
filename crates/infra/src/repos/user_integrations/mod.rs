@@ -1,6 +1,6 @@
 mod postgres;
 
-use nittei_domain::{IntegrationProvider, UserIntegration, ID};
+use nittei_domain::{ID, IntegrationProvider, UserIntegration};
 pub use postgres::PostgresUserIntegrationRepo;
 
 #[async_trait::async_trait]
@@ -39,12 +39,13 @@ mod tests {
                 redirect_uri: "".into(),
                 provider: provider.clone(),
             };
-            assert!(ctx
-                .repos
-                .account_integrations
-                .insert(&acc_integration)
-                .await
-                .is_ok());
+            assert!(
+                ctx.repos
+                    .account_integrations
+                    .insert(&acc_integration)
+                    .await
+                    .is_ok()
+            );
 
             let user_integration = UserIntegration {
                 access_token: "".into(),
@@ -54,12 +55,13 @@ mod tests {
                 user_id: user.id.clone(),
                 provider: provider.clone(),
             };
-            assert!(ctx
-                .repos
-                .user_integrations
-                .insert(&user_integration)
-                .await
-                .is_ok());
+            assert!(
+                ctx.repos
+                    .user_integrations
+                    .insert(&user_integration)
+                    .await
+                    .is_ok()
+            );
             let found_integration = ctx
                 .repos
                 .user_integrations
@@ -82,12 +84,13 @@ mod tests {
                 user_id: user.id.clone(),
                 provider: provider.clone(),
             };
-            assert!(ctx
-                .repos
-                .user_integrations
-                .save(&updated_user_integration)
-                .await
-                .is_ok());
+            assert!(
+                ctx.repos
+                    .user_integrations
+                    .save(&updated_user_integration)
+                    .await
+                    .is_ok()
+            );
             let found_integration = ctx
                 .repos
                 .user_integrations
@@ -111,25 +114,31 @@ mod tests {
         assert_eq!(user_integrations.len(), 2);
         assert_eq!(user_integrations[0].user_id, user.id);
         assert_eq!(user_integrations[1].user_id, user.id);
-        assert!(user_integrations
-            .iter()
-            .any(|c| c.provider == IntegrationProvider::Google));
-        assert!(user_integrations
-            .iter()
-            .any(|c| c.provider == IntegrationProvider::Outlook));
+        assert!(
+            user_integrations
+                .iter()
+                .any(|c| c.provider == IntegrationProvider::Google)
+        );
+        assert!(
+            user_integrations
+                .iter()
+                .any(|c| c.provider == IntegrationProvider::Outlook)
+        );
 
-        assert!(ctx
-            .repos
-            .user_integrations
-            .delete(&user.id, IntegrationProvider::Google)
-            .await
-            .is_ok());
-        assert!(ctx
-            .repos
-            .user_integrations
-            .delete(&user.id, IntegrationProvider::Google)
-            .await
-            .is_err());
+        assert!(
+            ctx.repos
+                .user_integrations
+                .delete(&user.id, IntegrationProvider::Google)
+                .await
+                .is_ok()
+        );
+        assert!(
+            ctx.repos
+                .user_integrations
+                .delete(&user.id, IntegrationProvider::Google)
+                .await
+                .is_err()
+        );
 
         // Find after delete
         let user_integrations = ctx

@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use itertools::Itertools;
-use rand::{thread_rng, Rng};
+use rand::{Rng, thread_rng};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 

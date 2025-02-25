@@ -1,4 +1,4 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use nittei_api_structs::delete_account_webhook::APIResponse;
 use nittei_infra::NitteiContext;
 

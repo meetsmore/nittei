@@ -1,12 +1,12 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use chrono::{DateTime, Utc};
 use nittei_api_structs::get_events_by_calendars::*;
 use nittei_domain::{
+    EventWithInstances,
+    ID,
+    TimeSpan,
     expand_event_and_remove_exceptions,
     generate_map_exceptions_original_start_times,
-    EventWithInstances,
-    TimeSpan,
-    ID,
 };
 use nittei_infra::NitteiContext;
 use tracing::error;
@@ -15,7 +15,7 @@ use crate::{
     error::NitteiError,
     shared::{
         auth::protect_account_route,
-        usecase::{execute, UseCase},
+        usecase::{UseCase, execute},
     },
 };
 

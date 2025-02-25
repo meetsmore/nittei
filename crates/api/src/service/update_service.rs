@@ -1,13 +1,13 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use nittei_api_structs::update_service::*;
-use nittei_domain::{Service, ServiceMultiPersonOptions, ID};
+use nittei_domain::{ID, Service, ServiceMultiPersonOptions};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
         auth::protect_account_route,
-        usecase::{execute, UseCase},
+        usecase::{UseCase, execute},
     },
 };
 

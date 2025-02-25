@@ -1,14 +1,14 @@
 use std::collections::HashMap;
 
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use chrono::{DateTime, Utc};
 use nittei_api_structs::get_user_freebusy::{APIResponse, PathParams, QueryParams};
 use nittei_domain::{
-    expand_all_events_and_remove_exceptions,
     CompatibleInstances,
     EventInstance,
-    TimeSpan,
     ID,
+    TimeSpan,
+    expand_all_events_and_remove_exceptions,
 };
 use nittei_infra::NitteiContext;
 
@@ -16,7 +16,7 @@ use crate::{
     error::NitteiError,
     shared::{
         auth::protect_public_account_route,
-        usecase::{execute, UseCase},
+        usecase::{UseCase, execute},
     },
 };
 

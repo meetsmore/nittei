@@ -1,13 +1,13 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use nittei_api_structs::{dtos::CalendarEventDTO, search_events::*};
-use nittei_domain::{CalendarEventSort, DateTimeQuery, IDQuery, StringQuery, ID};
+use nittei_domain::{CalendarEventSort, DateTimeQuery, ID, IDQuery, StringQuery};
 use nittei_infra::{NitteiContext, SearchEventsForUserParams, SearchEventsParams};
 
 use crate::{
     error::NitteiError,
     shared::{
         auth::protect_account_route,
-        usecase::{execute, UseCase},
+        usecase::{UseCase, execute},
     },
 };
 

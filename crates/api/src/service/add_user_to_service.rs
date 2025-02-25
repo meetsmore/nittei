@@ -1,13 +1,13 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use nittei_api_structs::add_user_to_service::*;
-use nittei_domain::{Account, ServiceResource, TimePlan, ID};
+use nittei_domain::{Account, ID, ServiceResource, TimePlan};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
         auth::protect_account_route,
-        usecase::{execute, UseCase},
+        usecase::{UseCase, execute},
     },
 };
 
@@ -192,7 +192,7 @@ pub async fn update_resource_values(
                 Ok(_) => {
                     return Err(UpdateServiceResourceError::ScheduleNotOwnedByUser(
                         id.to_string(),
-                    ))
+                    ));
                 }
                 Err(_) => {
                     return Err(UpdateServiceResourceError::InternalError);

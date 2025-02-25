@@ -1,6 +1,6 @@
 use actix_web::{
-    http::{header, StatusCode},
     HttpResponse,
+    http::{StatusCode, header},
 };
 use thiserror::Error;
 

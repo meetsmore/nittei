@@ -14,11 +14,11 @@ use std::{net::TcpListener, sync::Arc};
 
 use actix_cors::Cors;
 use actix_web::{
+    App,
+    HttpServer,
     dev::Server,
     middleware::{self},
     web::{self, Data},
-    App,
-    HttpServer,
 };
 use futures::lock::Mutex;
 use http_logger::NitteiTracingRootSpanBuilder;
@@ -27,9 +27,9 @@ use nittei_domain::{
     Account,
     AccountIntegration,
     AccountWebhookSettings,
+    ID,
     IntegrationProvider,
     PEMKey,
-    ID,
 };
 use nittei_infra::NitteiContext;
 use tracing::{error, info, warn};

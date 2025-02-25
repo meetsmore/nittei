@@ -1,10 +1,10 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use nittei_api_structs::delete_event::*;
-use nittei_domain::{CalendarEvent, IntegrationProvider, User, ID};
+use nittei_domain::{CalendarEvent, ID, IntegrationProvider, User};
 use nittei_infra::{
+    NitteiContext,
     google_calendar::GoogleCalendarProvider,
     outlook_calendar::OutlookCalendarProvider,
-    NitteiContext,
 };
 use tracing::error;
 
@@ -12,13 +12,13 @@ use crate::{
     error::NitteiError,
     shared::{
         auth::{
+            Permission,
             account_can_modify_event,
             account_can_modify_user,
             protect_account_route,
             protect_route,
-            Permission,
         },
-        usecase::{execute, execute_with_policy, PermissionBoundary, UseCase},
+        usecase::{PermissionBoundary, UseCase, execute, execute_with_policy},
     },
 };
 

@@ -4,8 +4,8 @@ use nittei_domain::{
     CalendarEventReminder,
     CalendarEventStatus,
     EventInstance,
-    RRuleOptions,
     ID,
+    RRuleOptions,
 };
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;

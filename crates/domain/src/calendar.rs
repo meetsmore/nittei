@@ -2,10 +2,10 @@ use chrono_tz::{Tz, UTC};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    shared::entity::{Entity, ID},
     IntegrationProvider,
     Meta,
     Weekday,
+    shared::entity::{Entity, ID},
 };
 
 #[derive(Debug, Clone, Default)]

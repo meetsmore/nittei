@@ -10,9 +10,9 @@ use nittei_sdk::{
     CreateUserInput,
     GetCalendarEventsInput,
     GetUserFreeBusyInput,
+    ID,
     MultipleFreeBusyRequestBody,
     NitteiSDK,
-    ID,
 };
 use tokio::time::Instant;
 

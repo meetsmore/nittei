@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
-use nittei_domain::{Reminder, ID};
-use sqlx::{types::Uuid, FromRow, PgPool};
+use nittei_domain::{ID, Reminder};
+use sqlx::{FromRow, PgPool, types::Uuid};
 use tracing::{error, instrument};
 
 use super::IReminderRepo;

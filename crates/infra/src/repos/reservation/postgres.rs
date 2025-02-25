@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use nittei_domain::ID;
-use sqlx::{types::Uuid, FromRow, PgPool};
+use sqlx::{FromRow, PgPool, types::Uuid};
 use tracing::{error, instrument};
 
 use super::IReservationRepo;

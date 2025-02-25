@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use actix_web::rt::time::{interval, sleep_until, Instant};
+use actix_web::rt::time::{Instant, interval, sleep_until};
 use awc::Client;
 use nittei_api_structs::send_event_reminders::AccountRemindersDTO;
 use nittei_infra::NitteiContext;

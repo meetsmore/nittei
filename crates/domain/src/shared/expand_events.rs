@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use chrono::{DateTime, Utc};
 use tracing::warn;
 
-use crate::{Calendar, CalendarEvent, EventInstance, TimeSpan, ID};
+use crate::{Calendar, CalendarEvent, EventInstance, ID, TimeSpan};
 
 /// Generate a map of recurring_event_id to original_start_times (vector)
 /// This is used to remove exceptions from the expanded events
@@ -91,11 +91,11 @@ mod test {
 
     use super::expand_event_and_remove_exceptions;
     use crate::{
-        generate_map_exceptions_original_start_times,
         Calendar,
         CalendarEvent,
-        TimeSpan,
         ID,
+        TimeSpan,
+        generate_map_exceptions_original_start_times,
     };
 
     #[test]

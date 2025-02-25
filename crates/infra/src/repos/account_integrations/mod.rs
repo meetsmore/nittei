@@ -1,6 +1,6 @@
 mod postgres;
 
-use nittei_domain::{AccountIntegration, IntegrationProvider, ID};
+use nittei_domain::{AccountIntegration, ID, IntegrationProvider};
 pub use postgres::PostgresAccountIntegrationRepo;
 
 #[async_trait::async_trait]
@@ -35,18 +35,20 @@ mod tests {
                 redirect_uri: "".into(),
                 provider: provider.clone(),
             };
-            assert!(ctx
-                .repos
-                .account_integrations
-                .insert(&acc_integration)
-                .await
-                .is_ok());
-            assert!(ctx
-                .repos
-                .account_integrations
-                .insert(&acc_integration)
-                .await
-                .is_err());
+            assert!(
+                ctx.repos
+                    .account_integrations
+                    .insert(&acc_integration)
+                    .await
+                    .is_ok()
+            );
+            assert!(
+                ctx.repos
+                    .account_integrations
+                    .insert(&acc_integration)
+                    .await
+                    .is_err()
+            );
         }
         let acc_integrations = ctx
             .repos
@@ -57,24 +59,30 @@ mod tests {
         assert_eq!(acc_integrations.len(), 2);
         assert_eq!(acc_integrations[0].account_id, account.id);
         assert_eq!(acc_integrations[1].account_id, account.id);
-        assert!(acc_integrations
-            .iter()
-            .any(|c| c.provider == IntegrationProvider::Google));
-        assert!(acc_integrations
-            .iter()
-            .any(|c| c.provider == IntegrationProvider::Outlook));
-        assert!(ctx
-            .repos
-            .account_integrations
-            .delete(&account.id, IntegrationProvider::Google)
-            .await
-            .is_ok());
-        assert!(ctx
-            .repos
-            .account_integrations
-            .delete(&account.id, IntegrationProvider::Google)
-            .await
-            .is_err());
+        assert!(
+            acc_integrations
+                .iter()
+                .any(|c| c.provider == IntegrationProvider::Google)
+        );
+        assert!(
+            acc_integrations
+                .iter()
+                .any(|c| c.provider == IntegrationProvider::Outlook)
+        );
+        assert!(
+            ctx.repos
+                .account_integrations
+                .delete(&account.id, IntegrationProvider::Google)
+                .await
+                .is_ok()
+        );
+        assert!(
+            ctx.repos
+                .account_integrations
+                .delete(&account.id, IntegrationProvider::Google)
+                .await
+                .is_err()
+        );
 
         // Find after delete
         let acc_integrations = ctx

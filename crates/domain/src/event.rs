@@ -1,11 +1,13 @@
 use std::convert::TryFrom;
 
-use chrono::{prelude::*, TimeDelta};
+use chrono::{TimeDelta, prelude::*};
 use rrule::RRuleSet;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use crate::{
+    IntegrationProvider,
+    Meta,
     calendar::CalendarSettings,
     event_instance::EventInstance,
     shared::{
@@ -13,8 +15,6 @@ use crate::{
         recurrence::RRuleOptions,
     },
     timespan::TimeSpan,
-    IntegrationProvider,
-    Meta,
 };
 
 // Maximum number of instances to return
@@ -288,7 +288,7 @@ mod test {
     use chrono_tz::UTC;
 
     use super::*;
-    use crate::{shared::recurrence::WeekDayRecurrence, RRuleFrequency};
+    use crate::{RRuleFrequency, shared::recurrence::WeekDayRecurrence};
 
     #[test]
     fn daily_calendar_event() {
