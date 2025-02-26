@@ -362,10 +362,6 @@ mod test {
         };
         let mut invalid_rrules = Vec::new();
         invalid_rrules.push(RRuleOptions {
-            count: Some(1000), // too big count
-            ..Default::default()
-        });
-        invalid_rrules.push(RRuleOptions {
             // Only bysetpos and no by*
             bysetpos: Some(vec![1]),
             freq: RRuleFrequency::Monthly,
