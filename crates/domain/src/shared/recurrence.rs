@@ -59,11 +59,6 @@ fn is_none_or_empty<T>(v: &Option<Vec<T>>) -> bool {
 
 impl RRuleOptions {
     pub fn is_valid(&self) -> bool {
-        if let Some(count) = self.count {
-            if !(1..740).contains(&count) {
-                return false;
-            }
-        }
         if let Some(bysetpos) = &self.bysetpos {
             // Check that bysetpos is used with some other by* rule
             if !bysetpos.is_empty()

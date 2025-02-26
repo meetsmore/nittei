@@ -346,34 +346,4 @@ mod test {
             UseCaseError::NotFound(usecase.calendar_id)
         );
     }
-
-    #[actix_web::main]
-    #[test]
-    async fn rejects_event_with_invalid_recurrence() {
-        let TestContext {
-            ctx,
-            calendar,
-            user,
-        } = setup().await;
-
-        let mut invalid_rrules = Vec::new();
-        invalid_rrules.push(RRuleOptions {
-            count: Some(1000), // too big count
-            ..Default::default()
-        });
-        for rrule in invalid_rrules {
-            let mut usecase = CreateEventUseCase {
-                start_time: DateTime::from_timestamp_millis(500).unwrap(),
-                duration: 800,
-                recurrence: Some(rrule),
-                calendar_id: calendar.id.clone(),
-                user: user.clone(),
-                ..Default::default()
-            };
-
-            let res = usecase.execute(&ctx).await;
-
-            assert!(res.is_err());
-        }
-    }
 }
