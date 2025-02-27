@@ -8,7 +8,15 @@ pub async fn get_account_controller(
     http_req: HttpRequest,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
-    let account = protect_account_route(&http_req, &ctx).await?;
+    let account_possibly_stale = protect_account_route(&http_req, &ctx).await?;
+
+    let account = ctx
+        .repos
+        .accounts
+        .find(&account_possibly_stale.id)
+        .await
+        .map_err(|_| NitteiError::InternalError)?
+        .ok_or(NitteiError::NotFound("Account not found".to_string()))?;
 
     Ok(HttpResponse::Ok().json(APIResponse::new(account)))
 }

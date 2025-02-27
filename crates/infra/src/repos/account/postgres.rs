@@ -193,7 +193,7 @@ impl IAccountRepo for PostgresAccountRepo {
             return Ok(Some(account));
         }
 
-        let result: Option<Account> = sqlx::query_as!(
+        let optional_account: Option<Account> = sqlx::query_as!(
             AccountRaw,
             "
             SELECT * FROM accounts
@@ -212,12 +212,12 @@ impl IAccountRepo for PostgresAccountRepo {
         .map(|res| res.try_into())
         .transpose()?;
 
-        if let Some(ref account) = result {
+        if let Some(ref account) = optional_account {
             self.cache
                 .insert(api_key.to_string(), account.clone())
                 .await;
         }
 
-        Ok(result)
+        Ok(optional_account)
     }
 }
