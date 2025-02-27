@@ -1,3 +1,4 @@
+import type { AxiosInstance } from 'axios'
 import { NitteiAccountClient } from './accountClient'
 import {
   createAxiosInstanceBackend,
@@ -26,6 +27,8 @@ export interface INitteiUserClient {
   service: NitteiServiceUserClient
   schedule: NitteiScheduleUserClient
   user: NitteiUserUserClient
+
+  readonly axiosClient: AxiosInstance
 }
 
 export interface INitteiClient {
@@ -36,6 +39,8 @@ export interface INitteiClient {
   service: NitteiServiceClient
   schedule: NitteiScheduleClient
   user: _NitteiUserClient
+
+  readonly axiosClient: AxiosInstance
 }
 
 /**
