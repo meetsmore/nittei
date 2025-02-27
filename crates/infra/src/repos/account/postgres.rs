@@ -109,6 +109,10 @@ impl IAccountRepo for PostgresAccountRepo {
                 account, e
             );
         })?;
+
+        // Remove the account from the local cache
+        self.cache.remove(&account.secret_api_key).await;
+
         Ok(())
     }
 
@@ -166,7 +170,7 @@ impl IAccountRepo for PostgresAccountRepo {
 
     #[instrument]
     async fn delete(&self, account_id: &ID) -> anyhow::Result<Option<Account>> {
-        sqlx::query_as!(
+        let possibly_deleted_account: Option<Account> = sqlx::query_as!(
             AccountRaw,
             "
             DELETE FROM accounts
@@ -184,7 +188,14 @@ impl IAccountRepo for PostgresAccountRepo {
             );
         })?
         .map(|res| res.try_into())
-        .transpose()
+        .transpose()?;
+
+        // If the account was deleted, remove it from the cache
+        if let Some(ref account) = possibly_deleted_account {
+            self.cache.remove(&account.secret_api_key).await;
+        }
+
+        Ok(possibly_deleted_account)
     }
 
     #[instrument]

@@ -10,6 +10,8 @@ pub async fn get_account_controller(
 ) -> Result<HttpResponse, NitteiError> {
     let account_possibly_stale = protect_admin_route(&http_req, &ctx).await?;
 
+    // Refetch the account, as the protect_admin_route uses a cached method
+    // Meaning that the account could have been deleted in the meantime (or updated)
     let account = ctx
         .repos
         .accounts
