@@ -7,7 +7,7 @@ use nittei_infra::NitteiContext;
 use crate::{
     error::NitteiError,
     shared::{
-        auth::protect_account_route,
+        auth::protect_admin_route,
         usecase::{UseCase, execute},
     },
 };
@@ -18,7 +18,7 @@ pub async fn remove_service_event_intend_controller(
     mut path_params: web::Path<PathParams>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
-    let account = protect_account_route(&http_req, &ctx).await?;
+    let account = protect_admin_route(&http_req, &ctx).await?;
 
     let query = query_params.0;
     let usecase = RemoveServiceEventIntendUseCase {

@@ -15,7 +15,7 @@ use crate::{
             Permission,
             account_can_modify_event,
             account_can_modify_user,
-            protect_account_route,
+            protect_admin_route,
             protect_route,
         },
         usecase::{PermissionBoundary, UseCase, execute, execute_with_policy},
@@ -27,7 +27,7 @@ pub async fn delete_event_admin_controller(
     path_params: web::Path<PathParams>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
-    let account = protect_account_route(&http_req, &ctx).await?;
+    let account = protect_admin_route(&http_req, &ctx).await?;
     let e = account_can_modify_event(&account, &path_params.event_id, &ctx).await?;
     let user = account_can_modify_user(&account, &e.user_id, &ctx).await?;
 

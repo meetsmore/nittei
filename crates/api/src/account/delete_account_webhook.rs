@@ -5,14 +5,14 @@ use nittei_infra::NitteiContext;
 use super::set_account_webhook::SetAccountWebhookUseCase;
 use crate::{
     error::NitteiError,
-    shared::{auth::protect_account_route, usecase::execute},
+    shared::{auth::protect_admin_route, usecase::execute},
 };
 
 pub async fn delete_account_webhook_controller(
     http_req: HttpRequest,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
-    let account = protect_account_route(&http_req, &ctx).await?;
+    let account = protect_admin_route(&http_req, &ctx).await?;
 
     let usecase = SetAccountWebhookUseCase {
         account,

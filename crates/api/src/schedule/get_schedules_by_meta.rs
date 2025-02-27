@@ -3,14 +3,14 @@ use nittei_api_structs::get_schedules_by_meta::*;
 use nittei_domain::Metadata;
 use nittei_infra::{MetadataFindQuery, NitteiContext};
 
-use crate::{error::NitteiError, shared::auth::protect_account_route};
+use crate::{error::NitteiError, shared::auth::protect_admin_route};
 
 pub async fn get_schedules_by_meta_controller(
     http_req: HttpRequest,
     query_params: web::Query<QueryParams>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
-    let account = protect_account_route(&http_req, &ctx).await?;
+    let account = protect_admin_route(&http_req, &ctx).await?;
 
     let query = MetadataFindQuery {
         account_id: account.id,

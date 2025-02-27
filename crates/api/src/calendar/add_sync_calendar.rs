@@ -16,7 +16,7 @@ use nittei_infra::{
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{Permission, account_can_modify_user, protect_account_route},
+        auth::{Permission, account_can_modify_user, protect_admin_route},
         usecase::{PermissionBoundary, UseCase, execute},
     },
 };
@@ -27,7 +27,7 @@ pub async fn add_sync_calendar_admin_controller(
     body: actix_web_validator::Json<RequestBody>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
-    let account = protect_account_route(&http_req, &ctx).await?;
+    let account = protect_admin_route(&http_req, &ctx).await?;
     let user = account_can_modify_user(&account, &path_params.user_id, &ctx).await?;
 
     let body = body.0;

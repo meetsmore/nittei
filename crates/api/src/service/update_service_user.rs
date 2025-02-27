@@ -11,7 +11,7 @@ use super::add_user_to_service::{
 use crate::{
     error::NitteiError,
     shared::{
-        auth::protect_account_route,
+        auth::protect_admin_route,
         usecase::{UseCase, execute},
     },
 };
@@ -22,7 +22,7 @@ pub async fn update_service_user_controller(
     mut path: web::Path<PathParams>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
-    let account = protect_account_route(&http_req, &ctx).await?;
+    let account = protect_admin_route(&http_req, &ctx).await?;
 
     let usecase = UpdateServiceUserUseCase {
         account,

@@ -6,7 +6,7 @@ use nittei_infra::NitteiContext;
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{Permission, account_can_modify_calendar, protect_account_route, protect_route},
+        auth::{Permission, account_can_modify_calendar, protect_admin_route, protect_route},
         usecase::{PermissionBoundary, UseCase, execute, execute_with_policy},
     },
 };
@@ -16,7 +16,7 @@ pub async fn delete_calendar_admin_controller(
     path: web::Path<PathParams>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
-    let account = protect_account_route(&http_req, &ctx).await?;
+    let account = protect_admin_route(&http_req, &ctx).await?;
     let cal = account_can_modify_calendar(&account, &path.calendar_id, &ctx).await?;
 
     let usecase = DeleteCalendarUseCase {

@@ -6,7 +6,7 @@ use nittei_infra::NitteiContext;
 use crate::{
     error::NitteiError,
     shared::{
-        auth::protect_account_route,
+        auth::protect_admin_route,
         usecase::{UseCase, execute},
     },
 };
@@ -16,7 +16,7 @@ pub async fn set_account_webhook_controller(
     ctx: web::Data<NitteiContext>,
     body: actix_web_validator::Json<RequestBody>,
 ) -> Result<HttpResponse, NitteiError> {
-    let account = protect_account_route(&http_req, &ctx).await?;
+    let account = protect_admin_route(&http_req, &ctx).await?;
 
     let usecase = SetAccountWebhookUseCase {
         account,
