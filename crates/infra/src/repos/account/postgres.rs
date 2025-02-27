@@ -1,5 +1,10 @@
-use std::convert::{TryFrom, TryInto};
+use std::{
+    convert::{TryFrom, TryInto},
+    sync::Arc,
+    time::Duration,
+};
 
+use moka::future::Cache;
 use nittei_domain::{Account, ID, PEMKey};
 use serde_json::Value;
 use sqlx::{
@@ -14,11 +19,19 @@ use super::IAccountRepo;
 #[derive(Debug)]
 pub struct PostgresAccountRepo {
     pool: PgPool,
+    cache: Arc<Cache<String, Account>>,
 }
 
 impl PostgresAccountRepo {
     pub fn new(pool: PgPool) -> Self {
-        Self { pool }
+        let cache = Cache::builder()
+            .time_to_live(Duration::from_secs(300)) // 5 minutes
+            .build();
+
+        Self {
+            pool,
+            cache: Arc::new(cache),
+        }
     }
 }
 
@@ -176,7 +189,11 @@ impl IAccountRepo for PostgresAccountRepo {
 
     #[instrument]
     async fn find_by_apikey(&self, api_key: &str) -> anyhow::Result<Option<Account>> {
-        sqlx::query_as!(
+        if let Some(account) = self.cache.get(api_key).await {
+            return Ok(Some(account));
+        }
+
+        let result: Option<Account> = sqlx::query_as!(
             AccountRaw,
             "
             SELECT * FROM accounts
@@ -193,6 +210,14 @@ impl IAccountRepo for PostgresAccountRepo {
             );
         })?
         .map(|res| res.try_into())
-        .transpose()
+        .transpose()?;
+
+        if let Some(ref account) = result {
+            self.cache
+                .insert(api_key.to_string(), account.clone())
+                .await;
+        }
+
+        Ok(result)
     }
 }

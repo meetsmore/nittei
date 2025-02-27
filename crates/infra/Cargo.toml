@@ -34,3 +34,4 @@ sqlx = { version = "0.8.3", features = [
   "chrono",
 ] }
 url = { version = "2.5.2" }
+moka = { version = "0.12.10", features = ["future"] }
