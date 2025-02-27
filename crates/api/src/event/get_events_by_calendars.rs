@@ -1,4 +1,8 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use axum::{
+    extract::{Path, Query, State},
+    http::HeaderMap,
+    Json,
+};
 use chrono::{DateTime, Utc};
 use nittei_api_structs::get_events_by_calendars::*;
 use nittei_domain::{
@@ -20,12 +24,12 @@ use crate::{
 };
 
 pub async fn get_events_by_calendars_controller(
-    http_req: HttpRequest,
-    path_params: web::Path<PathParams>,
-    query: web::Query<QueryParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_account_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    path_params: Path<PathParams>,
+    query: Query<QueryParams>,
+    State(ctx): State<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let account = protect_account_route(&headers, &ctx).await?;
 
     let calendar_ids = match &query.calendar_ids {
         Some(ids) => ids.clone(),
@@ -42,7 +46,7 @@ pub async fn get_events_by_calendars_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|events| HttpResponse::Ok().json(APIResponse::new(events.events)))
+        .map(|events| Json(APIResponse::new(events.events)))
         .map_err(NitteiError::from)
 }
 

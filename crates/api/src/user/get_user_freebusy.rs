@@ -1,6 +1,10 @@
 use std::collections::HashMap;
 
-use actix_web::{web, HttpRequest, HttpResponse};
+use axum::{
+    extract::{Path, Query, State},
+    http::HeaderMap,
+    Json,
+};
 use chrono::{DateTime, Utc};
 use nittei_api_structs::get_user_freebusy::{APIResponse, PathParams, QueryParams};
 use nittei_domain::{
@@ -31,12 +35,12 @@ pub fn parse_vec_query_value(val: &Option<String>) -> Option<Vec<ID>> {
 }
 
 pub async fn get_freebusy_controller(
-    http_req: HttpRequest,
-    mut query_params: web::Query<QueryParams>,
-    mut params: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let _account = protect_public_account_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    mut query_params: Query<QueryParams>,
+    mut params: Path<PathParams>,
+    State(ctx): State<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let _account = protect_public_account_route(&headers, &ctx).await?;
 
     let usecase = GetFreeBusyUseCase {
         user_id: std::mem::take(&mut params.user_id),
@@ -49,7 +53,7 @@ pub async fn get_freebusy_controller(
     execute(usecase, &ctx)
         .await
         .map(|usecase_res| {
-            HttpResponse::Ok().json(APIResponse {
+            Json(APIResponse {
                 busy: usecase_res.busy.inner().into(),
                 user_id: usecase_res.user_id.to_string(),
             })
@@ -194,8 +198,7 @@ mod test {
         );
     }
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn test_freebusy_recurring() {
         let ctx = setup_context().await.unwrap();
         let account = Account::default();

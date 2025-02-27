@@ -1,4 +1,5 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use axum::{extract::State, http::HeaderMap, Json};
+use axum_valid::Valid;
 use nittei_api_structs::set_account_webhook::{APIResponse, RequestBody};
 use nittei_domain::Account;
 use nittei_infra::NitteiContext;
@@ -12,11 +13,11 @@ use crate::{
 };
 
 pub async fn set_account_webhook_controller(
-    http_req: HttpRequest,
-    ctx: web::Data<NitteiContext>,
-    body: actix_web_validator::Json<RequestBody>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_account_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    State(ctx): State<NitteiContext>,
+    body: Valid<Json<RequestBody>>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let account = protect_account_route(&headers, &ctx).await?;
 
     let usecase = SetAccountWebhookUseCase {
         account,
@@ -25,7 +26,7 @@ pub async fn set_account_webhook_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|account| HttpResponse::Ok().json(APIResponse::new(account)))
+        .map(|account| Json(APIResponse::new(account)))
         .map_err(NitteiError::from)
 }
 
@@ -87,8 +88,7 @@ mod tests {
 
     use super::*;
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn it_rejects_invalid_webhook_url() {
         let ctx = setup_context().await.unwrap();
         let bad_uris = vec!["1", "", "test.zzcom", "test.com", "google.com"];
@@ -111,8 +111,7 @@ mod tests {
         }
     }
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn it_accepts_valid_webhook_url() {
         let ctx = setup_context().await.unwrap();
 

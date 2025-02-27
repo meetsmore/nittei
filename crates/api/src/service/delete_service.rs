@@ -1,4 +1,8 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use axum::{
+    extract::{Path, State},
+    http::HeaderMap,
+    Json,
+};
 use nittei_api_structs::delete_service::*;
 use nittei_domain::{Account, Service, ID};
 use nittei_infra::NitteiContext;
@@ -12,11 +16,11 @@ use crate::{
 };
 
 pub async fn delete_service_controller(
-    http_req: HttpRequest,
-    path_params: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_account_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    path_params: Path<PathParams>,
+    State(ctx): State<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let account = protect_account_route(&headers, &ctx).await?;
 
     let usecase = DeleteServiceUseCase {
         account,
@@ -25,7 +29,7 @@ pub async fn delete_service_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|usecase_res| HttpResponse::Ok().json(APIResponse::new(usecase_res.service)))
+        .map(|usecase_res| Json(APIResponse::new(usecase_res.service)))
         .map_err(NitteiError::from)
 }
 

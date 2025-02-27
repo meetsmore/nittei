@@ -1,4 +1,8 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use axum::{
+    extract::{Path, Query, State},
+    http::HeaderMap,
+    Json,
+};
 use chrono::TimeDelta;
 use futures::future::join_all;
 use nittei_api_structs::get_service_bookingslots::*;
@@ -41,11 +45,11 @@ use crate::{
 };
 
 pub async fn get_service_bookingslots_controller(
-    _http_req: HttpRequest,
-    query_params: web::Query<QueryParams>,
-    mut path_params: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
+    _headers: HeaderMap,
+    query_params: Query<QueryParams>,
+    mut path_params: Path<PathParams>,
+    State(ctx): State<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
     let query_params = query_params.0;
     let _service_id = path_params.service_id.clone();
 
@@ -62,7 +66,7 @@ pub async fn get_service_bookingslots_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|usecase_res| HttpResponse::Ok().json(APIResponse::new(usecase_res.booking_slots)))
+        .map(|usecase_res| Json(APIResponse::new(usecase_res.booking_slots)))
         .map_err(NitteiError::from)
 }
 
@@ -639,8 +643,7 @@ mod test {
         ctx.repos.service_users.insert(&resource2).await.unwrap();
     }
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn get_service_bookingslots() {
         let TestContext {
             ctx,
@@ -663,8 +666,7 @@ mod test {
         assert!(res.unwrap().booking_slots.dates.is_empty());
     }
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn get_bookingslots_with_multiple_users_in_service() {
         let TestContext {
             ctx,

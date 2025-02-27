@@ -1,4 +1,4 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use axum::{extract::State, http::HeaderMap, Json};
 use nittei_api_structs::delete_account_webhook::APIResponse;
 use nittei_infra::NitteiContext;
 
@@ -9,10 +9,10 @@ use crate::{
 };
 
 pub async fn delete_account_webhook_controller(
-    http_req: HttpRequest,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_account_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    State(ctx): State<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let account = protect_account_route(&headers, &ctx).await?;
 
     let usecase = SetAccountWebhookUseCase {
         account,
@@ -21,6 +21,6 @@ pub async fn delete_account_webhook_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|account| HttpResponse::Ok().json(APIResponse::new(account)))
+        .map(|account| Json(APIResponse::new(account)))
         .map_err(NitteiError::from)
 }

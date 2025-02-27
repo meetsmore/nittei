@@ -1,10 +1,4 @@
-use actix_web::{
-    body::MessageBody,
-    dev::{ServiceRequest, ServiceResponse},
-    Error,
-};
 use tracing::{Level, Span};
-use tracing_actix_web::{DefaultRootSpanBuilder, RootSpanBuilder};
 
 /// Custom root span builder (tracing) for Actix Web
 pub struct NitteiTracingRootSpanBuilder;

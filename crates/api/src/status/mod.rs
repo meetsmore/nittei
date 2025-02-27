@@ -1,21 +1,27 @@
-use actix_web::{web, HttpResponse};
+use axum::{extract::State, http::StatusCode, routing::get, Json, Router};
 use nittei_api_structs::get_service_health::*;
 use nittei_infra::NitteiContext;
 
 /// Get the status of the service
-async fn status(ctx: web::Data<NitteiContext>) -> HttpResponse {
+async fn status(State(ctx): State<NitteiContext>) -> (StatusCode, Json<APIResponse>) {
     match ctx.repos.status.check_connection().await {
-        Ok(_) => HttpResponse::Ok().json(APIResponse {
-            message: "Ok!\r\n".into(),
-        }),
-        Err(_) => HttpResponse::InternalServerError().json(APIResponse {
-            message: "Internal Server Error".into(),
-        }),
+        Ok(_) => (
+            StatusCode::OK,
+            Json(APIResponse {
+                message: "Ok!\r\n".into(),
+            }),
+        ),
+        Err(_) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(APIResponse {
+                message: "Internal Server Error".into(),
+            }),
+        ),
     }
 }
 
 /// Configure the routes for the status module
-pub fn configure_routes(cfg: &mut web::ServiceConfig) {
+pub fn configure_routes(router: &mut Router) {
     // Get the health status of the service
-    cfg.route("/healthcheck", web::get().to(status));
+    router.route("/healthcheck", get(status));
 }

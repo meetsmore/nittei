@@ -1,4 +1,9 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use axum::{
+    extract::State,
+    http::{HeaderMap, StatusCode},
+    Json,
+};
+use axum_valid::Valid;
 use futures::{try_join, FutureExt};
 use nittei_api_structs::create_user::*;
 use nittei_domain::{User, ID};
@@ -13,22 +18,27 @@ use crate::{
 };
 
 pub async fn create_user_controller(
-    http_req: HttpRequest,
-    body: web::Json<RequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_account_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    mut body: Valid<Json<RequestBody>>,
+    State(ctx): State<NitteiContext>,
+) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
+    let account = protect_account_route(&headers, &ctx).await?;
 
     let usecase = CreateUserUseCase {
         account_id: account.id,
-        metadata: body.0.metadata,
-        external_id: body.0.external_id,
-        user_id: body.0.user_id,
+        metadata: body.0.metadata.take(),
+        external_id: body.0.external_id.take(),
+        user_id: body.0.user_id.take(),
     };
 
     execute(usecase, &ctx)
         .await
-        .map(|usecase_res| HttpResponse::Created().json(APIResponse::new(usecase_res.user)))
+        .map(|usecase_res| {
+            (
+                StatusCode::CREATED,
+                Json(APIResponse::new(usecase_res.user)),
+            )
+        })
         .map_err(NitteiError::from)
 }
 

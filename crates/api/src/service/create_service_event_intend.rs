@@ -1,4 +1,9 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use axum::{
+    extract::{Path, State},
+    http::HeaderMap,
+    Json,
+};
+use axum_valid::Valid;
 use chrono::{DateTime, Duration, TimeDelta, Utc};
 use get_service_bookingslots::GetServiceBookingSlotsUseCase;
 use nittei_api_structs::create_service_event_intend::*;
@@ -26,17 +31,17 @@ use crate::{
 };
 
 pub async fn create_service_event_intend_controller(
-    http_req: HttpRequest,
-    body: web::Json<RequestBody>,
-    mut path: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    protect_account_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    body: Valid<Json<RequestBody>>,
+    mut path: Path<PathParams>,
+    State(ctx): State<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    protect_account_route(&headers, &ctx).await?;
 
-    let body = body.0;
+    let mut body = body.0;
     let usecase = CreateServiceEventIntendUseCase {
         service_id: std::mem::take(&mut path.service_id),
-        host_user_ids: body.host_user_ids,
+        host_user_ids: body.host_user_ids.take(),
         duration: body.duration,
         timestamp: body.timestamp,
         interval: body.interval,
@@ -45,7 +50,7 @@ pub async fn create_service_event_intend_controller(
     execute(usecase, &ctx)
         .await
         .map(|res| {
-            HttpResponse::Ok().json(APIResponse::new(
+            Json(APIResponse::new(
                 res.selected_hosts,
                 res.create_event_for_hosts,
             ))

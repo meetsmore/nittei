@@ -1,4 +1,5 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use axum::{extract::State, http::HeaderMap, Json};
+use axum_valid::Valid;
 use nittei_api_structs::{account_search_events::*, dtos::CalendarEventDTO};
 use nittei_domain::{CalendarEventSort, DateTimeQuery, IDQuery, StringQuery, ID};
 use nittei_infra::{NitteiContext, SearchEventsForAccountParams, SearchEventsParams};
@@ -12,30 +13,30 @@ use crate::{
 };
 
 pub async fn account_search_events_controller(
-    http_req: HttpRequest,
-    body: actix_web_validator::Json<RequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_account_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    body: Valid<Json<RequestBody>>,
+    State(ctx): State<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let account = protect_account_route(&headers, &ctx).await?;
 
-    let body = body.0;
+    let mut body = body.0;
     let usecase = AccountSearchEventsUseCase {
         account_id: account.id,
-        user_id: body.filter.user_id,
-        external_parent_id: body.filter.external_parent_id,
-        start_time: body.filter.start_time,
-        end_time: body.filter.end_time,
-        status: body.filter.status,
-        event_type: body.filter.event_type,
-        updated_at: body.filter.updated_at,
-        metadata: body.filter.metadata,
-        sort: body.sort,
-        limit: body.limit,
+        user_id: body.filter.user_id.take(),
+        external_parent_id: body.filter.external_parent_id.take(),
+        start_time: body.filter.start_time.take(),
+        end_time: body.filter.end_time.take(),
+        status: body.filter.status.take(),
+        event_type: body.filter.event_type.take(),
+        updated_at: body.filter.updated_at.take(),
+        metadata: body.filter.metadata.take(),
+        sort: body.sort.take(),
+        limit: body.limit.take(),
     };
 
     execute(usecase, &ctx)
         .await
-        .map(|events| HttpResponse::Ok().json(APIResponse::new(events.events)))
+        .map(|events| Json(APIResponse::new(events.events)))
         .map_err(NitteiError::from)
 }
 

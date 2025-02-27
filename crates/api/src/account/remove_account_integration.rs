@@ -1,4 +1,8 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use axum::{
+    extract::{Path, State},
+    http::HeaderMap,
+    Json,
+};
 use nittei_api_structs::remove_account_integration::{APIResponse, PathParams};
 use nittei_domain::{Account, IntegrationProvider};
 use nittei_infra::NitteiContext;
@@ -12,11 +16,11 @@ use crate::{
 };
 
 pub async fn remove_account_integration_controller(
-    http_req: HttpRequest,
-    mut path: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_account_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    mut path: Path<PathParams>,
+    State(ctx): State<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let account = protect_account_route(&headers, &ctx).await?;
 
     let usecase = RemoveAccountIntegrationUseCase {
         account,
@@ -26,7 +30,7 @@ pub async fn remove_account_integration_controller(
     execute(usecase, &ctx)
         .await
         .map(|_| {
-            HttpResponse::Ok().json(APIResponse::from(
+            Json(APIResponse::from(
                 "Provider integration removed from account",
             ))
         })

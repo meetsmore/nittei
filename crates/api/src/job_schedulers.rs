@@ -1,9 +1,9 @@
 use std::time::Duration;
 
-use actix_web::rt::time::{interval, sleep_until, Instant};
 use awc::Client;
 use nittei_api_structs::send_event_reminders::AccountRemindersDTO;
 use nittei_infra::NitteiContext;
+use tokio::time::{interval, sleep_until, Instant};
 use tracing::{debug, error};
 
 use crate::{
@@ -26,7 +26,7 @@ pub fn get_start_delay(now_ts: usize, secs_before_min: usize) -> usize {
 
 /// Start the job scheduler for generating reminders
 pub fn start_reminder_generation_job(ctx: NitteiContext) {
-    actix_web::rt::spawn(async move {
+    tokio::spawn(async move {
         let mut interval = interval(Duration::from_secs(30 * 60));
         loop {
             interval.tick().await;
@@ -41,7 +41,7 @@ pub fn start_reminder_generation_job(ctx: NitteiContext) {
 
 /// Start the job scheduler for sending reminders
 pub fn start_send_reminders_job(ctx: NitteiContext) {
-    actix_web::rt::spawn(async move {
+    tokio::spawn(async move {
         let now = ctx.sys.get_timestamp_millis();
         let secs_to_next_run = get_start_delay(now as usize, 0);
         let start = Instant::now() + Duration::from_secs(secs_to_next_run as u64);
@@ -51,7 +51,7 @@ pub fn start_send_reminders_job(ctx: NitteiContext) {
         loop {
             minutely_interval.tick().await;
             let context = ctx.clone();
-            actix_web::rt::spawn(send_reminders(context));
+            tokio::spawn(send_reminders(context));
         }
     });
 }

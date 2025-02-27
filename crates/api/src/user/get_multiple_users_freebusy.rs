@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
-use actix_web::{web, HttpRequest, HttpResponse};
+use axum::{extract::State, http::HeaderMap, Json};
+use axum_valid::Valid;
 use chrono::{DateTime, Utc};
 use futures::{future::join_all, stream, StreamExt};
 use nittei_api_structs::multiple_freebusy::{APIResponse, RequestBody};
@@ -24,11 +25,11 @@ use crate::{
 };
 
 pub async fn get_multiple_freebusy_controller(
-    http_req: HttpRequest,
-    body: web::Json<RequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let _account = protect_public_account_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    body: Valid<Json<RequestBody>>,
+    State(ctx): State<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let _account = protect_public_account_route(&headers, &ctx).await?;
 
     let usecase = GetMultipleFreeBusyUseCase {
         user_ids: body.user_ids.clone(),
@@ -38,7 +39,7 @@ pub async fn get_multiple_freebusy_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|usecase_res| HttpResponse::Ok().json(APIResponse(usecase_res.0)))
+        .map(|usecase_res| Json(APIResponse(usecase_res.0)))
         .map_err(NitteiError::from)
 }
 
@@ -195,8 +196,7 @@ mod test {
 
     use super::*;
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn multiple_freebusy_works() {
         let ctx = setup_context().await.unwrap();
         let account = Account::default();

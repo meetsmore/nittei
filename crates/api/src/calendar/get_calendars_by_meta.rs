@@ -1,4 +1,8 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use axum::{
+    extract::{Query, State},
+    http::HeaderMap,
+    Json,
+};
 use nittei_api_structs::get_calendars_by_meta::*;
 use nittei_domain::Metadata;
 use nittei_infra::{MetadataFindQuery, NitteiContext};
@@ -6,11 +10,11 @@ use nittei_infra::{MetadataFindQuery, NitteiContext};
 use crate::{error::NitteiError, shared::auth::protect_account_route};
 
 pub async fn get_calendars_by_meta_controller(
-    http_req: HttpRequest,
-    query_params: web::Query<QueryParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_account_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    query_params: Query<QueryParams>,
+    State(ctx): State<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let account = protect_account_route(&headers, &ctx).await?;
 
     let query = MetadataFindQuery {
         account_id: account.id,
@@ -24,5 +28,5 @@ pub async fn get_calendars_by_meta_controller(
         .find_by_metadata(query)
         .await
         .map_err(|_| NitteiError::InternalError)?;
-    Ok(HttpResponse::Ok().json(APIResponse::new(calendars)))
+    Ok(Json(APIResponse::new(calendars)))
 }

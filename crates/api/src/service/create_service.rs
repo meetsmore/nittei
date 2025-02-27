@@ -1,4 +1,9 @@
-use actix_web::{web, HttpRequest, HttpResponse};
+use axum::{
+    extract::State,
+    http::{HeaderMap, StatusCode},
+    Json,
+};
+use axum_valid::Valid;
 use nittei_api_structs::create_service::*;
 use nittei_domain::{Account, Service, ServiceMultiPersonOptions};
 use nittei_infra::NitteiContext;
@@ -12,22 +17,27 @@ use crate::{
 };
 
 pub async fn create_service_controller(
-    http_req: HttpRequest,
-    body: web::Json<RequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_account_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    body: Valid<Json<RequestBody>>,
+    State(ctx): State<NitteiContext>,
+) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
+    let account = protect_account_route(&headers, &ctx).await?;
 
-    let body = body.0;
+    let mut body = body.0;
     let usecase = CreateServiceUseCase {
         account,
-        metadata: body.metadata,
-        multi_person: body.multi_person.unwrap_or_default(),
+        metadata: body.metadata.take(),
+        multi_person: body.multi_person.take().unwrap_or_default(),
     };
 
     execute(usecase, &ctx)
         .await
-        .map(|usecase_res| HttpResponse::Created().json(APIResponse::new(usecase_res.service)))
+        .map(|usecase_res| {
+            (
+                StatusCode::CREATED,
+                Json(APIResponse::new(usecase_res.service)),
+            )
+        })
         .map_err(NitteiError::from)
 }
 

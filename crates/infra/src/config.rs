@@ -5,8 +5,6 @@ use tracing::info;
 pub struct Config {
     /// Secret code used to create new `Account`s
     pub create_account_secret_code: String,
-    /// Port for the application to run on
-    pub port: usize,
     /// Maximum allowed duration in millis for querying event instances.
     /// This is used to avoid having clients ask for `CalendarEvents` in a
     /// timespan of several years which will take a lot of time to compute
@@ -46,14 +44,12 @@ impl Config {
                 }
             }
         };
-        let port = nittei_utils::config::APP_CONFIG.http_port;
 
         const DAYS_62: i64 = 1000 * 60 * 60 * 24 * 62;
         const DAYS_101: i64 = 1000 * 60 * 60 * 24 * 101;
 
         Self {
             create_account_secret_code,
-            port,
             event_instances_query_duration_limit: DAYS_62,
             booking_slots_query_duration_limit: DAYS_101,
         }
