@@ -14,7 +14,7 @@ use tracing::error;
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_event, protect_account_route, protect_route},
+        auth::{account_can_modify_event, protect_admin_route, protect_route},
         usecase::{UseCase, execute},
     },
 };
@@ -25,7 +25,7 @@ pub async fn get_event_instances_admin_controller(
     query_params: web::Query<QueryParams>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
-    let account = protect_account_route(&http_req, &ctx).await?;
+    let account = protect_admin_route(&http_req, &ctx).await?;
     let e = account_can_modify_event(&account, &path_params.event_id, &ctx).await?;
 
     let usecase = GetEventInstancesUseCase {

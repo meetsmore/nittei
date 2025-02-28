@@ -14,7 +14,7 @@ use tracing::error;
 use crate::{
     error::NitteiError,
     shared::{
-        auth::protect_account_route,
+        auth::protect_admin_route,
         usecase::{UseCase, execute},
     },
 };
@@ -25,7 +25,7 @@ pub async fn get_events_by_calendars_controller(
     query: web::Query<QueryParams>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
-    let account = protect_account_route(&http_req, &ctx).await?;
+    let account = protect_admin_route(&http_req, &ctx).await?;
 
     let calendar_ids = match &query.calendar_ids {
         Some(ids) => ids.clone(),

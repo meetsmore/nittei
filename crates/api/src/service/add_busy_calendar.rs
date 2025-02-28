@@ -18,7 +18,7 @@ use nittei_infra::{
 use crate::{
     error::NitteiError,
     shared::{
-        auth::protect_account_route,
+        auth::protect_admin_route,
         usecase::{UseCase, execute},
     },
 };
@@ -29,7 +29,7 @@ pub async fn add_busy_calendar_controller(
     mut path: web::Path<PathParams>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
-    let account = protect_account_route(&http_req, &ctx).await?;
+    let account = protect_admin_route(&http_req, &ctx).await?;
 
     let body = body.0;
     let usecase = AddBusyCalendarUseCase {

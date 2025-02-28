@@ -12,7 +12,7 @@ use crate::{
             Permission,
             account_can_modify_calendar,
             account_can_modify_user,
-            protect_account_route,
+            protect_admin_route,
             protect_route,
         },
         usecase::{PermissionBoundary, UseCase, execute, execute_with_policy},
@@ -25,7 +25,7 @@ pub async fn update_calendar_admin_controller(
     path: web::Path<PathParams>,
     body: actix_web_validator::Json<RequestBody>,
 ) -> Result<HttpResponse, NitteiError> {
-    let account = protect_account_route(&http_req, &ctx).await?;
+    let account = protect_admin_route(&http_req, &ctx).await?;
     let cal = account_can_modify_calendar(&account, &path.calendar_id, &ctx).await?;
     let user = account_can_modify_user(&account, &cal.user_id, &ctx).await?;
 

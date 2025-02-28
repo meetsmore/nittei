@@ -20,7 +20,7 @@ use super::get_service_bookingslots;
 use crate::{
     error::NitteiError,
     shared::{
-        auth::protect_account_route,
+        auth::protect_admin_route,
         usecase::{UseCase, execute},
     },
 };
@@ -31,7 +31,7 @@ pub async fn create_service_event_intend_controller(
     mut path: web::Path<PathParams>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
-    protect_account_route(&http_req, &ctx).await?;
+    protect_admin_route(&http_req, &ctx).await?;
 
     let body = body.0;
     let usecase = CreateServiceEventIntendUseCase {

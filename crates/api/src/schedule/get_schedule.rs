@@ -6,7 +6,7 @@ use nittei_infra::NitteiContext;
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_schedule, protect_account_route, protect_route},
+        auth::{account_can_modify_schedule, protect_admin_route, protect_route},
         usecase::{UseCase, execute},
     },
 };
@@ -16,7 +16,7 @@ pub async fn get_schedule_admin_controller(
     path: web::Path<PathParams>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
-    let account = protect_account_route(&http_req, &ctx).await?;
+    let account = protect_admin_route(&http_req, &ctx).await?;
     let schedule = account_can_modify_schedule(&account, &path.schedule_id, &ctx).await?;
 
     let usecase = GetScheduleUseCase {

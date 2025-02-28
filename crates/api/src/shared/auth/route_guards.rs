@@ -143,11 +143,11 @@ pub async fn protect_route(
     }
 }
 
-/// Protects an `Account` admin route, like updating `AccountSettings`
+/// Protects admin routes
 ///
 /// This function will check if the request has a valid `x-api-key` header
 /// and if the token is the one stored in DB for the `Account`
-pub async fn protect_account_route(
+pub async fn protect_admin_route(
     req: &HttpRequest,
     ctx: &NitteiContext,
 ) -> Result<Account, NitteiError> {
@@ -200,7 +200,7 @@ pub async fn protect_public_account_route(
                 })
         }
         // No nittei-account header, then check if this is an admin client
-        None => protect_account_route(http_req, ctx).await,
+        None => protect_admin_route(http_req, ctx).await,
     }
 }
 

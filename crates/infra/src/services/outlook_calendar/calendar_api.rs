@@ -284,8 +284,6 @@ impl OutlookCalendarRestApi {
         let calendar_views = join_all(cal_futures)
             .await
             .into_iter()
-            // Keep the error in the stream, propagate it instead of discarding with `filter_map`
-            .map(|res| res.map_err(anyhow::Error::from))
             // Collect the result and propagate the first encountered error
             .collect::<Result<Vec<_>, _>>()?
             .into_iter()

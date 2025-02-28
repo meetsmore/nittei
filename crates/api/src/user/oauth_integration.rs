@@ -7,7 +7,7 @@ use nittei_infra::{CodeTokenRequest, NitteiContext, ProviderOAuth};
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_user, protect_account_route, protect_route},
+        auth::{account_can_modify_user, protect_admin_route, protect_route},
         usecase::{UseCase, execute},
     },
 };
@@ -18,7 +18,7 @@ pub async fn oauth_integration_admin_controller(
     body: actix_web_validator::Json<RequestBody>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
-    let account = protect_account_route(&http_req, &ctx).await?;
+    let account = protect_admin_route(&http_req, &ctx).await?;
     let user = account_can_modify_user(&account, &path.user_id, &ctx).await?;
 
     let usecase = OAuthIntegrationUseCase {
