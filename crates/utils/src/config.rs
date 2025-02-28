@@ -42,10 +42,10 @@ pub struct AppConfig {
     /// Env var: NITTEI__SKIP_DB_MIGRATIONS
     pub skip_db_migrations: bool,
 
-    /// This is a flag to enable the reminders job
+    /// This is a flag to enable the reminders features
     /// Default is false
-    /// Env var: NITTEI__ENABLE_REMINDERS_JOB
-    pub enable_reminders_job: bool,
+    /// Env var: NITTEI__ENABLE_REMINDERS
+    pub enable_reminders: bool,
 
     /// The account configuration
     /// This is used to find the superadmin account

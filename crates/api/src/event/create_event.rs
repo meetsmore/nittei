@@ -10,6 +10,7 @@ use nittei_domain::{
     User,
 };
 use nittei_infra::NitteiContext;
+use nittei_utils::config::APP_CONFIG;
 
 use super::subscribers::CreateRemindersOnEventCreated;
 use crate::{
@@ -234,10 +235,14 @@ impl UseCase for CreateEventUseCase {
     }
 
     fn subscribers() -> Vec<Box<dyn Subscriber<Self>>> {
-        vec![
-            Box::new(CreateRemindersOnEventCreated),
-            Box::new(CreateSyncedEventsOnEventCreated),
-        ]
+        if APP_CONFIG.enable_reminders {
+            vec![
+                Box::new(CreateRemindersOnEventCreated),
+                Box::new(CreateSyncedEventsOnEventCreated),
+            ]
+        } else {
+            vec![]
+        }
     }
 }
 
