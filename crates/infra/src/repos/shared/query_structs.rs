@@ -23,28 +23,29 @@ pub struct MetadataFindQuery {
 /// This effectively mutates the query_builder !
 pub fn apply_id_query(
     query_builder: &mut sqlx::QueryBuilder<'_, Postgres>,
+    table_name: &str,
     field_name: &str,
     id_query: &Option<IDQuery>,
 ) {
     if let Some(id_query) = id_query {
         match id_query {
             IDQuery::Eq(id) => {
-                query_builder.push(format!(" AND e.{} = ", field_name));
+                query_builder.push(format!(" AND {}.{} = ", table_name, field_name));
                 query_builder.push_bind::<Uuid>(id.clone().into());
             }
             IDQuery::Ne(id) => {
-                query_builder.push(format!(" AND e.{} != ", field_name));
+                query_builder.push(format!(" AND {}.{} != ", table_name, field_name));
                 query_builder.push_bind::<Uuid>(id.clone().into());
             }
             IDQuery::Exists(exists) => {
                 if *exists {
-                    query_builder.push(format!(" AND e.{} IS NOT NULL", field_name));
+                    query_builder.push(format!(" AND {}.{} IS NOT NULL", table_name, field_name));
                 } else {
-                    query_builder.push(format!(" AND e.{} IS NULL", field_name));
+                    query_builder.push(format!(" AND {}.{} IS NULL", table_name, field_name));
                 };
             }
             IDQuery::In(ids) => {
-                query_builder.push(format!(" AND e.{} IN (", field_name));
+                query_builder.push(format!(" AND {}.{} IN (", table_name, field_name));
                 let mut separated = query_builder.separated(", ");
                 for id in ids.iter() {
                     separated.push_bind::<Uuid>(id.clone().into());
@@ -178,11 +179,11 @@ mod test {
         let id1 = ID::default();
         let id_query = Some(IDQuery::Eq(id1));
 
-        apply_id_query(&mut query_builder, "id", &id_query);
+        apply_id_query(&mut query_builder, "u", "id", &id_query);
 
         let built_query = query_builder.build();
 
-        assert_eq!(built_query.sql(), " AND e.id = $1");
+        assert_eq!(built_query.sql(), " AND u.id = $1");
     }
 
     #[test]
@@ -192,7 +193,7 @@ mod test {
         let id1 = ID::default();
         let id_query = Some(IDQuery::Ne(id1));
 
-        apply_id_query(&mut query_builder, "id", &id_query);
+        apply_id_query(&mut query_builder, "e", "id", &id_query);
 
         let built_query = query_builder.build();
 
@@ -205,11 +206,11 @@ mod test {
 
         let id_query = Some(IDQuery::Exists(true));
 
-        apply_id_query(&mut query_builder, "id", &id_query);
+        apply_id_query(&mut query_builder, "u", "id", &id_query);
 
         let built_query = query_builder.build();
 
-        assert_eq!(built_query.sql(), " AND e.id IS NOT NULL");
+        assert_eq!(built_query.sql(), " AND u.id IS NOT NULL");
     }
 
     #[test]
@@ -220,7 +221,7 @@ mod test {
         let id2 = ID::default();
         let id_query = Some(IDQuery::In(vec![id1, id2]));
 
-        apply_id_query(&mut query_builder, "id", &id_query);
+        apply_id_query(&mut query_builder, "e", "id", &id_query);
 
         let built_query = query_builder.build();
 

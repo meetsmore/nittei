@@ -681,7 +681,12 @@ impl IEventRepo for PostgresEventRepo {
 
         query.push_bind::<Uuid>(params.account_id.into());
 
-        apply_id_query(&mut query, "user_uid", &params.search_events_params.user_id);
+        apply_id_query(
+            &mut query,
+            "u",
+            "user_uid",
+            &params.search_events_params.user_id,
+        );
 
         apply_string_query(
             &mut query,

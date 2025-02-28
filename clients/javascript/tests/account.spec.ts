@@ -220,5 +220,24 @@ describe('Account API', () => {
         }),
       ])
     })
+
+    it('should be able to search by userId and status', async () => {
+      const res = await adminClient.account.searchEventsInAccount({
+        filter: {
+          userId: {
+            eq: userId,
+          },
+          status: {
+            eq: 'confirmed',
+          },
+        },
+      })
+      expect(res.events.length).toBe(1)
+      expect(res.events).toEqual([
+        expect.objectContaining({
+          id: eventId2,
+        }),
+      ])
+    })
   })
 })
