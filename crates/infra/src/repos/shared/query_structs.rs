@@ -20,7 +20,9 @@ pub struct MetadataFindQuery {
 ///
 /// This can only be used for fields that are UUIDs
 ///
-/// This effectively mutates the query_builder !
+/// Note that the table_name needs to be specified as well as the field_name
+///
+/// This mutates the query_builder !
 pub fn apply_id_query(
     query_builder: &mut sqlx::QueryBuilder<'_, Postgres>,
     table_name: &str,
