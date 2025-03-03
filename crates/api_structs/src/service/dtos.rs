@@ -1,4 +1,4 @@
-use nittei_domain::{Service, ServiceResource, ServiceWithUsers, TimePlan, ID};
+use nittei_domain::{ID, Service, ServiceResource, ServiceWithUsers, TimePlan};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 

@@ -1,17 +1,17 @@
 use std::{collections::HashMap, str::FromStr};
 
-use chrono::{offset::LocalResult, prelude::*, Duration};
+use chrono::{Duration, offset::LocalResult, prelude::*};
 use chrono_tz::Tz;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use crate::{
+    CompatibleInstances,
+    Meta,
     date,
     event_instance::EventInstance,
     shared::entity::{Entity, ID},
     timespan::TimeSpan,
-    CompatibleInstances,
-    Meta,
 };
 
 #[derive(Debug, Clone)]

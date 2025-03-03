@@ -1,14 +1,14 @@
 use axum::{
+    Json,
     extract::{Path, State},
     http::HeaderMap,
-    Json,
 };
 use nittei_api_structs::delete_event::*;
-use nittei_domain::{CalendarEvent, IntegrationProvider, User, ID};
+use nittei_domain::{CalendarEvent, ID, IntegrationProvider, User};
 use nittei_infra::{
+    NitteiContext,
     google_calendar::GoogleCalendarProvider,
     outlook_calendar::OutlookCalendarProvider,
-    NitteiContext,
 };
 use tracing::error;
 
@@ -16,13 +16,13 @@ use crate::{
     error::NitteiError,
     shared::{
         auth::{
+            Permission,
             account_can_modify_event,
             account_can_modify_user,
-            protect_account_route,
+            protect_admin_route,
             protect_route,
-            Permission,
         },
-        usecase::{execute, execute_with_policy, PermissionBoundary, UseCase},
+        usecase::{PermissionBoundary, UseCase, execute, execute_with_policy},
     },
 };
 
@@ -31,7 +31,7 @@ pub async fn delete_event_admin_controller(
     path_params: Path<PathParams>,
     State(ctx): State<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_account_route(&headers, &ctx).await?;
+    let account = protect_admin_route(&headers, &ctx).await?;
     let e = account_can_modify_event(&account, &path_params.event_id, &ctx).await?;
     let user = account_can_modify_user(&account, &e.user_id, &ctx).await?;
 

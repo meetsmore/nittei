@@ -12,16 +12,16 @@ mod user;
 
 use std::sync::Arc;
 
-use axum::{http::header, Extension, Router};
+use axum::{Extension, Router, http::header};
 use futures::lock::Mutex;
 use job_schedulers::{start_reminder_generation_job, start_send_reminders_job};
 use nittei_domain::{
     Account,
     AccountIntegration,
     AccountWebhookSettings,
+    ID,
     IntegrationProvider,
     PEMKey,
-    ID,
 };
 use nittei_infra::NitteiContext;
 use tokio::{net::TcpListener, sync::oneshot};

@@ -1,16 +1,16 @@
 use axum::{
+    Json,
     extract::{Path, Query, State},
     http::HeaderMap,
-    Json,
 };
 use chrono::{DateTime, Utc};
 use nittei_api_structs::get_events_by_calendars::*;
 use nittei_domain::{
+    EventWithInstances,
+    ID,
+    TimeSpan,
     expand_event_and_remove_exceptions,
     generate_map_exceptions_original_start_times,
-    EventWithInstances,
-    TimeSpan,
-    ID,
 };
 use nittei_infra::NitteiContext;
 use tracing::error;
@@ -18,8 +18,8 @@ use tracing::error;
 use crate::{
     error::NitteiError,
     shared::{
-        auth::protect_account_route,
-        usecase::{execute, UseCase},
+        auth::protect_admin_route,
+        usecase::{UseCase, execute},
     },
 };
 
@@ -29,7 +29,7 @@ pub async fn get_events_by_calendars_controller(
     query: Query<QueryParams>,
     State(ctx): State<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_account_route(&headers, &ctx).await?;
+    let account = protect_admin_route(&headers, &ctx).await?;
 
     let calendar_ids = match &query.calendar_ids {
         Some(ids) => ids.clone(),

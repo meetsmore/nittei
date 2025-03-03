@@ -1,7 +1,7 @@
 use axum::{
+    Json,
     extract::{Path, State},
     http::{HeaderMap, StatusCode},
-    Json,
 };
 use axum_valid::Valid;
 use chrono::Weekday;
@@ -13,8 +13,8 @@ use nittei_infra::NitteiContext;
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_user, protect_account_route, protect_route, Permission},
-        usecase::{execute, execute_with_policy, PermissionBoundary, UseCase},
+        auth::{Permission, account_can_modify_user, protect_admin_route, protect_route},
+        usecase::{PermissionBoundary, UseCase, execute, execute_with_policy},
     },
 };
 
@@ -24,7 +24,7 @@ pub async fn create_calendar_admin_controller(
     mut body: Valid<Json<RequestBody>>,
     State(ctx): State<NitteiContext>,
 ) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
-    let account = protect_account_route(&headers, &ctx).await?;
+    let account = protect_admin_route(&headers, &ctx).await?;
     let user = account_can_modify_user(&account, &path_params.user_id, &ctx).await?;
 
     let usecase = CreateCalendarUseCase {

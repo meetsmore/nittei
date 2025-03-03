@@ -161,7 +161,7 @@ mod tests {
 
     use chrono::{DateTime, Utc};
     use nittei_domain::{Calendar, CalendarEventReminder, User};
-    use nittei_infra::{setup_context as _setup_ctx, ISys};
+    use nittei_infra::{ISys, setup_context as _setup_ctx};
 
     use super::{super::create_event::CreateEventUseCase, *};
     use crate::{

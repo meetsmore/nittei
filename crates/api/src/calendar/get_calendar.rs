@@ -1,7 +1,7 @@
 use axum::{
+    Json,
     extract::{Path, State},
     http::HeaderMap,
-    Json,
 };
 use nittei_api_structs::get_calendar::{APIResponse, PathParams};
 use nittei_domain::{Calendar, ID};
@@ -10,8 +10,8 @@ use nittei_infra::NitteiContext;
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_calendar, protect_account_route, protect_route},
-        usecase::{execute, UseCase},
+        auth::{account_can_modify_calendar, protect_admin_route, protect_route},
+        usecase::{UseCase, execute},
     },
 };
 
@@ -20,7 +20,7 @@ pub async fn get_calendar_admin_controller(
     path: Path<PathParams>,
     State(ctx): State<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_account_route(&headers, &ctx).await?;
+    let account = protect_admin_route(&headers, &ctx).await?;
     let cal = account_can_modify_calendar(&account, &path.calendar_id, &ctx).await?;
 
     let usecase = GetCalendarUseCase {

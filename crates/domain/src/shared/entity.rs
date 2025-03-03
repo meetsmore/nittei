@@ -1,6 +1,6 @@
 use std::{fmt::Display, hash::Hash, str::FromStr};
 
-use serde::{de::Visitor, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::Visitor};
 use thiserror::Error;
 use ts_rs::TS;
 use uuid::Uuid;

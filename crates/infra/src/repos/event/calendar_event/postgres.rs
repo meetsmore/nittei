@@ -1,13 +1,13 @@
 use std::convert::{TryFrom, TryInto};
 
 use chrono::{DateTime, Utc};
-use nittei_domain::{CalendarEvent, CalendarEventReminder, CalendarEventStatus, RRuleOptions, ID};
+use nittei_domain::{CalendarEvent, CalendarEventReminder, CalendarEventStatus, ID, RRuleOptions};
 use serde_json::Value;
 use sqlx::{
-    types::{Json, Uuid},
     FromRow,
     PgPool,
     QueryBuilder,
+    types::{Json, Uuid},
 };
 use tracing::{error, instrument};
 
@@ -681,7 +681,12 @@ impl IEventRepo for PostgresEventRepo {
 
         query.push_bind::<Uuid>(params.account_id.into());
 
-        apply_id_query(&mut query, "user_uid", &params.search_events_params.user_id);
+        apply_id_query(
+            &mut query,
+            "u",
+            "user_uid",
+            &params.search_events_params.user_id,
+        );
 
         apply_string_query(
             &mut query,

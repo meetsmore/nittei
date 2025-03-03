@@ -1,7 +1,7 @@
 use axum::{
+    Json,
     extract::{Path, State},
     http::HeaderMap,
-    Json,
 };
 use axum_valid::Valid;
 use chrono::Utc;
@@ -12,8 +12,8 @@ use nittei_infra::{CodeTokenRequest, NitteiContext, ProviderOAuth};
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_user, protect_account_route, protect_route},
-        usecase::{execute, UseCase},
+        auth::{account_can_modify_user, protect_admin_route, protect_route},
+        usecase::{UseCase, execute},
     },
 };
 
@@ -23,7 +23,7 @@ pub async fn oauth_integration_admin_controller(
     body: Valid<Json<RequestBody>>,
     State(ctx): State<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_account_route(&headers, &ctx).await?;
+    let account = protect_admin_route(&headers, &ctx).await?;
     let user = account_can_modify_user(&account, &path.user_id, &ctx).await?;
 
     let usecase = OAuthIntegrationUseCase {

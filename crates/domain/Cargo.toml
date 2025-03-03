@@ -4,7 +4,7 @@ version = "0.2.1"
 description = "Nittei domain"
 license = "MIT"
 authors = ["Fredrik Meringdal"]
-edition = "2021"
+edition = "2024"
 
 [lints]
 workspace = true

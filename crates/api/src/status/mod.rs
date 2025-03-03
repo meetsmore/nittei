@@ -1,4 +1,4 @@
-use axum::{extract::State, http::StatusCode, routing::get, Json, Router};
+use axum::{Json, Router, extract::State, http::StatusCode, routing::get};
 use nittei_api_structs::get_service_health::*;
 use nittei_infra::NitteiContext;
 

@@ -1,46 +1,46 @@
 use axum::{
+    Json,
     extract::{Path, Query, State},
     http::HeaderMap,
-    Json,
 };
 use chrono::TimeDelta;
 use futures::future::join_all;
 use nittei_api_structs::get_service_bookingslots::*;
 use nittei_domain::{
-    booking_slots::{
-        get_service_bookingslots,
-        validate_bookingslots_query,
-        validate_slots_interval,
-        BookingQueryError,
-        BookingSlotsOptions,
-        BookingSlotsQuery,
-        ServiceBookingSlots,
-        UserFreeEvents,
-    },
-    get_free_busy,
     BusyCalendarProvider,
     Calendar,
     CompatibleInstances,
     EventInstance,
+    ID,
     ServiceMultiPersonOptions,
     ServiceResource,
     ServiceWithUsers,
     TimePlan,
     TimeSpan,
     Tz,
-    ID,
+    booking_slots::{
+        BookingQueryError,
+        BookingSlotsOptions,
+        BookingSlotsQuery,
+        ServiceBookingSlots,
+        UserFreeEvents,
+        get_service_bookingslots,
+        validate_bookingslots_query,
+        validate_slots_interval,
+    },
+    get_free_busy,
 };
 use nittei_infra::{
-    google_calendar::GoogleCalendarProvider,
-    outlook_calendar::OutlookCalendarProvider,
     FreeBusyProviderQuery,
     NitteiContext,
+    google_calendar::GoogleCalendarProvider,
+    outlook_calendar::OutlookCalendarProvider,
 };
 use tracing::{error, warn};
 
 use crate::{
     error::NitteiError,
-    shared::usecase::{execute, UseCase},
+    shared::usecase::{UseCase, execute},
     user::parse_vec_query_value,
 };
 
@@ -526,7 +526,7 @@ impl GetServiceBookingSlotsUseCase {
 mod test {
     use std::sync::Arc;
 
-    use chrono::{prelude::*, Utc};
+    use chrono::{Utc, prelude::*};
     use nittei_domain::{
         Account,
         Calendar,
@@ -536,7 +536,7 @@ mod test {
         ServiceResource,
         User,
     };
-    use nittei_infra::{setup_context, ISys};
+    use nittei_infra::{ISys, setup_context};
 
     use super::*;
 

@@ -2,7 +2,7 @@
 name = "nittei_infra"
 version = "0.1.0"
 authors = ["Meetsmore", "Fredrik Meringdal"]
-edition = "2021"
+edition = "2024"
 
 [lints]
 workspace = true
@@ -25,7 +25,7 @@ reqwest = { version = "0.12", default-features = false, features = [
 ] }
 uuid = { version = "1.1.2", features = ["serde"] }
 futures = "0.3"
-sqlx = { version = "0.8.2", features = [
+sqlx = { version = "0.8.3", features = [
   "runtime-tokio",
   "tls-rustls-ring",
   "postgres",
@@ -34,3 +34,4 @@ sqlx = { version = "0.8.2", features = [
   "chrono",
 ] }
 url = { version = "2.5.2" }
+moka = { version = "0.12.10", features = ["future"] }

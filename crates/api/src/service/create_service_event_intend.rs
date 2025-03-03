@@ -1,22 +1,22 @@
 use axum::{
+    Json,
     extract::{Path, State},
     http::HeaderMap,
-    Json,
 };
 use axum_valid::Valid;
 use chrono::{DateTime, Duration, TimeDelta, Utc};
 use get_service_bookingslots::GetServiceBookingSlotsUseCase;
 use nittei_api_structs::create_service_event_intend::*;
 use nittei_domain::{
+    ID,
+    ServiceMultiPersonOptions,
+    User,
     format_date,
     scheduling::{
         RoundRobinAlgorithm,
         RoundRobinAvailabilityAssignment,
         RoundRobinEqualDistributionAssignment,
     },
-    ServiceMultiPersonOptions,
-    User,
-    ID,
 };
 use nittei_infra::NitteiContext;
 use tracing::warn;
@@ -25,8 +25,8 @@ use super::get_service_bookingslots;
 use crate::{
     error::NitteiError,
     shared::{
-        auth::protect_account_route,
-        usecase::{execute, UseCase},
+        auth::protect_admin_route,
+        usecase::{UseCase, execute},
     },
 };
 
@@ -36,7 +36,7 @@ pub async fn create_service_event_intend_controller(
     mut path: Path<PathParams>,
     State(ctx): State<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    protect_account_route(&headers, &ctx).await?;
+    protect_admin_route(&headers, &ctx).await?;
 
     let mut body = body.0;
     let usecase = CreateServiceEventIntendUseCase {

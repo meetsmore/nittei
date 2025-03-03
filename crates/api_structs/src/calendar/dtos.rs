@@ -1,4 +1,4 @@
-use nittei_domain::{Calendar, CalendarSettings, Weekday, ID};
+use nittei_domain::{Calendar, CalendarSettings, ID, Weekday};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 

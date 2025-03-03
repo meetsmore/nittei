@@ -3,7 +3,7 @@ use std::time::Duration;
 use awc::Client;
 use nittei_api_structs::send_event_reminders::AccountRemindersDTO;
 use nittei_infra::NitteiContext;
-use tokio::time::{interval, sleep_until, Instant};
+use tokio::time::{Instant, interval, sleep_until};
 use tracing::{debug, error};
 
 use crate::{

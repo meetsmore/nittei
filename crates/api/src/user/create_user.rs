@@ -1,19 +1,19 @@
 use axum::{
+    Json,
     extract::State,
     http::{HeaderMap, StatusCode},
-    Json,
 };
 use axum_valid::Valid;
-use futures::{try_join, FutureExt};
+use futures::{FutureExt, try_join};
 use nittei_api_structs::create_user::*;
-use nittei_domain::{User, ID};
+use nittei_domain::{ID, User};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::protect_account_route,
-        usecase::{execute, UseCase},
+        auth::protect_admin_route,
+        usecase::{UseCase, execute},
     },
 };
 
@@ -22,7 +22,7 @@ pub async fn create_user_controller(
     mut body: Valid<Json<RequestBody>>,
     State(ctx): State<NitteiContext>,
 ) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
-    let account = protect_account_route(&headers, &ctx).await?;
+    let account = protect_admin_route(&headers, &ctx).await?;
 
     let usecase = CreateUserUseCase {
         account_id: account.id,

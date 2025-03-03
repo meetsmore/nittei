@@ -1,17 +1,17 @@
 use std::collections::HashMap;
 
-use axum::{extract::State, http::HeaderMap, Json};
+use axum::{Json, extract::State, http::HeaderMap};
 use axum_valid::Valid;
 use chrono::{DateTime, Utc};
-use futures::{future::join_all, stream, StreamExt};
+use futures::{StreamExt, future::join_all, stream};
 use nittei_api_structs::multiple_freebusy::{APIResponse, RequestBody};
 use nittei_domain::{
-    expand_all_events_and_remove_exceptions,
     Calendar,
     CalendarEvent,
     EventInstance,
-    TimeSpan,
     ID,
+    TimeSpan,
+    expand_all_events_and_remove_exceptions,
 };
 use nittei_infra::NitteiContext;
 use tracing::error;
@@ -20,7 +20,7 @@ use crate::{
     error::NitteiError,
     shared::{
         auth::protect_public_account_route,
-        usecase::{execute, UseCase},
+        usecase::{UseCase, execute},
     },
 };
 

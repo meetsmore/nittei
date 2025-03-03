@@ -10,7 +10,7 @@ use super::{
     sync_event_reminders::{EventOperation, SyncEventRemindersTrigger, SyncEventRemindersUseCase},
     update_event::UpdateEventUseCase,
 };
-use crate::shared::usecase::{execute, Subscriber};
+use crate::shared::usecase::{Subscriber, execute};
 
 pub struct CreateRemindersOnEventCreated;
 

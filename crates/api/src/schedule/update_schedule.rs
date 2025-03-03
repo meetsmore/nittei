@@ -1,19 +1,19 @@
 use axum::{
+    Json,
     extract::{Path, State},
     http::HeaderMap,
-    Json,
 };
 use axum_valid::Valid;
 use chrono_tz::Tz;
 use nittei_api_structs::update_schedule::*;
-use nittei_domain::{Schedule, ScheduleRule, ID};
+use nittei_domain::{ID, Schedule, ScheduleRule};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_schedule, protect_account_route, protect_route, Permission},
-        usecase::{execute, execute_with_policy, PermissionBoundary, UseCase},
+        auth::{Permission, account_can_modify_schedule, protect_admin_route, protect_route},
+        usecase::{PermissionBoundary, UseCase, execute, execute_with_policy},
     },
 };
 
@@ -23,7 +23,7 @@ pub async fn update_schedule_admin_controller(
     body: Valid<Json<RequestBody>>,
     State(ctx): State<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_account_route(&headers, &ctx).await?;
+    let account = protect_admin_route(&headers, &ctx).await?;
     let schedule = account_can_modify_schedule(&account, &path.schedule_id, &ctx).await?;
 
     let mut body = body.0;

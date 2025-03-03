@@ -1,6 +1,6 @@
 mod postgres;
 
-use nittei_domain::{BusyCalendarProvider, IntegrationProvider, ID};
+use nittei_domain::{BusyCalendarProvider, ID, IntegrationProvider};
 pub use postgres::PostgresServiceUseBusyCalendarRepo;
 
 #[derive(Debug, Clone)]
@@ -47,7 +47,7 @@ mod tests {
         UserIntegration,
     };
 
-    use crate::{setup_context, BusyCalendarIdentifier, ExternalBusyCalendarIdentifier};
+    use crate::{BusyCalendarIdentifier, ExternalBusyCalendarIdentifier, setup_context};
 
     #[tokio::test]
     async fn test_service_user_busy_calendars() {
@@ -75,12 +75,13 @@ mod tests {
                 redirect_uri: "".into(),
                 provider: provider.clone(),
             };
-            assert!(ctx
-                .repos
-                .account_integrations
-                .insert(&acc_integration)
-                .await
-                .is_ok());
+            assert!(
+                ctx.repos
+                    .account_integrations
+                    .insert(&acc_integration)
+                    .await
+                    .is_ok()
+            );
 
             let user_integration = UserIntegration {
                 access_token: "".into(),
@@ -90,12 +91,13 @@ mod tests {
                 user_id: user.id.clone(),
                 provider: provider.clone(),
             };
-            assert!(ctx
-                .repos
-                .user_integrations
-                .insert(&user_integration)
-                .await
-                .is_ok());
+            assert!(
+                ctx.repos
+                    .user_integrations
+                    .insert(&user_integration)
+                    .await
+                    .is_ok()
+            );
         }
 
         let calendar = Calendar::new(&user.id, &account.id, None, None);
@@ -107,40 +109,45 @@ mod tests {
             service_id: service.id.clone(),
             user_id: user.id.clone(),
         };
-        assert!(ctx
-            .repos
-            .service_user_busy_calendars
-            .insert(busy.clone())
-            .await
-            .is_ok());
+        assert!(
+            ctx.repos
+                .service_user_busy_calendars
+                .insert(busy.clone())
+                .await
+                .is_ok()
+        );
         // Double insert should be error
-        assert!(ctx
-            .repos
-            .service_user_busy_calendars
-            .insert(busy.clone())
-            .await
-            .is_err());
+        assert!(
+            ctx.repos
+                .service_user_busy_calendars
+                .insert(busy.clone())
+                .await
+                .is_err()
+        );
         // It should find the busy calendar after insert
-        assert!(ctx
-            .repos
-            .service_user_busy_calendars
-            .exists(busy.clone())
-            .await
-            .expect("To check if busy calendar exists"));
+        assert!(
+            ctx.repos
+                .service_user_busy_calendars
+                .exists(busy.clone())
+                .await
+                .expect("To check if busy calendar exists")
+        );
         // It should remove a busy calendar
-        assert!(ctx
-            .repos
-            .service_user_busy_calendars
-            .delete(busy.clone())
-            .await
-            .is_ok());
+        assert!(
+            ctx.repos
+                .service_user_busy_calendars
+                .delete(busy.clone())
+                .await
+                .is_ok()
+        );
         // It should NOT find the busy calendar after delete
-        assert!(!ctx
-            .repos
-            .service_user_busy_calendars
-            .exists(busy.clone())
-            .await
-            .expect("To check if busy calendar exists"));
+        assert!(
+            !ctx.repos
+                .service_user_busy_calendars
+                .exists(busy.clone())
+                .await
+                .expect("To check if busy calendar exists")
+        );
 
         // Insert nittei busy calendar that does not exist
         let bad_busy = BusyCalendarIdentifier {
@@ -148,19 +155,21 @@ mod tests {
             service_id: service.id.clone(),
             user_id: user.id.clone(),
         };
-        assert!(ctx
-            .repos
-            .service_user_busy_calendars
-            .insert(bad_busy.clone())
-            .await
-            .is_err());
+        assert!(
+            ctx.repos
+                .service_user_busy_calendars
+                .insert(bad_busy.clone())
+                .await
+                .is_err()
+        );
         // Query if that exists should return false
-        assert!(!ctx
-            .repos
-            .service_user_busy_calendars
-            .exists(bad_busy.clone())
-            .await
-            .expect("To check if busy calendar exists"));
+        assert!(
+            !ctx.repos
+                .service_user_busy_calendars
+                .exists(bad_busy.clone())
+                .await
+                .expect("To check if busy calendar exists")
+        );
 
         // ------------------------------------
         // Insert external busy calendar
@@ -170,40 +179,45 @@ mod tests {
             ext_calendar_id: "".into(),
             provider: IntegrationProvider::Google,
         };
-        assert!(ctx
-            .repos
-            .service_user_busy_calendars
-            .insert_ext(busy.clone())
-            .await
-            .is_ok());
+        assert!(
+            ctx.repos
+                .service_user_busy_calendars
+                .insert_ext(busy.clone())
+                .await
+                .is_ok()
+        );
         // Double insert should be error
-        assert!(ctx
-            .repos
-            .service_user_busy_calendars
-            .insert_ext(busy.clone())
-            .await
-            .is_err());
+        assert!(
+            ctx.repos
+                .service_user_busy_calendars
+                .insert_ext(busy.clone())
+                .await
+                .is_err()
+        );
         // It should find the busy calendar after insert
-        assert!(ctx
-            .repos
-            .service_user_busy_calendars
-            .exists_ext(busy.clone())
-            .await
-            .expect("To check if busy calendar exists"));
+        assert!(
+            ctx.repos
+                .service_user_busy_calendars
+                .exists_ext(busy.clone())
+                .await
+                .expect("To check if busy calendar exists")
+        );
         // It should remove a busy calendar
-        assert!(ctx
-            .repos
-            .service_user_busy_calendars
-            .delete_ext(busy.clone())
-            .await
-            .is_ok());
+        assert!(
+            ctx.repos
+                .service_user_busy_calendars
+                .delete_ext(busy.clone())
+                .await
+                .is_ok()
+        );
         // It should NOT find the busy calendar after delete
-        assert!(!ctx
-            .repos
-            .service_user_busy_calendars
-            .exists_ext(busy.clone())
-            .await
-            .expect("To check if busy calendar exists"));
+        assert!(
+            !ctx.repos
+                .service_user_busy_calendars
+                .exists_ext(busy.clone())
+                .await
+                .expect("To check if busy calendar exists")
+        );
 
         // External busy calendar that does not exist
         let bad_busy = ExternalBusyCalendarIdentifier {
@@ -213,11 +227,12 @@ mod tests {
             provider: IntegrationProvider::Google,
         };
         // Query if that exists should return false
-        assert!(!ctx
-            .repos
-            .service_user_busy_calendars
-            .exists_ext(bad_busy.clone())
-            .await
-            .expect("To check if busy calendar exists"));
+        assert!(
+            !ctx.repos
+                .service_user_busy_calendars
+                .exists_ext(bad_busy.clone())
+                .await
+                .expect("To check if busy calendar exists")
+        );
     }
 }

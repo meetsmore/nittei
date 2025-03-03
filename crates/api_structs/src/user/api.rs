@@ -1,4 +1,4 @@
-use nittei_domain::{User, ID};
+use nittei_domain::{ID, User};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 use validator::Validate;

@@ -1,18 +1,18 @@
 use axum::{
+    Json,
     extract::{Path, State},
     http::HeaderMap,
-    Json,
 };
 use axum_valid::Valid;
 use nittei_api_structs::remove_busy_calendar::*;
-use nittei_domain::{Account, BusyCalendarProvider, IntegrationProvider, ID};
+use nittei_domain::{Account, BusyCalendarProvider, ID, IntegrationProvider};
 use nittei_infra::{BusyCalendarIdentifier, ExternalBusyCalendarIdentifier, NitteiContext};
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::protect_account_route,
-        usecase::{execute, UseCase},
+        auth::protect_admin_route,
+        usecase::{UseCase, execute},
     },
 };
 
@@ -22,7 +22,7 @@ pub async fn remove_busy_calendar_controller(
     body: Valid<Json<RequestBody>>,
     State(ctx): State<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_account_route(&headers, &ctx).await?;
+    let account = protect_admin_route(&headers, &ctx).await?;
 
     let body = body.0;
 

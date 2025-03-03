@@ -1,4 +1,4 @@
-use nittei_domain::{Account, AccountSettings, AccountWebhookSettings, PEMKey, ID};
+use nittei_domain::{Account, AccountSettings, AccountWebhookSettings, ID, PEMKey};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 

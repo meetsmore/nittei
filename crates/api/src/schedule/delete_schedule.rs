@@ -1,17 +1,17 @@
 use axum::{
+    Json,
     extract::{Path, State},
     http::HeaderMap,
-    Json,
 };
 use nittei_api_structs::delete_schedule::*;
-use nittei_domain::{Schedule, ID};
+use nittei_domain::{ID, Schedule};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_schedule, protect_account_route, protect_route, Permission},
-        usecase::{execute, execute_with_policy, PermissionBoundary, UseCase},
+        auth::{Permission, account_can_modify_schedule, protect_admin_route, protect_route},
+        usecase::{PermissionBoundary, UseCase, execute, execute_with_policy},
     },
 };
 
@@ -20,7 +20,7 @@ pub async fn delete_schedule_admin_controller(
     path: Path<PathParams>,
     State(ctx): State<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_account_route(&headers, &ctx).await?;
+    let account = protect_admin_route(&headers, &ctx).await?;
     let schedule = account_can_modify_schedule(&account, &path.schedule_id, &ctx).await?;
 
     let usecase = DeleteScheduleUseCase {

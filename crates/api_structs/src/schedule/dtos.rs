@@ -1,4 +1,4 @@
-use nittei_domain::{Schedule, ScheduleRule, ID};
+use nittei_domain::{ID, Schedule, ScheduleRule};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 

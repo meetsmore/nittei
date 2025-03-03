@@ -125,3 +125,6 @@ tolerations: []
 affinity: {}
 
 revisionHistoryLimit: 5
+
+# Specify the strategy to the Deployment
+strategy: {}

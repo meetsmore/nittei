@@ -1,7 +1,7 @@
 use axum::{
+    Json,
     extract::{Path, State},
     http::HeaderMap,
-    Json,
 };
 use axum_valid::Valid;
 use chrono::{DateTime, TimeDelta, Utc};
@@ -11,9 +11,9 @@ use nittei_domain::{
     CalendarEvent,
     CalendarEventReminder,
     CalendarEventStatus,
+    ID,
     RRuleOptions,
     User,
-    ID,
 };
 use nittei_infra::NitteiContext;
 
@@ -22,13 +22,13 @@ use crate::{
     event::{self, subscribers::UpdateSyncedEventsOnEventUpdated},
     shared::{
         auth::{
+            Permission,
             account_can_modify_event,
             account_can_modify_user,
-            protect_account_route,
+            protect_admin_route,
             protect_route,
-            Permission,
         },
-        usecase::{execute, execute_with_policy, PermissionBoundary, Subscriber, UseCase},
+        usecase::{PermissionBoundary, Subscriber, UseCase, execute, execute_with_policy},
     },
 };
 
@@ -38,7 +38,7 @@ pub async fn update_event_admin_controller(
     path_params: Path<PathParams>,
     State(ctx): State<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_account_route(&headers, &ctx).await?;
+    let account = protect_admin_route(&headers, &ctx).await?;
     let e = account_can_modify_event(&account, &path_params.event_id, &ctx).await?;
     let user = account_can_modify_user(&account, &e.user_id, &ctx).await?;
 
@@ -207,7 +207,7 @@ impl UseCase for UpdateEventUseCase {
                 return Err(UseCaseError::NotFound(
                     "Calendar Event".into(),
                     event_id.clone(),
-                ))
+                ));
             }
             Err(e) => {
                 tracing::error!("Failed to get one event {:?}", e);
@@ -241,7 +241,7 @@ impl UseCase for UpdateEventUseCase {
                 return Err(UseCaseError::NotFound(
                     "Calendar".into(),
                     e.calendar_id.clone(),
-                ))
+                ));
             }
             Err(e) => {
                 tracing::error!("[update_event] Failed to get one calendar {:?}", e);

@@ -56,13 +56,14 @@ mod tests {
         assert!(res.is_ok());
 
         // Find
-        assert!(ctx
-            .repos
-            .calendars
-            .find(&calendar.id)
-            .await
-            .unwrap()
-            .is_none());
+        assert!(
+            ctx.repos
+                .calendars
+                .find(&calendar.id)
+                .await
+                .unwrap()
+                .is_none()
+        );
     }
 
     #[tokio::test]
@@ -111,12 +112,13 @@ mod tests {
         assert!(res.is_some());
 
         // Find
-        assert!(ctx
-            .repos
-            .calendars
-            .find(&calendar.id)
-            .await
-            .unwrap()
-            .is_none());
+        assert!(
+            ctx.repos
+                .calendars
+                .find(&calendar.id)
+                .await
+                .unwrap()
+                .is_none()
+        );
     }
 }

@@ -5,7 +5,7 @@ use helpers::{
     setup::spawn_app,
     utils::{assert_equal_user_lists, format_datetime},
 };
-use nittei_domain::{BusyCalendarProvider, ServiceMultiPersonOptions, TimePlan, ID};
+use nittei_domain::{BusyCalendarProvider, ID, ServiceMultiPersonOptions, TimePlan};
 use nittei_sdk::{
     AddBusyCalendar,
     AddServiceUserInput,

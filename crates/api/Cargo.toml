@@ -2,7 +2,7 @@
 name = "nittei_api"
 version = "0.1.0"
 authors = ["Meetsmore", "Fredrik Meringdal"]
-edition = "2021"
+edition = "2024"
 
 [lints]
 workspace = true

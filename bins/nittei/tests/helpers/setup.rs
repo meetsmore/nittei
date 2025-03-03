@@ -1,5 +1,5 @@
 use nittei_api::Application;
-use nittei_infra::{setup_context, Config, NitteiContext};
+use nittei_infra::{Config, NitteiContext, setup_context};
 use nittei_sdk::NitteiSDK;
 
 #[allow(dead_code)]

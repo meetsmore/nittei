@@ -1,4 +1,4 @@
-use nittei_domain::{IntegrationProvider, UserIntegration, ID};
+use nittei_domain::{ID, IntegrationProvider, UserIntegration};
 use serde::Deserialize;
 use sqlx::{FromRow, PgPool};
 use tracing::{error, instrument};
@@ -147,7 +147,7 @@ impl IUserIntegrationRepo for PostgresUserIntegrationRepo {
             Err(e) => {
                 error!(
                     "Delete user integration for user id: {} and provider: {:?} failed. DB returned error: {:?}",
-                    user_id,  provider, e
+                    user_id, provider, e
                 );
 
                 Err(anyhow::Error::new(e))

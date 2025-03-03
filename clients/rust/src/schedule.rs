@@ -4,7 +4,7 @@ use nittei_api_structs::*;
 use nittei_domain::Tz;
 use reqwest::StatusCode;
 
-use crate::{APIResponse, BaseClient, ScheduleRule, ID};
+use crate::{APIResponse, BaseClient, ID, ScheduleRule};
 
 #[derive(Clone)]
 pub struct ScheduleClient {

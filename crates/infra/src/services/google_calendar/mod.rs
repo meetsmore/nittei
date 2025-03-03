@@ -14,11 +14,11 @@ use calendar_api::{
 };
 use chrono::{DateTime, Utc};
 use nittei_domain::{
-    providers::google::GoogleCalendarAccessRole,
     CalendarEvent,
     CompatibleInstances,
     EventInstance,
     User,
+    providers::google::GoogleCalendarAccessRole,
 };
 
 use super::FreeBusyProviderQuery;

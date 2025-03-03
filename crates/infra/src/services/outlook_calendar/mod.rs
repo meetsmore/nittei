@@ -4,10 +4,10 @@ mod calendar_api;
 
 use calendar_api::OutlookCalendarRestApi;
 use nittei_domain::{
-    providers::outlook::{OutlookCalendarAccessRole, OutlookCalendarEvent},
     CalendarEvent,
     CompatibleInstances,
     User,
+    providers::outlook::{OutlookCalendarAccessRole, OutlookCalendarEvent},
 };
 
 use self::calendar_api::{FreeBusyRequest, ListCalendarsResponse, OutlookCalendarEventAttributes};

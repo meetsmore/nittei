@@ -1,18 +1,18 @@
-use axum::{extract::State, http::HeaderMap, Json};
+use axum::{Json, extract::State, http::HeaderMap};
 use nittei_api_structs::delete_account_webhook::APIResponse;
 use nittei_infra::NitteiContext;
 
 use super::set_account_webhook::SetAccountWebhookUseCase;
 use crate::{
     error::NitteiError,
-    shared::{auth::protect_account_route, usecase::execute},
+    shared::{auth::protect_admin_route, usecase::execute},
 };
 
 pub async fn delete_account_webhook_controller(
     headers: HeaderMap,
     State(ctx): State<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_account_route(&headers, &ctx).await?;
+    let account = protect_admin_route(&headers, &ctx).await?;
 
     let usecase = SetAccountWebhookUseCase {
         account,

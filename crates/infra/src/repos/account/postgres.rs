@@ -1,11 +1,16 @@
-use std::convert::{TryFrom, TryInto};
+use std::{
+    convert::{TryFrom, TryInto},
+    sync::Arc,
+    time::Duration,
+};
 
-use nittei_domain::{Account, PEMKey, ID};
+use moka::future::Cache;
+use nittei_domain::{Account, ID, PEMKey};
 use serde_json::Value;
 use sqlx::{
-    types::{Json, Uuid},
     FromRow,
     PgPool,
+    types::{Json, Uuid},
 };
 use tracing::{error, instrument};
 
@@ -14,11 +19,19 @@ use super::IAccountRepo;
 #[derive(Debug)]
 pub struct PostgresAccountRepo {
     pool: PgPool,
+    cache: Arc<Cache<String, Account>>,
 }
 
 impl PostgresAccountRepo {
     pub fn new(pool: PgPool) -> Self {
-        Self { pool }
+        let cache = Cache::builder()
+            .time_to_live(Duration::from_secs(300)) // 5 minutes
+            .build();
+
+        Self {
+            pool,
+            cache: Arc::new(cache),
+        }
     }
 }
 
@@ -96,6 +109,10 @@ impl IAccountRepo for PostgresAccountRepo {
                 account, e
             );
         })?;
+
+        // Remove the account from the local cache
+        self.cache.remove(&account.secret_api_key).await;
+
         Ok(())
     }
 
@@ -153,7 +170,7 @@ impl IAccountRepo for PostgresAccountRepo {
 
     #[instrument]
     async fn delete(&self, account_id: &ID) -> anyhow::Result<Option<Account>> {
-        sqlx::query_as!(
+        let possibly_deleted_account: Option<Account> = sqlx::query_as!(
             AccountRaw,
             "
             DELETE FROM accounts
@@ -171,12 +188,23 @@ impl IAccountRepo for PostgresAccountRepo {
             );
         })?
         .map(|res| res.try_into())
-        .transpose()
+        .transpose()?;
+
+        // If the account was deleted, remove it from the cache
+        if let Some(ref account) = possibly_deleted_account {
+            self.cache.remove(&account.secret_api_key).await;
+        }
+
+        Ok(possibly_deleted_account)
     }
 
     #[instrument]
     async fn find_by_apikey(&self, api_key: &str) -> anyhow::Result<Option<Account>> {
-        sqlx::query_as!(
+        if let Some(account) = self.cache.get(api_key).await {
+            return Ok(Some(account));
+        }
+
+        let optional_account: Option<Account> = sqlx::query_as!(
             AccountRaw,
             "
             SELECT * FROM accounts
@@ -193,6 +221,14 @@ impl IAccountRepo for PostgresAccountRepo {
             );
         })?
         .map(|res| res.try_into())
-        .transpose()
+        .transpose()?;
+
+        if let Some(ref account) = optional_account {
+            self.cache
+                .insert(api_key.to_string(), account.clone())
+                .await;
+        }
+
+        Ok(optional_account)
     }
 }

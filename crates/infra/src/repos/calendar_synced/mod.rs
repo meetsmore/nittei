@@ -1,6 +1,6 @@
 mod postgres;
 
-use nittei_domain::{SyncedCalendar, ID};
+use nittei_domain::{ID, SyncedCalendar};
 pub use postgres::PostgresCalendarSyncedRepo;
 
 #[async_trait::async_trait]
@@ -81,12 +81,13 @@ mod tests {
                 provider,
                 user_id: user.id.clone(),
             };
-            assert!(ctx
-                .repos
-                .calendar_synced
-                .insert(&sync_calendar)
-                .await
-                .is_ok());
+            assert!(
+                ctx.repos
+                    .calendar_synced
+                    .insert(&sync_calendar)
+                    .await
+                    .is_ok()
+            );
         }
 
         let synced_calendars = ctx
@@ -98,12 +99,16 @@ mod tests {
         assert_eq!(synced_calendars.len(), 2);
         assert_eq!(synced_calendars[0].calendar_id, calendar.id);
         assert_eq!(synced_calendars[1].calendar_id, calendar.id);
-        assert!(synced_calendars
-            .iter()
-            .any(|c| c.provider == IntegrationProvider::Google));
-        assert!(synced_calendars
-            .iter()
-            .any(|c| c.provider == IntegrationProvider::Outlook));
+        assert!(
+            synced_calendars
+                .iter()
+                .any(|c| c.provider == IntegrationProvider::Google)
+        );
+        assert!(
+            synced_calendars
+                .iter()
+                .any(|c| c.provider == IntegrationProvider::Outlook)
+        );
 
         let sync_calendar = SyncedCalendar {
             calendar_id: calendar.id.clone(),
@@ -111,18 +116,20 @@ mod tests {
             provider: IntegrationProvider::Google,
             user_id: user.id.clone(),
         };
-        assert!(ctx
-            .repos
-            .calendar_synced
-            .delete(&sync_calendar)
-            .await
-            .is_ok());
-        assert!(ctx
-            .repos
-            .calendar_synced
-            .delete(&sync_calendar)
-            .await
-            .is_err());
+        assert!(
+            ctx.repos
+                .calendar_synced
+                .delete(&sync_calendar)
+                .await
+                .is_ok()
+        );
+        assert!(
+            ctx.repos
+                .calendar_synced
+                .delete(&sync_calendar)
+                .await
+                .is_err()
+        );
 
         // Find after delete
         let synced_calendars = ctx

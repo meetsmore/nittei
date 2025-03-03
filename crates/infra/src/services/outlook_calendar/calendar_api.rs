@@ -1,6 +1,9 @@
 use chrono::{DateTime, SecondsFormat, Utc};
 use futures::future::join_all;
 use nittei_domain::{
+    CalendarEvent,
+    CompatibleInstances,
+    EventInstance,
     providers::outlook::{
         OutlookCalendar,
         OutlookCalendarEvent,
@@ -11,9 +14,6 @@ use nittei_domain::{
         OutlookCalendarEventTime,
         OutlookOnlineMeetingProvider,
     },
-    CalendarEvent,
-    CompatibleInstances,
-    EventInstance,
 };
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -284,8 +284,6 @@ impl OutlookCalendarRestApi {
         let calendar_views = join_all(cal_futures)
             .await
             .into_iter()
-            // Keep the error in the stream, propagate it instead of discarding with `filter_map`
-            .map(|res| res.map_err(anyhow::Error::from))
             // Collect the result and propagate the first encountered error
             .collect::<Result<Vec<_>, _>>()?
             .into_iter()

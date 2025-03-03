@@ -1,23 +1,23 @@
 use axum::{
+    Json,
     extract::{Path, State},
     http::HeaderMap,
-    Json,
 };
 use axum_valid::Valid;
 use nittei_api_structs::update_service_user::*;
-use nittei_domain::{Account, ServiceResource, TimePlan, ID};
+use nittei_domain::{Account, ID, ServiceResource, TimePlan};
 use nittei_infra::NitteiContext;
 
 use super::add_user_to_service::{
-    update_resource_values,
     ServiceResourceUpdate,
     UpdateServiceResourceError,
+    update_resource_values,
 };
 use crate::{
     error::NitteiError,
     shared::{
-        auth::protect_account_route,
-        usecase::{execute, UseCase},
+        auth::protect_admin_route,
+        usecase::{UseCase, execute},
     },
 };
 
@@ -27,7 +27,7 @@ pub async fn update_service_user_controller(
     mut path: Path<PathParams>,
     State(ctx): State<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_account_route(&headers, &ctx).await?;
+    let account = protect_admin_route(&headers, &ctx).await?;
 
     let usecase = UpdateServiceUserUseCase {
         account,

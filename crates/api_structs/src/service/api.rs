@@ -1,11 +1,11 @@
 use nittei_domain::{
     BusyCalendarProvider,
+    ID,
     Service,
     ServiceResource,
     ServiceWithUsers,
     TimePlan,
     Tz,
-    ID,
 };
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;

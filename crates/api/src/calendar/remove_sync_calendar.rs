@@ -1,18 +1,18 @@
 use axum::{
+    Json,
     extract::{Path, State},
     http::HeaderMap,
-    Json,
 };
 use axum_valid::Valid;
 use nittei_api_structs::remove_sync_calendar::{APIResponse, PathParams, RequestBody};
-use nittei_domain::{IntegrationProvider, ID};
+use nittei_domain::{ID, IntegrationProvider};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_user, protect_account_route, Permission},
-        usecase::{execute, PermissionBoundary, UseCase},
+        auth::{Permission, account_can_modify_user, protect_admin_route},
+        usecase::{PermissionBoundary, UseCase, execute},
     },
 };
 
@@ -31,7 +31,7 @@ pub async fn remove_sync_calendar_admin_controller(
     body: Valid<Json<RequestBody>>,
     State(ctx): State<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_account_route(&headers, &ctx).await?;
+    let account = protect_admin_route(&headers, &ctx).await?;
     // Check if user exists and can be modified by the account
     account_can_modify_user(&account, &path_params.user_id, &ctx).await?;
 

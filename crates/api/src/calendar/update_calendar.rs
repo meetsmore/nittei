@@ -1,26 +1,26 @@
 use axum::{
+    Json,
     extract::{Path, State},
     http::HeaderMap,
-    Json,
 };
 use axum_valid::Valid;
 use chrono::Weekday;
 use chrono_tz::Tz;
 use nittei_api_structs::update_calendar::{APIResponse, PathParams, RequestBody};
-use nittei_domain::{Calendar, User, ID};
+use nittei_domain::{Calendar, ID, User};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
         auth::{
+            Permission,
             account_can_modify_calendar,
             account_can_modify_user,
-            protect_account_route,
+            protect_admin_route,
             protect_route,
-            Permission,
         },
-        usecase::{execute, execute_with_policy, PermissionBoundary, UseCase},
+        usecase::{PermissionBoundary, UseCase, execute, execute_with_policy},
     },
 };
 
@@ -30,7 +30,7 @@ pub async fn update_calendar_admin_controller(
     path: Path<PathParams>,
     mut body: Valid<Json<RequestBody>>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_account_route(&headers, &ctx).await?;
+    let account = protect_admin_route(&headers, &ctx).await?;
     let cal = account_can_modify_calendar(&account, &path.calendar_id, &ctx).await?;
     let user = account_can_modify_user(&account, &cal.user_id, &ctx).await?;
 

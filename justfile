@@ -60,7 +60,7 @@ lint: _setup_db
 
 # Format
 format:
-	cargo +nightly fmt --all -- --check
+	cargo +nightly fmt --all
 	pnpm run format
 
 # Check unused dependencies

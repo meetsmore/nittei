@@ -12,9 +12,6 @@ static GLOBAL: Jemalloc = Jemalloc;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    // Initialize the environment variables for SSL certificates
-    openssl_probe::init_ssl_cert_env_vars();
-
     // Initialize the subscriber for logging & tracing
     init_subscriber()?;
 

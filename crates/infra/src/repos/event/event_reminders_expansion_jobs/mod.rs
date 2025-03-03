@@ -94,13 +94,14 @@ mod tests {
                 version: v_e3,
             },
         ];
-        assert!(ctx
-            .repos
-            .event_reminders_generation_jobs
-            .bulk_insert(&jobs)
-            .await
-            .map_err(|e| error!("Err: {:?}", e))
-            .is_ok());
+        assert!(
+            ctx.repos
+                .event_reminders_generation_jobs
+                .bulk_insert(&jobs)
+                .await
+                .map_err(|e| error!("Err: {:?}", e))
+                .is_ok()
+        );
 
         // Delete before timestamp
         let delete_res = ctx

@@ -1,18 +1,18 @@
 use axum::{
+    Json,
     extract::{Path, State},
     http::HeaderMap,
-    Json,
 };
 use axum_valid::Valid;
 use nittei_api_structs::add_user_to_service::*;
-use nittei_domain::{Account, ServiceResource, TimePlan, ID};
+use nittei_domain::{Account, ID, ServiceResource, TimePlan};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::protect_account_route,
-        usecase::{execute, UseCase},
+        auth::protect_admin_route,
+        usecase::{UseCase, execute},
     },
 };
 
@@ -22,7 +22,7 @@ pub async fn add_user_to_service_controller(
     mut path: Path<PathParams>,
     State(ctx): State<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_account_route(&headers, &ctx).await?;
+    let account = protect_admin_route(&headers, &ctx).await?;
 
     let usecase = AddUserToServiceUseCase {
         account,
@@ -197,7 +197,7 @@ pub async fn update_resource_values(
                 Ok(_) => {
                     return Err(UpdateServiceResourceError::ScheduleNotOwnedByUser(
                         id.to_string(),
-                    ))
+                    ));
                 }
                 Err(_) => {
                     return Err(UpdateServiceResourceError::InternalError);

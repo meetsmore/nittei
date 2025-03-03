@@ -1,5 +1,5 @@
-use nittei_domain::{SyncedCalendar, ID};
-use sqlx::{types::Uuid, FromRow, PgPool};
+use nittei_domain::{ID, SyncedCalendar};
+use sqlx::{FromRow, PgPool, types::Uuid};
 use tracing::{error, instrument};
 
 use super::ICalendarSyncedRepo;

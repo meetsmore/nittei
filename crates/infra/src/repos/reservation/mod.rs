@@ -50,30 +50,34 @@ mod tests {
             .expect("To get reservations count");
         assert_eq!(count, 0);
 
-        assert!(ctx
-            .repos
-            .reservations
-            .increment(&service.id, DateTime::from_timestamp_millis(0).unwrap())
-            .await
-            .is_ok());
-        assert!(ctx
-            .repos
-            .reservations
-            .increment(&service.id, DateTime::from_timestamp_millis(1).unwrap())
-            .await
-            .is_ok());
-        assert!(ctx
-            .repos
-            .reservations
-            .increment(&service.id, DateTime::from_timestamp_millis(2).unwrap())
-            .await
-            .is_ok());
-        assert!(ctx
-            .repos
-            .reservations
-            .increment(&service2.id, DateTime::from_timestamp_millis(1).unwrap())
-            .await
-            .is_ok());
+        assert!(
+            ctx.repos
+                .reservations
+                .increment(&service.id, DateTime::from_timestamp_millis(0).unwrap())
+                .await
+                .is_ok()
+        );
+        assert!(
+            ctx.repos
+                .reservations
+                .increment(&service.id, DateTime::from_timestamp_millis(1).unwrap())
+                .await
+                .is_ok()
+        );
+        assert!(
+            ctx.repos
+                .reservations
+                .increment(&service.id, DateTime::from_timestamp_millis(2).unwrap())
+                .await
+                .is_ok()
+        );
+        assert!(
+            ctx.repos
+                .reservations
+                .increment(&service2.id, DateTime::from_timestamp_millis(1).unwrap())
+                .await
+                .is_ok()
+        );
         let count = ctx
             .repos
             .reservations
@@ -102,30 +106,34 @@ mod tests {
 
         let timestamp = DateTime::from_timestamp_millis(10).unwrap();
 
-        assert!(ctx
-            .repos
-            .reservations
-            .increment(&service.id, timestamp)
-            .await
-            .is_ok());
-        assert!(ctx
-            .repos
-            .reservations
-            .increment(&service.id, timestamp)
-            .await
-            .is_ok());
-        assert!(ctx
-            .repos
-            .reservations
-            .increment(&service.id, timestamp)
-            .await
-            .is_ok());
-        assert!(ctx
-            .repos
-            .reservations
-            .increment(&service.id, timestamp)
-            .await
-            .is_ok());
+        assert!(
+            ctx.repos
+                .reservations
+                .increment(&service.id, timestamp)
+                .await
+                .is_ok()
+        );
+        assert!(
+            ctx.repos
+                .reservations
+                .increment(&service.id, timestamp)
+                .await
+                .is_ok()
+        );
+        assert!(
+            ctx.repos
+                .reservations
+                .increment(&service.id, timestamp)
+                .await
+                .is_ok()
+        );
+        assert!(
+            ctx.repos
+                .reservations
+                .increment(&service.id, timestamp)
+                .await
+                .is_ok()
+        );
         let count = ctx
             .repos
             .reservations
@@ -135,12 +143,13 @@ mod tests {
         assert_eq!(count, 4);
 
         // Delete one reservation
-        assert!(ctx
-            .repos
-            .reservations
-            .decrement(&service.id, timestamp)
-            .await
-            .is_ok());
+        assert!(
+            ctx.repos
+                .reservations
+                .decrement(&service.id, timestamp)
+                .await
+                .is_ok()
+        );
 
         // Now there should only be three
         let count = ctx

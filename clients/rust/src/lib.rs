@@ -44,10 +44,9 @@ pub use nittei_api_structs::{
     send_event_reminders::AccountRemindersDTO as AccountReminders,
 };
 pub use nittei_domain::{
-    providers::{google::*, outlook::*},
-    scheduling::RoundRobinAlgorithm,
     BusyCalendarProvider,
     CalendarEventReminder,
+    ID,
     IntegrationProvider,
     Metadata,
     Month,
@@ -60,7 +59,8 @@ pub use nittei_domain::{
     Tz,
     WeekDayRecurrence,
     Weekday,
-    ID,
+    providers::{google::*, outlook::*},
+    scheduling::RoundRobinAlgorithm,
 };
 use schedule::ScheduleClient;
 pub use schedule::{CreateScheduleInput, UpdateScheduleInput};

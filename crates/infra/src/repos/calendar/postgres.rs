@@ -3,9 +3,9 @@ use std::convert::{TryFrom, TryInto};
 use nittei_domain::{Calendar, ID};
 use serde_json::Value;
 use sqlx::{
-    types::{Json, Uuid},
     FromRow,
     PgPool,
+    types::{Json, Uuid},
 };
 use tracing::{error, instrument};
 

@@ -2,8 +2,8 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use crate::{
-    shared::entity::{Entity, ID},
     Meta,
+    shared::entity::{Entity, ID},
 };
 
 #[derive(Debug, Clone, Default)]

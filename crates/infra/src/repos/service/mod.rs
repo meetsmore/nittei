@@ -1,6 +1,6 @@
 mod postgres;
 
-use nittei_domain::{Service, ServiceWithUsers, ID};
+use nittei_domain::{ID, Service, ServiceWithUsers};
 pub use postgres::PostgresServiceRepo;
 
 use super::shared::query_structs::MetadataFindQuery;
@@ -95,12 +95,13 @@ mod tests {
             .await
             .expect("To delete service");
 
-        assert!(ctx
-            .repos
-            .services
-            .find(&service.id)
-            .await
-            .unwrap()
-            .is_none());
+        assert!(
+            ctx.repos
+                .services
+                .find(&service.id)
+                .await
+                .unwrap()
+                .is_none()
+        );
     }
 }

@@ -1,6 +1,6 @@
-use nittei_domain::{ServiceResource, TimePlan, ID};
+use nittei_domain::{ID, ServiceResource, TimePlan};
 use serde::Deserialize;
-use sqlx::{types::Uuid, FromRow, PgPool};
+use sqlx::{FromRow, PgPool, types::Uuid};
 use tracing::{error, instrument};
 
 use super::IServiceUserRepo;

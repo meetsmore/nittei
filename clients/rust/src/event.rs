@@ -7,12 +7,12 @@ use reqwest::StatusCode;
 use serde::Serialize;
 
 use crate::{
-    shared::MetadataFindInput,
     APIResponse,
     BaseClient,
     CalendarEventReminder,
-    RRuleOptions,
     ID,
+    RRuleOptions,
+    shared::MetadataFindInput,
 };
 
 #[derive(Clone)]

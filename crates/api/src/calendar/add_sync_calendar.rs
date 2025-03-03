@@ -1,28 +1,28 @@
 use axum::{
+    Json,
     extract::{Path, State},
     http::HeaderMap,
-    Json,
 };
 use axum_valid::Valid;
 use nittei_api_structs::add_sync_calendar::{APIResponse, PathParams, RequestBody};
 use nittei_domain::{
-    providers::{google::GoogleCalendarAccessRole, outlook::OutlookCalendarAccessRole},
+    ID,
     IntegrationProvider,
     SyncedCalendar,
     User,
-    ID,
+    providers::{google::GoogleCalendarAccessRole, outlook::OutlookCalendarAccessRole},
 };
 use nittei_infra::{
+    NitteiContext,
     google_calendar::GoogleCalendarProvider,
     outlook_calendar::OutlookCalendarProvider,
-    NitteiContext,
 };
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_user, protect_account_route, Permission},
-        usecase::{execute, PermissionBoundary, UseCase},
+        auth::{Permission, account_can_modify_user, protect_admin_route},
+        usecase::{PermissionBoundary, UseCase, execute},
     },
 };
 
@@ -32,7 +32,7 @@ pub async fn add_sync_calendar_admin_controller(
     body: Valid<Json<RequestBody>>,
     State(ctx): State<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_account_route(&headers, &ctx).await?;
+    let account = protect_admin_route(&headers, &ctx).await?;
     let user = account_can_modify_user(&account, &path_params.user_id, &ctx).await?;
 
     let body = body.0;

@@ -1,20 +1,20 @@
 use axum::{
+    Json,
     extract::{Path, Query, State},
     http::HeaderMap,
-    Json,
 };
 use nittei_api_structs::get_google_calendars::{APIResponse, PathParams, QueryParams};
 use nittei_domain::{
-    providers::google::{GoogleCalendarAccessRole, GoogleCalendarListEntry},
     User,
+    providers::google::{GoogleCalendarAccessRole, GoogleCalendarListEntry},
 };
-use nittei_infra::{google_calendar::GoogleCalendarProvider, NitteiContext};
+use nittei_infra::{NitteiContext, google_calendar::GoogleCalendarProvider};
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_user, protect_account_route, protect_route},
-        usecase::{execute, UseCase},
+        auth::{account_can_modify_user, protect_admin_route, protect_route},
+        usecase::{UseCase, execute},
     },
 };
 
@@ -24,7 +24,7 @@ pub async fn get_google_calendars_admin_controller(
     query: Query<QueryParams>,
     State(ctx): State<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_account_route(&headers, &ctx).await?;
+    let account = protect_admin_route(&headers, &ctx).await?;
     let user = account_can_modify_user(&account, &path.user_id, &ctx).await?;
 
     let usecase = GetGoogleCalendarsUseCase {

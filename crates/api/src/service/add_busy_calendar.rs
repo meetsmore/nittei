@@ -1,30 +1,30 @@
 use axum::{
+    Json,
     extract::{Path, State},
     http::HeaderMap,
-    Json,
 };
 use axum_valid::Valid;
 use nittei_api_structs::add_busy_calendar::*;
 use nittei_domain::{
-    providers::{google::GoogleCalendarAccessRole, outlook::OutlookCalendarAccessRole},
     Account,
     BusyCalendarProvider,
-    IntegrationProvider,
     ID,
+    IntegrationProvider,
+    providers::{google::GoogleCalendarAccessRole, outlook::OutlookCalendarAccessRole},
 };
 use nittei_infra::{
-    google_calendar::GoogleCalendarProvider,
-    outlook_calendar::OutlookCalendarProvider,
     BusyCalendarIdentifier,
     ExternalBusyCalendarIdentifier,
     NitteiContext,
+    google_calendar::GoogleCalendarProvider,
+    outlook_calendar::OutlookCalendarProvider,
 };
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::protect_account_route,
-        usecase::{execute, UseCase},
+        auth::protect_admin_route,
+        usecase::{UseCase, execute},
     },
 };
 
@@ -34,7 +34,7 @@ pub async fn add_busy_calendar_controller(
     mut path: Path<PathParams>,
     State(ctx): State<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_account_route(&headers, &ctx).await?;
+    let account = protect_admin_route(&headers, &ctx).await?;
 
     let body = body.0;
     let usecase = AddBusyCalendarUseCase {

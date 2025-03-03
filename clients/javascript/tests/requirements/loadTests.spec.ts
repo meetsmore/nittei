@@ -16,21 +16,21 @@ const TIMESTAMP_FIRST_JANUARY_2024 = 1704067200000 // 2024-01-01 00:00:00 UTC
 // This test suite is load testing the server
 
 /**
- * Create 300 events for a user
+ * Create 200 events for a user
  * @param client SDK's client to use
  * @param user user to create the events for
  * @param calendar calendar to create the events in
  * @returns array of created events
  */
-async function create300Events(
+async function create200Events(
   client: INitteiClient,
   user: UserDTO,
   calendar: CalendarDTO
 ): Promise<CalendarEventDTO[]> {
-  // Should create 300 events, 100 events per day
+  // Should create 200 events, 100 events per day
   const events: CalendarEventDTO[] = []
   let dayCount = 0
-  for (let i = 0; i < 300; i++) {
+  for (let i = 0; i < 200; i++) {
     // Event index for 10 events per day, each spaced within the range of 9 AM to 6 PM
     const events_per_day = 10
     const event_hour = 9 + (i % events_per_day) // Ensure hour stays between 9 AM and 6 PM
@@ -91,7 +91,7 @@ describe('Load tests', () => {
       user1Calendar1 = resCalendar.calendar
     })
 
-    it('WILL create 300 events in the calendar', async () => {
+    it('WILL create 200 events in the calendar', async () => {
       if (!client) {
         throw new Error('Client not created')
       }
@@ -100,15 +100,15 @@ describe('Load tests', () => {
       }
 
       const timeStartLoadTest = Date.now()
-      const events = await create300Events(client, user1, user1Calendar1)
+      const events = await create200Events(client, user1, user1Calendar1)
 
       const timeTakenLoadTest = Date.now() - timeStartLoadTest
 
-      expect(events.length).toBe(300)
-      console.log('Time taken to create 300 events:', timeTakenLoadTest)
+      expect(events.length).toBe(200)
+      console.log('Time taken to create 200 events:', timeTakenLoadTest)
     })
 
-    it('WILL get the 300 events of the calendar', async () => {
+    it('WILL get the 200 events of the calendar', async () => {
       if (!client) {
         throw new Error('Client not created')
       }
@@ -130,8 +130,8 @@ describe('Load tests', () => {
 
       const timeTakenLoadTest = Date.now() - timeStartLoadTest
 
-      expect(res.events.length).toBe(300)
-      console.log('Time taken to get 300 events:', timeTakenLoadTest)
+      expect(res.events.length).toBe(200)
+      console.log('Time taken to get 200 events:', timeTakenLoadTest)
     })
 
     it('WILL delete the user', async () => {

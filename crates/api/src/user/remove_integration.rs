@@ -1,7 +1,7 @@
 use axum::{
+    Json,
     extract::{Path, State},
     http::HeaderMap,
-    Json,
 };
 use nittei_api_structs::remove_integration::*;
 use nittei_domain::{IntegrationProvider, User};
@@ -10,8 +10,8 @@ use nittei_infra::NitteiContext;
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_user, protect_account_route, protect_route},
-        usecase::{execute, UseCase},
+        auth::{account_can_modify_user, protect_admin_route, protect_route},
+        usecase::{UseCase, execute},
     },
 };
 
@@ -20,7 +20,7 @@ pub async fn remove_integration_admin_controller(
     mut path: Path<PathParams>,
     State(ctx): State<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_account_route(&headers, &ctx).await?;
+    let account = protect_admin_route(&headers, &ctx).await?;
     let user = account_can_modify_user(&account, &path.user_id, &ctx).await?;
 
     let usecase = OAuthIntegrationUseCase {

@@ -1,5 +1,5 @@
-use nittei_domain::{AccountIntegration, IntegrationProvider, ID};
-use sqlx::{types::Uuid, FromRow, PgPool};
+use nittei_domain::{AccountIntegration, ID, IntegrationProvider};
+use sqlx::{FromRow, PgPool, types::Uuid};
 use tracing::{error, instrument};
 
 use super::IAccountIntegrationRepo;

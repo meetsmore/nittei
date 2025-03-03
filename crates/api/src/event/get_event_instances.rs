@@ -1,16 +1,16 @@
 use axum::{
+    Json,
     extract::{Path, Query, State},
     http::HeaderMap,
-    Json,
 };
 use nittei_api_structs::get_event_instances::*;
 use nittei_domain::{
-    expand_event_and_remove_exceptions,
-    generate_map_exceptions_original_start_times,
     CalendarEvent,
     EventInstance,
-    TimeSpan,
     ID,
+    TimeSpan,
+    expand_event_and_remove_exceptions,
+    generate_map_exceptions_original_start_times,
 };
 use nittei_infra::NitteiContext;
 use tracing::error;
@@ -18,8 +18,8 @@ use tracing::error;
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_event, protect_account_route, protect_route},
-        usecase::{execute, UseCase},
+        auth::{account_can_modify_event, protect_admin_route, protect_route},
+        usecase::{UseCase, execute},
     },
 };
 
@@ -29,7 +29,7 @@ pub async fn get_event_instances_admin_controller(
     query_params: Query<QueryParams>,
     State(ctx): State<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_account_route(&headers, &ctx).await?;
+    let account = protect_admin_route(&headers, &ctx).await?;
     let e = account_can_modify_event(&account, &path_params.event_id, &ctx).await?;
 
     let usecase = GetEventInstancesUseCase {
@@ -146,7 +146,7 @@ impl UseCase for GetEventInstancesUseCase {
                 return Err(UseCaseError::NotFound(
                     "Calendar".into(),
                     main_event.calendar_id.clone(),
-                ))
+                ));
             }
             Err(_) => {
                 return Err(UseCaseError::InternalError);
