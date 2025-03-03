@@ -155,8 +155,8 @@ fn parse_config() -> AppConfig {
         .expect("Failed to set default server_shutdown_timeout")
         .set_default("skip_db_migrations", false)
         .expect("Failed to set default skip_db_migrations")
-        .set_default("enable_reminders_job", false)
-        .expect("Failed to set default enable_reminders_job")
+        .set_default("enable_reminders", false)
+        .expect("Failed to set default enable_reminders")
         .set_default(
             "database_url",
             "postgresql://postgres:postgres@localhost:45432/nittei",
