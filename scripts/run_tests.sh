@@ -104,6 +104,9 @@ do
   sleep 1
 done
 
+# Wait a bit more
+sleep 1
+
 # Run the migrations
 cd crates/infra && sqlx migrate run && cd ../..
 
