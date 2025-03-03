@@ -10,7 +10,10 @@ mod oauth_integration;
 mod remove_integration;
 mod update_user;
 
-use actix_web::web;
+use axum::{
+    routing::{delete, get, post, put},
+    Router,
+};
 use create_user::create_user_controller;
 use delete_user::delete_user_controller;
 use get_me::get_me_controller;
@@ -25,56 +28,50 @@ use remove_integration::{remove_integration_admin_controller, remove_integration
 use update_user::update_user_controller;
 
 // Configure the routes for the user module
-pub fn configure_routes(cfg: &mut web::ServiceConfig) {
+pub fn configure_routes(router: &mut Router) {
     // Create a new user
-    cfg.route("/user", web::post().to(create_user_controller));
+    router.route("/user", post(create_user_controller));
 
     // Get the current user
-    cfg.route("/me", web::get().to(get_me_controller));
+    router.route("/me", get(get_me_controller));
 
     // Get users by metadata
-    cfg.route("/user/meta", web::get().to(get_users_by_meta_controller));
+    router.route("/user/meta", get(get_users_by_meta_controller));
 
     // Get user by external_id
-    cfg.route(
+    router.route(
         "/user/external_id/{external_id}",
-        web::get().to(get_user_by_external_id_controller),
+        get(get_user_by_external_id_controller),
     );
 
     // Get freebusy for multiple users
     // This is a POST route !
-    cfg.route(
-        "/user/freebusy",
-        web::post().to(get_multiple_freebusy_controller),
-    );
+    router.route("/user/freebusy", post(get_multiple_freebusy_controller));
 
     // Get a specific user by id
-    cfg.route("/user/{user_id}", web::get().to(get_user_controller));
+    router.route("/user/{user_id}", get(get_user_controller));
 
     // Update a specific user by id
-    cfg.route("/user/{user_id}", web::put().to(update_user_controller));
+    router.route("/user/{user_id}", put(update_user_controller));
 
     // Delete a specific user by id
-    cfg.route("/user/{user_id}", web::delete().to(delete_user_controller));
+    router.route("/user/{user_id}", delete(delete_user_controller));
 
     // Get freebusy for a specific user
-    cfg.route(
-        "/user/{user_id}/freebusy",
-        web::get().to(get_freebusy_controller),
-    );
+    router.route("/user/{user_id}/freebusy", get(get_freebusy_controller));
 
     // Oauth
-    cfg.route("/me/oauth", web::post().to(oauth_integration_controller));
-    cfg.route(
+    router.route("/me/oauth", post(oauth_integration_controller));
+    router.route(
         "/me/oauth/{provider}",
-        web::delete().to(remove_integration_controller),
+        delete(remove_integration_controller),
     );
-    cfg.route(
+    router.route(
         "/user/{user_id}/oauth",
-        web::post().to(oauth_integration_admin_controller),
+        post(oauth_integration_admin_controller),
     );
-    cfg.route(
+    router.route(
         "/user/{user_id}/oauth/{provider}",
-        web::delete().to(remove_integration_admin_controller),
+        delete(remove_integration_admin_controller),
     );
 }
