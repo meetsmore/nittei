@@ -1,13 +1,7 @@
 use actix_web::{HttpRequest, HttpResponse, web};
 use nittei_api_structs::delete_event::*;
-use nittei_domain::{CalendarEvent, ID, IntegrationProvider, User};
-use nittei_infra::{
-    NitteiContext,
-    google_calendar::GoogleCalendarProvider,
-    outlook_calendar::OutlookCalendarProvider,
-};
-use nittei_utils::config::APP_CONFIG;
-use tracing::error;
+use nittei_domain::{CalendarEvent, ID, User};
+use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
@@ -106,10 +100,6 @@ impl UseCase for DeleteEventUseCase {
             _ => return Err(UseCaseError::NotFound(self.event_id.clone())),
         };
 
-        if APP_CONFIG.enable_reminders {
-            self.delete_synced_events(&e, ctx).await;
-        }
-
         ctx.repos
             .events
             .delete(&e.id)
@@ -123,81 +113,5 @@ impl UseCase for DeleteEventUseCase {
 impl PermissionBoundary for DeleteEventUseCase {
     fn permissions(&self) -> Vec<Permission> {
         vec![Permission::DeleteCalendarEvent]
-    }
-}
-
-impl DeleteEventUseCase {
-    pub async fn delete_synced_events(&self, e: &CalendarEvent, ctx: &NitteiContext) {
-        let synced_events = match ctx.repos.event_synced.find_by_event(&e.id).await {
-            Ok(synced_events) => synced_events,
-            Err(e) => {
-                error!("Unable to query synced events from repo: {:?}", e);
-                return;
-            }
-        };
-
-        let synced_outlook_events = synced_events
-            .iter()
-            .filter(|o_event| o_event.provider == IntegrationProvider::Outlook)
-            .collect::<Vec<_>>();
-        let synced_google_events = synced_events
-            .iter()
-            .filter(|g_event| g_event.provider == IntegrationProvider::Google)
-            .collect::<Vec<_>>();
-
-        if synced_google_events.is_empty() && synced_outlook_events.is_empty() {
-            return;
-        }
-
-        let user = ctx.repos.users.find(&e.user_id).await;
-        let user = match user {
-            Ok(Some(u)) => u,
-            Ok(None) => {
-                error!("Unable to find user when deleting sync events");
-                return;
-            }
-            Err(e) => {
-                error!("Unable to find user when deleting sync events {:?}", e);
-                return;
-            }
-        };
-
-        if !synced_outlook_events.is_empty() {
-            let provider = match OutlookCalendarProvider::new(&user, ctx).await {
-                Ok(p) => p,
-                Err(_) => {
-                    error!("Unable to create outlook calendar provider");
-                    return;
-                }
-            };
-            for cal in synced_outlook_events {
-                if provider
-                    .delete_event(cal.ext_calendar_id.clone(), cal.ext_event_id.clone())
-                    .await
-                    .is_err()
-                {
-                    error!("Unable to delete external outlook calendar event");
-                };
-            }
-        }
-
-        if !synced_google_events.is_empty() {
-            let provider = match GoogleCalendarProvider::new(&user, ctx).await {
-                Ok(p) => p,
-                Err(_) => {
-                    error!("Unable to create google calendar provider");
-                    return;
-                }
-            };
-            for cal in synced_google_events {
-                if provider
-                    .delete_event(cal.ext_calendar_id.clone(), cal.ext_event_id.clone())
-                    .await
-                    .is_err()
-                {
-                    error!("Unable to delete google external calendar event");
-                };
-            }
-        }
     }
 }

@@ -42,11 +42,6 @@ pub struct AppConfig {
     /// Env var: NITTEI__SKIP_DB_MIGRATIONS
     pub skip_db_migrations: bool,
 
-    /// This is a flag to enable the reminders features
-    /// Default is false
-    /// Env var: NITTEI__ENABLE_REMINDERS
-    pub enable_reminders: bool,
-
     /// The account configuration
     /// This is used to find the superadmin account
     pub account: Option<AccountConfig>,
@@ -155,8 +150,6 @@ fn parse_config() -> AppConfig {
         .expect("Failed to set default server_shutdown_timeout")
         .set_default("skip_db_migrations", false)
         .expect("Failed to set default skip_db_migrations")
-        .set_default("enable_reminders", false)
-        .expect("Failed to set default enable_reminders")
         .set_default(
             "database_url",
             "postgresql://postgres:postgres@localhost:45432/nittei",

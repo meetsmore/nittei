@@ -1,6 +1,5 @@
 use actix_web::{HttpRequest, HttpResponse, web};
 use chrono::{DateTime, TimeDelta, Utc};
-use event::subscribers::SyncRemindersOnEventUpdated;
 use nittei_api_structs::update_event::*;
 use nittei_domain::{
     CalendarEvent,
@@ -11,11 +10,9 @@ use nittei_domain::{
     User,
 };
 use nittei_infra::NitteiContext;
-use nittei_utils::config::APP_CONFIG;
 
 use crate::{
     error::NitteiError,
-    event::{self, subscribers::UpdateSyncedEventsOnEventUpdated},
     shared::{
         auth::{
             Permission,
@@ -355,14 +352,7 @@ impl UseCase for UpdateEventUseCase {
     }
 
     fn subscribers() -> Vec<Box<dyn Subscriber<Self>>> {
-        if APP_CONFIG.enable_reminders {
-            vec![
-                Box::new(SyncRemindersOnEventUpdated),
-                Box::new(UpdateSyncedEventsOnEventUpdated),
-            ]
-        } else {
-            vec![]
-        }
+        vec![]
     }
 }
 

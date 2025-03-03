@@ -3,7 +3,6 @@ mod calendar;
 mod error;
 mod event;
 mod http_logger;
-mod job_schedulers;
 mod schedule;
 mod service;
 mod shared;
@@ -22,7 +21,6 @@ use actix_web::{
 };
 use futures::lock::Mutex;
 use http_logger::NitteiTracingRootSpanBuilder;
-use job_schedulers::{start_reminder_generation_job, start_send_reminders_job};
 use nittei_domain::{
     Account,
     AccountIntegration,
@@ -78,8 +76,6 @@ impl Application {
         let (server, port) =
             Application::configure_server(context.clone(), shared_state.clone()).await?;
 
-        Application::start_jobs(context.clone());
-
         Ok(Self {
             server,
             port,
@@ -90,15 +86,6 @@ impl Application {
 
     pub fn port(&self) -> u16 {
         self.port
-    }
-
-    /// Start the background jobs of the application
-    /// Note that the jobs are only started if the environment variable NITTEI_REMINDERS_JOB_ENABLED is set to true
-    fn start_jobs(context: NitteiContext) {
-        if nittei_utils::config::APP_CONFIG.enable_reminders {
-            start_send_reminders_job(context.clone());
-            start_reminder_generation_job(context);
-        }
     }
 
     /// Configure the Actix server
