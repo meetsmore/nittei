@@ -46,6 +46,7 @@ pub struct SearchEventsParams {
     pub status: Option<StringQuery>,
     pub event_type: Option<StringQuery>,
     pub updated_at: Option<DateTimeQuery>,
+    pub is_recurring: Option<bool>,
     pub metadata: Option<serde_json::Value>,
 }
 

@@ -385,6 +385,10 @@ pub mod search_events {
         #[ts(optional)]
         pub updated_at: Option<DateTimeQuery>,
 
+        /// Optional filter on the recurrence (existence)
+        #[ts(optional)]
+        pub is_recurring: Option<bool>,
+
         /// Optional list of metadata key-value pairs
         #[ts(optional)]
         pub metadata: Option<serde_json::Value>,

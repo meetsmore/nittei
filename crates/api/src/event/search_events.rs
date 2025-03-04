@@ -29,6 +29,7 @@ pub async fn search_events_controller(
         event_type: body.filter.event_type,
         status: body.filter.status,
         updated_at: body.filter.updated_at,
+        is_recurring: body.filter.is_recurring,
         metadata: body.filter.metadata,
         sort: body.sort,
         limit: body.limit,
@@ -75,6 +76,9 @@ pub struct SearchEventsUseCase {
 
     /// Optional sort
     pub sort: Option<CalendarEventSort>,
+
+    /// Optional filter on the recurrence (existence)
+    pub is_recurring: Option<bool>,
 
     /// Optional limit
     pub limit: Option<u16>,
@@ -161,6 +165,7 @@ impl UseCase for SearchEventsUseCase {
                     event_type: self.event_type.take(),
                     status: self.status.take(),
                     updated_at: self.updated_at.take(),
+                    is_recurring: self.is_recurring.take(),
                     metadata: self.metadata.take(),
                 },
                 sort: self.sort.take(),

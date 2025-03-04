@@ -621,6 +621,13 @@ impl IEventRepo for PostgresEventRepo {
             true,
         );
 
+        if let Some(is_recurring) = params.search_events_params.is_recurring {
+            query.push(format!(
+                " AND e.recurrence::text {} 'null'",
+                if is_recurring { "<>" } else { "=" },
+            ));
+        }
+
         if let Some(metadata) = params.search_events_params.metadata {
             query.push(" AND e.metadata @> ");
             query.push_bind(Json(metadata.clone()));
@@ -722,6 +729,13 @@ impl IEventRepo for PostgresEventRepo {
             &params.search_events_params.updated_at,
             true,
         );
+
+        if let Some(is_recurring) = params.search_events_params.is_recurring {
+            query.push(format!(
+                " AND e.recurrence::text {} 'null'",
+                if is_recurring { "<>" } else { "=" },
+            ));
+        }
 
         if let Some(metadata) = params.search_events_params.metadata {
             query.push(" AND e.metadata @> ");
