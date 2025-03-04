@@ -91,6 +91,7 @@ describe('Account API', () => {
     let eventId1: string
     let metadataEventId1: string
     let eventId2: string
+    let recurringEventId: string
     beforeAll(async () => {
       const data = await setupAccount()
       adminClient = data.client
@@ -143,6 +144,19 @@ describe('Account API', () => {
       })
 
       eventId2 = eventRes2.event.id
+
+      const recurringEventRes = await adminClient.events.create(userId, {
+        calendarId,
+        status: 'confirmed',
+        duration: 1000,
+        startTime: new Date(10000), // Later date
+        recurrence: {
+          freq: 'weekly',
+          interval: 1,
+        },
+      })
+
+      recurringEventId = recurringEventRes.event.id
     })
 
     it('should be able to search for events in the account (by startTime, for multiple users)', async () => {
@@ -232,12 +246,59 @@ describe('Account API', () => {
           },
         },
       })
+      expect(res.events.length).toBe(2)
+      expect(res.events).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: eventId2,
+          }),
+          expect.objectContaining({
+            id: recurringEventId,
+          }),
+        ])
+      )
+    })
+
+    it('should be able to search by userId and recurrence', async () => {
+      const res = await adminClient.account.searchEventsInAccount({
+        filter: {
+          userId: {
+            eq: userId,
+          },
+          isRecurring: true,
+        },
+      })
       expect(res.events.length).toBe(1)
       expect(res.events).toEqual([
         expect.objectContaining({
-          id: eventId2,
+          id: recurringEventId,
         }),
       ])
+    })
+
+    it('should be able to search by userId and without recurrence', async () => {
+      const res = await adminClient.account.searchEventsInAccount({
+        filter: {
+          userId: {
+            eq: userId,
+          },
+          isRecurring: false,
+        },
+      })
+      expect(res.events.length).toBe(3)
+      expect(res.events).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: eventId2,
+          }),
+          expect.objectContaining({
+            id: eventId1,
+          }),
+          expect.objectContaining({
+            id: metadataEventId1,
+          }),
+        ])
+      )
     })
   })
 })

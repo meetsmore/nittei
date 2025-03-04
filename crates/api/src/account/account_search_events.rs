@@ -28,6 +28,7 @@ pub async fn account_search_events_controller(
         status: body.filter.status,
         event_type: body.filter.event_type,
         updated_at: body.filter.updated_at,
+        is_recurring: body.filter.is_recurring,
         metadata: body.filter.metadata,
         sort: body.sort,
         limit: body.limit,
@@ -64,6 +65,9 @@ pub struct AccountSearchEventsUseCase {
 
     /// Optional query on updated at - "lower than or equal", or "great than or equal" (UTC)
     pub updated_at: Option<DateTimeQuery>,
+
+    /// Optional recurrence test
+    pub is_recurring: Option<bool>,
 
     /// Optional list of metadata key-value pairs
     pub metadata: Option<serde_json::Value>,
@@ -124,6 +128,7 @@ impl UseCase for AccountSearchEventsUseCase {
                     status: self.status.take(),
                     event_type: self.event_type.take(),
                     updated_at: self.updated_at.take(),
+                    is_recurring: self.is_recurring.take(),
                     metadata: self.metadata.take(),
                 },
                 sort: self.sort.take(),

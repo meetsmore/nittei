@@ -41,6 +41,10 @@ export type AccountSearchEventsRequestBodyFilter = {
    */
   updatedAt?: DateTimeQuery
   /**
+   * Optional filter on the recurrence (existence)
+   */
+  isRecurring?: boolean
+  /**
    * Optional query on metadata
    */
   metadata?: JsonValue
