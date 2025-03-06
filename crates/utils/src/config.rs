@@ -43,7 +43,7 @@ pub struct AppConfig {
     pub skip_db_migrations: bool,
 
     /// This is a flag to enable the reminders features
-    /// Default is false
+    /// Default is true
     /// Env var: NITTEI__ENABLE_REMINDERS
     pub enable_reminders: bool,
 
@@ -155,7 +155,7 @@ fn parse_config() -> AppConfig {
         .expect("Failed to set default server_shutdown_timeout")
         .set_default("skip_db_migrations", false)
         .expect("Failed to set default skip_db_migrations")
-        .set_default("enable_reminders", false)
+        .set_default("enable_reminders", true)
         .expect("Failed to set default enable_reminders")
         .set_default(
             "database_url",
