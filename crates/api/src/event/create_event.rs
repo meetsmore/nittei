@@ -235,7 +235,7 @@ impl UseCase for CreateEventUseCase {
     }
 
     fn subscribers() -> Vec<Box<dyn Subscriber<Self>>> {
-        if APP_CONFIG.enable_reminders {
+        if APP_CONFIG.disable_reminders {
             vec![
                 Box::new(CreateRemindersOnEventCreated),
                 Box::new(CreateSyncedEventsOnEventCreated),
