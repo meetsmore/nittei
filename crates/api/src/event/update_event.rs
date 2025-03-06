@@ -356,12 +356,12 @@ impl UseCase for UpdateEventUseCase {
 
     fn subscribers() -> Vec<Box<dyn Subscriber<Self>>> {
         if APP_CONFIG.disable_reminders {
+            vec![]
+        } else {
             vec![
                 Box::new(SyncRemindersOnEventUpdated),
                 Box::new(UpdateSyncedEventsOnEventUpdated),
             ]
-        } else {
-            vec![]
         }
     }
 }

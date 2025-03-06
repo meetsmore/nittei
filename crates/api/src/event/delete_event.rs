@@ -106,7 +106,7 @@ impl UseCase for DeleteEventUseCase {
             _ => return Err(UseCaseError::NotFound(self.event_id.clone())),
         };
 
-        if APP_CONFIG.disable_reminders {
+        if !APP_CONFIG.disable_reminders {
             self.delete_synced_events(&e, ctx).await;
         }
 
