@@ -10,9 +10,12 @@ use nittei_domain::{
     User,
 };
 use nittei_infra::NitteiContext;
+use nittei_utils::config::APP_CONFIG;
 
+use super::subscribers::CreateRemindersOnEventCreated;
 use crate::{
     error::NitteiError,
+    event::subscribers::CreateSyncedEventsOnEventCreated,
     shared::{
         auth::{Permission, account_can_modify_user, protect_admin_route, protect_route},
         usecase::{PermissionBoundary, Subscriber, UseCase, execute, execute_with_policy},
@@ -232,7 +235,14 @@ impl UseCase for CreateEventUseCase {
     }
 
     fn subscribers() -> Vec<Box<dyn Subscriber<Self>>> {
-        vec![]
+        if APP_CONFIG.enable_reminders {
+            vec![
+                Box::new(CreateRemindersOnEventCreated),
+                Box::new(CreateSyncedEventsOnEventCreated),
+            ]
+        } else {
+            vec![]
+        }
     }
 }
 

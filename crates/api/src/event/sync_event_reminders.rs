@@ -1,4 +1,5 @@
 use chrono::{TimeDelta, Utc};
+use futures::future;
 use nittei_domain::{Calendar, CalendarEvent, EventRemindersExpansionJob, Reminder};
 use nittei_infra::NitteiContext;
 use tracing::error;
@@ -21,6 +22,9 @@ pub struct SyncEventRemindersUseCase<'a> {
 pub enum SyncEventRemindersTrigger<'a> {
     /// A `CalendarEvent` has been modified, e.g. deleted, updated og created.
     EventModified(&'a CalendarEvent, EventOperation),
+    /// Periodic Job Scheduler that triggers this use case to perform
+    /// `EventRemindersExpansionJob`s.
+    JobScheduler,
 }
 
 #[derive(Debug)]
@@ -207,6 +211,64 @@ impl UseCase for SyncEventRemindersUseCase<'_> {
                         e
                     })
             }
+            SyncEventRemindersTrigger::JobScheduler => {
+                let jobs = ctx
+                    .repos
+                    .event_reminders_generation_jobs
+                    .delete_all_before(ctx.sys.get_timestamp())
+                    .await
+                    .map_err(|_| UseCaseError::StorageError)?;
+
+                let event_ids = jobs
+                    .iter()
+                    .map(|job| job.event_id.to_owned())
+                    .collect::<Vec<_>>();
+
+                let events = match ctx.repos.events.find_many(&event_ids).await {
+                    Ok(events) => events,
+                    Err(_) => return Err(UseCaseError::StorageError),
+                };
+
+                future::join_all(
+                    events
+                        .into_iter()
+                        .map(|event| generate_event_reminders_job(event, ctx))
+                        .collect::<Vec<_>>(),
+                )
+                .await;
+
+                Ok(())
+            }
         }
+    }
+}
+
+async fn generate_event_reminders_job(event: CalendarEvent, ctx: &NitteiContext) {
+    let calendar = match ctx.repos.calendars.find(&event.calendar_id).await {
+        Ok(Some(cal)) => cal,
+        Ok(None) => return,
+        Err(e) => {
+            error!(
+                "Unable to find calendar {} for event {}. Err: {:?}",
+                event.calendar_id, event.id, e
+            );
+            return;
+        }
+    };
+    let version = match ctx.repos.reminders.inc_version(&event.id).await {
+        Ok(v) => v,
+        Err(e) => {
+            error!(
+                "Unable to increment event {:?} reminder version. Err: {:?}",
+                event.id, e
+            );
+            return;
+        }
+    };
+    if let Err(err) = create_event_reminders(&event, &calendar, version, ctx).await {
+        error!(
+            "Unable to create event reminders for event {}, Error: {:?}",
+            event.id, err
+        );
     }
 }

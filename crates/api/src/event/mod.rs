@@ -5,6 +5,7 @@ mod get_event_by_external_id;
 mod get_event_instances;
 mod get_events_by_calendars;
 mod get_events_by_meta;
+pub mod get_upcoming_reminders;
 mod search_events;
 mod subscribers;
 pub mod sync_event_reminders;
