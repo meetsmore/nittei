@@ -137,11 +137,14 @@ export class NitteiEventClient extends NitteiBaseClient {
     return await this.delete<CalendarEventResponse>(`/user/events/${eventId}`)
   }
 
-  public async removeMany(body: DeleteManyEventsRequestBody) {
-    return await this.post<CalendarEventResponse>(
-      '/user/events/delete_many',
-      body
-    )
+  /**
+   * Remove many events (either by id and/or by external id)
+   * @param body.eventIds - ids of the events to remove
+   * @param body.externalIds - external ids of the events to remove
+   * @returns Nothing
+   */
+  public async removeMany(body: DeleteManyEventsRequestBody): Promise<void> {
+    await this.post<CalendarEventResponse>('/user/events/delete_many', body)
   }
 
   public async getInstances(
