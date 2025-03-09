@@ -2,19 +2,42 @@ mod telemetry;
 
 use nittei_api::Application;
 use nittei_infra::setup_context;
+use nittei_utils::config::APP_CONFIG;
 use telemetry::init_subscriber;
 use tikv_jemallocator::Jemalloc;
-use tokio::signal;
+use tokio::{runtime::Builder, signal};
 use tracing::{error, info};
 
 #[global_allocator]
 static GLOBAL: Jemalloc = Jemalloc;
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
+fn main() -> anyhow::Result<()> {
     // Initialize the subscriber for logging & tracing
     init_subscriber()?;
 
+    // Read the environment variable (default to "multi_thread" if not set)
+    let runtime_mode = &APP_CONFIG.tokio_runtime;
+
+    let runtime = if runtime_mode == "current_thread" {
+        info!("Using single-threaded Tokio runtime.");
+        Builder::new_current_thread().enable_all().build()?
+    } else if runtime_mode == "multi_thread" {
+        info!("Using multi-threaded Tokio runtime.");
+        Builder::new_multi_thread().enable_all().build()?
+    } else {
+        error!(
+            "Invalid value for `tokio_runtime` in the configuration: {} - defaulting to `multi_thread`",
+            runtime_mode
+        );
+        Builder::new_multi_thread().enable_all().build()?
+    };
+
+    runtime.block_on(async_main())?;
+
+    Ok(())
+}
+
+async fn async_main() -> anyhow::Result<()> {
     let context = setup_context().await?;
     let (tx, rx) = tokio::sync::oneshot::channel::<()>();
 

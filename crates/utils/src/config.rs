@@ -7,15 +7,20 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize)]
 #[allow(unused)]
 pub struct AppConfig {
-    //// The host to bind the HTTP server to
-    //// Default is 127.0.0.1
-    //// Env var: NITTEI__HTTP_HOST
+    /// The host to bind the HTTP server to
+    /// Default is 127.0.0.1
+    /// Env var: NITTEI__HTTP_HOST
     pub http_host: String,
 
     /// The port to bind the HTTP server to
     /// Default is 5000
     /// Env var: NITTEI__HTTP_PORT
     pub http_port: usize,
+
+    /// The Tokio runtime to use
+    /// Default is "multi_thread"
+    /// Env var: NITTEI__TOKIO_RUNTIME
+    pub tokio_runtime: String,
 
     /// The sleep time for the HTTP server shutdown (in seconds)
     /// Default is 5 seconds
@@ -149,6 +154,8 @@ fn parse_config() -> AppConfig {
         .expect("Failed to set default host")
         .set_default("http_port", "5000")
         .expect("Failed to set default port")
+        .set_default("tokio_runtime", "multi_thread")
+        .expect("Failed to set default tokio_runtime")
         .set_default("server_shutdown_sleep", "5")
         .expect("Failed to set default server_shutdown_sleep")
         .set_default("server_shutdown_timeout", "10")
