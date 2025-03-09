@@ -1,5 +1,6 @@
 import { NitteiBaseClient } from './baseClient'
 import type {
+  DeleteManyEventsRequestBody,
   GetEventsByExternalIdAPIResponse,
   SearchEventsAPIResponse,
   SearchEventsRequestBody,
@@ -134,6 +135,13 @@ export class NitteiEventClient extends NitteiBaseClient {
 
   public async remove(eventId: ID) {
     return await this.delete<CalendarEventResponse>(`/user/events/${eventId}`)
+  }
+
+  public async removeMany(body: DeleteManyEventsRequestBody) {
+    return await this.post<CalendarEventResponse>(
+      '/user/events/delete_many',
+      body
+    )
   }
 
   public async getInstances(

@@ -194,6 +194,28 @@ pub mod delete_event {
     pub type APIResponse = CalendarEventResponse;
 }
 
+pub mod delete_many_events {
+    use super::*;
+
+    /// Request body for creating an event
+    #[derive(Serialize, Deserialize, Validate, TS)]
+    #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "DeleteManyEventsRequestBody")]
+    pub struct DeleteManyEventsRequestBody {
+        /// List of event IDs to delete
+        #[validate(length(min = 1))]
+        #[ts(optional)]
+        pub event_ids: Option<Vec<ID>>,
+
+        /// List of events with external IDs to delete
+        #[validate(length(min = 1))]
+        #[ts(optional)]
+        pub external_ids: Option<Vec<String>>,
+    }
+
+    pub type APIResponse = CalendarEventResponse;
+}
+
 pub mod get_event_instances {
 
     use chrono::{DateTime, Utc};
