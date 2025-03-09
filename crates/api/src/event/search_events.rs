@@ -23,6 +23,7 @@ pub async fn search_events_controller(
         account_id: account.id,
         user_id: body.filter.user_id,
         calendar_ids: body.filter.calendar_ids,
+        external_id: body.filter.external_id,
         external_parent_id: body.filter.external_parent_id,
         start_time: body.filter.start_time,
         end_time: body.filter.end_time,
@@ -32,7 +33,7 @@ pub async fn search_events_controller(
         is_recurring: body.filter.is_recurring,
         metadata: body.filter.metadata,
         sort: body.sort,
-        limit: body.limit,
+        limit: body.limit.or(Some(200)), // Default limit to 200
     };
 
     execute(usecase, &ctx)
@@ -53,7 +54,10 @@ pub struct SearchEventsUseCase {
     /// If not provided, all calendars will be used
     pub calendar_ids: Option<Vec<ID>>,
 
-    /// Optional query on parent ID (which is a string as it's an ID from an external system)
+    /// Optional query on ID (which is a string as it's an ID from an external system)
+    pub external_id: Option<StringQuery>,
+
+    /// Optional query on external parent ID (which is a string as it's an ID from an external system)
     pub external_parent_id: Option<StringQuery>,
 
     /// Optional query on start time - "lower than or equal", or "great than or equal" (UTC)
@@ -159,6 +163,7 @@ impl UseCase for SearchEventsUseCase {
                 search_events_params: SearchEventsParams {
                     // Force user_id to be the same as the one in the search
                     user_id: Some(IDQuery::Eq(self.user_id.clone())),
+                    external_id: self.external_id.take(),
                     external_parent_id: self.external_parent_id.take(),
                     start_time: self.start_time.take(),
                     end_time: self.end_time.take(),

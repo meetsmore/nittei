@@ -22,6 +22,7 @@ pub async fn account_search_events_controller(
     let usecase = AccountSearchEventsUseCase {
         account_id: account.id,
         user_id: body.filter.user_id,
+        external_id: body.filter.external_id,
         external_parent_id: body.filter.external_parent_id,
         start_time: body.filter.start_time,
         end_time: body.filter.end_time,
@@ -31,7 +32,7 @@ pub async fn account_search_events_controller(
         is_recurring: body.filter.is_recurring,
         metadata: body.filter.metadata,
         sort: body.sort,
-        limit: body.limit,
+        limit: body.limit.or(Some(200)), // Default limit to 200
     };
 
     execute(usecase, &ctx)
@@ -48,7 +49,10 @@ pub struct AccountSearchEventsUseCase {
     /// Optional query on user ID, or list of user IDs
     pub user_id: Option<IDQuery>,
 
-    /// Optional query on parent ID (which is a string as it's an ID from an external system)
+    /// Optional query on external ID (which is a string as it's an ID from an external system)
+    pub external_id: Option<StringQuery>,
+
+    /// Optional query on external parent ID (which is a string as it's an ID from an external system)
     pub external_parent_id: Option<StringQuery>,
 
     /// Optional query on start time - "lower than or equal", or "great than or equal" (UTC)
@@ -115,6 +119,21 @@ impl UseCase for AccountSearchEventsUseCase {
             }
         }
 
+        // Check that we have a least one filter
+        if self.user_id.is_none()
+            && self.external_id.is_none()
+            && self.external_parent_id.is_none()
+            && self.start_time.is_none()
+            && self.end_time.is_none()
+            && self.status.is_none()
+            && self.event_type.is_none()
+            && self.updated_at.is_none()
+            && self.is_recurring.is_none()
+            && self.metadata.is_none()
+        {
+            return Err(UseCaseError::BadRequest);
+        }
+
         let res = ctx
             .repos
             .events
@@ -122,6 +141,7 @@ impl UseCase for AccountSearchEventsUseCase {
                 account_id: self.account_id.clone(),
                 search_events_params: SearchEventsParams {
                     user_id: self.user_id.take(),
+                    external_id: self.external_id.take(),
                     external_parent_id: self.external_parent_id.take(),
                     start_time: self.start_time.take(),
                     end_time: self.end_time.take(),

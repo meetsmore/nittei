@@ -21,6 +21,7 @@ ts-rs = { version = "10.1.0", features = [
   "uuid-impl",
   "chrono-impl",
   "serde-json-impl",
+  "no-serde-warnings",
 ] }
 
 [dev-dependencies]

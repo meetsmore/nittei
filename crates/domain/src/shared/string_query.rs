@@ -3,8 +3,8 @@ use ts_rs::TS;
 
 /// Query parameters for searching on a string
 #[derive(Deserialize, Serialize, TS, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-#[ts(export, rename = "StringQuery")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(export, rename = "StringQuery", rename_all = "camelCase")]
 pub enum StringQuery {
     /// Optional String (equality test)
     Eq(String),
@@ -19,6 +19,5 @@ pub enum StringQuery {
 
     /// Optional list of strings (equality test)
     /// If "eq" is provided, this field is ignored
-    /// (use r# in the field name as "in" is a reserved keyword)
     In(Vec<String>),
 }

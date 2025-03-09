@@ -5,8 +5,8 @@ use crate::ID;
 
 /// Query parameters for searching on an ID (or list of IDs)
 #[derive(Deserialize, Serialize, TS, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-#[ts(export, rename = "IDQuery")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(export, rename = "IDQuery", rename_all = "camelCase")]
 pub enum IDQuery {
     /// ID (equality test)
     Eq(ID),
