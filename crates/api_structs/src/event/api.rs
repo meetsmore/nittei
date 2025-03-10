@@ -197,7 +197,7 @@ pub mod delete_event {
 pub mod delete_many_events {
     use super::*;
 
-    /// Request body for creating an event
+    /// Request body for deleting many events (by event_ids and/or by external_ids)
     #[derive(Serialize, Deserialize, Validate, TS)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "DeleteManyEventsRequestBody")]
@@ -207,7 +207,7 @@ pub mod delete_many_events {
         #[ts(optional)]
         pub event_ids: Option<Vec<ID>>,
 
-        /// List of events with external IDs to delete
+        /// List of events' external IDs to delete
         #[validate(length(min = 1))]
         #[ts(optional)]
         pub external_ids: Option<Vec<String>>,

@@ -90,7 +90,6 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     );
 
     // Admin delete many events
-    // This is above
     cfg.route(
         "/user/events/delete_many",
         web::post().to(delete_many_events_admin_controller),
