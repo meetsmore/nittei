@@ -86,11 +86,14 @@ impl UseCase for DeleteManyEventsUseCase {
                 .await
                 .map_err(|_| UseCaseError::StorageError)?;
 
-        let event_ids_to_delete: Vec<_> = events_by_ids
+        // Merge event ids and remove duplicates
+        let event_ids_to_delete = events_by_ids
             .iter()
             .chain(events_by_external_ids.iter())
-            .map(|e| e.id.clone())
-            .collect();
+            .map(|event| event.id.clone())
+            .collect::<std::collections::HashSet<ID>>()
+            .into_iter()
+            .collect::<Vec<ID>>();
 
         ctx.repos
             .events
