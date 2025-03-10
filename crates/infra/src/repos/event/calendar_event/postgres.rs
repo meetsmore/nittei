@@ -619,6 +619,12 @@ impl IEventRepo for PostgresEventRepo {
 
         apply_string_query(
             &mut query,
+            "external_id",
+            &params.search_events_params.external_id,
+        );
+
+        apply_string_query(
+            &mut query,
             "external_parent_id",
             &params.search_events_params.external_parent_id,
         );
@@ -724,6 +730,12 @@ impl IEventRepo for PostgresEventRepo {
             "u",
             "user_uid",
             &params.search_events_params.user_id,
+        );
+
+        apply_string_query(
+            &mut query,
+            "external_id",
+            &params.search_events_params.external_id,
         );
 
         apply_string_query(

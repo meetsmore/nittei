@@ -13,7 +13,11 @@ export type AccountSearchEventsRequestBodyFilter = {
    */
   userId?: IDQuery
   /**
-   * Optional query on parent ID (which is a string as it's an ID from an external system)
+   * Optional query on external ID (which is a string as it's an ID from an external system)
+   */
+  externalId?: StringQuery
+  /**
+   * Optional query on external parent ID (which is a string as it's an ID from an external system)
    */
   externalParentId?: StringQuery
   /**
