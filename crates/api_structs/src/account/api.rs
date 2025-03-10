@@ -157,8 +157,12 @@ pub mod account_search_events {
 
     /// Request body for searching events for a whole account (across all users)
     #[derive(Deserialize, Serialize, Validate, TS)]
-    #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "AccountSearchEventsRequestBody")]
+    #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    #[ts(
+        export,
+        rename = "AccountSearchEventsRequestBody",
+        rename_all = "camelCase"
+    )]
     pub struct RequestBody {
         /// Filter to use for searching events
         pub filter: RequestBodyFilter,
@@ -168,20 +172,29 @@ pub mod account_search_events {
         pub sort: Option<CalendarEventSort>,
 
         /// Optional limit to use when searching events (u16)
+        /// Defaults to 200
         #[ts(optional)]
         pub limit: Option<u16>,
     }
 
     /// Request body for searching events for a whole account (across all users)
     #[derive(Deserialize, Serialize, Validate, TS)]
-    #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "AccountSearchEventsRequestBodyFilter")]
+    #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    #[ts(
+        export,
+        rename = "AccountSearchEventsRequestBodyFilter",
+        rename_all = "camelCase"
+    )]
     pub struct RequestBodyFilter {
         /// Optional query on user ID, or list of user IDs
         #[ts(optional)]
         pub user_id: Option<IDQuery>,
 
-        /// Optional query on parent ID (which is a string as it's an ID from an external system)
+        /// Optional query on external ID (which is a string as it's an ID from an external system)
+        #[ts(optional)]
+        pub external_id: Option<StringQuery>,
+
+        /// Optional query on external parent ID (which is a string as it's an ID from an external system)
         #[ts(optional)]
         pub external_parent_id: Option<StringQuery>,
 

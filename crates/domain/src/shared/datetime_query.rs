@@ -3,8 +3,8 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 #[derive(Deserialize, Serialize, TS, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-#[ts(export, rename = "DateTimeQueryRange")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(export, rename = "DateTimeQueryRange", rename_all = "camelCase")]
 pub struct DateTimeQueryRange {
     /// "greater than or equal" query (UTC)
     #[ts(type = "Date", optional)]
@@ -27,8 +27,8 @@ pub struct DateTimeQueryRange {
 
 /// Query parameters for searching on a date time
 #[derive(Deserialize, Serialize, TS, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-#[ts(export, rename = "DateTimeQuery")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[ts(export, rename = "DateTimeQuery", rename_all = "camelCase")]
 pub enum DateTimeQuery {
     /// "equal" query (UTC)
     #[ts(type = "Date")]
