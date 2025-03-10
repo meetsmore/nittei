@@ -2,7 +2,7 @@
 import type { ID } from './ID'
 
 /**
- * Request body for creating an event
+ * Request body for deleting many events (by event_ids and/or by external_ids)
  */
 export type DeleteManyEventsRequestBody = {
   /**
@@ -10,7 +10,7 @@ export type DeleteManyEventsRequestBody = {
    */
   eventIds?: Array<ID>
   /**
-   * List of events with external IDs to delete
+   * List of events' external IDs to delete
    */
   externalIds?: Array<string>
 }
