@@ -222,6 +222,10 @@ pub mod account_search_events {
         #[ts(optional)]
         pub updated_at: Option<DateTimeQuery>,
 
+        /// Optional query on original start time - "lower than or equal", or "great than or equal" (UTC)
+        #[ts(optional)]
+        pub original_start_time: Option<DateTimeQuery>,
+
         /// Optional filter on the recurrence (existence)
         #[ts(optional)]
         pub is_recurring: Option<bool>,

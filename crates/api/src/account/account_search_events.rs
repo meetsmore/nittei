@@ -29,6 +29,7 @@ pub async fn account_search_events_controller(
         status: body.filter.status,
         event_type: body.filter.event_type,
         updated_at: body.filter.updated_at,
+        original_start_time: body.filter.original_start_time,
         is_recurring: body.filter.is_recurring,
         metadata: body.filter.metadata,
         sort: body.sort,
@@ -69,6 +70,9 @@ pub struct AccountSearchEventsUseCase {
 
     /// Optional query on updated at - "lower than or equal", or "great than or equal" (UTC)
     pub updated_at: Option<DateTimeQuery>,
+
+    /// Optional query on original start time - "lower than or equal", or "great than or equal" (UTC)
+    pub original_start_time: Option<DateTimeQuery>,
 
     /// Optional recurrence test
     pub is_recurring: Option<bool>,
@@ -130,6 +134,7 @@ impl UseCase for AccountSearchEventsUseCase {
             && self.updated_at.is_none()
             && self.is_recurring.is_none()
             && self.metadata.is_none()
+            && self.original_start_time.is_none()
         {
             return Err(UseCaseError::BadRequest);
         }
@@ -148,6 +153,7 @@ impl UseCase for AccountSearchEventsUseCase {
                     status: self.status.take(),
                     event_type: self.event_type.take(),
                     updated_at: self.updated_at.take(),
+                    original_start_time: self.original_start_time.take(),
                     is_recurring: self.is_recurring.take(),
                     metadata: self.metadata.take(),
                 },

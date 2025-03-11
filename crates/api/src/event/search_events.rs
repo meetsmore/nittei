@@ -30,6 +30,7 @@ pub async fn search_events_controller(
         event_type: body.filter.event_type,
         status: body.filter.status,
         updated_at: body.filter.updated_at,
+        original_start_time: body.filter.original_start_time,
         is_recurring: body.filter.is_recurring,
         metadata: body.filter.metadata,
         sort: body.sort,
@@ -78,11 +79,14 @@ pub struct SearchEventsUseCase {
     /// Optional list of metadata key-value pairs
     pub metadata: Option<serde_json::Value>,
 
-    /// Optional sort
-    pub sort: Option<CalendarEventSort>,
+    /// Optional query on original start time - "lower than or equal", or "great than or equal" (UTC)
+    pub original_start_time: Option<DateTimeQuery>,
 
     /// Optional filter on the recurrence (existence)
     pub is_recurring: Option<bool>,
+
+    /// Optional sort
+    pub sort: Option<CalendarEventSort>,
 
     /// Optional limit
     pub limit: Option<u16>,
@@ -170,6 +174,7 @@ impl UseCase for SearchEventsUseCase {
                     event_type: self.event_type.take(),
                     status: self.status.take(),
                     updated_at: self.updated_at.take(),
+                    original_start_time: self.original_start_time.take(),
                     is_recurring: self.is_recurring.take(),
                     metadata: self.metadata.take(),
                 },
