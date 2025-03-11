@@ -233,10 +233,11 @@ impl UseCase for UpdateEventUseCase {
         let mut start_or_duration_change = false;
 
         if let Some(start_time) = start_time {
-            e.start_time = *start_time;
+            // Only change the exdates if the start time has actually changed
             if e.start_time != *start_time {
                 e.exdates = Vec::new();
             }
+            e.start_time = *start_time;
             start_or_duration_change = true;
         }
         if let Some(duration) = duration {
