@@ -47,6 +47,10 @@ export type SearchEventsRequestBodyFilter = {
    */
   updatedAt?: DateTimeQuery
   /**
+   * Optional query on original start time - "lower than or equal", or "great than or equal" (UTC)
+   */
+  originalStartTime?: DateTimeQuery
+  /**
    * Optional filter on the recurrence (existence)
    */
   isRecurring?: boolean

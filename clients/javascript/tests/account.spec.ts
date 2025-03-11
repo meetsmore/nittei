@@ -92,6 +92,7 @@ describe('Account API', () => {
     let metadataEventId1: string
     let eventId2: string
     let recurringEventId: string
+    let recurringExceptionEventId: string
 
     const externalId = 'externalId'
     const externalId2 = 'externalId2'
@@ -162,6 +163,17 @@ describe('Account API', () => {
       })
 
       recurringEventId = recurringEventRes.event.id
+
+      const exceptionEventRes = await adminClient.events.create(userId, {
+        calendarId,
+        status: 'confirmed',
+        duration: 1000,
+        startTime: new Date(10000), // Later date
+        originalStartTime: new Date(20000),
+        recurringEventId: recurringEventId,
+      })
+
+      recurringExceptionEventId = exceptionEventRes.event.id
     })
 
     it('should be able to search for events in the account (by startTime, for multiple users)', async () => {
@@ -251,7 +263,7 @@ describe('Account API', () => {
           },
         },
       })
-      expect(res.events.length).toBe(2)
+      expect(res.events.length).toBe(3)
       expect(res.events).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -259,6 +271,9 @@ describe('Account API', () => {
           }),
           expect.objectContaining({
             id: recurringEventId,
+          }),
+          expect.objectContaining({
+            id: recurringExceptionEventId,
           }),
         ])
       )
@@ -290,7 +305,7 @@ describe('Account API', () => {
           isRecurring: false,
         },
       })
-      expect(res.events.length).toBe(3)
+      expect(res.events.length).toBe(4)
       expect(res.events).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -301,6 +316,9 @@ describe('Account API', () => {
           }),
           expect.objectContaining({
             id: metadataEventId1,
+          }),
+          expect.objectContaining({
+            id: recurringExceptionEventId,
           }),
         ])
       )
@@ -323,6 +341,27 @@ describe('Account API', () => {
           }),
           expect.objectContaining({
             id: metadataEventId1,
+          }),
+        ])
+      )
+    })
+
+    it('should be able to search on originalStartTime', async () => {
+      const res = await adminClient.account.searchEventsInAccount({
+        filter: {
+          originalStartTime: {
+            range: {
+              gte: new Date(20000),
+            },
+          },
+        },
+      })
+
+      expect(res.events.length).toBe(1)
+      expect(res.events).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: recurringExceptionEventId,
           }),
         ])
       )

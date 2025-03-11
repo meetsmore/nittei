@@ -658,6 +658,13 @@ impl IEventRepo for PostgresEventRepo {
             true,
         );
 
+        apply_datetime_query(
+            &mut query,
+            "original_start_time",
+            &params.search_events_params.original_start_time,
+            false,
+        );
+
         if let Some(is_recurring) = params.search_events_params.is_recurring {
             query.push(format!(
                 " AND e.recurrence::text {} 'null'",
@@ -771,6 +778,13 @@ impl IEventRepo for PostgresEventRepo {
             "updated",
             &params.search_events_params.updated_at,
             true,
+        );
+
+        apply_datetime_query(
+            &mut query,
+            "original_start_time",
+            &params.search_events_params.original_start_time,
+            false,
         );
 
         if let Some(is_recurring) = params.search_events_params.is_recurring {
