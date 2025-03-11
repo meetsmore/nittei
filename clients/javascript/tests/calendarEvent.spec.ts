@@ -198,6 +198,23 @@ describe('CalendarEvent API', () => {
       expect(res.event.eventType).toBe('job')
     })
 
+    it('should be able to create event', async () => {
+      const res = await adminClient.events.create(userId, {
+        calendarId,
+        startTime: new Date('2024-06-08T13:00:00.000Z'),
+        duration: 21599999,
+        eventType: 'block',
+        recurrence: {
+          freq: 'weekly',
+          interval: 1,
+        },
+      })
+      expect(res.event).toBeDefined()
+      expect(res.event.calendarId).toBe(calendarId)
+      expect(res.event.eventType).toBe('block')
+      expect(res.event.endTime.toISOString()).toBe('2024-06-08T18:59:59.999Z')
+    })
+
     it('should be able to create event with recurring schedule', async () => {
       const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
       const res = await adminClient.events.create(userId, {
