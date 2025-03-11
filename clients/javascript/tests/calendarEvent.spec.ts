@@ -198,7 +198,7 @@ describe('CalendarEvent API', () => {
       expect(res.event.eventType).toBe('job')
     })
 
-    it('should be able to create event', async () => {
+    it('should be able to create a recurring block event', async () => {
       const res = await adminClient.events.create(userId, {
         calendarId,
         startTime: new Date('2024-06-08T13:00:00.000Z'),
