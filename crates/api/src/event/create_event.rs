@@ -194,7 +194,7 @@ impl UseCase for CreateEventUseCase {
             start_time: self.start_time,
             duration: self.duration,
             recurrence: None,
-            end_time: self.start_time + TimeDelta::milliseconds(self.duration), // default, if recurrence changes, this will be updated
+            end_time: self.start_time + TimeDelta::milliseconds(self.duration),
             exdates: self.exdates.clone(),
             recurring_event_id: self.recurring_event_id.take(),
             original_start_time: self.original_start_time,
@@ -210,12 +210,10 @@ impl UseCase for CreateEventUseCase {
 
         // If we have recurrence, check if it's valid and set it
         if let Some(rrule_opts) = self.recurrence.clone() {
-            let res = e
-                .set_recurrence(rrule_opts, &calendar.settings, false)
-                .map_err(|e| {
-                    tracing::error!("[create_event] Error setting recurrence: {:?}", e);
-                    UseCaseError::InvalidRecurrenceRule
-                })?;
+            let res = e.set_recurrence(rrule_opts).map_err(|e| {
+                tracing::error!("[create_event] Error setting recurrence: {:?}", e);
+                UseCaseError::InvalidRecurrenceRule
+            })?;
             if !res {
                 return Err(UseCaseError::InvalidRecurrenceRule);
             }

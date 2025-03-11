@@ -142,46 +142,13 @@ impl CalendarEventReminder {
 }
 
 impl CalendarEvent {
-    fn update_endtime(&mut self, calendar_settings: &CalendarSettings) -> anyhow::Result<bool> {
-        match self.recurrence.clone() {
-            Some(recurrence) => {
-                let rrule_options =
-                    recurrence.get_parsed_options(self.start_time, calendar_settings)?;
-                let options = rrule_options.get_rrule().first();
-                if let Some(options) = options {
-                    if (options.get_count().unwrap_or(0) > 0) || options.get_until().is_some() {
-                        let expand = self.expand(None, calendar_settings)?;
-                        self.end_time = expand
-                            .last()
-                            .map(|l| l.end_time)
-                            .unwrap_or(DateTime::<Utc>::MIN_UTC);
-                    } else {
-                        self.end_time = DateTime::<Utc>::MAX_UTC;
-                    }
-                } else {
-                    self.end_time = DateTime::<Utc>::MAX_UTC;
-                }
-                Ok(true)
-            }
-            None => Ok(true),
-        }
-    }
-
-    pub fn set_recurrence(
-        &mut self,
-        recurrence: RRuleOptions,
-        calendar_settings: &CalendarSettings,
-        update_endtime: bool,
-    ) -> anyhow::Result<bool> {
+    pub fn set_recurrence(&mut self, recurrence: RRuleOptions) -> anyhow::Result<bool> {
         let valid_recurrence = recurrence.is_valid();
         if !valid_recurrence {
             return Ok(false);
         }
 
         self.recurrence = Some(recurrence);
-        if update_endtime {
-            return self.update_endtime(calendar_settings);
-        }
         Ok(true)
     }
 
@@ -356,10 +323,6 @@ mod test {
 
     #[test]
     fn rejects_event_with_invalid_recurrence() {
-        let settings = CalendarSettings {
-            timezone: UTC,
-            week_start: Weekday::Mon,
-        };
         let mut invalid_rrules = Vec::new();
         invalid_rrules.push(RRuleOptions {
             // Only bysetpos and no by*
@@ -375,7 +338,7 @@ mod test {
                 ..Default::default()
             };
 
-            let valid = match event.set_recurrence(rrule, &settings, true) {
+            let valid = match event.set_recurrence(rrule) {
                 Ok(valid) => valid,
                 Err(e) => {
                     panic!("Error: {:?}", e);
@@ -387,10 +350,6 @@ mod test {
 
     #[test]
     fn allows_event_with_valid_recurrence() {
-        let settings = CalendarSettings {
-            timezone: UTC,
-            week_start: Weekday::Mon,
-        };
         let mut valid_rrules = Vec::new();
         let start_time = DateTime::from_timestamp_millis(1521317491239).unwrap();
         valid_rrules.push(Default::default());
@@ -419,7 +378,7 @@ mod test {
                 ..Default::default()
             };
 
-            let valid = match event.set_recurrence(rrule, &settings, true) {
+            let valid = match event.set_recurrence(rrule) {
                 Ok(valid) => valid,
                 Err(e) => {
                     panic!("Error: {:?}", e);
