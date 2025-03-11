@@ -2,9 +2,11 @@ import dayjs from 'dayjs'
 import timezone from 'dayjs/plugin/timezone'
 import utc from 'dayjs/plugin/utc'
 import {
+  type CalendarEventDTO,
   type INitteiClient,
   type INitteiUserClient,
   NitteiClient,
+  NotFoundError,
 } from '../lib'
 import { setupAccount, setupUserClient } from './helpers/fixtures'
 
@@ -749,6 +751,46 @@ describe('CalendarEvent API', () => {
         })
         expect(res.events.length).toBe(1)
         expect(res.events[0].id).toBe(metadataEventId1)
+      })
+    })
+
+    describe('Delete many events', () => {
+      it('should be able to delete many events', async () => {
+        const event1 = await adminClient.events.create(userId, {
+          calendarId,
+          duration: 1000,
+          startTime: new Date(1000),
+        })
+        const externalId = crypto.randomUUID()
+        await adminClient.events.create(userId, {
+          calendarId,
+          duration: 1000,
+          startTime: new Date(2000),
+          externalId,
+        })
+
+        await adminClient.events.removeMany({
+          eventIds: [event1.event.id],
+          externalIds: [externalId],
+        })
+
+        // Refetch the events
+        let event1Deleted: CalendarEventDTO | null
+        try {
+          const res = await adminClient.events.getById(event1.event.id)
+          event1Deleted = res.event
+        } catch (e) {
+          if (e instanceof NotFoundError) {
+            event1Deleted = null
+          } else {
+            throw e
+          }
+        }
+        const event2Deleted =
+          await adminClient.events.getByExternalId(externalId)
+
+        expect(event1Deleted).toBe(null)
+        expect(event2Deleted.events.length).toBe(0)
       })
     })
 

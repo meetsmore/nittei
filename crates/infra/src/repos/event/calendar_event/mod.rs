@@ -65,6 +65,11 @@ pub trait IEventRepo: Send + Sync {
         account_uid: &ID,
         external_id: &str,
     ) -> anyhow::Result<Vec<CalendarEvent>>;
+    async fn find_many_by_external_ids(
+        &self,
+        account_uid: &ID,
+        external_ids: &[String],
+    ) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn find_many(&self, event_ids: &[ID]) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn find_by_calendar(
         &self,
@@ -110,6 +115,7 @@ pub trait IEventRepo: Send + Sync {
         max_time: DateTime<Utc>,
     ) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn delete(&self, event_id: &ID) -> anyhow::Result<()>;
+    async fn delete_many(&self, event_ids: &[ID]) -> anyhow::Result<()>;
     async fn delete_by_service(&self, service_id: &ID) -> anyhow::Result<()>;
     async fn find_by_metadata(
         &self,

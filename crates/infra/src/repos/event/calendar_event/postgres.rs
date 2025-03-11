@@ -363,6 +363,37 @@ impl IEventRepo for PostgresEventRepo {
         .collect()
     }
 
+    async fn find_many_by_external_ids(
+        &self,
+        account_uid: &ID,
+        external_ids: &[String],
+    ) -> anyhow::Result<Vec<CalendarEvent>> {
+        sqlx::query_as!(
+            EventRaw,
+            r#"
+            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+            INNER JOIN calendars AS c
+                ON c.calendar_uid = e.calendar_uid
+            INNER JOIN users AS u
+                ON u.user_uid = c.user_uid
+            WHERE u.account_uid = $1 AND e.external_id = any($2)
+            "#,
+            account_uid.as_ref(),
+            external_ids,
+        )
+        .fetch_all(&self.pool)
+        .await
+        .inspect_err(|err| {
+            error!(
+                "Find calendar events with external_ids: {:?} failed. DB returned error: {:?}",
+                external_ids, err
+            );
+        })?
+        .into_iter()
+        .map(|e| e.try_into())
+        .collect()
+    }
+
     #[instrument]
     async fn find_many(&self, event_ids: &[ID]) -> anyhow::Result<Vec<CalendarEvent>> {
         let ids = event_ids.iter().map(|id| *id.as_ref()).collect::<Vec<_>>();
@@ -927,6 +958,26 @@ impl IEventRepo for PostgresEventRepo {
         })?
         .ok_or_else(|| anyhow::Error::msg("Unable to delete calendar event"))
         .map(|_| ())
+    }
+
+    async fn delete_many(&self, event_ids: &[ID]) -> anyhow::Result<()> {
+        let ids = event_ids.iter().map(|id| *id.as_ref()).collect::<Vec<_>>();
+        sqlx::query!(
+            r#"
+            DELETE FROM calendar_events AS c
+            WHERE c.event_uid = ANY($1)
+            "#,
+            &ids
+        )
+        .execute(&self.pool)
+        .await
+        .inspect_err(|e| {
+            error!(
+                "Delete calendar events with ids: {:?} failed. DB returned error: {:?}",
+                event_ids, e
+            );
+        })?;
+        Ok(())
     }
 
     #[instrument]
