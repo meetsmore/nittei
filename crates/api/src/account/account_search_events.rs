@@ -103,7 +103,7 @@ pub struct UseCaseResponse {
 
 #[derive(Debug)]
 pub enum UseCaseError {
-    BadRequest,
+    BadRequest(String),
     InternalError,
 }
 
@@ -111,7 +111,7 @@ impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::InternalError => Self::InternalError,
-            UseCaseError::BadRequest => Self::BadClientData("Bad request".to_string()),
+            UseCaseError::BadRequest(msg) => Self::BadClientData(msg),
         }
     }
 }
@@ -129,7 +129,10 @@ impl UseCase for AccountSearchEventsUseCase {
             // Note that limit is unsigned, so it can't be negative
             // Limit to 1000 events max`
             if limit == 0 || limit > APP_CONFIG.max_events_returned_by_search {
-                return Err(UseCaseError::BadRequest);
+                return Err(UseCaseError::BadRequest(format!(
+                    "Limit is invalid: it should be positive and under {}",
+                    APP_CONFIG.max_events_returned_by_search
+                )));
             }
         }
 

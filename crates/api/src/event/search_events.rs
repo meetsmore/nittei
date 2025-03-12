@@ -2,6 +2,7 @@ use actix_web::{HttpRequest, HttpResponse, web};
 use nittei_api_structs::{dtos::CalendarEventDTO, search_events::*};
 use nittei_domain::{CalendarEventSort, DateTimeQuery, ID, IDQuery, StringQuery};
 use nittei_infra::{NitteiContext, SearchEventsForUserParams, SearchEventsParams};
+use nittei_utils::config::APP_CONFIG;
 
 use crate::{
     error::NitteiError,
@@ -134,6 +135,17 @@ impl UseCase for SearchEventsUseCase {
     const NAME: &'static str = "SearchEvents";
 
     async fn execute(&mut self, ctx: &NitteiContext) -> Result<UseCaseResponse, UseCaseError> {
+        if let Some(limit) = self.limit {
+            // Note that limit is unsigned, so it can't be negative
+            // Limit to 1000 events max`
+            if limit == 0 || limit > APP_CONFIG.max_events_returned_by_search {
+                return Err(UseCaseError::BadRequest(format!(
+                    "Limit is invalid: it should be positive and under {}",
+                    APP_CONFIG.max_events_returned_by_search
+                )));
+            }
+        }
+
         if let Some(calendar_ids) = &self.calendar_ids {
             if calendar_ids.is_empty() {
                 return Err(UseCaseError::BadRequest(
