@@ -608,6 +608,13 @@ impl IEventRepo for PostgresEventRepo {
 
         query.push_bind::<Uuid>(params.user_id.into());
 
+        apply_id_query(
+            &mut query,
+            "e",
+            "event_uid",
+            &params.search_events_params.event_uid,
+        );
+
         if let Some(calendar_ids) = params.calendar_ids {
             query.push(" AND c.calendar_uid IN (");
             let mut separated = query.separated(", ");
@@ -687,6 +694,10 @@ impl IEventRepo for PostgresEventRepo {
                 nittei_domain::CalendarEventSort::EndTimeDesc => "end_time DESC",
                 nittei_domain::CalendarEventSort::CreatedAsc => "created ASC",
                 nittei_domain::CalendarEventSort::CreatedDesc => "created DESC",
+                nittei_domain::CalendarEventSort::UpdatedAsc => "updated ASC",
+                nittei_domain::CalendarEventSort::UpdatedDesc => "updated DESC",
+                nittei_domain::CalendarEventSort::EventUidAsc => "event_uid ASC",
+                nittei_domain::CalendarEventSort::EventUidDesc => "event_uid DESC",
             });
         }
 
@@ -734,9 +745,16 @@ impl IEventRepo for PostgresEventRepo {
 
         apply_id_query(
             &mut query,
+            "e",
+            "event_uid",
+            &params.search_events_params.event_uid,
+        );
+
+        apply_id_query(
+            &mut query,
             "u",
             "user_uid",
-            &params.search_events_params.user_id,
+            &params.search_events_params.user_uid,
         );
 
         apply_string_query(
@@ -775,13 +793,6 @@ impl IEventRepo for PostgresEventRepo {
 
         apply_datetime_query(
             &mut query,
-            "updated",
-            &params.search_events_params.updated_at,
-            true,
-        );
-
-        apply_datetime_query(
-            &mut query,
             "original_start_time",
             &params.search_events_params.original_start_time,
             false,
@@ -799,6 +810,20 @@ impl IEventRepo for PostgresEventRepo {
             query.push_bind(Json(metadata.clone()));
         }
 
+        apply_datetime_query(
+            &mut query,
+            "created",
+            &params.search_events_params.created_at,
+            true,
+        );
+
+        apply_datetime_query(
+            &mut query,
+            "updated",
+            &params.search_events_params.updated_at,
+            true,
+        );
+
         // Sort if needed
         if let Some(sort) = params.sort {
             query.push(" ORDER BY ");
@@ -809,6 +834,10 @@ impl IEventRepo for PostgresEventRepo {
                 nittei_domain::CalendarEventSort::EndTimeDesc => "end_time DESC",
                 nittei_domain::CalendarEventSort::CreatedAsc => "created ASC",
                 nittei_domain::CalendarEventSort::CreatedDesc => "created DESC",
+                nittei_domain::CalendarEventSort::UpdatedAsc => "updated ASC",
+                nittei_domain::CalendarEventSort::UpdatedDesc => "updated DESC",
+                nittei_domain::CalendarEventSort::EventUidAsc => "event_uid ASC",
+                nittei_domain::CalendarEventSort::EventUidDesc => "event_uid DESC",
             });
         }
 

@@ -186,6 +186,10 @@ pub mod account_search_events {
         rename_all = "camelCase"
     )]
     pub struct RequestBodyFilter {
+        /// Optional query on event ID
+        #[ts(optional)]
+        pub event_uid: Option<IDQuery>,
+
         /// Optional query on user ID, or list of user IDs
         #[ts(optional)]
         pub user_id: Option<IDQuery>,
@@ -218,10 +222,6 @@ pub mod account_search_events {
         #[ts(optional)]
         pub status: Option<StringQuery>,
 
-        /// Optional query on updated at - e.g. "lower than or equal", or "great than or equal" (UTC)
-        #[ts(optional)]
-        pub updated_at: Option<DateTimeQuery>,
-
         /// Optional query on original start time - "lower than or equal", or "great than or equal" (UTC)
         #[ts(optional)]
         pub original_start_time: Option<DateTimeQuery>,
@@ -233,6 +233,14 @@ pub mod account_search_events {
         /// Optional query on metadata
         #[ts(optional)]
         pub metadata: Option<serde_json::Value>,
+
+        /// Optional query on created at - e.g. "lower than or equal", or "great than or equal" (UTC)
+        #[ts(optional)]
+        pub created_at: Option<DateTimeQuery>,
+
+        /// Optional query on updated at - e.g. "lower than or equal", or "great than or equal" (UTC)
+        #[ts(optional)]
+        pub updated_at: Option<DateTimeQuery>,
     }
 
     /// API response for getting events by calendars

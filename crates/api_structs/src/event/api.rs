@@ -347,7 +347,7 @@ pub mod get_events_by_calendars {
 }
 
 pub mod search_events {
-    use nittei_domain::{CalendarEventSort, DateTimeQuery, StringQuery};
+    use nittei_domain::{CalendarEventSort, DateTimeQuery, IDQuery, StringQuery};
 
     use super::*;
 
@@ -382,6 +382,10 @@ pub mod search_events {
         /// User ID
         pub user_id: ID,
 
+        /// Optional query on event UUID(s)
+        #[ts(optional)]
+        pub event_uid: Option<IDQuery>,
+
         /// Optional list of calendar UUIDs
         /// If not provided, all calendars will be used
         #[validate(length(min = 1))]
@@ -412,10 +416,6 @@ pub mod search_events {
         #[ts(optional)]
         pub status: Option<StringQuery>,
 
-        /// Optioanl query on updated at - "lower than or equal", or "great than or equal" (UTC)
-        #[ts(optional)]
-        pub updated_at: Option<DateTimeQuery>,
-
         /// Optional query on original start time - "lower than or equal", or "great than or equal" (UTC)
         #[ts(optional)]
         pub original_start_time: Option<DateTimeQuery>,
@@ -427,6 +427,14 @@ pub mod search_events {
         /// Optional list of metadata key-value pairs
         #[ts(optional)]
         pub metadata: Option<serde_json::Value>,
+
+        /// Optional query on created at - e.g. "lower than or equal", or "great than or equal" (UTC)
+        #[ts(optional)]
+        pub created_at: Option<DateTimeQuery>,
+
+        /// Optional query on updated at - "lower than or equal", or "great than or equal" (UTC)
+        #[ts(optional)]
+        pub updated_at: Option<DateTimeQuery>,
     }
 
     /// API response for searching events for one user

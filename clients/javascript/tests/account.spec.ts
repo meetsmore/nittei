@@ -366,5 +366,28 @@ describe('Account API', () => {
         ])
       )
     })
+
+    it('should be able to search on event IDs directly', async () => {
+      const res = await adminClient.account.searchEventsInAccount({
+        filter: {
+          eventUid: {
+            in: [eventId1, eventId2],
+          },
+        },
+        sort: 'eventUidAsc',
+      })
+
+      expect(res.events.length).toBe(2)
+      expect(res.events).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: eventId1,
+          }),
+          expect.objectContaining({
+            id: eventId2,
+          }),
+        ])
+      )
+    })
   })
 })

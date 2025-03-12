@@ -19,4 +19,19 @@ pub enum IDQuery {
 
     /// List of IDs (equality test)
     In(Vec<ID>),
+
+    /// List of IDs (inequality test)
+    Nin(Vec<ID>),
+
+    /// Greater than the ID
+    Gt(ID),
+
+    /// Greater than or equal to the ID
+    Gte(ID),
+
+    /// Less than the ID
+    Lt(ID),
+
+    /// Less than or equal to the ID
+    Lte(ID),
 }

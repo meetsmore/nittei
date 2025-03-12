@@ -39,17 +39,19 @@ pub struct SearchEventsForAccountParams {
 
 #[derive(Debug, Clone)]
 pub struct SearchEventsParams {
-    pub user_id: Option<IDQuery>,
+    pub event_uid: Option<IDQuery>,
+    pub user_uid: Option<IDQuery>,
     pub external_id: Option<StringQuery>,
     pub external_parent_id: Option<StringQuery>,
     pub start_time: Option<DateTimeQuery>,
     pub end_time: Option<DateTimeQuery>,
     pub status: Option<StringQuery>,
     pub event_type: Option<StringQuery>,
-    pub updated_at: Option<DateTimeQuery>,
     pub original_start_time: Option<DateTimeQuery>,
     pub is_recurring: Option<bool>,
     pub metadata: Option<serde_json::Value>,
+    pub created_at: Option<DateTimeQuery>,
+    pub updated_at: Option<DateTimeQuery>,
 }
 
 #[async_trait::async_trait]
