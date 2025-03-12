@@ -2,6 +2,7 @@ use actix_web::{HttpRequest, HttpResponse, web};
 use nittei_api_structs::{account_search_events::*, dtos::CalendarEventDTO};
 use nittei_domain::{CalendarEventSort, DateTimeQuery, ID, IDQuery, StringQuery};
 use nittei_infra::{NitteiContext, SearchEventsForAccountParams, SearchEventsParams};
+use nittei_utils::config::APP_CONFIG;
 
 use crate::{
     error::NitteiError,
@@ -127,7 +128,7 @@ impl UseCase for AccountSearchEventsUseCase {
         if let Some(limit) = self.limit {
             // Note that limit is unsigned, so it can't be negative
             // Limit to 1000 events max`
-            if limit == 0 || limit > 1000 {
+            if limit == 0 || limit > APP_CONFIG.max_events_returned_by_search {
                 return Err(UseCaseError::BadRequest);
             }
         }
