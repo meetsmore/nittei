@@ -215,7 +215,7 @@ describe('CalendarEvent API', () => {
       expect(res.event.endTime.toISOString()).toBe('2024-06-08T18:59:59.999Z')
     })
 
-    it('should be able to create event with recurring schedule', async () => {
+    it('should be able to create events with recurring schedule', async () => {
       const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
       const res = await adminClient.events.create(userId, {
         calendarId,
@@ -293,6 +293,38 @@ describe('CalendarEvent API', () => {
           until: '2024-10-16T14:59:59Z',
           byweekday: ['Thu'],
           bymonthday: [],
+        })
+      )
+
+      const by3rdFriday = await adminClient.events.create(userId, {
+        calendarId: calendarTokyoId,
+        startTime: dayjs('2022-03-10T09:30:00.000Z').toDate(),
+        duration: 1800000,
+        eventType: 'gcal',
+        recurrence: {
+          freq: 'monthly',
+          interval: 1,
+          count: undefined,
+          until: undefined,
+          bysetpos: undefined,
+          byweekday: ['3Fri'],
+          bymonthday: [],
+          bymonth: undefined,
+          byyearday: undefined,
+          byweekno: undefined,
+          weekstart: 'Sun',
+        },
+      })
+
+      expect(by3rdFriday.event).toBeDefined()
+      expect(by3rdFriday.event.calendarId).toBe(calendarTokyoId)
+      expect(by3rdFriday.event.recurrence).toEqual(
+        expect.objectContaining({
+          freq: 'monthly',
+          interval: 1,
+          byweekday: ['3Fri'],
+          bymonthday: [],
+          weekstart: 'Sun',
         })
       )
     })
