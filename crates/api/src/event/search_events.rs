@@ -29,10 +29,11 @@ pub async fn search_events_controller(
         end_time: body.filter.end_time,
         event_type: body.filter.event_type,
         status: body.filter.status,
-        updated_at: body.filter.updated_at,
         original_start_time: body.filter.original_start_time,
         is_recurring: body.filter.is_recurring,
         metadata: body.filter.metadata,
+        created_at: body.filter.created_at,
+        updated_at: body.filter.updated_at,
         sort: body.sort,
         limit: body.limit.or(Some(200)), // Default limit to 200
     };
@@ -73,17 +74,20 @@ pub struct SearchEventsUseCase {
     /// Optional query on status
     pub status: Option<StringQuery>,
 
-    /// Optioanl query on updated at - "lower than or equal", or "great than or equal" (UTC)
-    pub updated_at: Option<DateTimeQuery>,
-
-    /// Optional list of metadata key-value pairs
-    pub metadata: Option<serde_json::Value>,
-
     /// Optional query on original start time - "lower than or equal", or "great than or equal" (UTC)
     pub original_start_time: Option<DateTimeQuery>,
 
     /// Optional filter on the recurrence (existence)
     pub is_recurring: Option<bool>,
+
+    /// Optional list of metadata key-value pairs
+    pub metadata: Option<serde_json::Value>,
+
+    /// Optional query on created at - "lower than or equal", or "great than or equal" (UTC)
+    pub created_at: Option<DateTimeQuery>,
+
+    /// Optional query on updated at - "lower than or equal", or "great than or equal" (UTC)
+    pub updated_at: Option<DateTimeQuery>,
 
     /// Optional sort
     pub sort: Option<CalendarEventSort>,
@@ -173,10 +177,11 @@ impl UseCase for SearchEventsUseCase {
                     end_time: self.end_time.take(),
                     event_type: self.event_type.take(),
                     status: self.status.take(),
-                    updated_at: self.updated_at.take(),
                     original_start_time: self.original_start_time.take(),
                     is_recurring: self.is_recurring.take(),
                     metadata: self.metadata.take(),
+                    created_at: self.created_at.take(),
+                    updated_at: self.updated_at.take(),
                 },
                 sort: self.sort.take(),
                 limit: self.limit.take(),

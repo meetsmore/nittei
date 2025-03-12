@@ -412,10 +412,6 @@ pub mod search_events {
         #[ts(optional)]
         pub status: Option<StringQuery>,
 
-        /// Optioanl query on updated at - "lower than or equal", or "great than or equal" (UTC)
-        #[ts(optional)]
-        pub updated_at: Option<DateTimeQuery>,
-
         /// Optional query on original start time - "lower than or equal", or "great than or equal" (UTC)
         #[ts(optional)]
         pub original_start_time: Option<DateTimeQuery>,
@@ -427,6 +423,14 @@ pub mod search_events {
         /// Optional list of metadata key-value pairs
         #[ts(optional)]
         pub metadata: Option<serde_json::Value>,
+
+        /// Optional query on created at - e.g. "lower than or equal", or "great than or equal" (UTC)
+        #[ts(optional)]
+        pub created_at: Option<DateTimeQuery>,
+
+        /// Optional query on updated at - "lower than or equal", or "great than or equal" (UTC)
+        #[ts(optional)]
+        pub updated_at: Option<DateTimeQuery>,
     }
 
     /// API response for searching events for one user

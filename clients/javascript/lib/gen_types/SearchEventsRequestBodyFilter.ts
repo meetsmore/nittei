@@ -43,10 +43,6 @@ export type SearchEventsRequestBodyFilter = {
    */
   status?: StringQuery
   /**
-   * Optioanl query on updated at - "lower than or equal", or "great than or equal" (UTC)
-   */
-  updatedAt?: DateTimeQuery
-  /**
    * Optional query on original start time - "lower than or equal", or "great than or equal" (UTC)
    */
   originalStartTime?: DateTimeQuery
@@ -58,4 +54,12 @@ export type SearchEventsRequestBodyFilter = {
    * Optional list of metadata key-value pairs
    */
   metadata?: JsonValue
+  /**
+   * Optional query on created at - e.g. "lower than or equal", or "great than or equal" (UTC)
+   */
+  createdAt?: DateTimeQuery
+  /**
+   * Optional query on updated at - "lower than or equal", or "great than or equal" (UTC)
+   */
+  updatedAt?: DateTimeQuery
 }
