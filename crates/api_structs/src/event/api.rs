@@ -347,7 +347,7 @@ pub mod get_events_by_calendars {
 }
 
 pub mod search_events {
-    use nittei_domain::{CalendarEventSort, DateTimeQuery, StringQuery};
+    use nittei_domain::{CalendarEventSort, DateTimeQuery, IDQuery, StringQuery};
 
     use super::*;
 
@@ -381,6 +381,10 @@ pub mod search_events {
     pub struct RequestBodyFilter {
         /// User ID
         pub user_id: ID,
+
+        /// Optional query on event UUID(s)
+        #[ts(optional)]
+        pub event_uid: Option<IDQuery>,
 
         /// Optional list of calendar UUIDs
         /// If not provided, all calendars will be used

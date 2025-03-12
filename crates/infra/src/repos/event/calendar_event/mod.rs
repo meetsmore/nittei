@@ -39,7 +39,8 @@ pub struct SearchEventsForAccountParams {
 
 #[derive(Debug, Clone)]
 pub struct SearchEventsParams {
-    pub user_id: Option<IDQuery>,
+    pub event_uid: Option<IDQuery>,
+    pub user_uid: Option<IDQuery>,
     pub external_id: Option<StringQuery>,
     pub external_parent_id: Option<StringQuery>,
     pub start_time: Option<DateTimeQuery>,

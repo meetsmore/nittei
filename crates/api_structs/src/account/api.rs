@@ -186,6 +186,10 @@ pub mod account_search_events {
         rename_all = "camelCase"
     )]
     pub struct RequestBodyFilter {
+        /// Optional query on event ID
+        #[ts(optional)]
+        pub event_uid: Option<IDQuery>,
+
         /// Optional query on user ID, or list of user IDs
         #[ts(optional)]
         pub user_id: Option<IDQuery>,

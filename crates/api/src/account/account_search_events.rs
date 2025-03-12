@@ -20,8 +20,9 @@ pub async fn account_search_events_controller(
 
     let body = body.0;
     let usecase = AccountSearchEventsUseCase {
-        account_id: account.id,
-        user_id: body.filter.user_id,
+        account_uid: account.id,
+        event_uid: body.filter.event_uid,
+        user_uid: body.filter.user_id,
         external_id: body.filter.external_id,
         external_parent_id: body.filter.external_parent_id,
         start_time: body.filter.start_time,
@@ -45,11 +46,14 @@ pub async fn account_search_events_controller(
 
 #[derive(Debug)]
 pub struct AccountSearchEventsUseCase {
-    /// Account ID
-    pub account_id: ID,
+    /// Account UUID
+    pub account_uid: ID,
 
-    /// Optional query on user ID, or list of user IDs
-    pub user_id: Option<IDQuery>,
+    /// Optional query on event UUID, or list of event UUIDs
+    pub event_uid: Option<IDQuery>,
+
+    /// Optional query on user UUID, or list of user UUIDs
+    pub user_uid: Option<IDQuery>,
 
     /// Optional query on external ID (which is a string as it's an ID from an external system)
     pub external_id: Option<StringQuery>,
@@ -128,7 +132,8 @@ impl UseCase for AccountSearchEventsUseCase {
         }
 
         // Check that we have a least one filter
-        if self.user_id.is_none()
+        if self.event_uid.is_none()
+            && self.user_uid.is_none()
             && self.external_id.is_none()
             && self.external_parent_id.is_none()
             && self.start_time.is_none()
@@ -148,9 +153,10 @@ impl UseCase for AccountSearchEventsUseCase {
             .repos
             .events
             .search_events_for_account(SearchEventsForAccountParams {
-                account_id: self.account_id.clone(),
+                account_id: self.account_uid.clone(),
                 search_events_params: SearchEventsParams {
-                    user_id: self.user_id.take(),
+                    event_uid: self.event_uid.take(),
+                    user_uid: self.user_uid.take(),
                     external_id: self.external_id.take(),
                     external_parent_id: self.external_parent_id.take(),
                     start_time: self.start_time.take(),

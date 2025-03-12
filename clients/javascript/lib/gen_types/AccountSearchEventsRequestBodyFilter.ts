@@ -9,6 +9,10 @@ import type { JsonValue } from './serde_json/JsonValue'
  */
 export type AccountSearchEventsRequestBodyFilter = {
   /**
+   * Optional query on event ID
+   */
+  eventUid?: IDQuery
+  /**
    * Optional query on user ID, or list of user IDs
    */
   userId?: IDQuery

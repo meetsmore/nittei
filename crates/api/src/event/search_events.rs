@@ -21,6 +21,7 @@ pub async fn search_events_controller(
     let body = body.0;
     let usecase = SearchEventsUseCase {
         account_id: account.id,
+        event_uid: body.filter.event_uid,
         user_id: body.filter.user_id,
         calendar_ids: body.filter.calendar_ids,
         external_id: body.filter.external_id,
@@ -51,6 +52,9 @@ pub struct SearchEventsUseCase {
 
     /// User ID
     pub user_id: ID,
+
+    /// Optional query on event UUID, or list of event UUIDs
+    pub event_uid: Option<IDQuery>,
 
     /// Optional list of calendar UUIDs
     /// If not provided, all calendars will be used
@@ -170,7 +174,8 @@ impl UseCase for SearchEventsUseCase {
                 calendar_ids: self.calendar_ids.take(),
                 search_events_params: SearchEventsParams {
                     // Force user_id to be the same as the one in the search
-                    user_id: Some(IDQuery::Eq(self.user_id.clone())),
+                    user_uid: Some(IDQuery::Eq(self.user_id.clone())),
+                    event_uid: self.event_uid.take(),
                     external_id: self.external_id.take(),
                     external_parent_id: self.external_parent_id.take(),
                     start_time: self.start_time.take(),

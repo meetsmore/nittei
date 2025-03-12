@@ -608,6 +608,13 @@ impl IEventRepo for PostgresEventRepo {
 
         query.push_bind::<Uuid>(params.user_id.into());
 
+        apply_id_query(
+            &mut query,
+            "e",
+            "event_uid",
+            &params.search_events_params.event_uid,
+        );
+
         if let Some(calendar_ids) = params.calendar_ids {
             query.push(" AND c.calendar_uid IN (");
             let mut separated = query.separated(", ");
@@ -689,6 +696,8 @@ impl IEventRepo for PostgresEventRepo {
                 nittei_domain::CalendarEventSort::CreatedDesc => "created DESC",
                 nittei_domain::CalendarEventSort::UpdatedAsc => "updated ASC",
                 nittei_domain::CalendarEventSort::UpdatedDesc => "updated DESC",
+                nittei_domain::CalendarEventSort::IdAsc => "event_uid ASC",
+                nittei_domain::CalendarEventSort::IdDesc => "event_uid DESC",
             });
         }
 
@@ -736,9 +745,16 @@ impl IEventRepo for PostgresEventRepo {
 
         apply_id_query(
             &mut query,
+            "e",
+            "event_uid",
+            &params.search_events_params.event_uid,
+        );
+
+        apply_id_query(
+            &mut query,
             "u",
             "user_uid",
-            &params.search_events_params.user_id,
+            &params.search_events_params.user_uid,
         );
 
         apply_string_query(
@@ -820,6 +836,8 @@ impl IEventRepo for PostgresEventRepo {
                 nittei_domain::CalendarEventSort::CreatedDesc => "created DESC",
                 nittei_domain::CalendarEventSort::UpdatedAsc => "updated ASC",
                 nittei_domain::CalendarEventSort::UpdatedDesc => "updated DESC",
+                nittei_domain::CalendarEventSort::IdAsc => "event_uid ASC",
+                nittei_domain::CalendarEventSort::IdDesc => "event_uid DESC",
             });
         }
 
