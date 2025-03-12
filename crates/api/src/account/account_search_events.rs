@@ -127,7 +127,7 @@ impl UseCase for AccountSearchEventsUseCase {
     async fn execute(&mut self, ctx: &NitteiContext) -> Result<UseCaseResponse, UseCaseError> {
         if let Some(limit) = self.limit {
             // Note that limit is unsigned, so it can't be negative
-            // Limit to 1000 events max`
+            // Limit nb of events to be returned
             if limit == 0 || limit > APP_CONFIG.max_events_returned_by_search {
                 return Err(UseCaseError::BadRequest(format!(
                     "Limit is invalid: it should be positive and under {}",
