@@ -126,27 +126,10 @@ impl UseCase for AccountSearchEventsUseCase {
     async fn execute(&mut self, ctx: &NitteiContext) -> Result<UseCaseResponse, UseCaseError> {
         if let Some(limit) = self.limit {
             // Note that limit is unsigned, so it can't be negative
-            if limit == 0 {
+            // Limit to 1000 events max`
+            if limit == 0 || limit > 1000 {
                 return Err(UseCaseError::BadRequest);
             }
-        }
-
-        // Check that we have a least one filter
-        if self.event_uid.is_none()
-            && self.user_uid.is_none()
-            && self.external_id.is_none()
-            && self.external_parent_id.is_none()
-            && self.start_time.is_none()
-            && self.end_time.is_none()
-            && self.status.is_none()
-            && self.event_type.is_none()
-            && self.is_recurring.is_none()
-            && self.original_start_time.is_none()
-            && self.metadata.is_none()
-            && self.created_at.is_none()
-            && self.updated_at.is_none()
-        {
-            return Err(UseCaseError::BadRequest);
         }
 
         let res = ctx
