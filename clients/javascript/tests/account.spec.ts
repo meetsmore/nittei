@@ -374,7 +374,7 @@ describe('Account API', () => {
             in: [eventId1, eventId2],
           },
         },
-        sort: 'idAsc',
+        sort: 'eventUidAsc',
       })
 
       expect(res.events.length).toBe(2)

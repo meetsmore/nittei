@@ -12,5 +12,5 @@ export type CalendarEventSort =
   | 'createdDesc'
   | 'updatedAsc'
   | 'updatedDesc'
-  | 'idAsc'
-  | 'idDesc'
+  | 'eventUidAsc'
+  | 'eventUidDesc'

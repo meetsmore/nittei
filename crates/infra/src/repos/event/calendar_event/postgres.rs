@@ -696,8 +696,8 @@ impl IEventRepo for PostgresEventRepo {
                 nittei_domain::CalendarEventSort::CreatedDesc => "created DESC",
                 nittei_domain::CalendarEventSort::UpdatedAsc => "updated ASC",
                 nittei_domain::CalendarEventSort::UpdatedDesc => "updated DESC",
-                nittei_domain::CalendarEventSort::IdAsc => "event_uid ASC",
-                nittei_domain::CalendarEventSort::IdDesc => "event_uid DESC",
+                nittei_domain::CalendarEventSort::EventUidAsc => "event_uid ASC",
+                nittei_domain::CalendarEventSort::EventUidDesc => "event_uid DESC",
             });
         }
 
@@ -836,8 +836,8 @@ impl IEventRepo for PostgresEventRepo {
                 nittei_domain::CalendarEventSort::CreatedDesc => "created DESC",
                 nittei_domain::CalendarEventSort::UpdatedAsc => "updated ASC",
                 nittei_domain::CalendarEventSort::UpdatedDesc => "updated DESC",
-                nittei_domain::CalendarEventSort::IdAsc => "event_uid ASC",
-                nittei_domain::CalendarEventSort::IdDesc => "event_uid DESC",
+                nittei_domain::CalendarEventSort::EventUidAsc => "event_uid ASC",
+                nittei_domain::CalendarEventSort::EventUidDesc => "event_uid DESC",
             });
         }
 

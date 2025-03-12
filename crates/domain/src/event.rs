@@ -74,10 +74,10 @@ pub enum CalendarEventSort {
     UpdatedAsc,
     // Sort by updated time (desc)
     UpdatedDesc,
-    // Sort by id (asc)
-    IdAsc,
-    // Sort by id (desc)
-    IdDesc,
+    // Sort by event uid (asc)
+    EventUidAsc,
+    // Sort by event uid (desc)
+    EventUidDesc,
 }
 
 #[derive(Debug, Clone, Default, Serialize)]
