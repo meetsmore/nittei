@@ -117,6 +117,11 @@
         "ordinal": 22,
         "name": "original_start_time",
         "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 23,
+        "name": "recurring_until",
+        "type_info": "Timestamptz"
       }
     ],
     "parameters": {
@@ -144,6 +149,7 @@
       true,
       true,
       false,
+      true,
       true,
       true,
       true,
