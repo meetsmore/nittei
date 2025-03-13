@@ -416,6 +416,10 @@ pub mod search_events {
         #[ts(optional)]
         pub status: Option<StringQuery>,
 
+        /// Optional query on the recurring event UID
+        #[ts(optional)]
+        pub recurring_event_uid: Option<IDQuery>,
+
         /// Optional query on original start time - "lower than or equal", or "great than or equal" (UTC)
         #[ts(optional)]
         pub original_start_time: Option<DateTimeQuery>,
