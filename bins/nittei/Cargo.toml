@@ -43,9 +43,6 @@ opentelemetry-datadog = { version = "0.11.0", features = ["reqwest-client"] }
 chrono = "0.4.19"
 chrono-tz = "0.9.0"
 
-# Use the `jemallocator` crate to use jemalloc as the global allocator.
-tikv-jemallocator = "0.6"
-
 
 ##################
 # Dev dependencies
