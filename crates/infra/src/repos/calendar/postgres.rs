@@ -113,9 +113,7 @@ impl ICalendarRepo for PostgresCalendarRepo {
         sqlx::query_as!(
             CalendarRaw,
             r#"
-            SELECT c.*, u.account_uid FROM calendars AS c
-            INNER JOIN users AS u
-                ON u.user_uid = c.user_uid
+            SELECT c.* FROM calendars AS c
             WHERE c.calendar_uid = $1
             "#,
             calendar_id.as_ref(),
@@ -141,9 +139,7 @@ impl ICalendarRepo for PostgresCalendarRepo {
         sqlx::query_as!(
             CalendarRaw,
             r#"
-            SELECT c.*, u.account_uid FROM calendars AS c
-            INNER JOIN users AS u
-                ON u.user_uid = c.user_uid
+            SELECT c.* FROM calendars AS c
             WHERE c.calendar_uid = any($1)
             "#,
             calendar_ids.as_slice()
@@ -166,9 +162,7 @@ impl ICalendarRepo for PostgresCalendarRepo {
         sqlx::query_as!(
             CalendarRaw,
             r#"
-            SELECT c.*, u.account_uid FROM calendars AS c
-            INNER JOIN users AS u
-                ON u.user_uid = c.user_uid
+            SELECT c.* FROM calendars AS c
             WHERE c.user_uid = $1
             "#,
             user_id.as_ref(),
@@ -194,9 +188,7 @@ impl ICalendarRepo for PostgresCalendarRepo {
         sqlx::query_as!(
             CalendarRaw,
             r#"
-            SELECT c.*, u.account_uid FROM calendars AS c
-            INNER JOIN users AS u
-                ON u.user_uid = c.user_uid
+            SELECT c.* FROM calendars AS c
             WHERE c.user_uid = $1 AND c.key = $2
             "#,
             user_id.as_ref(),
@@ -240,10 +232,8 @@ impl ICalendarRepo for PostgresCalendarRepo {
         sqlx::query_as!(
             CalendarRaw,
             r#"
-            SELECT c.*, u.account_uid FROM calendars AS c
-            INNER JOIN users AS u
-                ON u.user_uid = c.user_uid
-            WHERE u.account_uid = $1 AND c.metadata @> $2
+            SELECT c.* FROM calendars AS c
+            WHERE c.account_uid = $1 AND c.metadata @> $2
             LIMIT $3
             OFFSET $4
             "#,

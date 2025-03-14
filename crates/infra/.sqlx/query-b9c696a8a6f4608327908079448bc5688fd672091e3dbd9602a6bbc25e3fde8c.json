@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT users.user_uid, events.created FROM users LEFT JOIN (\n                SELECT DISTINCT ON (user_uid) user_uid, e.created\n                FROM calendar_events AS e\n                WHERE service_uid = $1\n                ORDER BY user_uid, created DESC\n            ) AS events ON events.user_uid = users.user_uid\n            WHERE users.user_uid = ANY($2)\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "created",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "UuidArray"
+      ]
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "b9c696a8a6f4608327908079448bc5688fd672091e3dbd9602a6bbc25e3fde8c"
+}

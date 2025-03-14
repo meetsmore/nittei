@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e\n            INNER JOIN calendars AS c\n                ON c.calendar_uid = e.calendar_uid\n            INNER JOIN users AS u\n                ON u.user_uid = c.user_uid\n            WHERE u.account_uid = $1 AND e.metadata @> $2\n            LIMIT $3\n            OFFSET $4\n            ",
+  "query": "\n            DELETE FROM calendar_events AS e\n            WHERE e.event_uid = $1\n            RETURNING *\n            ",
   "describe": {
     "columns": [
       {
@@ -131,10 +131,7 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid",
-        "Jsonb",
-        "Int8",
-        "Int8"
+        "Uuid"
       ]
     },
     "nullable": [
@@ -165,5 +162,5 @@
       false
     ]
   },
-  "hash": "6d8b17be58e55bd6c51aef757655973d637db2af2519cf59aa8a3b1ad9278308"
+  "hash": "105b965345ce214b9959983ccf2e50d860d0eed56bccdaba824ac46d178fdd14"
 }

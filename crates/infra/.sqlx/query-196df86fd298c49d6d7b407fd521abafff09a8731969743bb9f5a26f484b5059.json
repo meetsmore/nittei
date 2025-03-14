@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT c.*, u.account_uid FROM calendars AS c\n            INNER JOIN users AS u\n                ON u.user_uid = c.user_uid\n            WHERE c.calendar_uid = any($1)\n            ",
+  "query": "\n            SELECT c.* FROM calendars AS c\n            WHERE c.account_uid = $1 AND c.metadata @> $2\n            LIMIT $3\n            OFFSET $4\n            ",
   "describe": {
     "columns": [
       {
@@ -41,7 +41,10 @@
     ],
     "parameters": {
       "Left": [
-        "UuidArray"
+        "Uuid",
+        "Jsonb",
+        "Int8",
+        "Int8"
       ]
     },
     "nullable": [
@@ -54,5 +57,5 @@
       false
     ]
   },
-  "hash": "63a53e2b1db9e7284f1785360ba550368a2cd5fd12ee35dace4965441d487337"
+  "hash": "196df86fd298c49d6d7b407fd521abafff09a8731969743bb9f5a26f484b5059"
 }
