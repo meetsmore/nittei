@@ -1,14 +1,14 @@
 mod telemetry;
 
+use mimalloc::MiMalloc;
 use nittei_api::Application;
 use nittei_infra::setup_context;
 use telemetry::init_subscriber;
-use tikv_jemallocator::Jemalloc;
 use tokio::signal;
 use tracing::{error, info};
 
 #[global_allocator]
-static GLOBAL: Jemalloc = Jemalloc;
+static GLOBAL: MiMalloc = MiMalloc;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
