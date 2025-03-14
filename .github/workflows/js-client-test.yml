@@ -65,14 +65,12 @@ jobs:
           cargo install sqlx-cli --no-default-features --features postgres || true
           (cd crates/infra && sqlx migrate run)
 
-          export RUST_LOG=error,tracing=info
-
           cargo build
           ./target/debug/nittei &> output.log &
           echo "Started server in background"
 
           # Wait for backend server to be ready
-          RETRIES=5
+          RETRIES=10
           PORT=${NITTEI__HTTP_PORT}
           until
             curl localhost:$PORT/api/v1/healthcheck >/dev/null 2>&1 ||
