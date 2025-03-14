@@ -119,10 +119,12 @@ jobs:
           pnpm run test
 
       - name: Run print output of server
+        if: always()
         run: |
           cat output.log
 
       - name: Stop server
+        if: always()
         run: |
           kill $(lsof -t -i:${NITTEI__HTTP_PORT}) || true
           echo "Stopped server"
