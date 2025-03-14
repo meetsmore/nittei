@@ -82,6 +82,7 @@ struct EventRaw {
     created: i64,
     updated: i64,
     recurrence: Option<Value>,
+    recurring_until: Option<DateTime<Utc>>,
     exdates: Vec<DateTime<Utc>>,
     recurring_event_uid: Option<Uuid>,
     original_start_time: Option<DateTime<Utc>>,
@@ -127,6 +128,7 @@ impl TryFrom<EventRaw> for CalendarEvent {
                 "Unable to convert updated timestamp to DateTime"
             ))?,
             recurrence,
+            recurring_until: e.recurring_until,
             exdates: e.exdates,
             recurring_event_id: e.recurring_event_uid.map(|id| id.into()),
             original_start_time: e.original_start_time,
@@ -167,6 +169,7 @@ impl IEventRepo for PostgresEventRepo {
                 created,
                 updated,
                 recurrence,
+                recurring_until,
                 exdates,
                 recurring_event_uid,
                 original_start_time,
@@ -174,7 +177,7 @@ impl IEventRepo for PostgresEventRepo {
                 service_uid,
                 metadata
             )
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
             "#,
             e.id.as_ref(),
             e.calendar_id.as_ref(),
@@ -193,6 +196,7 @@ impl IEventRepo for PostgresEventRepo {
             e.created.timestamp_millis(),
             e.updated.timestamp_millis(),
             &recurrence as _,
+            e.recurring_until,
             &e.exdates,
             e.recurring_event_id.as_ref().map(|id| id.as_ref()),
             e.original_start_time,
@@ -238,12 +242,13 @@ impl IEventRepo for PostgresEventRepo {
                 created = $14,
                 updated = $15,
                 recurrence = $16,
-                exdates = $17,
-                recurring_event_uid = $18,
-                original_start_time = $19,
-                reminders = $20,
-                service_uid = $21,
-                metadata = $22
+                recurring_until = $17,
+                exdates = $18,
+                recurring_event_uid = $19,
+                original_start_time = $20,
+                reminders = $21,
+                service_uid = $22,
+                metadata = $23
             WHERE event_uid = $1
             "#,
             e.id.as_ref(),
@@ -262,6 +267,7 @@ impl IEventRepo for PostgresEventRepo {
             e.created.timestamp_millis(),
             e.updated.timestamp_millis(),
             &recurrence as _,
+            e.recurring_until,
             &e.exdates,
             e.recurring_event_id.as_ref().map(|id| id.as_ref()),
             e.original_start_time,

@@ -110,11 +110,16 @@
       },
       {
         "ordinal": 21,
+        "name": "recurring_until",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 22,
         "name": "recurrence",
         "type_info": "Jsonb"
       },
       {
-        "ordinal": 22,
+        "ordinal": 23,
         "name": "reminders",
         "type_info": "Jsonb"
       }
@@ -142,6 +147,7 @@
       false,
       true,
       false,
+      true,
       true,
       true,
       true,
