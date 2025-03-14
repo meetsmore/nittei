@@ -831,10 +831,10 @@ impl IEventRepo for PostgresEventRepo {
             MostRecentCreatedServiceEventsRaw,
             r#"
             SELECT users.user_uid, events.created FROM users LEFT JOIN (
-                SELECT DISTINCT ON (user_uid) user_uid, e.created
+                SELECT DISTINCT ON (e.user_uid) e.user_uid, e.created
                 FROM calendar_events AS e
                 WHERE service_uid = $1
-                ORDER BY user_uid, created DESC
+                ORDER BY e.user_uid, created DESC
             ) AS events ON events.user_uid = users.user_uid
             WHERE users.user_uid = ANY($2)
             "#,
