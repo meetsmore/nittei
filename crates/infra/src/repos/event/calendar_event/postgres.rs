@@ -670,7 +670,7 @@ impl IEventRepo for PostgresEventRepo {
 
         apply_id_query(
             &mut query,
-            "recurring_event_uid",
+            "e",
             "recurring_event_uid",
             &params.search_events_params.recurring_event_uid,
         );
@@ -817,7 +817,7 @@ impl IEventRepo for PostgresEventRepo {
 
         apply_id_query(
             &mut query,
-            "recurring_event_uid",
+            "e",
             "recurring_event_uid",
             &params.search_events_params.recurring_event_uid,
         );
