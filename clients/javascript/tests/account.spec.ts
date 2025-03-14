@@ -389,5 +389,24 @@ describe('Account API', () => {
         ])
       )
     })
+
+    it('should be able to search on the recurring event ID directly', async () => {
+      const res = await adminClient.account.searchEventsInAccount({
+        filter: {
+          recurringEventUid: {
+            eq: recurringEventId,
+          },
+        },
+      })
+
+      expect(res.events.length).toBe(1)
+      expect(res.events).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: recurringExceptionEventId,
+          }),
+        ])
+      )
+    })
   })
 })
