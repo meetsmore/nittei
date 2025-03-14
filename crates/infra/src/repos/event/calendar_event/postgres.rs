@@ -664,11 +664,11 @@ impl IEventRepo for PostgresEventRepo {
 
         apply_string_query(&mut query, "status", &params.search_events_params.status);
 
-        apply_datetime_query(
+        apply_id_query(
             &mut query,
-            "updated",
-            &params.search_events_params.updated_at,
-            true,
+            "recurring_event_uid",
+            "recurring_event_uid",
+            &params.search_events_params.recurring_event_uid,
         );
 
         apply_datetime_query(
@@ -689,6 +689,20 @@ impl IEventRepo for PostgresEventRepo {
             query.push(" AND e.metadata @> ");
             query.push_bind(Json(metadata.clone()));
         }
+
+        apply_datetime_query(
+            &mut query,
+            "created",
+            &params.search_events_params.created_at,
+            true,
+        );
+
+        apply_datetime_query(
+            &mut query,
+            "updated",
+            &params.search_events_params.updated_at,
+            true,
+        );
 
         // Sort if needed
         if let Some(sort) = params.sort {
@@ -796,6 +810,13 @@ impl IEventRepo for PostgresEventRepo {
         );
 
         apply_string_query(&mut query, "status", &params.search_events_params.status);
+
+        apply_id_query(
+            &mut query,
+            "recurring_event_uid",
+            "recurring_event_uid",
+            &params.search_events_params.recurring_event_uid,
+        );
 
         apply_datetime_query(
             &mut query,

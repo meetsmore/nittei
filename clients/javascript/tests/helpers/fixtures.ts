@@ -5,17 +5,25 @@ import { readPrivateKey, readPublicKey } from './utils'
 export const CREATE_ACCOUNT_CODE =
   process.env.NITTEI__CREATE_ACCOUNT_SECRET_CODE || 'create_account_dev_secret'
 
-export const setupAccount = async () => {
+export const setupAccount = async (options?: {
+  timeout?: number
+}) => {
   const client = await NitteiClient()
   const account = await client.account.create({ code: CREATE_ACCOUNT_CODE })
   const accountId = account.account.id
   if (!accountId) {
     throw new Error('Account not created')
   }
+
+  const config: Parameters<typeof NitteiClient>[0] = {
+    apiKey: account.secretApiKey,
+  }
+  if (options?.timeout) {
+    config.timeout = options.timeout
+  }
+
   return {
-    client: await NitteiClient({
-      apiKey: account.secretApiKey,
-    }),
+    client: await NitteiClient(config),
     accountId: account.account.id,
   }
 }
