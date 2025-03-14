@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e\n            INNER JOIN calendars AS c\n                ON c.calendar_uid = e.calendar_uid\n            INNER JOIN users AS u\n                ON u.user_uid = c.user_uid\n            WHERE u.user_uid = $1 AND\n            e.busy = $2 AND\n            e.service_uid IS NOT NULL AND\n            e.start_time <= $3 AND e.end_time >= $4\n            ",
+  "query": "\n            SELECT e.* FROM calendar_events AS e\n            INNER JOIN calendars AS c\n                ON c.calendar_uid = e.calendar_uid\n            INNER JOIN users AS u\n                ON u.user_uid = c.user_uid\n            WHERE e.service_uid = $1 AND\n            u.user_uid = ANY($2) AND\n            e.start_time <= $3 AND e.end_time >= $4\n            ",
   "describe": {
     "columns": [
       {
@@ -115,29 +115,29 @@
       },
       {
         "ordinal": 22,
-        "name": "recurrence",
-        "type_info": "Jsonb"
-      },
-      {
-        "ordinal": 23,
-        "name": "reminders",
-        "type_info": "Jsonb"
-      },
-      {
-        "ordinal": 24,
         "name": "user_uid",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 25,
+        "ordinal": 23,
         "name": "account_uid",
         "type_info": "Uuid"
+      },
+      {
+        "ordinal": 24,
+        "name": "recurrence",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 25,
+        "name": "reminders",
+        "type_info": "Jsonb"
       }
     ],
     "parameters": {
       "Left": [
         "Uuid",
-        "Bool",
+        "UuidArray",
         "Timestamptz",
         "Timestamptz"
       ]
@@ -165,11 +165,11 @@
       true,
       true,
       true,
-      true,
-      true,
       false,
-      false
+      false,
+      true,
+      true
     ]
   },
-  "hash": "06df3ceb9d4cb19181312733eff427005768ac1df02c3c219242996daff2d6fe"
+  "hash": "24aefbe2058407ea99a564ab5403afcd35adc7381e0018d06cc007f1aee11c11"
 }

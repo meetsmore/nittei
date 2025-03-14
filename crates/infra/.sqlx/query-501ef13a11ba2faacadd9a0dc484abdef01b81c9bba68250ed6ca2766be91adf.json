@@ -115,11 +115,21 @@
       },
       {
         "ordinal": 22,
+        "name": "user_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 23,
+        "name": "account_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 24,
         "name": "recurrence",
         "type_info": "Jsonb"
       },
       {
-        "ordinal": 23,
+        "ordinal": 25,
         "name": "reminders",
         "type_info": "Jsonb"
       }
@@ -152,6 +162,8 @@
       true,
       true,
       true,
+      false,
+      false,
       true,
       true
     ]

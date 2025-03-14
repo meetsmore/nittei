@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e\n            INNER JOIN calendars AS c\n                ON c.calendar_uid = e.calendar_uid\n            INNER JOIN users AS u\n                ON u.user_uid = c.user_uid\n            WHERE e.event_uid = $1 OR e.recurring_event_uid = $1\n            ",
+  "query": "\n            SELECT e.* FROM calendar_events AS e\n            INNER JOIN calendars AS c\n                ON c.calendar_uid = e.calendar_uid\n            INNER JOIN users AS u\n                ON u.user_uid = c.user_uid\n            WHERE u.user_uid = $1 AND\n            e.busy = $2 AND\n            e.service_uid IS NOT NULL AND\n            e.start_time <= $3 AND e.end_time >= $4\n            ",
   "describe": {
     "columns": [
       {
@@ -115,28 +115,31 @@
       },
       {
         "ordinal": 22,
-        "name": "recurrence",
-        "type_info": "Jsonb"
-      },
-      {
-        "ordinal": 23,
-        "name": "reminders",
-        "type_info": "Jsonb"
-      },
-      {
-        "ordinal": 24,
         "name": "user_uid",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 25,
+        "ordinal": 23,
         "name": "account_uid",
         "type_info": "Uuid"
+      },
+      {
+        "ordinal": 24,
+        "name": "recurrence",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 25,
+        "name": "reminders",
+        "type_info": "Jsonb"
       }
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "Uuid",
+        "Bool",
+        "Timestamptz",
+        "Timestamptz"
       ]
     },
     "nullable": [
@@ -162,11 +165,11 @@
       true,
       true,
       true,
-      true,
-      true,
       false,
-      false
+      false,
+      true,
+      true
     ]
   },
-  "hash": "e2942b19e8dd8c5de308e64bd6e4f587005e6d6e864dbe6c656bf5df5cdcb112"
+  "hash": "a79b014aa0f26a9fbe1458fc81e4bf1bc82da810c4a166af133e97511e0e3a86"
 }

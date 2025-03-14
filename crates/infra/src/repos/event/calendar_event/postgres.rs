@@ -153,6 +153,8 @@ impl IEventRepo for PostgresEventRepo {
             r#"
             INSERT INTO calendar_events(
                 event_uid,
+                account_uid,
+                user_uid,
                 calendar_uid,
                 external_parent_id,
                 external_id,
@@ -177,9 +179,11 @@ impl IEventRepo for PostgresEventRepo {
                 service_uid,
                 metadata
             )
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
             "#,
             e.id.as_ref(),
+            e.account_id.as_ref(),
+            e.user_id.as_ref(),
             e.calendar_id.as_ref(),
             e.external_parent_id,
             e.external_id,
@@ -292,7 +296,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+            SELECT e.* FROM calendar_events AS e
             INNER JOIN calendars AS c
                 ON c.calendar_uid = e.calendar_uid
             INNER JOIN users AS u
@@ -325,7 +329,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+            SELECT e.* FROM calendar_events AS e
             INNER JOIN calendars AS c
                 ON c.calendar_uid = e.calendar_uid
             INNER JOIN users AS u
@@ -356,7 +360,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+            SELECT e.* FROM calendar_events AS e
             INNER JOIN calendars AS c
                 ON c.calendar_uid = e.calendar_uid
             INNER JOIN users AS u
@@ -387,7 +391,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+            SELECT e.* FROM calendar_events AS e
             INNER JOIN calendars AS c
                 ON c.calendar_uid = e.calendar_uid
             INNER JOIN users AS u
@@ -416,7 +420,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+            SELECT e.* FROM calendar_events AS e
             INNER JOIN calendars AS c
                 ON c.calendar_uid = e.calendar_uid
             INNER JOIN users AS u
@@ -448,7 +452,7 @@ impl IEventRepo for PostgresEventRepo {
             sqlx::query_as!(
                 EventRaw,
                 r#"
-                    SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+                    SELECT e.* FROM calendar_events AS e
                     INNER JOIN calendars AS c
                         ON c.calendar_uid = e.calendar_uid
                     INNER JOIN users AS u
@@ -479,7 +483,7 @@ impl IEventRepo for PostgresEventRepo {
             sqlx::query_as!(
                 EventRaw,
                 r#"
-                    SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+                    SELECT e.* FROM calendar_events AS e
                     INNER JOIN calendars AS c
                         ON c.calendar_uid = e.calendar_uid
                     INNER JOIN users AS u
@@ -515,7 +519,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-                    SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+                    SELECT e.* FROM calendar_events AS e
                     INNER JOIN calendars AS c
                         ON c.calendar_uid = e.calendar_uid
                     INNER JOIN users AS u
@@ -571,7 +575,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-                    SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+                    SELECT e.* FROM calendar_events AS e
                     INNER JOIN calendars AS c
                         ON c.calendar_uid = e.calendar_uid
                     INNER JOIN users AS u
@@ -614,7 +618,7 @@ impl IEventRepo for PostgresEventRepo {
     ) -> anyhow::Result<Vec<CalendarEvent>> {
         let mut query = QueryBuilder::new(
             r#"
-            SELECT e.*, c.user_uid, u.account_uid FROM calendar_events AS e
+            SELECT e.* FROM calendar_events AS e
             INNER JOIN calendars AS c
                 ON c.calendar_uid = e.calendar_uid
             INNER JOIN users AS u
@@ -676,7 +680,7 @@ impl IEventRepo for PostgresEventRepo {
 
         apply_id_query(
             &mut query,
-            "recurring_event_uid",
+            "e",
             "recurring_event_uid",
             &params.search_events_params.recurring_event_uid,
         );
@@ -767,7 +771,7 @@ impl IEventRepo for PostgresEventRepo {
     ) -> anyhow::Result<Vec<CalendarEvent>> {
         let mut query = QueryBuilder::new(
             r#"
-            SELECT e.*, c.user_uid, u.account_uid FROM calendar_events AS e
+            SELECT e.* FROM calendar_events AS e
             INNER JOIN calendars AS c
                 ON c.calendar_uid = e.calendar_uid
             INNER JOIN users AS u
@@ -827,7 +831,7 @@ impl IEventRepo for PostgresEventRepo {
 
         apply_id_query(
             &mut query,
-            "recurring_event_uid",
+            "e",
             "recurring_event_uid",
             &params.search_events_params.recurring_event_uid,
         );
@@ -919,12 +923,12 @@ impl IEventRepo for PostgresEventRepo {
             MostRecentCreatedServiceEventsRaw,
             r#"
             SELECT users.user_uid, events.created FROM users LEFT JOIN (
-                SELECT DISTINCT ON (user_uid) user_uid, e.created
+                SELECT DISTINCT ON (c.user_uid) c.user_uid, e.created
                 FROM calendar_events AS e
                 INNER JOIN calendars AS c
                     ON c.calendar_uid = e.calendar_uid
                 WHERE service_uid = $1
-                ORDER BY user_uid, created DESC
+                ORDER BY c.user_uid, created DESC
             ) AS events ON events.user_uid = users.user_uid
             WHERE users.user_uid = ANY($2)
             "#,
@@ -958,7 +962,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+            SELECT e.* FROM calendar_events AS e
             INNER JOIN calendars AS c
                 ON c.calendar_uid = e.calendar_uid
             INNER JOIN users AS u
@@ -997,7 +1001,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+            SELECT e.* FROM calendar_events AS e
             INNER JOIN calendars AS c
                 ON c.calendar_uid = e.calendar_uid
             INNER JOIN users AS u
@@ -1096,7 +1100,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+            SELECT e.* FROM calendar_events AS e
             INNER JOIN calendars AS c
                 ON c.calendar_uid = e.calendar_uid
             INNER JOIN users AS u

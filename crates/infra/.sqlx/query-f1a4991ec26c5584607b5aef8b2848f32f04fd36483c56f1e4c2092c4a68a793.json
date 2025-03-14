@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                    SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e\n                    INNER JOIN calendars AS c\n                        ON c.calendar_uid = e.calendar_uid\n                    INNER JOIN users AS u\n                        ON u.user_uid = c.user_uid\n                    WHERE e.calendar_uid  = any($1)\n                    AND (\n                        (e.start_time < $2 AND e.end_time > $3)\n                        OR\n                        (e.start_time < $2 AND e.recurrence IS NOT NULL)\n                    )\n                    AND busy = true\n                    AND status = any($4)\n                    ",
+  "query": "\n            SELECT e.* FROM calendar_events AS e\n            INNER JOIN calendars AS c\n                ON c.calendar_uid = e.calendar_uid\n            INNER JOIN users AS u\n                ON u.user_uid = c.user_uid\n            WHERE u.account_uid = $1 AND e.external_id = any($2)\n            ",
   "describe": {
     "columns": [
       {
@@ -115,30 +115,28 @@
       },
       {
         "ordinal": 22,
-        "name": "recurrence",
-        "type_info": "Jsonb"
-      },
-      {
-        "ordinal": 23,
-        "name": "reminders",
-        "type_info": "Jsonb"
-      },
-      {
-        "ordinal": 24,
         "name": "user_uid",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 25,
+        "ordinal": 23,
         "name": "account_uid",
         "type_info": "Uuid"
+      },
+      {
+        "ordinal": 24,
+        "name": "recurrence",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 25,
+        "name": "reminders",
+        "type_info": "Jsonb"
       }
     ],
     "parameters": {
       "Left": [
-        "UuidArray",
-        "Timestamptz",
-        "Timestamptz",
+        "Uuid",
         "TextArray"
       ]
     },
@@ -165,11 +163,11 @@
       true,
       true,
       true,
-      true,
-      true,
       false,
-      false
+      false,
+      true,
+      true
     ]
   },
-  "hash": "b19c22333c104fd5739a109872b7f7d5c61c7266e63ed995abf30357ef1174a3"
+  "hash": "f1a4991ec26c5584607b5aef8b2848f32f04fd36483c56f1e4c2092c4a68a793"
 }
