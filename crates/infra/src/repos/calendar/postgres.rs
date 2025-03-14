@@ -56,10 +56,11 @@ impl ICalendarRepo for PostgresCalendarRepo {
     async fn insert(&self, calendar: &Calendar) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
-            INSERT INTO calendars(calendar_uid, user_uid, name, key, settings, metadata)
-            VALUES($1, $2, $3, $4, $5, $6)
+            INSERT INTO calendars(calendar_uid, account_uid, user_uid, name, key, settings, metadata)
+            VALUES($1, $2, $3, $4, $5, $6, $7)
             "#,
             calendar.id.as_ref(),
+            calendar.account_id.as_ref(),
             calendar.user_id.as_ref(),
             calendar.name.as_ref(),
             calendar.key.as_ref(),
@@ -85,9 +86,9 @@ impl ICalendarRepo for PostgresCalendarRepo {
             r#"
             UPDATE calendars
             SET name = $2,
-            key = $3,
-            settings = $4,
-            metadata = $5
+                key = $3,
+                settings = $4,
+                metadata = $5
             WHERE calendar_uid = $1
             "#,
             calendar.id.as_ref(),

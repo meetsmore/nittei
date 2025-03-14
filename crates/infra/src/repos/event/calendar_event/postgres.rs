@@ -146,6 +146,8 @@ impl IEventRepo for PostgresEventRepo {
             r#"
             INSERT INTO calendar_events(
                 event_uid,
+                account_uid,
+                user_uid,
                 calendar_uid,
                 external_parent_id,
                 external_id,
@@ -169,9 +171,11 @@ impl IEventRepo for PostgresEventRepo {
                 service_uid,
                 metadata
             )
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
             "#,
             e.id.as_ref(),
+            e.account_id.as_ref(),
+            e.user_id.as_ref(),
             e.calendar_id.as_ref(),
             e.external_parent_id,
             e.external_id,
