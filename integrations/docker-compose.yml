@@ -1,7 +1,7 @@
 name: nittei
 services:
   postgres:
-    image: postgres:13
+    image: postgres:15.4-alpine
     ports:
       - "45432:5432"
     environment:
