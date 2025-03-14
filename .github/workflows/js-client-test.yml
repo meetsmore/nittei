@@ -71,7 +71,15 @@ jobs:
           ./target/debug/nittei &> output.log &
           echo "Started server in background"
 
-          sleep 10
+          # Wait for backend server to be ready
+          RETRIES=5
+          PORT=${NITTEI__HTTP_PORT}
+          until
+            curl localhost:$PORT/api/v1/healthcheck >/dev/null 2>&1 ||
+              [ $((RETRIES--)) -eq 0 ]
+          do
+            sleep 1
+          done
 
       - name: Install JS modules
         run: |
@@ -111,6 +119,10 @@ jobs:
         run: |
           cd clients/javascript
           pnpm run test
+
+      - name: Run print output of server
+        run: |
+          cat output.log
 
       - name: Stop server
         run: |
