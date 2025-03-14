@@ -75,63 +75,63 @@
       },
       {
         "ordinal": 14,
-        "name": "recurrence",
-        "type_info": "Json"
-      },
-      {
-        "ordinal": 15,
         "name": "exdates",
         "type_info": "TimestamptzArray"
       },
       {
-        "ordinal": 16,
-        "name": "reminders",
-        "type_info": "Json"
-      },
-      {
-        "ordinal": 17,
+        "ordinal": 15,
         "name": "service_uid",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 18,
+        "ordinal": 16,
         "name": "metadata",
         "type_info": "Jsonb"
       },
       {
-        "ordinal": 19,
+        "ordinal": 17,
         "name": "external_id",
         "type_info": "Text"
       },
       {
-        "ordinal": 20,
+        "ordinal": 18,
         "name": "event_type",
         "type_info": "Text"
       },
       {
-        "ordinal": 21,
+        "ordinal": 19,
         "name": "recurring_event_uid",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 22,
+        "ordinal": 20,
         "name": "original_start_time",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 23,
+        "ordinal": 21,
         "name": "recurring_until",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 24,
+        "ordinal": 22,
         "name": "user_uid",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 25,
+        "ordinal": 23,
         "name": "account_uid",
         "type_info": "Uuid"
+      },
+      {
+        "ordinal": 24,
+        "name": "recurrence",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 25,
+        "name": "reminders",
+        "type_info": "Jsonb"
       }
     ],
     "parameters": {
@@ -157,9 +157,7 @@
       false,
       false,
       false,
-      true,
       false,
-      true,
       true,
       false,
       true,
@@ -168,7 +166,9 @@
       true,
       true,
       false,
-      false
+      false,
+      true,
+      true
     ]
   },
   "hash": "1cb57531e6437077dbab86f7338b4704ac3c7d2fdfc6e44dfb8997a67a4cbe1c"
