@@ -142,6 +142,11 @@ impl IEventRepo for PostgresEventRepo {
     #[instrument]
     async fn insert(&self, e: &CalendarEvent) -> anyhow::Result<()> {
         let status: String = e.status.clone().into();
+        let recurrence = if e.recurrence.is_some() {
+            Some(serde_json::to_value(&e.recurrence)?)
+        } else {
+            None
+        };
         sqlx::query!(
             r#"
             INSERT INTO calendar_events(
@@ -187,7 +192,7 @@ impl IEventRepo for PostgresEventRepo {
             e.busy,
             e.created.timestamp_millis(),
             e.updated.timestamp_millis(),
-            Json(&e.recurrence) as _,
+            &recurrence as _,
             &e.exdates,
             e.recurring_event_id.as_ref().map(|id| id.as_ref()),
             e.original_start_time,
@@ -210,6 +215,11 @@ impl IEventRepo for PostgresEventRepo {
     #[instrument]
     async fn save(&self, e: &CalendarEvent) -> anyhow::Result<()> {
         let status: String = e.status.clone().into();
+        let recurrence = if e.recurrence.is_some() {
+            Some(serde_json::to_value(&e.recurrence)?)
+        } else {
+            None
+        };
         sqlx::query!(
             r#"
             UPDATE calendar_events SET
@@ -251,7 +261,7 @@ impl IEventRepo for PostgresEventRepo {
             e.busy,
             e.created.timestamp_millis(),
             e.updated.timestamp_millis(),
-            Json(&e.recurrence) as _,
+            &recurrence as _,
             &e.exdates,
             e.recurring_event_id.as_ref().map(|id| id.as_ref()),
             e.original_start_time,
@@ -441,7 +451,7 @@ impl IEventRepo for PostgresEventRepo {
                     AND (
                         (e.start_time <= $2 AND e.end_time >= $3)
                         OR
-                        (e.start_time < $2 AND e.recurrence::text <> 'null')
+                        (e.start_time < $2 AND e.recurrence IS NOT NULL)
                     )
                     "#,
                 calendar_id.as_ref(),
@@ -508,7 +518,7 @@ impl IEventRepo for PostgresEventRepo {
                     AND (
                         (e.start_time <= $2 AND e.end_time >= $3)
                         OR 
-                        (e.start_time < $2 AND e.recurrence::text <> 'null')
+                        (e.start_time < $2 AND e.recurrence::text IS NOT NULL)
                     )
                     "#,
             &calendar_ids,
@@ -564,7 +574,7 @@ impl IEventRepo for PostgresEventRepo {
                     AND (
                         (e.start_time < $2 AND e.end_time > $3)
                         OR
-                        (e.start_time < $2 AND e.recurrence::text <> 'null')
+                        (e.start_time < $2 AND e.recurrence IS NOT NULL)
                     )
                     AND busy = true
                     AND status = any($4)
@@ -674,8 +684,12 @@ impl IEventRepo for PostgresEventRepo {
 
         if let Some(is_recurring) = params.search_events_params.is_recurring {
             query.push(format!(
-                " AND e.recurrence::text {} 'null'",
-                if is_recurring { "<>" } else { "=" },
+                " AND e.recurrence::text {}",
+                if is_recurring {
+                    "IS NOT NULL"
+                } else {
+                    "IS NULL"
+                },
             ));
         }
 
@@ -821,8 +835,12 @@ impl IEventRepo for PostgresEventRepo {
 
         if let Some(is_recurring) = params.search_events_params.is_recurring {
             query.push(format!(
-                " AND e.recurrence::text {} 'null'",
-                if is_recurring { "<>" } else { "=" },
+                " AND e.recurrence {}",
+                if is_recurring {
+                    "IS NOT NULL"
+                } else {
+                    "IS NULL"
+                },
             ));
         }
 

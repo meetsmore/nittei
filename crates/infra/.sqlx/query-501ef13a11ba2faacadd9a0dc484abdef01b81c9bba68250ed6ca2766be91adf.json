@@ -75,48 +75,48 @@
       },
       {
         "ordinal": 14,
-        "name": "recurrence",
-        "type_info": "Json"
-      },
-      {
-        "ordinal": 15,
         "name": "exdates",
         "type_info": "TimestamptzArray"
       },
       {
-        "ordinal": 16,
-        "name": "reminders",
-        "type_info": "Json"
-      },
-      {
-        "ordinal": 17,
+        "ordinal": 15,
         "name": "service_uid",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 18,
+        "ordinal": 16,
         "name": "metadata",
         "type_info": "Jsonb"
       },
       {
-        "ordinal": 19,
+        "ordinal": 17,
         "name": "external_id",
         "type_info": "Text"
       },
       {
-        "ordinal": 20,
+        "ordinal": 18,
         "name": "event_type",
         "type_info": "Text"
       },
       {
-        "ordinal": 21,
+        "ordinal": 19,
         "name": "recurring_event_uid",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 22,
+        "ordinal": 20,
         "name": "original_start_time",
         "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 21,
+        "name": "recurrence",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 22,
+        "name": "reminders",
+        "type_info": "Jsonb"
       }
     ],
     "parameters": {
@@ -139,11 +139,11 @@
       false,
       false,
       false,
+      false,
       true,
       false,
       true,
       true,
-      false,
       true,
       true,
       true,
