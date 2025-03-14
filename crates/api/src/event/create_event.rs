@@ -196,6 +196,7 @@ impl UseCase for CreateEventUseCase {
             recurrence: None,
             end_time: self.start_time + TimeDelta::milliseconds(self.duration),
             exdates: self.exdates.clone(),
+            recurring_until: None,
             recurring_event_id: self.recurring_event_id.take(),
             original_start_time: self.original_start_time,
             calendar_id: calendar.id.clone(),

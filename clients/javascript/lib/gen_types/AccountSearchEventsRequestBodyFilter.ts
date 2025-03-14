@@ -45,6 +45,10 @@ export type AccountSearchEventsRequestBodyFilter = {
    */
   status?: StringQuery
   /**
+   * Optional query on the recurring event UID
+   */
+  recurringEventUid?: IDQuery
+  /**
    * Optional query on original start time - "lower than or equal", or "great than or equal" (UTC)
    */
   originalStartTime?: DateTimeQuery
