@@ -31,6 +31,7 @@ pub async fn search_events_controller(
         end_time: body.filter.end_time,
         event_type: body.filter.event_type,
         status: body.filter.status,
+        recurring_event_uid: body.filter.recurring_event_uid,
         original_start_time: body.filter.original_start_time,
         is_recurring: body.filter.is_recurring,
         metadata: body.filter.metadata,
@@ -78,6 +79,9 @@ pub struct SearchEventsUseCase {
 
     /// Optional query on status
     pub status: Option<StringQuery>,
+
+    /// Optional query on the recurring event UID
+    pub recurring_event_uid: Option<IDQuery>,
 
     /// Optional query on original start time - "lower than or equal", or "great than or equal" (UTC)
     pub original_start_time: Option<DateTimeQuery>,
@@ -194,6 +198,7 @@ impl UseCase for SearchEventsUseCase {
                     end_time: self.end_time.take(),
                     event_type: self.event_type.take(),
                     status: self.status.take(),
+                    recurring_event_uid: self.recurring_event_uid.take(),
                     original_start_time: self.original_start_time.take(),
                     is_recurring: self.is_recurring.take(),
                     metadata: self.metadata.take(),

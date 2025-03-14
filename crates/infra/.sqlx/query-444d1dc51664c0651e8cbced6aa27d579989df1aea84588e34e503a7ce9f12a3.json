@@ -120,11 +120,16 @@
       },
       {
         "ordinal": 23,
+        "name": "recurring_until",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 24,
         "name": "user_uid",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 24,
+        "ordinal": 25,
         "name": "account_uid",
         "type_info": "Uuid"
       }
@@ -154,6 +159,7 @@
       true,
       true,
       false,
+      true,
       true,
       true,
       true,

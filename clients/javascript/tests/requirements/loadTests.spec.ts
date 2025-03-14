@@ -57,12 +57,13 @@ async function create200Events(
 
 describe('Load tests', () => {
   let client: INitteiClient | undefined
-  let accountId: string | undefined
 
   beforeAll(async () => {
-    const account = await setupAccount()
+    const account = await setupAccount({
+      // Increase timeout to 3 seconds for load tests
+      timeout: 3000,
+    })
 
-    accountId = account.accountId
     client = account.client
   })
 

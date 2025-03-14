@@ -103,6 +103,7 @@ pub struct CalendarEvent {
     pub updated: DateTime<Utc>,
     pub recurrence: Option<RRuleOptions>,
     pub exdates: Vec<DateTime<Utc>>,
+    pub recurring_until: Option<DateTime<Utc>>,
     pub recurring_event_id: Option<ID>,
     pub original_start_time: Option<DateTime<Utc>>,
     pub reminders: Vec<CalendarEventReminder>,
@@ -156,6 +157,7 @@ impl CalendarEvent {
             return Ok(false);
         }
 
+        self.recurring_until = recurrence.until;
         self.recurrence = Some(recurrence);
         Ok(true)
     }
