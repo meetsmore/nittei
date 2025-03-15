@@ -1,10 +1,9 @@
 use axum::{
     Extension,
     Json,
-    extract::{Path, State},
+    extract::Path,
     http::HeaderMap,
 };
-use axum_valid::Valid;
 use nittei_api_structs::update_service_user::*;
 use nittei_domain::{Account, ID, ServiceResource, TimePlan};
 use nittei_infra::NitteiContext;

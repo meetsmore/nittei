@@ -105,10 +105,10 @@ pub fn get_nittei_account_header(headers: &HeaderMap) -> Option<Result<ID, Nitte
 /// Decodes the JWT token by checking if the signature matches the public
 /// key provided by the `Account`
 fn decode_token(account: &Account, token: &str) -> anyhow::Result<Claims> {
-    let public_key = match &account.public_jwt_key {
-        Some(val) => val,
-        None => return Err(anyhow::Error::msg("Account does not support user tokens")),
-    };
+    let public_key = account
+        .public_jwt_key
+        .as_ref()
+        .ok_or_else(|| anyhow::Error::msg("Account does not support user tokens"))?;
     let decoding_key = DecodingKey::from_rsa_pem(public_key.as_bytes())?;
     let claims = decode::<Claims>(token, &decoding_key, &Validation::new(Algorithm::RS256))?.claims;
 
@@ -131,6 +131,7 @@ pub async fn protect_route(
                 "Could not find out which account the client belongs to".into(),
             )
         })?;
+
     let res = auth_user_req(headers, &account, ctx)
         .await
         .map_err(|_| NitteiError::InternalError)?;

@@ -1,4 +1,4 @@
-use axum::{Extension, Json, extract::State, http::HeaderMap};
+use axum::{Extension, Json, http::HeaderMap};
 use nittei_api_structs::get_me::*;
 use nittei_infra::NitteiContext;
 

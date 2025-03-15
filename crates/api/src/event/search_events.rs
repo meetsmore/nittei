@@ -1,4 +1,4 @@
-use axum::{Extension, Json, extract::State, http::HeaderMap};
+use axum::{Extension, Json, http::HeaderMap};
 use axum_valid::Valid;
 use nittei_api_structs::{dtos::CalendarEventDTO, search_events::*};
 use nittei_domain::{CalendarEventSort, DateTimeQuery, ID, IDQuery, StringQuery};

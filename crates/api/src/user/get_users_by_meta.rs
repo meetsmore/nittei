@@ -1,7 +1,7 @@
 use axum::{
     Extension,
     Json,
-    extract::{Query, State},
+    extract::Query,
     http::HeaderMap,
 };
 use nittei_api_structs::get_users_by_meta::*;

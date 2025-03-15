@@ -1,7 +1,7 @@
 use axum::{
     Extension,
     Json,
-    extract::{Path, State},
+    extract::Path,
     http::HeaderMap,
 };
 use axum_valid::Valid;

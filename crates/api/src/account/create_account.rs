@@ -9,8 +9,6 @@ use crate::{
     shared::usecase::{UseCase, execute},
 };
 
-fn assert_send<T: Send>() {}
-
 // #[axum::debug_handler]
 pub async fn create_account_controller(
     Extension(ctx): Extension<NitteiContext>,

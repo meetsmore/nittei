@@ -1,10 +1,9 @@
 use axum::{
     Extension,
     Json,
-    extract::{Path, State},
+    extract::Path,
     http::{HeaderMap, StatusCode},
 };
-use axum_valid::Valid;
 use chrono_tz::Tz;
 use nittei_api_structs::create_schedule::*;
 use nittei_domain::{ID, Schedule, ScheduleRule};

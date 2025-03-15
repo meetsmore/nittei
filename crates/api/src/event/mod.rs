@@ -44,7 +44,7 @@ pub fn configure_routes() -> Router {
         .route("/events/meta", get(get_events_by_meta_controller))
         // Search events
         // /!\ This is a POST route
-        .route("/events/search", get(search_events_controller))
+        .route("/events/search", post(search_events_controller))
         // Get a specific event by external id
         .route(
             "/user/events/external_id/{external_id}",

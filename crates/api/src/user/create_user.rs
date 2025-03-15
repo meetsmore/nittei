@@ -1,10 +1,8 @@
 use axum::{
     Extension,
     Json,
-    extract::State,
     http::{HeaderMap, StatusCode},
 };
-use axum_valid::Valid;
 use futures::{FutureExt, try_join};
 use nittei_api_structs::create_user::*;
 use nittei_domain::{ID, User};

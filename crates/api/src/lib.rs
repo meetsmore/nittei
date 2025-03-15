@@ -73,14 +73,14 @@ pub struct ServerSharedState {
     pub is_shutting_down: Arc<Mutex<bool>>,
 
     /// Channel to send shutdown signal
-    pub shutdown_tx: Arc<Option<Sender<()>>>,
+    pub shutdown_tx: Arc<Mutex<Option<Sender<()>>>>,
 }
 
 impl Application {
     pub async fn new(context: NitteiContext) -> anyhow::Result<Self> {
         let shared_state = ServerSharedState {
             is_shutting_down: Arc::new(Mutex::new(false)),
-            shutdown_tx: Arc::new(None),
+            shutdown_tx: Arc::new(Mutex::new(None)),
         };
 
         let server = Application::configure_server(context.clone(), shared_state.clone()).await?;
@@ -154,18 +154,25 @@ impl Application {
 
         // Create a shutdown signal channel
         let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
-        self.shared_state.shutdown_tx = Arc::new(Some(shutdown_tx));
+        self.shared_state.shutdown_tx = Arc::new(Mutex::new(Some(shutdown_tx)));
 
         info!("Starting server on: {}", address_and_port);
         let listener = TcpListener::bind(address_and_port).await?;
 
-        tokio::spawn(async move {
-            axum::serve(listener, self.server).with_graceful_shutdown(async {
-                shutdown_rx.await.unwrap();
+        axum::serve(listener, self.server)
+            .with_graceful_shutdown(async {
+                shutdown_rx.await.unwrap_or_else(|e| {
+                    error!("[server] Failed to listen for shutdown signal: {}", e)
+                });
+            })
+            .await
+            .unwrap_or_else(|e| {
+                error!("[server] Server error: {:?}", e);
+                // Exit the process with an error code
+                std::process::exit(1);
             });
 
-            info!("[server] Server stopped");
-        });
+        info!("[server] Server stopped");
 
         Ok(())
     }
@@ -326,7 +333,8 @@ impl Application {
     }
 
     /// Setup the shutdown handler
-    fn setup_shutdown_handler(&self, shutdown_channel: tokio::sync::oneshot::Receiver<()>) {
+    fn setup_shutdown_handler(&mut self, shutdown_channel: tokio::sync::oneshot::Receiver<()>) {
+        // Clone shutdown_tx before entering the async block
         let shared_state = self.shared_state.clone();
 
         // Listen to shutdown channel
@@ -340,8 +348,12 @@ impl Application {
                 if cfg!(debug_assertions) {
                     // In debug mode, stop the server immediately
                     info!("[server] Stopping server...");
-                    if let Some(server_handle) = shared_state.shutdown_tx.as_ref() {
-                        server_handle.send(()).unwrap();
+                    if let Some(server_handle) = shared_state.shutdown_tx.lock().await.take() {
+                        server_handle.send(()).unwrap_or_else(|_| {
+                            error!("[server] Failed to send shutdown signal");
+                            // Exit the process with an error code
+                            std::process::exit(1);
+                        });
                     }
                     info!("[server] Server stopped");
                 } else {
@@ -362,8 +374,12 @@ impl Application {
                     info!("[server] Stopping server...");
 
                     // Shutdown the server
-                    if let Some(server_handle) = shared_state.shutdown_tx.as_ref() {
-                        server_handle.send(()).unwrap();
+                    if let Some(server_handle) = shared_state.shutdown_tx.lock().await.take() {
+                        server_handle.send(()).unwrap_or_else(|_| {
+                            error!("[server] Failed to send shutdown signal");
+                            // Exit the process with an error code
+                            std::process::exit(1);
+                        });
                     }
                 }
             }

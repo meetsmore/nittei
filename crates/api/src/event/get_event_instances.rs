@@ -1,7 +1,7 @@
 use axum::{
     Extension,
     Json,
-    extract::{Path, Query, State},
+    extract::{Path, Query},
     http::HeaderMap,
 };
 use nittei_api_structs::get_event_instances::*;

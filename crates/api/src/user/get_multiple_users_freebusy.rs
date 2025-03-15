@@ -1,7 +1,6 @@
-use std::{collections::HashMap, pin::Pin, sync::Arc};
+use std::collections::HashMap;
 
-use axum::{Extension, Json, extract::State, http::HeaderMap};
-use axum_valid::Valid;
+use axum::{Extension, Json, http::HeaderMap};
 use chrono::{DateTime, Utc};
 use futures::{FutureExt, StreamExt, future::join_all, stream};
 use nittei_api_structs::multiple_freebusy::{APIResponse, RequestBody};

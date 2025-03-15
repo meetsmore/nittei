@@ -1,7 +1,7 @@
 use axum::{
     Extension,
     Json,
-    extract::{Path, State},
+    extract::Path,
     http::HeaderMap,
 };
 use nittei_api_structs::delete_schedule::*;

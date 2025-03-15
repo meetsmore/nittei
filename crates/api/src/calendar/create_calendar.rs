@@ -32,8 +32,8 @@ pub async fn create_calendar_admin_controller(
         user_id: user.id,
         account_id: account.id,
         week_start: body.0.week_start,
-        name: body.0.name.clone(),
-        key: body.0.key.clone(),
+        name: body.0.name.take(),
+        key: body.0.key.take(),
         timezone: body.0.timezone,
         metadata: body.0.metadata.take(),
     };
@@ -55,8 +55,8 @@ pub async fn create_calendar_controller(
         user_id: user.id,
         account_id: user.account_id,
         week_start: body.0.week_start,
-        name: body.0.name.clone(),
-        key: body.0.key.clone(),
+        name: body.0.name.take(),
+        key: body.0.key.take(),
         timezone: body.0.timezone,
         metadata: body.0.metadata.take(),
     };
