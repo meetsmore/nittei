@@ -47,6 +47,10 @@ pub struct AppConfig {
     /// Env var: NITTEI__ENABLE_REMINDERS_JOB
     pub enable_reminders_job: bool,
 
+    /// Max number of events returned that can be returned at once by search (u16)
+    /// Default to 1000
+    pub max_events_returned_by_search: u16,
+
     /// The account configuration
     /// This is used to find the superadmin account
     pub account: Option<AccountConfig>,
@@ -155,6 +159,8 @@ fn parse_config() -> AppConfig {
         .expect("Failed to set default server_shutdown_timeout")
         .set_default("skip_db_migrations", false)
         .expect("Failed to set default skip_db_migrations")
+        .set_default("max_events_returned_by_search", "1000")
+        .expect("Failed to set default max_events_returned_by_search")
         .set_default("enable_reminders_job", false)
         .expect("Failed to set default enable_reminders_job")
         .set_default(

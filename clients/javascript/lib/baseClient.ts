@@ -153,11 +153,12 @@ export abstract class NitteiBaseClient {
 export const createAxiosInstanceFrontend = (
   args: {
     baseUrl: string
+    timeout: number
   },
   credentials: ICredentials
 ): AxiosInstance => {
   const config: AxiosRequestConfig = {
-    timeout: 5_000, // Default timeout of 5 seconds
+    timeout: args.timeout,
     baseURL: args.baseUrl,
     headers: credentials.createAuthHeaders(),
     validateStatus: () => true, // allow all status codes without throwing error
@@ -191,11 +192,12 @@ export const createAxiosInstanceBackend = async (
   args: {
     baseUrl: string
     keepAlive: boolean
+    timeout: number
   },
   credentials: ICredentials
 ): Promise<AxiosInstance> => {
   const config: AxiosRequestConfig = {
-    timeout: 5_000, // Default timeout of 5 seconds
+    timeout: args.timeout,
     baseURL: args.baseUrl,
     headers: credentials.createAuthHeaders(),
     validateStatus: () => true, // allow all status codes without throwing error

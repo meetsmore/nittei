@@ -9,11 +9,19 @@ import type { JsonValue } from './serde_json/JsonValue'
  */
 export type AccountSearchEventsRequestBodyFilter = {
   /**
+   * Optional query on event ID
+   */
+  eventUid?: IDQuery
+  /**
    * Optional query on user ID, or list of user IDs
    */
   userId?: IDQuery
   /**
-   * Optional query on parent ID (which is a string as it's an ID from an external system)
+   * Optional query on external ID (which is a string as it's an ID from an external system)
+   */
+  externalId?: StringQuery
+  /**
+   * Optional query on external parent ID (which is a string as it's an ID from an external system)
    */
   externalParentId?: StringQuery
   /**
@@ -37,11 +45,27 @@ export type AccountSearchEventsRequestBodyFilter = {
    */
   status?: StringQuery
   /**
-   * Optional query on updated at - e.g. "lower than or equal", or "great than or equal" (UTC)
+   * Optional query on the recurring event UID
    */
-  updatedAt?: DateTimeQuery
+  recurringEventUid?: IDQuery
+  /**
+   * Optional query on original start time - "lower than or equal", or "great than or equal" (UTC)
+   */
+  originalStartTime?: DateTimeQuery
+  /**
+   * Optional filter on the recurrence (existence)
+   */
+  isRecurring?: boolean
   /**
    * Optional query on metadata
    */
   metadata?: JsonValue
+  /**
+   * Optional query on created at - e.g. "lower than or equal", or "great than or equal" (UTC)
+   */
+  createdAt?: DateTimeQuery
+  /**
+   * Optional query on updated at - e.g. "lower than or equal", or "great than or equal" (UTC)
+   */
+  updatedAt?: DateTimeQuery
 }

@@ -219,7 +219,7 @@ mod test {
             count: Some(100),
             ..Default::default()
         };
-        match e1.set_recurrence(e1rr, &calendar.settings, true) {
+        match e1.set_recurrence(e1rr) {
             Ok(_) => {}
             Err(e) => {
                 panic!("{:?}", e);
@@ -240,7 +240,7 @@ mod test {
             count: Some(100),
             ..Default::default()
         };
-        match e2.set_recurrence(e2rr, &calendar.settings, true) {
+        match e2.set_recurrence(e2rr) {
             Ok(_) => {}
             Err(e) => {
                 panic!("{:?}", e);
@@ -261,7 +261,7 @@ mod test {
             interval: 2,
             ..Default::default()
         };
-        match e3.set_recurrence(e3rr, &calendar.settings, true) {
+        match e3.set_recurrence(e3rr) {
             Ok(_) => {}
             Err(e) => {
                 panic!("{:?}", e);

@@ -1,5 +1,6 @@
 mod create_event;
 mod delete_event;
+mod delete_many_events;
 mod get_event;
 mod get_event_by_external_id;
 mod get_event_instances;
@@ -17,6 +18,7 @@ use axum::{
 };
 use create_event::{create_event_admin_controller, create_event_controller};
 use delete_event::{delete_event_admin_controller, delete_event_controller};
+use delete_many_events::delete_many_events_admin_controller;
 use get_event::{get_event_admin_controller, get_event_controller};
 use get_event_instances::{get_event_instances_admin_controller, get_event_instances_controller};
 use get_events_by_meta::get_events_by_meta_controller;
@@ -82,5 +84,11 @@ pub fn configure_routes(router: &mut Router) {
     router.route(
         "/user/events/{event_id}/instances",
         get(get_event_instances_admin_controller),
+    );
+
+    // Admin delete many events
+    cfg.route(
+        "/user/events/delete_many",
+        web::post().to(delete_many_events_admin_controller),
     );
 }

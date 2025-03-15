@@ -54,6 +54,30 @@ pub fn apply_id_query(
                 }
                 separated.push_unseparated(")");
             }
+            IDQuery::Nin(ids) => {
+                query_builder.push(format!(" AND {}.{} NOT IN (", table_name, field_name));
+                let mut separated = query_builder.separated(", ");
+                for id in ids.iter() {
+                    separated.push_bind::<Uuid>(id.clone().into());
+                }
+                separated.push_unseparated(")");
+            }
+            IDQuery::Gt(id) => {
+                query_builder.push(format!(" AND {}.{} > ", table_name, field_name));
+                query_builder.push_bind::<Uuid>(id.clone().into());
+            }
+            IDQuery::Gte(id) => {
+                query_builder.push(format!(" AND {}.{} >= ", table_name, field_name));
+                query_builder.push_bind::<Uuid>(id.clone().into());
+            }
+            IDQuery::Lt(id) => {
+                query_builder.push(format!(" AND {}.{} < ", table_name, field_name));
+                query_builder.push_bind::<Uuid>(id.clone().into());
+            }
+            IDQuery::Lte(id) => {
+                query_builder.push(format!(" AND {}.{} <= ", table_name, field_name));
+                query_builder.push_bind::<Uuid>(id.clone().into());
+            }
         }
     }
 }
@@ -228,6 +252,77 @@ mod test {
         let built_query = query_builder.build();
 
         assert_eq!(built_query.sql(), " AND e.id IN ($1, $2)");
+    }
+
+    #[test]
+    fn it_applies_id_query_for_nin() {
+        let mut query_builder = sqlx::QueryBuilder::new("");
+
+        let id1 = ID::default();
+        let id2 = ID::default();
+        let id_query = Some(IDQuery::Nin(vec![id1, id2]));
+
+        apply_id_query(&mut query_builder, "e", "id", &id_query);
+
+        let built_query = query_builder.build();
+
+        assert_eq!(built_query.sql(), " AND e.id NOT IN ($1, $2)");
+    }
+
+    #[test]
+    fn it_applies_id_query_for_gt() {
+        let mut query_builder = sqlx::QueryBuilder::new("");
+
+        let id1 = ID::default();
+        let id_query = Some(IDQuery::Gt(id1));
+
+        apply_id_query(&mut query_builder, "e", "id", &id_query);
+
+        let built_query = query_builder.build();
+
+        assert_eq!(built_query.sql(), " AND e.id > $1");
+    }
+
+    #[test]
+    fn it_applies_id_query_for_gte() {
+        let mut query_builder = sqlx::QueryBuilder::new("");
+
+        let id1 = ID::default();
+        let id_query = Some(IDQuery::Gte(id1));
+
+        apply_id_query(&mut query_builder, "e", "id", &id_query);
+
+        let built_query = query_builder.build();
+
+        assert_eq!(built_query.sql(), " AND e.id >= $1");
+    }
+
+    #[test]
+    fn it_applies_id_query_for_lt() {
+        let mut query_builder = sqlx::QueryBuilder::new("");
+
+        let id1 = ID::default();
+        let id_query = Some(IDQuery::Lt(id1));
+
+        apply_id_query(&mut query_builder, "e", "id", &id_query);
+
+        let built_query = query_builder.build();
+
+        assert_eq!(built_query.sql(), " AND e.id < $1");
+    }
+
+    #[test]
+    fn it_applies_id_query_for_lte() {
+        let mut query_builder = sqlx::QueryBuilder::new("");
+
+        let id1 = ID::default();
+        let id_query = Some(IDQuery::Lte(id1));
+
+        apply_id_query(&mut query_builder, "e", "id", &id_query);
+
+        let built_query = query_builder.build();
+
+        assert_eq!(built_query.sql(), " AND e.id <= $1");
     }
 
     #[test]

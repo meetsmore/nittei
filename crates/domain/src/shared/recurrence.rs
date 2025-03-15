@@ -24,24 +24,52 @@ pub enum RRuleFrequency {
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct RRuleOptions {
+    /// Frequency of the rule
+    /// Default: Daily
     pub freq: RRuleFrequency,
+
+    /// Interval between recurrences
     pub interval: isize,
+
+    /// Number of occurrences to generate
     #[ts(optional)]
     pub count: Option<i32>,
+
+    /// End date of the rule (UTC)
     #[ts(optional)]
     pub until: Option<DateTime<Utc>>,
+
+    /// Select specific occurrences within a set
     #[ts(optional)]
     pub bysetpos: Option<Vec<isize>>,
+
+    /// Select specific weekdays
+    /// E.g. `["Mon"]`, `["Mon", "Tue"]`, `["1Mon"]`, `["-1Sun"]`
     #[ts(optional)]
     pub byweekday: Option<Vec<WeekDayRecurrence>>,
+
+    /// Select specific month days
     #[ts(optional)]
     pub bymonthday: Option<Vec<isize>>,
+
+    /// Select specific months
+    /// E.g. `["January"]`, `["January", "February"]`, `[1, 2]`
     #[ts(optional)]
     pub bymonth: Option<Vec<Month>>,
+
+    /// Select specific year days
     #[ts(optional)]
     pub byyearday: Option<Vec<isize>>,
+
+    /// Select specific week numbers
     #[ts(optional)]
     pub byweekno: Option<Vec<isize>>,
+
+    /// Specify the week start day
+    /// Default: CalendarSettings.week_start (Week start configured in the calendar settings)
+    /// Possible values: "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"
+    #[ts(optional)]
+    pub weekstart: Option<Weekday>,
 }
 
 fn freq_convert(freq: &RRuleFrequency) -> Frequency {
@@ -144,7 +172,7 @@ impl RRuleOptions {
             .by_hour(vec![dtstart.hour() as u8])
             .by_minute(vec![dtstart.minute() as u8])
             .by_second(vec![dtstart.second() as u8])
-            .week_start(calendar_settings.week_start)
+            .week_start(self.weekstart.unwrap_or(calendar_settings.week_start))
             .interval(self.interval as u16);
 
         if let Some(count) = count {
@@ -172,6 +200,7 @@ impl Default for RRuleOptions {
             bymonth: None,
             byyearday: None,
             byweekno: None,
+            weekstart: None,
         }
     }
 }

@@ -194,6 +194,28 @@ pub mod delete_event {
     pub type APIResponse = CalendarEventResponse;
 }
 
+pub mod delete_many_events {
+    use super::*;
+
+    /// Request body for deleting many events (by event_ids and/or by external_ids)
+    #[derive(Serialize, Deserialize, Validate, TS)]
+    #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "DeleteManyEventsRequestBody")]
+    pub struct DeleteManyEventsRequestBody {
+        /// List of event IDs to delete
+        #[validate(length(min = 1))]
+        #[ts(optional)]
+        pub event_ids: Option<Vec<ID>>,
+
+        /// List of events' external IDs to delete
+        #[validate(length(min = 1))]
+        #[ts(optional)]
+        pub external_ids: Option<Vec<String>>,
+    }
+
+    pub type APIResponse = CalendarEventResponse;
+}
+
 pub mod get_event_instances {
 
     use chrono::{DateTime, Utc};
@@ -325,13 +347,13 @@ pub mod get_events_by_calendars {
 }
 
 pub mod search_events {
-    use nittei_domain::{CalendarEventSort, DateTimeQuery, StringQuery};
+    use nittei_domain::{CalendarEventSort, DateTimeQuery, IDQuery, StringQuery};
 
     use super::*;
 
     /// Request body for searching events for one user
     #[derive(Deserialize, Serialize, Validate, TS)]
-    #[serde(rename_all = "camelCase")]
+    #[serde(rename_all = "camelCase", deny_unknown_fields)]
     #[ts(export, rename = "SearchEventsRequestBody")]
     pub struct RequestBody {
         /// Filter to use for searching events
@@ -342,6 +364,7 @@ pub mod search_events {
         pub sort: Option<CalendarEventSort>,
 
         /// Optional limit to use when searching events (u16)
+        /// Default is 200
         #[ts(optional)]
         pub limit: Option<u16>,
     }
@@ -349,11 +372,19 @@ pub mod search_events {
     /// Part of the Request body for searching events for a user
     /// This is the filter
     #[derive(Deserialize, Serialize, Validate, TS)]
-    #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "SearchEventsRequestBodyFilter")]
+    #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    #[ts(
+        export,
+        rename = "SearchEventsRequestBodyFilter",
+        rename_all = "camelCase"
+    )]
     pub struct RequestBodyFilter {
         /// User ID
         pub user_id: ID,
+
+        /// Optional query on event UUID(s)
+        #[ts(optional)]
+        pub event_uid: Option<IDQuery>,
 
         /// Optional list of calendar UUIDs
         /// If not provided, all calendars will be used
@@ -361,7 +392,11 @@ pub mod search_events {
         #[ts(optional)]
         pub calendar_ids: Option<Vec<ID>>,
 
-        /// Optional query on parent ID (which is a string as it's an ID from an external system)
+        /// Optional query on external ID (which is a string as it's an ID from an external system)
+        #[ts(optional)]
+        pub external_id: Option<StringQuery>,
+
+        /// Optional query on external parent ID (which is a string as it's an ID from an external system)
         #[ts(optional)]
         pub external_parent_id: Option<StringQuery>,
 
@@ -381,13 +416,29 @@ pub mod search_events {
         #[ts(optional)]
         pub status: Option<StringQuery>,
 
-        /// Optioanl query on updated at - "lower than or equal", or "great than or equal" (UTC)
+        /// Optional query on the recurring event UID
         #[ts(optional)]
-        pub updated_at: Option<DateTimeQuery>,
+        pub recurring_event_uid: Option<IDQuery>,
+
+        /// Optional query on original start time - "lower than or equal", or "great than or equal" (UTC)
+        #[ts(optional)]
+        pub original_start_time: Option<DateTimeQuery>,
+
+        /// Optional filter on the recurrence (existence)
+        #[ts(optional)]
+        pub is_recurring: Option<bool>,
 
         /// Optional list of metadata key-value pairs
         #[ts(optional)]
         pub metadata: Option<serde_json::Value>,
+
+        /// Optional query on created at - e.g. "lower than or equal", or "great than or equal" (UTC)
+        #[ts(optional)]
+        pub created_at: Option<DateTimeQuery>,
+
+        /// Optional query on updated at - "lower than or equal", or "great than or equal" (UTC)
+        #[ts(optional)]
+        pub updated_at: Option<DateTimeQuery>,
     }
 
     /// API response for searching events for one user

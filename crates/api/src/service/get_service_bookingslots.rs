@@ -630,7 +630,7 @@ mod test {
             ..Default::default()
         };
         let recurrence = RRuleOptions::default();
-        match availability_event3.set_recurrence(recurrence, &calendar_user_2.settings, true) {
+        match availability_event3.set_recurrence(recurrence) {
             Ok(_) => {}
             Err(e) => panic!("Error setting recurrence: {:?}", e),
         };
