@@ -1,4 +1,5 @@
 use axum::{
+    Extension,
     Json,
     extract::{Path, State},
     http::HeaderMap,
@@ -18,7 +19,7 @@ use crate::{
 pub async fn get_schedule_admin_controller(
     headers: HeaderMap,
     path: Path<PathParams>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
     let schedule = account_can_modify_schedule(&account, &path.schedule_id, &ctx).await?;
@@ -36,7 +37,7 @@ pub async fn get_schedule_admin_controller(
 pub async fn get_schedule_controller(
     headers: HeaderMap,
     req: Path<PathParams>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let (_user, _policy) = protect_route(&headers, &ctx).await?;
 
@@ -73,7 +74,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for GetScheduleUseCase {
     type Response = Schedule;
 

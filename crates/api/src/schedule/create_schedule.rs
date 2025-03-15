@@ -1,4 +1,5 @@
 use axum::{
+    Extension,
     Json,
     extract::{Path, State},
     http::{HeaderMap, StatusCode},
@@ -20,18 +21,19 @@ use crate::{
 pub async fn create_schedule_admin_controller(
     headers: HeaderMap,
     path_params: Path<PathParams>,
-    mut body_params: Valid<Json<RequestBody>>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
+    body_params: Json<RequestBody>,
 ) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
     let user = account_can_modify_user(&account, &path_params.user_id, &ctx).await?;
 
+    let mut body_params = body_params.0;
     let usecase = CreateScheduleUseCase {
         user_id: user.id,
         account_id: account.id,
-        timezone: body_params.0.timezone,
-        rules: body_params.0.rules.take(),
-        metadata: body_params.0.metadata.take(),
+        timezone: body_params.timezone,
+        rules: body_params.rules.take(),
+        metadata: body_params.metadata.take(),
     };
 
     execute(usecase, &ctx)
@@ -42,17 +44,18 @@ pub async fn create_schedule_admin_controller(
 
 pub async fn create_schedule_controller(
     headers: HeaderMap,
-    mut body_params: Valid<Json<RequestBody>>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
+    body_params: Json<RequestBody>,
 ) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
     let (user, policy) = protect_route(&headers, &ctx).await?;
 
+    let mut body_params = body_params.0;
     let usecase = CreateScheduleUseCase {
         user_id: user.id,
         account_id: user.account_id,
-        timezone: body_params.0.timezone,
-        rules: body_params.0.rules.take(),
-        metadata: body_params.0.metadata.take(),
+        timezone: body_params.timezone,
+        rules: body_params.rules.take(),
+        metadata: body_params.metadata.take(),
     };
 
     execute_with_policy(usecase, &policy, &ctx)
@@ -92,7 +95,7 @@ struct UseCaseRes {
     pub schedule: Schedule,
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for CreateScheduleUseCase {
     type Response = UseCaseRes;
 

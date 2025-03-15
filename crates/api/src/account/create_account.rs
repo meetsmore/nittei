@@ -1,4 +1,4 @@
-use axum::{Json, extract::State, http::StatusCode};
+use axum::{Extension, extract::Json, http::StatusCode};
 use axum_valid::Valid;
 use nittei_api_structs::create_account::{APIResponse, RequestBody};
 use nittei_domain::Account;
@@ -9,8 +9,11 @@ use crate::{
     shared::usecase::{UseCase, execute},
 };
 
+fn assert_send<T: Send>() {}
+
+// #[axum::debug_handler]
 pub async fn create_account_controller(
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
     body: Valid<Json<RequestBody>>,
 ) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
     let usecase = CreateAccountUseCase {
@@ -44,7 +47,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for CreateAccountUseCase {
     type Response = Account;
 

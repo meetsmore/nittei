@@ -1,8 +1,4 @@
-use axum::{
-    Json,
-    extract::{Path, State},
-    http::HeaderMap,
-};
+use axum::{Extension, Json, extract::Path, http::HeaderMap};
 use nittei_api_structs::remove_account_integration::{APIResponse, PathParams};
 use nittei_domain::{Account, IntegrationProvider};
 use nittei_infra::NitteiContext;
@@ -18,7 +14,7 @@ use crate::{
 pub async fn remove_account_integration_controller(
     headers: HeaderMap,
     mut path: Path<PathParams>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
 
@@ -66,7 +62,7 @@ impl From<anyhow::Error> for UseCaseError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for RemoveAccountIntegrationUseCase {
     type Response = ();
 

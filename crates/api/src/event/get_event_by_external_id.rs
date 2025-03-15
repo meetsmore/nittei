@@ -1,8 +1,4 @@
-use axum::{
-    Json,
-    extract::{Path, State},
-    http::HeaderMap,
-};
+use axum::{Extension, Json, extract::Path, http::HeaderMap};
 use nittei_api_structs::{dtos::CalendarEventDTO, get_event_by_external_id::*};
 use nittei_domain::ID;
 use nittei_infra::NitteiContext;
@@ -18,7 +14,7 @@ use crate::{
 pub async fn get_event_by_external_id_admin_controller(
     headers: HeaderMap,
     path_params: Path<PathParams>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
 
@@ -52,7 +48,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for GetEventByExternalIdUseCase {
     type Response = Vec<CalendarEventDTO>;
 

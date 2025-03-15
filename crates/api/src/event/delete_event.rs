@@ -1,8 +1,4 @@
-use axum::{
-    Json,
-    extract::{Path, State},
-    http::HeaderMap,
-};
+use axum::{Extension, Json, extract::Path, http::HeaderMap};
 use nittei_api_structs::delete_event::*;
 use nittei_domain::{CalendarEvent, ID, IntegrationProvider, User};
 use nittei_infra::{
@@ -29,7 +25,7 @@ use crate::{
 pub async fn delete_event_admin_controller(
     headers: HeaderMap,
     path_params: Path<PathParams>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
     let e = account_can_modify_event(&account, &path_params.event_id, &ctx).await?;
@@ -49,7 +45,7 @@ pub async fn delete_event_admin_controller(
 pub async fn delete_event_controller(
     headers: HeaderMap,
     path_params: Path<PathParams>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let (user, policy) = protect_route(&headers, &ctx).await?;
 
@@ -88,7 +84,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for DeleteEventUseCase {
     type Response = CalendarEvent;
 

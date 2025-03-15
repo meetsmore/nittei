@@ -1,8 +1,4 @@
-use axum::{
-    Json,
-    extract::{Path, State},
-    http::HeaderMap,
-};
+use axum::{Extension, Json, extract::Path, http::HeaderMap};
 use axum_valid::Valid;
 use nittei_api_structs::add_sync_calendar::{APIResponse, PathParams, RequestBody};
 use nittei_domain::{
@@ -29,8 +25,8 @@ use crate::{
 pub async fn add_sync_calendar_admin_controller(
     headers: HeaderMap,
     path_params: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
     body: Valid<Json<RequestBody>>,
-    State(ctx): State<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
     let user = account_can_modify_user(&account, &path_params.user_id, &ctx).await?;
@@ -101,7 +97,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for AddSyncCalendarUseCase {
     type Response = ();
 

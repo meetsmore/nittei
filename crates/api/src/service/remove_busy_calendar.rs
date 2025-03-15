@@ -1,4 +1,5 @@
 use axum::{
+    Extension,
     Json,
     extract::{Path, State},
     http::HeaderMap,
@@ -19,8 +20,8 @@ use crate::{
 pub async fn remove_busy_calendar_controller(
     headers: HeaderMap,
     mut path: Path<PathParams>,
-    body: Valid<Json<RequestBody>>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Json<RequestBody>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
 
@@ -66,7 +67,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for RemoveBusyCalendarUseCase {
     type Response = ();
 

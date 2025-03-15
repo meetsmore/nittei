@@ -189,7 +189,7 @@ impl CalendarEvent {
 
     pub fn expand(
         &self,
-        timespan: Option<&TimeSpan>,
+        timespan: Option<TimeSpan>,
         calendar_settings: &CalendarSettings,
     ) -> anyhow::Result<Vec<EventInstance>> {
         match &self.recurrence {

@@ -1,4 +1,5 @@
 use axum::{
+    Extension,
     Json,
     extract::{Path, Query, State},
     http::HeaderMap,
@@ -48,7 +49,7 @@ pub async fn get_service_bookingslots_controller(
     _headers: HeaderMap,
     query_params: Query<QueryParams>,
     mut path_params: Path<PathParams>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let query_params = query_params.0;
     let _service_id = path_params.service_id.clone();
@@ -129,7 +130,7 @@ impl From<BookingQueryError> for UseCaseError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for GetServiceBookingSlotsUseCase {
     type Response = UseCaseRes;
 
@@ -233,7 +234,7 @@ impl GetServiceBookingSlotsUseCase {
         &self,
         user: &ServiceResource,
         user_calendars: &[Calendar],
-        timespan: &TimeSpan,
+        timespan: TimeSpan,
         ctx: &NitteiContext,
     ) -> anyhow::Result<CompatibleInstances> {
         let empty = CompatibleInstances::new(Vec::new());
@@ -248,7 +249,7 @@ impl GetServiceBookingSlotsUseCase {
                 let all_calendar_events = ctx
                     .repos
                     .events
-                    .find_by_calendar(id, Some(timespan))
+                    .find_by_calendar(id, Some(timespan.clone()))
                     .await
                     .unwrap_or_default();
 
@@ -256,6 +257,7 @@ impl GetServiceBookingSlotsUseCase {
                     .iter()
                     // Todo: handle error
                     .flat_map(|e| {
+                        let timespan = timespan.clone();
                         e.expand(Some(timespan), &calendar.settings)
                             .unwrap_or_default()
                     })
@@ -278,7 +280,7 @@ impl GetServiceBookingSlotsUseCase {
         &self,
         user: &ServiceResource,
         user_nittei_calendars: &[Calendar],
-        timespan: &TimeSpan,
+        timespan: TimeSpan,
         ctx: &NitteiContext,
     ) -> anyhow::Result<CompatibleInstances> {
         let busy_calendars = match ctx
@@ -344,7 +346,7 @@ impl GetServiceBookingSlotsUseCase {
             match ctx
                 .repos
                 .events
-                .find_by_calendar(&cal.id, Some(timespan))
+                .find_by_calendar(&cal.id, Some(timespan.clone()))
                 .await
             {
                 Ok(calendar_events) => {
@@ -352,6 +354,7 @@ impl GetServiceBookingSlotsUseCase {
                         .into_iter()
                         .filter(|e| e.busy)
                         .map(|e| -> anyhow::Result<Vec<EventInstance>> {
+                            let timespan = timespan.clone();
                             let mut instances = e.expand(Some(timespan), &cal.settings)?;
 
                             // Add buffer to instances if event is a service event
@@ -506,11 +509,11 @@ impl GetServiceBookingSlotsUseCase {
         //     .collect::<Vec<_>>();
 
         let mut free_events = self
-            .get_user_availability(service_resource, &user_calendars, &timespan, ctx)
+            .get_user_availability(service_resource, &user_calendars, timespan.clone(), ctx)
             .await?;
 
         let busy_events = self
-            .get_user_busy(service_resource, &user_calendars, &timespan, ctx)
+            .get_user_busy(service_resource, &user_calendars, timespan, ctx)
             .await?;
 
         free_events.remove_instances(&busy_events, 0);

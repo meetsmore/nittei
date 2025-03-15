@@ -1,6 +1,7 @@
 use axum::{
+    Extension,
     Json,
-    extract::{Path, Query, State},
+    extract::{Path, Query},
     http::HeaderMap,
 };
 use nittei_api_structs::get_calendars_by_user::{APIResponse, PathParams, QueryParams};
@@ -20,7 +21,7 @@ pub async fn get_calendars_admin_controller(
     headers: HeaderMap,
     query: Query<QueryParams>,
     path: Path<PathParams>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let _account = protect_admin_route(&headers, &ctx).await?;
 
@@ -39,7 +40,7 @@ pub async fn get_calendars_admin_controller(
 pub async fn get_calendars_controller(
     headers: HeaderMap,
     query: Query<QueryParams>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let (user, _policy) = protect_route(&headers, &ctx).await?;
 
@@ -72,7 +73,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for GetCalendarsUseCase {
     type Response = Vec<Calendar>;
 

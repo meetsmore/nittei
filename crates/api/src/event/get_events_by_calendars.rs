@@ -1,4 +1,5 @@
 use axum::{
+    Extension,
     Json,
     extract::{Path, Query, State},
     http::HeaderMap,
@@ -27,7 +28,7 @@ pub async fn get_events_by_calendars_controller(
     headers: HeaderMap,
     path_params: Path<PathParams>,
     query: Query<QueryParams>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
 
@@ -86,7 +87,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for GetEventsByCalendarsUseCase {
     type Response = UseCaseResponse;
 
@@ -178,8 +179,9 @@ impl UseCase for GetEventsByCalendarsUseCase {
                             .unwrap_or(&[]);
 
                         // Expand the event and remove the exceptions
+                        let timespan = timespan.clone();
                         let instances = expand_event_and_remove_exceptions(
-                            calendar, &event, exceptions, &timespan,
+                            calendar, &event, exceptions, timespan,
                         )
                         .map_err(|e| {
                             error!("Got an error while expanding an event {:?}", e);

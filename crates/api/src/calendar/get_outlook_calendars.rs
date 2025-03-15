@@ -1,6 +1,7 @@
 use axum::{
+    Extension,
     Json,
-    extract::{Path, Query, State},
+    extract::{Path, Query},
     http::HeaderMap,
 };
 use nittei_api_structs::get_outlook_calendars::{APIResponse, PathParams, QueryParams};
@@ -22,7 +23,7 @@ pub async fn get_outlook_calendars_admin_controller(
     headers: HeaderMap,
     path: Path<PathParams>,
     query: Query<QueryParams>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
     let user = account_can_modify_user(&account, &path.user_id, &ctx).await?;
@@ -41,7 +42,7 @@ pub async fn get_outlook_calendars_admin_controller(
 pub async fn get_outlook_calendars_controller(
     headers: HeaderMap,
     query: Query<QueryParams>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let (user, _policy) = protect_route(&headers, &ctx).await?;
 
@@ -79,7 +80,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for GetOutlookCalendarsUseCase {
     type Response = Vec<OutlookCalendar>;
 

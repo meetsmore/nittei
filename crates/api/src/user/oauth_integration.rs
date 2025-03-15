@@ -1,4 +1,5 @@
 use axum::{
+    Extension,
     Json,
     extract::{Path, State},
     http::HeaderMap,
@@ -20,8 +21,8 @@ use crate::{
 pub async fn oauth_integration_admin_controller(
     headers: HeaderMap,
     path: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
     body: Valid<Json<RequestBody>>,
-    State(ctx): State<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
     let user = account_can_modify_user(&account, &path.user_id, &ctx).await?;
@@ -40,8 +41,8 @@ pub async fn oauth_integration_admin_controller(
 
 pub async fn oauth_integration_controller(
     headers: HeaderMap,
-    body: Valid<Json<RequestBody>>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Json<RequestBody>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let (user, _) = protect_route(&headers, &ctx).await?;
 
@@ -92,7 +93,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for OAuthIntegrationUseCase {
     type Response = UseCaseRes;
     type Error = UseCaseError;

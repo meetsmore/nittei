@@ -24,7 +24,10 @@ use nittei_domain::{
     PEMKey,
 };
 use nittei_infra::NitteiContext;
-use tokio::{net::TcpListener, sync::oneshot};
+use tokio::{
+    net::TcpListener,
+    sync::oneshot::{self, Sender},
+};
 use tower::ServiceBuilder;
 use tower_http::{
     catch_panic::CatchPanicLayer,
@@ -38,14 +41,15 @@ use tracing::{error, info, warn};
 
 /// Configure the Actix server API
 /// Add all the routes to the server
-pub fn configure_server_api(router: &mut Router) {
-    account::configure_routes(router);
-    calendar::configure_routes(router);
-    event::configure_routes(router);
-    schedule::configure_routes(router);
-    service::configure_routes(router);
-    status::configure_routes(router);
-    user::configure_routes(router);
+pub fn configure_server_api() -> Router {
+    Router::new()
+        .merge(account::configure_routes())
+        .merge(calendar::configure_routes())
+        .merge(event::configure_routes())
+        .merge(schedule::configure_routes())
+        .merge(service::configure_routes())
+        .merge(status::configure_routes())
+        .merge(user::configure_routes())
 }
 
 /// Struct for storing the main application state
@@ -61,19 +65,22 @@ pub struct Application {
     /// Shared state of the server
     shared_state: ServerSharedState,
 }
-
 /// Struct for storing the shared state of the server
 /// Mainly useful for sharing the shutdown flag between the binary crate and the status endpoint
 #[derive(Clone)]
 pub struct ServerSharedState {
     /// Flag to indicate if the application is shutting down
     pub is_shutting_down: Arc<Mutex<bool>>,
+
+    /// Channel to send shutdown signal
+    pub shutdown_tx: Arc<Option<Sender<()>>>,
 }
 
 impl Application {
     pub async fn new(context: NitteiContext) -> anyhow::Result<Self> {
         let shared_state = ServerSharedState {
             is_shutting_down: Arc::new(Mutex::new(false)),
+            shutdown_tx: Arc::new(None),
         };
 
         let server = Application::configure_server(context.clone(), shared_state.clone()).await?;
@@ -107,8 +114,7 @@ impl Application {
         context: NitteiContext,
         shared_state: ServerSharedState,
     ) -> anyhow::Result<Router> {
-        let mut api_router = Router::new();
-        configure_server_api(&mut api_router);
+        let api_router = configure_server_api();
 
         let sensitive_headers = vec![header::AUTHORIZATION];
 
@@ -135,7 +141,7 @@ impl Application {
     ///
     /// It also sets up the shutdown handler
     pub async fn start(
-        self,
+        mut self,
         shutdown_channel: tokio::sync::oneshot::Receiver<()>,
     ) -> anyhow::Result<()> {
         self.setup_shutdown_handler(shutdown_channel);
@@ -148,6 +154,7 @@ impl Application {
 
         // Create a shutdown signal channel
         let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
+        self.shared_state.shutdown_tx = Arc::new(Some(shutdown_tx));
 
         info!("Starting server on: {}", address_and_port);
         let listener = TcpListener::bind(address_and_port).await?;
@@ -156,6 +163,8 @@ impl Application {
             axum::serve(listener, self.server).with_graceful_shutdown(async {
                 shutdown_rx.await.unwrap();
             });
+
+            info!("[server] Server stopped");
         });
 
         Ok(())
@@ -331,7 +340,9 @@ impl Application {
                 if cfg!(debug_assertions) {
                     // In debug mode, stop the server immediately
                     info!("[server] Stopping server...");
-                    server_handle.stop(true).await;
+                    if let Some(server_handle) = shared_state.shutdown_tx.as_ref() {
+                        server_handle.send(()).unwrap();
+                    }
                     info!("[server] Server stopped");
                 } else {
                     // In production, do the whole graceful shutdown process
@@ -351,9 +362,9 @@ impl Application {
                     info!("[server] Stopping server...");
 
                     // Shutdown the server
-                    server_handle.stop(true).await;
-
-                    info!("[server] Server stopped");
+                    if let Some(server_handle) = shared_state.shutdown_tx.as_ref() {
+                        server_handle.send(()).unwrap();
+                    }
                 }
             }
         });

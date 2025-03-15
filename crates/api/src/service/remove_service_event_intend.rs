@@ -1,4 +1,5 @@
 use axum::{
+    Extension,
     Json,
     extract::{Path, Query, State},
     http::HeaderMap,
@@ -20,7 +21,7 @@ pub async fn remove_service_event_intend_controller(
     headers: HeaderMap,
     query_params: Query<QueryParams>,
     mut path_params: Path<PathParams>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
 
@@ -64,7 +65,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for RemoveServiceEventIntendUseCase {
     type Response = UseCaseRes;
 

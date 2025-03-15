@@ -1,4 +1,5 @@
 use axum::{
+    Extension,
     Json,
     extract::{Path, State},
     http::HeaderMap,
@@ -18,7 +19,7 @@ use crate::{
 pub async fn delete_schedule_admin_controller(
     headers: HeaderMap,
     path: Path<PathParams>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
     let schedule = account_can_modify_schedule(&account, &path.schedule_id, &ctx).await?;
@@ -37,7 +38,7 @@ pub async fn delete_schedule_admin_controller(
 pub async fn delete_schedule_controller(
     headers: HeaderMap,
     path: Path<PathParams>,
-    ctx: State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let (user, policy) = protect_route(&headers, &ctx).await?;
 
@@ -76,7 +77,7 @@ pub struct DeleteScheduleUseCase {
     user_id: ID,
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for DeleteScheduleUseCase {
     type Response = Schedule;
 

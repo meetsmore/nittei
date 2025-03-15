@@ -1,4 +1,5 @@
 use axum::{
+    Extension,
     Json,
     extract::{Query, State},
     http::HeaderMap,
@@ -12,7 +13,7 @@ use crate::{error::NitteiError, shared::auth::protect_admin_route};
 pub async fn get_services_by_meta_controller(
     headers: HeaderMap,
     query_params: Query<QueryParams>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
 

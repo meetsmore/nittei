@@ -1,4 +1,5 @@
 use axum::{
+    Extension,
     Json,
     extract::{Path, Query, State},
     http::HeaderMap,
@@ -27,7 +28,7 @@ pub async fn get_event_instances_admin_controller(
     headers: HeaderMap,
     path_params: Path<PathParams>,
     query_params: Query<QueryParams>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
     let e = account_can_modify_event(&account, &path_params.event_id, &ctx).await?;
@@ -48,7 +49,7 @@ pub async fn get_event_instances_controller(
     headers: HeaderMap,
     path_params: Path<PathParams>,
     query_params: Query<QueryParams>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let (user, _policy) = protect_route(&headers, &ctx).await?;
 
@@ -99,7 +100,7 @@ pub struct UseCaseResponse {
     pub instances: Vec<EventInstance>,
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for GetEventInstancesUseCase {
     type Response = UseCaseResponse;
 
@@ -168,7 +169,7 @@ impl UseCase for GetEventInstancesUseCase {
 
         // Expand the event and remove the exceptions
         let instances =
-            expand_event_and_remove_exceptions(&calendar, main_event, exceptions, &timespan)
+            expand_event_and_remove_exceptions(&calendar, main_event, exceptions, timespan)
                 .map_err(|e| {
                     error!("Got an error while expanding an event {:?}", e);
                     UseCaseError::InternalError

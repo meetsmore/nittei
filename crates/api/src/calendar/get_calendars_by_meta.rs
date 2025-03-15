@@ -1,8 +1,4 @@
-use axum::{
-    Json,
-    extract::{Query, State},
-    http::HeaderMap,
-};
+use axum::{Extension, Json, extract::Query, http::HeaderMap};
 use nittei_api_structs::get_calendars_by_meta::*;
 use nittei_domain::Metadata;
 use nittei_infra::{MetadataFindQuery, NitteiContext};
@@ -12,7 +8,7 @@ use crate::{error::NitteiError, shared::auth::protect_admin_route};
 pub async fn get_calendars_by_meta_controller(
     headers: HeaderMap,
     query_params: Query<QueryParams>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
 

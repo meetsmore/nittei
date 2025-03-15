@@ -1,8 +1,4 @@
-use axum::{
-    Json,
-    extract::{Path, State},
-    http::HeaderMap,
-};
+use axum::{Extension, Json, extract::Path, http::HeaderMap};
 use nittei_api_structs::delete_calendar::{APIResponse, PathParams};
 use nittei_domain::{Calendar, ID};
 use nittei_infra::NitteiContext;
@@ -18,7 +14,7 @@ use crate::{
 pub async fn delete_calendar_admin_controller(
     headers: HeaderMap,
     path: Path<PathParams>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
     let cal = account_can_modify_calendar(&account, &path.calendar_id, &ctx).await?;
@@ -37,7 +33,7 @@ pub async fn delete_calendar_admin_controller(
 pub async fn delete_calendar_controller(
     headers: HeaderMap,
     path: Path<PathParams>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let (user, policy) = protect_route(&headers, &ctx).await?;
 
@@ -78,7 +74,7 @@ pub struct DeleteCalendarUseCase {
     user_id: ID,
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for DeleteCalendarUseCase {
     type Response = Calendar;
 

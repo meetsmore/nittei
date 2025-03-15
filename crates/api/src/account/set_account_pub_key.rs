@@ -1,4 +1,4 @@
-use axum::{Json, extract::State, http::HeaderMap};
+use axum::{Extension, Json, http::HeaderMap};
 use axum_valid::Valid;
 use nittei_api_structs::set_account_pub_key::{APIResponse, RequestBody};
 use nittei_domain::{Account, PEMKey};
@@ -14,7 +14,7 @@ use crate::{
 
 pub async fn set_account_pub_key_controller(
     headers: HeaderMap,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
     body: Valid<Json<RequestBody>>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
@@ -53,7 +53,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for SetAccountPubKeyUseCase {
     type Response = Account;
 

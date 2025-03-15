@@ -200,7 +200,7 @@ pub async fn protect_public_account_route(
                 })
         }
         // No nittei-account header, then check if this is an admin client
-        None => protect_amind_route(headers, ctx).await,
+        None => protect_admin_route(headers, ctx).await,
     }
 }
 

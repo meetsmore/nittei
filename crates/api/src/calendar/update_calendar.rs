@@ -1,8 +1,4 @@
-use axum::{
-    Json,
-    extract::{Path, State},
-    http::HeaderMap,
-};
+use axum::{Extension, Json, extract::Path, http::HeaderMap};
 use axum_valid::Valid;
 use chrono::Weekday;
 use chrono_tz::Tz;
@@ -26,7 +22,7 @@ use crate::{
 
 pub async fn update_calendar_admin_controller(
     headers: HeaderMap,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
     path: Path<PathParams>,
     mut body: Valid<Json<RequestBody>>,
 ) -> Result<Json<APIResponse>, NitteiError> {
@@ -51,7 +47,7 @@ pub async fn update_calendar_admin_controller(
 
 pub async fn update_calendar_controller(
     headers: HeaderMap,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
     mut path: Path<PathParams>,
     mut body: Valid<Json<RequestBody>>,
 ) -> Result<Json<APIResponse>, NitteiError> {
@@ -97,7 +93,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for UpdateCalendarUseCase {
     type Response = Calendar;
 

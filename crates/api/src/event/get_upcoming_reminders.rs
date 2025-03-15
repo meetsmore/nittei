@@ -98,7 +98,7 @@ async fn create_reminders_for_accounts(
         .collect())
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for GetUpcomingRemindersUseCase {
     type Response = (Vec<(Account, AccountReminders)>, Instant);
 

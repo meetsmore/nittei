@@ -1,4 +1,5 @@
 use axum::{
+    Extension,
     Json,
     extract::{Path, State},
     http::HeaderMap,
@@ -32,9 +33,9 @@ use crate::{
 
 pub async fn create_service_event_intend_controller(
     headers: HeaderMap,
-    body: Valid<Json<RequestBody>>,
     mut path: Path<PathParams>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Json<RequestBody>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     protect_admin_route(&headers, &ctx).await?;
 
@@ -92,7 +93,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for CreateServiceEventIntendUseCase {
     type Response = UseCaseRes;
 

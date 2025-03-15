@@ -1,8 +1,4 @@
-use axum::{
-    Json,
-    extract::{Path, State},
-    http::HeaderMap,
-};
+use axum::{Extension, Json, extract::Path, http::HeaderMap};
 use axum_valid::Valid;
 use nittei_api_structs::remove_sync_calendar::{APIResponse, PathParams, RequestBody};
 use nittei_domain::{ID, IntegrationProvider};
@@ -28,8 +24,8 @@ fn error_handler(e: UseCaseError) -> NitteiError {
 pub async fn remove_sync_calendar_admin_controller(
     headers: HeaderMap,
     path_params: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
     body: Valid<Json<RequestBody>>,
-    State(ctx): State<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
     // Check if user exists and can be modified by the account
@@ -67,7 +63,7 @@ impl From<anyhow::Error> for UseCaseError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for RemoveSyncCalendarUseCase {
     type Response = ();
 

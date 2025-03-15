@@ -1,6 +1,6 @@
 use axum::{
+    Extension,
     Json,
-    extract::State,
     http::{HeaderMap, StatusCode},
 };
 use axum_valid::Valid;
@@ -18,8 +18,8 @@ use crate::{
 
 pub async fn create_service_controller(
     headers: HeaderMap,
-    body: Valid<Json<RequestBody>>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Json<RequestBody>,
 ) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
 
@@ -65,7 +65,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for CreateServiceUseCase {
     type Response = UseCaseRes;
 

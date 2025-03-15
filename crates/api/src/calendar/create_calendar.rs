@@ -1,6 +1,7 @@
 use axum::{
+    Extension,
     Json,
-    extract::{Path, State},
+    extract::Path,
     http::{HeaderMap, StatusCode},
 };
 use axum_valid::Valid;
@@ -21,8 +22,8 @@ use crate::{
 pub async fn create_calendar_admin_controller(
     headers: HeaderMap,
     path_params: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
     mut body: Valid<Json<RequestBody>>,
-    State(ctx): State<NitteiContext>,
 ) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
     let user = account_can_modify_user(&account, &path_params.user_id, &ctx).await?;
@@ -45,8 +46,8 @@ pub async fn create_calendar_admin_controller(
 
 pub async fn create_calendar_controller(
     headers: HeaderMap,
+    Extension(ctx): Extension<NitteiContext>,
     mut body: Valid<Json<RequestBody>>,
-    State(ctx): State<NitteiContext>,
 ) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
     let (user, policy) = protect_route(&headers, &ctx).await?;
 
@@ -96,7 +97,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for CreateCalendarUseCase {
     type Response = Calendar;
 

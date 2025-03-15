@@ -1,4 +1,4 @@
-use axum::{Json, extract::State, http::HeaderMap};
+use axum::{Extension, Json, http::HeaderMap};
 use axum_valid::Valid;
 use nittei_api_structs::{account_search_events::*, dtos::CalendarEventDTO};
 use nittei_domain::{CalendarEventSort, DateTimeQuery, ID, IDQuery, StringQuery};
@@ -15,8 +15,8 @@ use crate::{
 
 pub async fn account_search_events_controller(
     headers: HeaderMap,
+    Extension(ctx): Extension<NitteiContext>,
     body: Valid<Json<RequestBody>>,
-    State(ctx): State<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
 
@@ -121,7 +121,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for AccountSearchEventsUseCase {
     type Response = UseCaseResponse;
 

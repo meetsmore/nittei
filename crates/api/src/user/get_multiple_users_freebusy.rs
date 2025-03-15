@@ -1,9 +1,9 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, pin::Pin, sync::Arc};
 
-use axum::{Json, extract::State, http::HeaderMap};
+use axum::{Extension, Json, extract::State, http::HeaderMap};
 use axum_valid::Valid;
 use chrono::{DateTime, Utc};
-use futures::{StreamExt, future::join_all, stream};
+use futures::{FutureExt, StreamExt, future::join_all, stream};
 use nittei_api_structs::multiple_freebusy::{APIResponse, RequestBody};
 use nittei_domain::{
     Calendar,
@@ -26,8 +26,8 @@ use crate::{
 
 pub async fn get_multiple_freebusy_controller(
     headers: HeaderMap,
-    body: Valid<Json<RequestBody>>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Json<RequestBody>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let _account = protect_public_account_route(&headers, &ctx).await?;
 
@@ -70,7 +70,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for GetMultipleFreeBusyUseCase {
     type Response = GetMultipleFreeBusyResponse;
 
@@ -95,7 +95,7 @@ impl UseCase for GetMultipleFreeBusyUseCase {
             .map_err(|_| UseCaseError::InternalError)?;
 
         let busy_event_instances = self
-            .get_event_instances_from_calendars(&timespan, ctx, calendars)
+            .get_event_instances_from_calendars(timespan, ctx, calendars)
             .await?;
 
         Ok(GetMultipleFreeBusyResponse(busy_event_instances))
@@ -129,7 +129,7 @@ impl GetMultipleFreeBusyUseCase {
 
     async fn get_event_instances_from_calendars(
         &self,
-        timespan: &TimeSpan,
+        timespan: TimeSpan,
         ctx: &NitteiContext,
         calendars: Vec<Calendar>,
     ) -> Result<HashMap<ID, Vec<EventInstance>>, UseCaseError> {
@@ -144,14 +144,20 @@ impl GetMultipleFreeBusyUseCase {
 
         // Fetch all events for all calendars
         // This is not executed yet (lazy)
-        let all_events_futures = calendars.iter().map(|calendar| async move {
-            let events = ctx
-                .repos
-                .events
-                .find_by_calendar(&calendar.id, Some(timespan))
-                .await
-                .unwrap_or_default(); // TODO: Handle error
-            Ok((calendar.user_id.clone(), events)) as Result<(ID, Vec<CalendarEvent>), UseCaseError>
+        let all_events_futures = calendars.clone().into_iter().map(|calendar| {
+            let timespan_for_closure = timespan.clone();
+            let ctx = ctx.clone();
+
+            async move {
+                let events = ctx
+                    .repos
+                    .events
+                    .find_by_calendar(&calendar.id, Some(timespan_for_closure))
+                    .await
+                    .unwrap_or_default(); // TODO: Handle error
+                Ok((calendar.user_id, events)) as Result<(ID, Vec<CalendarEvent>), UseCaseError>
+            }
+            .boxed()
         });
 
         // Fetch events in chunks of 5
@@ -167,7 +173,7 @@ impl GetMultipleFreeBusyUseCase {
                         let expanded_events = expand_all_events_and_remove_exceptions(
                             &calendars_lookup,
                             &events,
-                            timespan,
+                            timespan.clone(),
                         )
                         .map_err(|e| {
                             error!("Got an error when expanding events {:?}", e);

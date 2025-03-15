@@ -11,15 +11,15 @@ use crate::error::NitteiError;
 ///
 /// It is going to act upon the response of the execution
 /// of the `UseCase` if the execution was a success.
-#[async_trait::async_trait(?Send)]
-pub trait Subscriber<U: UseCase> {
+#[async_trait::async_trait]
+pub trait Subscriber<U: UseCase>: Send + Sync {
     async fn notify(&self, e: &U::Response, ctx: &NitteiContext);
 }
 
-#[async_trait::async_trait(?Send)]
-pub trait UseCase: Debug {
-    type Response: Debug;
-    type Error;
+#[async_trait::async_trait]
+pub trait UseCase: Debug + Send {
+    type Response: Debug + Send;
+    type Error: Send;
 
     /// UseCase name identifier
     const NAME: &'static str;
@@ -84,16 +84,16 @@ where
 #[tracing::instrument(name = "UseCase executed by Account", skip(usecase, ctx), fields(usecase = %U::NAME))]
 pub async fn execute<U>(usecase: U, ctx: &NitteiContext) -> Result<U::Response, U::Error>
 where
-    U: UseCase,
-    U::Error: Debug,
+    U: UseCase + Send,
+    U::Error: Debug + Send,
 {
     _execute(usecase, ctx).await
 }
 
 async fn _execute<U>(mut usecase: U, ctx: &NitteiContext) -> Result<U::Response, U::Error>
 where
-    U: UseCase,
-    U::Error: Debug,
+    U: UseCase + Send,
+    U::Error: Debug + Send,
 {
     debug!("{:?}", usecase);
     let res = usecase.execute(ctx).await;

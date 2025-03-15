@@ -1,6 +1,7 @@
 use axum::{
+    Extension,
     Json,
-    extract::{Path, Query, State},
+    extract::{Path, Query},
     http::HeaderMap,
 };
 use chrono::{DateTime, Utc};
@@ -28,7 +29,7 @@ pub async fn get_calendar_events_admin_controller(
     headers: HeaderMap,
     query_params: Query<QueryParams>,
     path: Path<PathParams>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
     let cal = account_can_modify_calendar(&account, &path.calendar_id, &ctx).await?;
@@ -50,7 +51,7 @@ pub async fn get_calendar_events_controller(
     headers: HeaderMap,
     query_params: Query<QueryParams>,
     path: Path<PathParams>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let (user, _policy) = protect_route(&headers, &ctx).await?;
 
@@ -102,7 +103,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for GetCalendarEventsUseCase {
     type Response = UseCaseResponse;
 
@@ -129,7 +130,7 @@ impl UseCase for GetCalendarEventsUseCase {
                 let calendar_events = ctx
                     .repos
                     .events
-                    .find_by_calendar(&calendar.id, Some(&timespan))
+                    .find_by_calendar(&calendar.id, Some(timespan.clone()))
                     .await
                     .map_err(|e| {
                         error!("{:?}", e);
@@ -152,8 +153,9 @@ impl UseCase for GetCalendarEventsUseCase {
                             .unwrap_or(&[]);
 
                         // Expand the event and remove the exceptions
+                        let timespan = timespan.clone();
                         let instances = expand_event_and_remove_exceptions(
-                            &calendar, &event, exceptions, &timespan,
+                            &calendar, &event, exceptions, timespan,
                         )
                         .map_err(|e| {
                             error!("Got an error while expanding an event {:?}", e);

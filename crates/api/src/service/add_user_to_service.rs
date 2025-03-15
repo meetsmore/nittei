@@ -1,4 +1,5 @@
 use axum::{
+    Extension,
     Json,
     extract::{Path, State},
     http::HeaderMap,
@@ -18,9 +19,9 @@ use crate::{
 
 pub async fn add_user_to_service_controller(
     headers: HeaderMap,
-    mut body: Valid<Json<RequestBody>>,
     mut path: Path<PathParams>,
-    State(ctx): State<NitteiContext>,
+    Extension(ctx): Extension<NitteiContext>,
+    mut body: Json<RequestBody>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
 
@@ -79,7 +80,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for AddUserToServiceUseCase {
     type Response = UseCaseRes;
 
