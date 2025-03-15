@@ -16,6 +16,7 @@ export type AccountSearchEventsRequestBody = {
   sort?: CalendarEventSort
   /**
    * Optional limit to use when searching events (u16)
+   * Defaults to 200
    */
   limit?: number
 }

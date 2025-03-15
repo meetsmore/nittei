@@ -82,6 +82,7 @@ struct EventRaw {
     created: i64,
     updated: i64,
     recurrence: Option<Value>,
+    recurring_until: Option<DateTime<Utc>>,
     exdates: Vec<DateTime<Utc>>,
     recurring_event_uid: Option<Uuid>,
     original_start_time: Option<DateTime<Utc>>,
@@ -127,6 +128,7 @@ impl TryFrom<EventRaw> for CalendarEvent {
                 "Unable to convert updated timestamp to DateTime"
             ))?,
             recurrence,
+            recurring_until: e.recurring_until,
             exdates: e.exdates,
             recurring_event_id: e.recurring_event_uid.map(|id| id.into()),
             original_start_time: e.original_start_time,
@@ -142,10 +144,17 @@ impl IEventRepo for PostgresEventRepo {
     #[instrument]
     async fn insert(&self, e: &CalendarEvent) -> anyhow::Result<()> {
         let status: String = e.status.clone().into();
+        let recurrence = if e.recurrence.is_some() {
+            Some(serde_json::to_value(&e.recurrence)?)
+        } else {
+            None
+        };
         sqlx::query!(
             r#"
             INSERT INTO calendar_events(
                 event_uid,
+                account_uid,
+                user_uid,
                 calendar_uid,
                 external_parent_id,
                 external_id,
@@ -162,6 +171,7 @@ impl IEventRepo for PostgresEventRepo {
                 created,
                 updated,
                 recurrence,
+                recurring_until,
                 exdates,
                 recurring_event_uid,
                 original_start_time,
@@ -169,9 +179,11 @@ impl IEventRepo for PostgresEventRepo {
                 service_uid,
                 metadata
             )
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
             "#,
             e.id.as_ref(),
+            e.account_id.as_ref(),
+            e.user_id.as_ref(),
             e.calendar_id.as_ref(),
             e.external_parent_id,
             e.external_id,
@@ -187,7 +199,8 @@ impl IEventRepo for PostgresEventRepo {
             e.busy,
             e.created.timestamp_millis(),
             e.updated.timestamp_millis(),
-            Json(&e.recurrence) as _,
+            &recurrence as _,
+            e.recurring_until,
             &e.exdates,
             e.recurring_event_id.as_ref().map(|id| id.as_ref()),
             e.original_start_time,
@@ -210,6 +223,11 @@ impl IEventRepo for PostgresEventRepo {
     #[instrument]
     async fn save(&self, e: &CalendarEvent) -> anyhow::Result<()> {
         let status: String = e.status.clone().into();
+        let recurrence = if e.recurrence.is_some() {
+            Some(serde_json::to_value(&e.recurrence)?)
+        } else {
+            None
+        };
         sqlx::query!(
             r#"
             UPDATE calendar_events SET
@@ -228,12 +246,13 @@ impl IEventRepo for PostgresEventRepo {
                 created = $14,
                 updated = $15,
                 recurrence = $16,
-                exdates = $17,
-                recurring_event_uid = $18,
-                original_start_time = $19,
-                reminders = $20,
-                service_uid = $21,
-                metadata = $22
+                recurring_until = $17,
+                exdates = $18,
+                recurring_event_uid = $19,
+                original_start_time = $20,
+                reminders = $21,
+                service_uid = $22,
+                metadata = $23
             WHERE event_uid = $1
             "#,
             e.id.as_ref(),
@@ -251,7 +270,8 @@ impl IEventRepo for PostgresEventRepo {
             e.busy,
             e.created.timestamp_millis(),
             e.updated.timestamp_millis(),
-            Json(&e.recurrence) as _,
+            &recurrence as _,
+            e.recurring_until,
             &e.exdates,
             e.recurring_event_id.as_ref().map(|id| id.as_ref()),
             e.original_start_time,
@@ -276,7 +296,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+            SELECT e.* FROM calendar_events AS e
             INNER JOIN calendars AS c
                 ON c.calendar_uid = e.calendar_uid
             INNER JOIN users AS u
@@ -309,7 +329,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+            SELECT e.* FROM calendar_events AS e
             INNER JOIN calendars AS c
                 ON c.calendar_uid = e.calendar_uid
             INNER JOIN users AS u
@@ -340,7 +360,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+            SELECT e.* FROM calendar_events AS e
             INNER JOIN calendars AS c
                 ON c.calendar_uid = e.calendar_uid
             INNER JOIN users AS u
@@ -363,13 +383,44 @@ impl IEventRepo for PostgresEventRepo {
         .collect()
     }
 
+    async fn find_many_by_external_ids(
+        &self,
+        account_uid: &ID,
+        external_ids: &[String],
+    ) -> anyhow::Result<Vec<CalendarEvent>> {
+        sqlx::query_as!(
+            EventRaw,
+            r#"
+            SELECT e.* FROM calendar_events AS e
+            INNER JOIN calendars AS c
+                ON c.calendar_uid = e.calendar_uid
+            INNER JOIN users AS u
+                ON u.user_uid = c.user_uid
+            WHERE u.account_uid = $1 AND e.external_id = any($2)
+            "#,
+            account_uid.as_ref(),
+            external_ids,
+        )
+        .fetch_all(&self.pool)
+        .await
+        .inspect_err(|err| {
+            error!(
+                "Find calendar events with external_ids: {:?} failed. DB returned error: {:?}",
+                external_ids, err
+            );
+        })?
+        .into_iter()
+        .map(|e| e.try_into())
+        .collect()
+    }
+
     #[instrument]
     async fn find_many(&self, event_ids: &[ID]) -> anyhow::Result<Vec<CalendarEvent>> {
         let ids = event_ids.iter().map(|id| *id.as_ref()).collect::<Vec<_>>();
         sqlx::query_as!(
             EventRaw,
             r#"
-            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+            SELECT e.* FROM calendar_events AS e
             INNER JOIN calendars AS c
                 ON c.calendar_uid = e.calendar_uid
             INNER JOIN users AS u
@@ -401,7 +452,7 @@ impl IEventRepo for PostgresEventRepo {
             sqlx::query_as!(
                 EventRaw,
                 r#"
-                    SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+                    SELECT e.* FROM calendar_events AS e
                     INNER JOIN calendars AS c
                         ON c.calendar_uid = e.calendar_uid
                     INNER JOIN users AS u
@@ -410,7 +461,7 @@ impl IEventRepo for PostgresEventRepo {
                     AND (
                         (e.start_time <= $2 AND e.end_time >= $3)
                         OR
-                        (e.start_time < $2 AND e.recurrence::text <> 'null')
+                        (e.start_time < $2 AND e.recurrence IS NOT NULL)
                     )
                     "#,
                 calendar_id.as_ref(),
@@ -432,7 +483,7 @@ impl IEventRepo for PostgresEventRepo {
             sqlx::query_as!(
                 EventRaw,
                 r#"
-                    SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+                    SELECT e.* FROM calendar_events AS e
                     INNER JOIN calendars AS c
                         ON c.calendar_uid = e.calendar_uid
                     INNER JOIN users AS u
@@ -468,7 +519,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-                    SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+                    SELECT e.* FROM calendar_events AS e
                     INNER JOIN calendars AS c
                         ON c.calendar_uid = e.calendar_uid
                     INNER JOIN users AS u
@@ -477,7 +528,7 @@ impl IEventRepo for PostgresEventRepo {
                     AND (
                         (e.start_time <= $2 AND e.end_time >= $3)
                         OR 
-                        (e.start_time < $2 AND e.recurrence::text <> 'null')
+                        (e.start_time < $2 AND e.recurrence::text IS NOT NULL)
                     )
                     "#,
             &calendar_ids,
@@ -524,7 +575,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-                    SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+                    SELECT e.* FROM calendar_events AS e
                     INNER JOIN calendars AS c
                         ON c.calendar_uid = e.calendar_uid
                     INNER JOIN users AS u
@@ -533,7 +584,7 @@ impl IEventRepo for PostgresEventRepo {
                     AND (
                         (e.start_time < $2 AND e.end_time > $3)
                         OR
-                        (e.start_time < $2 AND e.recurrence::text <> 'null')
+                        (e.start_time < $2 AND e.recurrence IS NOT NULL)
                     )
                     AND busy = true
                     AND status = any($4)
@@ -567,7 +618,7 @@ impl IEventRepo for PostgresEventRepo {
     ) -> anyhow::Result<Vec<CalendarEvent>> {
         let mut query = QueryBuilder::new(
             r#"
-            SELECT e.*, c.user_uid, u.account_uid FROM calendar_events AS e
+            SELECT e.* FROM calendar_events AS e
             INNER JOIN calendars AS c
                 ON c.calendar_uid = e.calendar_uid
             INNER JOIN users AS u
@@ -577,6 +628,13 @@ impl IEventRepo for PostgresEventRepo {
 
         query.push_bind::<Uuid>(params.user_id.into());
 
+        apply_id_query(
+            &mut query,
+            "e",
+            "event_uid",
+            &params.search_events_params.event_uid,
+        );
+
         if let Some(calendar_ids) = params.calendar_ids {
             query.push(" AND c.calendar_uid IN (");
             let mut separated = query.separated(", ");
@@ -585,6 +643,12 @@ impl IEventRepo for PostgresEventRepo {
             }
             separated.push_unseparated(") ");
         }
+
+        apply_string_query(
+            &mut query,
+            "external_id",
+            &params.search_events_params.external_id,
+        );
 
         apply_string_query(
             &mut query,
@@ -614,17 +678,28 @@ impl IEventRepo for PostgresEventRepo {
 
         apply_string_query(&mut query, "status", &params.search_events_params.status);
 
+        apply_id_query(
+            &mut query,
+            "e",
+            "recurring_event_uid",
+            &params.search_events_params.recurring_event_uid,
+        );
+
         apply_datetime_query(
             &mut query,
-            "updated",
-            &params.search_events_params.updated_at,
-            true,
+            "original_start_time",
+            &params.search_events_params.original_start_time,
+            false,
         );
 
         if let Some(is_recurring) = params.search_events_params.is_recurring {
             query.push(format!(
-                " AND e.recurrence::text {} 'null'",
-                if is_recurring { "<>" } else { "=" },
+                " AND e.recurrence::text {}",
+                if is_recurring {
+                    "IS NOT NULL"
+                } else {
+                    "IS NULL"
+                },
             ));
         }
 
@@ -632,6 +707,20 @@ impl IEventRepo for PostgresEventRepo {
             query.push(" AND e.metadata @> ");
             query.push_bind(Json(metadata.clone()));
         }
+
+        apply_datetime_query(
+            &mut query,
+            "created",
+            &params.search_events_params.created_at,
+            true,
+        );
+
+        apply_datetime_query(
+            &mut query,
+            "updated",
+            &params.search_events_params.updated_at,
+            true,
+        );
 
         // Sort if needed
         if let Some(sort) = params.sort {
@@ -643,6 +732,10 @@ impl IEventRepo for PostgresEventRepo {
                 nittei_domain::CalendarEventSort::EndTimeDesc => "end_time DESC",
                 nittei_domain::CalendarEventSort::CreatedAsc => "created ASC",
                 nittei_domain::CalendarEventSort::CreatedDesc => "created DESC",
+                nittei_domain::CalendarEventSort::UpdatedAsc => "updated ASC",
+                nittei_domain::CalendarEventSort::UpdatedDesc => "updated DESC",
+                nittei_domain::CalendarEventSort::EventUidAsc => "event_uid ASC",
+                nittei_domain::CalendarEventSort::EventUidDesc => "event_uid DESC",
             });
         }
 
@@ -678,7 +771,7 @@ impl IEventRepo for PostgresEventRepo {
     ) -> anyhow::Result<Vec<CalendarEvent>> {
         let mut query = QueryBuilder::new(
             r#"
-            SELECT e.*, c.user_uid, u.account_uid FROM calendar_events AS e
+            SELECT e.* FROM calendar_events AS e
             INNER JOIN calendars AS c
                 ON c.calendar_uid = e.calendar_uid
             INNER JOIN users AS u
@@ -690,9 +783,22 @@ impl IEventRepo for PostgresEventRepo {
 
         apply_id_query(
             &mut query,
+            "e",
+            "event_uid",
+            &params.search_events_params.event_uid,
+        );
+
+        apply_id_query(
+            &mut query,
             "u",
             "user_uid",
-            &params.search_events_params.user_id,
+            &params.search_events_params.user_uid,
+        );
+
+        apply_string_query(
+            &mut query,
+            "external_id",
+            &params.search_events_params.external_id,
         );
 
         apply_string_query(
@@ -723,17 +829,28 @@ impl IEventRepo for PostgresEventRepo {
 
         apply_string_query(&mut query, "status", &params.search_events_params.status);
 
+        apply_id_query(
+            &mut query,
+            "e",
+            "recurring_event_uid",
+            &params.search_events_params.recurring_event_uid,
+        );
+
         apply_datetime_query(
             &mut query,
-            "updated",
-            &params.search_events_params.updated_at,
-            true,
+            "original_start_time",
+            &params.search_events_params.original_start_time,
+            false,
         );
 
         if let Some(is_recurring) = params.search_events_params.is_recurring {
             query.push(format!(
-                " AND e.recurrence::text {} 'null'",
-                if is_recurring { "<>" } else { "=" },
+                " AND e.recurrence {}",
+                if is_recurring {
+                    "IS NOT NULL"
+                } else {
+                    "IS NULL"
+                },
             ));
         }
 
@@ -741,6 +858,20 @@ impl IEventRepo for PostgresEventRepo {
             query.push(" AND e.metadata @> ");
             query.push_bind(Json(metadata.clone()));
         }
+
+        apply_datetime_query(
+            &mut query,
+            "created",
+            &params.search_events_params.created_at,
+            true,
+        );
+
+        apply_datetime_query(
+            &mut query,
+            "updated",
+            &params.search_events_params.updated_at,
+            true,
+        );
 
         // Sort if needed
         if let Some(sort) = params.sort {
@@ -752,6 +883,10 @@ impl IEventRepo for PostgresEventRepo {
                 nittei_domain::CalendarEventSort::EndTimeDesc => "end_time DESC",
                 nittei_domain::CalendarEventSort::CreatedAsc => "created ASC",
                 nittei_domain::CalendarEventSort::CreatedDesc => "created DESC",
+                nittei_domain::CalendarEventSort::UpdatedAsc => "updated ASC",
+                nittei_domain::CalendarEventSort::UpdatedDesc => "updated DESC",
+                nittei_domain::CalendarEventSort::EventUidAsc => "event_uid ASC",
+                nittei_domain::CalendarEventSort::EventUidDesc => "event_uid DESC",
             });
         }
 
@@ -788,12 +923,12 @@ impl IEventRepo for PostgresEventRepo {
             MostRecentCreatedServiceEventsRaw,
             r#"
             SELECT users.user_uid, events.created FROM users LEFT JOIN (
-                SELECT DISTINCT ON (user_uid) user_uid, e.created
+                SELECT DISTINCT ON (c.user_uid) c.user_uid, e.created
                 FROM calendar_events AS e
                 INNER JOIN calendars AS c
                     ON c.calendar_uid = e.calendar_uid
                 WHERE service_uid = $1
-                ORDER BY user_uid, created DESC
+                ORDER BY c.user_uid, created DESC
             ) AS events ON events.user_uid = users.user_uid
             WHERE users.user_uid = ANY($2)
             "#,
@@ -827,7 +962,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+            SELECT e.* FROM calendar_events AS e
             INNER JOIN calendars AS c
                 ON c.calendar_uid = e.calendar_uid
             INNER JOIN users AS u
@@ -866,7 +1001,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+            SELECT e.* FROM calendar_events AS e
             INNER JOIN calendars AS c
                 ON c.calendar_uid = e.calendar_uid
             INNER JOIN users AS u
@@ -917,6 +1052,26 @@ impl IEventRepo for PostgresEventRepo {
         .map(|_| ())
     }
 
+    async fn delete_many(&self, event_ids: &[ID]) -> anyhow::Result<()> {
+        let ids = event_ids.iter().map(|id| *id.as_ref()).collect::<Vec<_>>();
+        sqlx::query!(
+            r#"
+            DELETE FROM calendar_events AS c
+            WHERE c.event_uid = ANY($1)
+            "#,
+            &ids
+        )
+        .execute(&self.pool)
+        .await
+        .inspect_err(|e| {
+            error!(
+                "Delete calendar events with ids: {:?} failed. DB returned error: {:?}",
+                event_ids, e
+            );
+        })?;
+        Ok(())
+    }
+
     #[instrument]
     async fn delete_by_service(&self, service_id: &ID) -> anyhow::Result<()> {
         sqlx::query!(
@@ -945,7 +1100,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e
+            SELECT e.* FROM calendar_events AS e
             INNER JOIN calendars AS c
                 ON c.calendar_uid = e.calendar_uid
             INNER JOIN users AS u

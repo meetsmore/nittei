@@ -9,3 +9,8 @@ export type IDQuery =
   | { ne: ID }
   | { exists: boolean }
   | { in: Array<ID> }
+  | { nin: Array<ID> }
+  | { gt: ID }
+  | { gte: ID }
+  | { lt: ID }
+  | { lte: ID }

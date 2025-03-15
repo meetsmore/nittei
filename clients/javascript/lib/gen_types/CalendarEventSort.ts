@@ -10,3 +10,7 @@ export type CalendarEventSort =
   | 'endTimeDesc'
   | 'createdAsc'
   | 'createdDesc'
+  | 'updatedAsc'
+  | 'updatedDesc'
+  | 'eventUidAsc'
+  | 'eventUidDesc'

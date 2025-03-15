@@ -230,58 +230,47 @@ impl UseCase for UpdateEventUseCase {
             e.reminders.clone_from(reminders);
         }
 
-        let calendar = match ctx.repos.calendars.find(&e.calendar_id).await {
-            Ok(Some(cal)) => cal,
-            Ok(None) => {
-                return Err(UseCaseError::NotFound(
-                    "Calendar".into(),
-                    e.calendar_id.clone(),
-                ));
-            }
-            Err(e) => {
-                tracing::error!("[update_event] Failed to get one calendar {:?}", e);
-                return Err(UseCaseError::StorageError);
-            }
-        };
-
         let mut start_or_duration_change = false;
 
         if let Some(start_time) = start_time {
+            // Only change the exdates if the start time has actually changed
             if e.start_time != *start_time {
-                e.start_time = *start_time;
                 e.exdates = Vec::new();
-                start_or_duration_change = true;
             }
+            e.start_time = *start_time;
+            start_or_duration_change = true;
         }
         if let Some(duration) = duration {
-            if e.duration != *duration {
-                e.duration = *duration;
-                start_or_duration_change = true;
-            }
+            e.duration = *duration;
+            start_or_duration_change = true;
         }
+
+        if start_or_duration_change {
+            e.end_time = e.start_time + TimeDelta::milliseconds(e.duration);
+        }
+
         if let Some(busy) = busy {
             e.busy = *busy;
         }
 
+        // Handle the new recurrence
         let valid_recurrence = if let Some(rrule_opts) = recurrence.clone() {
             // ? should exdates be deleted when rrules are updated
-            e.set_recurrence(rrule_opts, &calendar.settings, true)
-                .map_err(|e| {
-                    tracing::error!("[update_event] Failed to set recurrence {:?}", e);
-                    UseCaseError::InvalidRecurrenceRule
-                })?
+            e.set_recurrence(rrule_opts).map_err(|e| {
+                tracing::error!("[update_event] Failed to set recurrence {:?}", e);
+                UseCaseError::InvalidRecurrenceRule
+            })?
+
+        // Otherwise, we we don't have a new recurrence, but we have an existing one
+        // And the start time or duration has changed, we need to update the recurrence
         } else if start_or_duration_change && e.recurrence.is_some() {
             // This unwrap is safe as we have checked that recurrence "is_some"
             #[allow(clippy::unwrap_used)]
-            e.set_recurrence(e.recurrence.clone().unwrap(), &calendar.settings, true)
+            e.set_recurrence(e.recurrence.clone().unwrap())
                 .map_err(|e| {
                     tracing::error!("[update_event] Failed to set recurrence {:?}", e);
                     UseCaseError::InvalidRecurrenceRule
                 })?
-        } else if start_or_duration_change {
-            e.end_time = e.start_time + TimeDelta::milliseconds(e.duration);
-            e.recurrence = None;
-            true
         } else {
             e.recurrence = None;
             true

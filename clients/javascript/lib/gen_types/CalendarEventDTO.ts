@@ -82,6 +82,11 @@ export type CalendarEventDTO = {
    */
   recurrence?: RRuleOptions
   /**
+   * Optional recurring until date
+   * This is the date until which the event will recur
+   */
+  recurringUntil?: Date
+  /**
    * List of exclusion dates for the recurrence rule
    */
   exdates: Array<Date>

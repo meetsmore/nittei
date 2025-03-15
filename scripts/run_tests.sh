@@ -89,7 +89,7 @@ echo "#######################"
 echo ""
 
 # Launch a PG container
-docker run --rm -d -l ${LABEL} --name $RANDOM_NAME -p $PORT:5432 -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=nittei postgres:13 >/dev/null 2>&1
+docker run --rm -d -l ${LABEL} --name $RANDOM_NAME -p $PORT:5432 -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=nittei postgres:15.4-alpine >/dev/null 2>&1
 
 # Set DATABASE_URL (migrations) and NITTEI__DATABASE_URL (app) environment variables
 export DATABASE_URL="postgres://postgres:postgres@localhost:${PORT}/nittei"
