@@ -446,7 +446,7 @@ impl IEventRepo for PostgresEventRepo {
     async fn find_by_calendar(
         &self,
         calendar_id: &ID,
-        timespan: Option<&nittei_domain::TimeSpan>,
+        timespan: Option<nittei_domain::TimeSpan>,
     ) -> anyhow::Result<Vec<CalendarEvent>> {
         if let Some(timespan) = timespan {
             sqlx::query_as!(
@@ -557,7 +557,7 @@ impl IEventRepo for PostgresEventRepo {
     async fn find_busy_events_and_recurring_events_for_calendars(
         &self,
         calendar_ids: &[ID],
-        timespan: &nittei_domain::TimeSpan,
+        timespan: nittei_domain::TimeSpan,
         include_tentative: bool,
     ) -> anyhow::Result<Vec<CalendarEvent>> {
         let calendar_ids = calendar_ids

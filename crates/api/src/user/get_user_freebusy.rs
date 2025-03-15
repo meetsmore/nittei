@@ -1,6 +1,11 @@
 use std::collections::HashMap;
 
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{
+    Extension,
+    Json,
+    extract::{Path, Query},
+    http::HeaderMap,
+};
 use chrono::{DateTime, Utc};
 use nittei_api_structs::get_user_freebusy::{APIResponse, PathParams, QueryParams};
 use nittei_domain::{
@@ -31,12 +36,12 @@ pub fn parse_vec_query_value(val: &Option<String>) -> Option<Vec<ID>> {
 }
 
 pub async fn get_freebusy_controller(
-    http_req: HttpRequest,
-    mut query_params: web::Query<QueryParams>,
-    mut params: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let _account = protect_public_account_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    mut query_params: Query<QueryParams>,
+    mut params: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let _account = protect_public_account_route(&headers, &ctx).await?;
 
     let usecase = GetFreeBusyUseCase {
         user_id: std::mem::take(&mut params.user_id),
@@ -49,7 +54,7 @@ pub async fn get_freebusy_controller(
     execute(usecase, &ctx)
         .await
         .map(|usecase_res| {
-            HttpResponse::Ok().json(APIResponse {
+            Json(APIResponse {
                 busy: usecase_res.busy.inner().into(),
                 user_id: usecase_res.user_id.to_string(),
             })
@@ -89,7 +94,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for GetFreeBusyUseCase {
     type Response = GetFreeBusyResponse;
 
@@ -104,7 +109,7 @@ impl UseCase for GetFreeBusyUseCase {
         }
 
         let busy_event_instances = self
-            .get_event_instances_from_calendars(&timespan, ctx)
+            .get_event_instances_from_calendars(timespan, ctx)
             .await
             .map_err(|_| UseCaseError::InternalError)?
             .into_iter()
@@ -123,7 +128,7 @@ impl UseCase for GetFreeBusyUseCase {
 impl GetFreeBusyUseCase {
     async fn get_event_instances_from_calendars(
         &self,
-        timespan: &TimeSpan,
+        timespan: TimeSpan,
         ctx: &NitteiContext,
     ) -> anyhow::Result<Vec<EventInstance>> {
         // can probably make query to event repo instead
@@ -148,7 +153,7 @@ impl GetFreeBusyUseCase {
             .events
             .find_busy_events_and_recurring_events_for_calendars(
                 &calendar_ids,
-                timespan,
+                timespan.clone(),
                 self.include_tentative.unwrap_or(false),
             )
             .await?;
@@ -194,8 +199,7 @@ mod test {
         );
     }
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn test_freebusy_recurring() {
         let ctx = setup_context().await.unwrap();
         let account = Account::default();

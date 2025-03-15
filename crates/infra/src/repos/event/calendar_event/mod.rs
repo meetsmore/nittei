@@ -78,7 +78,7 @@ pub trait IEventRepo: Send + Sync {
     async fn find_by_calendar(
         &self,
         calendar_id: &ID,
-        timespan: Option<&TimeSpan>,
+        timespan: Option<TimeSpan>,
     ) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn find_by_calendars(
         &self,
@@ -88,7 +88,7 @@ pub trait IEventRepo: Send + Sync {
     async fn find_busy_events_and_recurring_events_for_calendars(
         &self,
         calendar_ids: &[ID],
-        timespan: &TimeSpan,
+        timespan: TimeSpan,
         include_tentative: bool,
     ) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn search_events_for_user(
@@ -480,7 +480,7 @@ mod tests {
             .events
             .find_by_calendar(
                 &calendar.id,
-                Some(&TimeSpan::new(
+                Some(TimeSpan::new(
                     DateTime::from_timestamp_millis(start_ts).unwrap(),
                     DateTime::from_timestamp_millis(end_ts).unwrap(),
                 )),

@@ -1,4 +1,5 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, extract::Path, http::HeaderMap};
+use axum_valid::Valid;
 use nittei_api_structs::add_sync_calendar::{APIResponse, PathParams, RequestBody};
 use nittei_domain::{
     ID,
@@ -22,25 +23,25 @@ use crate::{
 };
 
 pub async fn add_sync_calendar_admin_controller(
-    http_req: HttpRequest,
-    path_params: web::Path<PathParams>,
-    body: actix_web_validator::Json<RequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    path_params: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Valid<Json<RequestBody>>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let account = protect_admin_route(&headers, &ctx).await?;
     let user = account_can_modify_user(&account, &path_params.user_id, &ctx).await?;
 
     let body = body.0;
     let usecase = AddSyncCalendarUseCase {
         user,
-        calendar_id: body.calendar_id,
-        ext_calendar_id: body.ext_calendar_id,
-        provider: body.provider,
+        calendar_id: body.calendar_id.clone(),
+        ext_calendar_id: body.ext_calendar_id.clone(),
+        provider: body.provider.clone(),
     };
 
     execute(usecase, &ctx)
         .await
-        .map(|_| HttpResponse::Ok().json(APIResponse::from("Calendar sync created")))
+        .map(|_| Json(APIResponse::from("Calendar sync created")))
         .map_err(NitteiError::from)
 }
 
@@ -96,7 +97,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for AddSyncCalendarUseCase {
     type Response = ();
 

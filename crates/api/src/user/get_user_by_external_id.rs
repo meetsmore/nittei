@@ -1,4 +1,9 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{
+    Extension,
+    Json,
+    extract::Path,
+    http::HeaderMap,
+};
 use nittei_api_structs::get_user_by_external_id::*;
 use nittei_domain::{Account, User};
 use nittei_infra::NitteiContext;
@@ -12,11 +17,11 @@ use crate::{
 };
 
 pub async fn get_user_by_external_id_controller(
-    http_req: HttpRequest,
-    path_params: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    path_params: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let account = protect_admin_route(&headers, &ctx).await?;
 
     let usecase = GetUserByExternalIdUseCase {
         account,
@@ -24,7 +29,7 @@ pub async fn get_user_by_external_id_controller(
     };
     execute(usecase, &ctx)
         .await
-        .map(|usecase_res| HttpResponse::Ok().json(APIResponse::new(usecase_res.user)))
+        .map(|usecase_res| Json(APIResponse::new(usecase_res.user)))
         .map_err(NitteiError::from)
 }
 
@@ -56,7 +61,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for GetUserByExternalIdUseCase {
     type Response = UseCaseRes;
 

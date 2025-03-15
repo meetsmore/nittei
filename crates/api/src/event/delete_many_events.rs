@@ -1,4 +1,9 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{
+    Extension,
+    Json,
+    http::{HeaderMap, StatusCode},
+};
+use axum_valid::Valid;
 use futures::future::{self, try_join};
 use nittei_api_structs::delete_many_events::DeleteManyEventsRequestBody;
 use nittei_domain::ID;
@@ -13,11 +18,11 @@ use crate::{
 };
 
 pub async fn delete_many_events_admin_controller(
-    http_req: HttpRequest,
-    body: actix_web_validator::Json<DeleteManyEventsRequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Valid<Json<DeleteManyEventsRequestBody>>,
+) -> Result<StatusCode, NitteiError> {
+    let account = protect_admin_route(&headers, &ctx).await?;
 
     let usecase = DeleteManyEventsUseCase {
         account_uid: account.id,
@@ -27,7 +32,7 @@ pub async fn delete_many_events_admin_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|_| HttpResponse::Ok().finish())
+        .map(|_| StatusCode::OK)
         .map_err(NitteiError::from)
 }
 
@@ -53,7 +58,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for DeleteManyEventsUseCase {
     type Response = ();
 
