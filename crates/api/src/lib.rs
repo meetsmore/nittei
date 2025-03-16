@@ -56,8 +56,10 @@ pub fn configure_server_api() -> Router {
 pub struct Application {
     /// The Axum server instance
     server: Router,
-    /// The port the server is running on
-    // port: u16,
+
+    /// Listener for the server
+    listener: TcpListener,
+
     /// The application context (database connections, etc.)
     context: NitteiContext,
 
@@ -76,15 +78,21 @@ impl Application {
     pub async fn new(context: NitteiContext) -> anyhow::Result<Self> {
         let shared_state = Arc::new(Mutex::new(ServerSharedState { shutdown_tx: None }));
 
-        let server = Application::configure_server(context.clone(), shared_state.clone()).await?;
+        let (server, listener) =
+            Application::configure_server(context.clone(), shared_state.clone()).await?;
 
         Application::start_jobs(context.clone());
 
         Ok(Self {
             server,
+            listener,
             context,
             shared_state,
         })
+    }
+
+    pub fn get_port(&self) -> anyhow::Result<u16> {
+        Ok(self.listener.local_addr()?.port())
     }
 
     /// Start the background jobs of the application
@@ -106,7 +114,7 @@ impl Application {
     async fn configure_server(
         context: NitteiContext,
         shared_state: Arc<Mutex<ServerSharedState>>,
-    ) -> anyhow::Result<Router> {
+    ) -> anyhow::Result<(Router, TcpListener)> {
         let api_router = configure_server_api();
 
         let sensitive_headers = vec![header::AUTHORIZATION];
@@ -127,7 +135,14 @@ impl Application {
             .layer(Extension(context.clone()))
             .layer(Extension(shared_state.clone()));
 
-        Ok(server)
+        let port = context.config.port;
+        let address = nittei_utils::config::APP_CONFIG.http_host.clone();
+        let address_and_port = format!("{}:{}", address, port);
+
+        let listener = TcpListener::bind(address_and_port).await?;
+        info!("Starting server on: {}", listener.local_addr()?);
+
+        Ok((server, listener))
     }
 
     /// Init the default account and start the Actix server
@@ -141,18 +156,11 @@ impl Application {
 
         self.init_default_account().await?;
 
-        let port = nittei_utils::config::APP_CONFIG.http_port;
-        let address = nittei_utils::config::APP_CONFIG.http_host.clone();
-        let address_and_port = format!("{}:{}", address, port);
-
         // Create a shutdown signal channel
         let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
         self.shared_state.lock().await.shutdown_tx = Some(shutdown_tx);
 
-        info!("Starting server on: {}", address_and_port);
-        let listener = TcpListener::bind(address_and_port).await?;
-
-        axum::serve(listener, self.server)
+        axum::serve(self.listener, self.server)
             .with_graceful_shutdown(async {
                 shutdown_rx.await.unwrap_or_else(|e| {
                     error!("[server] Failed to listen for shutdown signal: {}", e)
