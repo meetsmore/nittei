@@ -5,7 +5,7 @@ export RUST_BACKTRACE := "1"
 install_tools: 
 	cargo install sqlx-cli
 	cargo install cargo-pretty-test
-	cargo install cargo-watch
+	cargo install --locked watchexec-cli
 
 # Install all tools
 install_all_tools: install_tools
@@ -27,7 +27,7 @@ _setup_client_node:
 
 # Dev
 dev: _setup_db
-	cargo watch -- cargo run
+	watchexec -r -e rs -- cargo run
 
 # Prepare offline SQLx
 prepare_sqlx:

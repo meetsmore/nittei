@@ -63,25 +63,18 @@ pub struct Application {
 
     /// Shutdown data
     /// Shared state of the server
-    shared_state: ServerSharedState,
+    shared_state: Arc<Mutex<ServerSharedState>>,
 }
 /// Struct for storing the shared state of the server
 /// Mainly useful for sharing the shutdown flag between the binary crate and the status endpoint
-#[derive(Clone)]
 pub struct ServerSharedState {
-    /// Flag to indicate if the application is shutting down
-    pub is_shutting_down: Arc<Mutex<bool>>,
-
     /// Channel to send shutdown signal
-    pub shutdown_tx: Arc<Mutex<Option<Sender<()>>>>,
+    pub shutdown_tx: Option<Sender<()>>,
 }
 
 impl Application {
     pub async fn new(context: NitteiContext) -> anyhow::Result<Self> {
-        let shared_state = ServerSharedState {
-            is_shutting_down: Arc::new(Mutex::new(false)),
-            shutdown_tx: Arc::new(Mutex::new(None)),
-        };
+        let shared_state = Arc::new(Mutex::new(ServerSharedState { shutdown_tx: None }));
 
         let server = Application::configure_server(context.clone(), shared_state.clone()).await?;
 
@@ -112,7 +105,7 @@ impl Application {
     /// - Tracing logger
     async fn configure_server(
         context: NitteiContext,
-        shared_state: ServerSharedState,
+        shared_state: Arc<Mutex<ServerSharedState>>,
     ) -> anyhow::Result<Router> {
         let api_router = configure_server_api();
 
@@ -154,7 +147,7 @@ impl Application {
 
         // Create a shutdown signal channel
         let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
-        self.shared_state.shutdown_tx = Arc::new(Mutex::new(Some(shutdown_tx)));
+        self.shared_state.lock().await.shutdown_tx = Some(shutdown_tx);
 
         info!("Starting server on: {}", address_and_port);
         let listener = TcpListener::bind(address_and_port).await?;
@@ -164,6 +157,7 @@ impl Application {
                 shutdown_rx.await.unwrap_or_else(|e| {
                     error!("[server] Failed to listen for shutdown signal: {}", e)
                 });
+                info!("[server] Server stopped");
             })
             .await
             .unwrap_or_else(|e| {
@@ -172,7 +166,7 @@ impl Application {
                 std::process::exit(1);
             });
 
-        info!("[server] Server stopped");
+        info!("[server] Server closed");
 
         Ok(())
     }
@@ -341,46 +335,46 @@ impl Application {
         tokio::spawn(async move {
             // Wait for the shutdown channel to receive a message
             if let Err(e) = shutdown_channel.await {
-                error!("[server] Failed to listen for shutdown channel: {}", e);
+                error!(
+                    "[shutdown_handler] Failed to listen for shutdown channel: {}",
+                    e
+                );
             } else {
-                info!("[server] Received shutdown signal",);
+                info!("[shutdown_handler] Received shutdown signal",);
 
                 if cfg!(debug_assertions) {
                     // In debug mode, stop the server immediately
-                    info!("[server] Stopping server...");
-                    if let Some(server_handle) = shared_state.shutdown_tx.lock().await.take() {
+                    info!("[shutdown_handler] Stopping server...");
+                    if let Some(server_handle) = shared_state.lock().await.shutdown_tx.take() {
                         server_handle.send(()).unwrap_or_else(|_| {
-                            error!("[server] Failed to send shutdown signal");
+                            error!("[shutdown_handler] Failed to send shutdown signal");
                             // Exit the process with an error code
                             std::process::exit(1);
                         });
                     }
-                    info!("[server] Server stopped");
+                    info!("[shutdown_handler] api crate - shutdown complete");
                 } else {
-                    // In production, do the whole graceful shutdown process
-
-                    // Update flag
-                    *shared_state.is_shutting_down.lock().await = true;
-
-                    info!("[server] is_shutting_down flag is now true");
+                    // In production, do the whole graceful shutdown process (wait for a timeout before stopping the server)
 
                     let duration = nittei_utils::config::APP_CONFIG.server_shutdown_sleep;
 
-                    info!("[server] Waiting {}s before stopping", duration);
+                    info!("[shutdown_handler] Waiting {}s before stopping", duration);
 
                     // Wait for the timeout
                     tokio::time::sleep(std::time::Duration::from_secs(duration)).await;
 
-                    info!("[server] Stopping server...");
+                    info!("[shutdown_handler] Stopping server...");
 
                     // Shutdown the server
-                    if let Some(server_handle) = shared_state.shutdown_tx.lock().await.take() {
+                    if let Some(server_handle) = shared_state.lock().await.shutdown_tx.take() {
                         server_handle.send(()).unwrap_or_else(|_| {
-                            error!("[server] Failed to send shutdown signal");
+                            error!("[shutdown_handler] Failed to send shutdown signal");
                             // Exit the process with an error code
                             std::process::exit(1);
                         });
                     }
+
+                    info!("[shutdown_handler] api crate - shutdown complete");
                 }
             }
         });

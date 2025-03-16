@@ -60,8 +60,8 @@ pub async fn auth_user_req(
                     .await
                     .map_err(|_| NitteiError::InternalError)?
                     .map(|user| (user, claims.scheduler_policy.unwrap_or_default())),
-                Err(e) => {
-                    warn!("Decode token error: {:?}", e);
+                Err(_) => {
+                    warn!("Decode token error");
                     None
                 }
             }
@@ -108,7 +108,7 @@ fn decode_token(account: &Account, token: &str) -> anyhow::Result<Claims> {
     let public_key = account
         .public_jwt_key
         .as_ref()
-        .ok_or_else(|| anyhow::Error::msg("Account does not support user tokens"))?;
+        .ok_or_else(|| anyhow::anyhow!("Account does not support user tokens"))?;
     let decoding_key = DecodingKey::from_rsa_pem(public_key.as_bytes())?;
     let claims = decode::<Claims>(token, &decoding_key, &Validation::new(Algorithm::RS256))?.claims;
 
