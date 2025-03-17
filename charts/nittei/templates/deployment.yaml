@@ -63,6 +63,33 @@ spec:
       serviceAccountName: {{ include "nittei.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{ if .Values.migrationInitContainer.enabled }}
+      initContainers:
+        - name: {{ .Chart.Name }}-migrate
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.initContainer.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            {{- range $key, $value := $envMap }}
+            - name: {{ $key }}
+              {{- if hasKey $value "value" }}
+              value: {{ $value.value | quote }}
+              {{- else if hasKey $value "valueFrom" }}
+              valueFrom: {{ toYaml $value.valueFrom | nindent 16 }}
+              {{- end }}
+            {{- end }}
+          command:
+            - /bin/sh
+            - -c
+            - "/nittei-migrate"
+          {{- with .Values.initContainer.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
