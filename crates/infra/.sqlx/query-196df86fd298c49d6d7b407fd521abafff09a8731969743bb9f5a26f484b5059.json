@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT c.* FROM calendars AS c\n            INNER JOIN users AS u\n                ON u.user_uid = c.user_uid\n            WHERE u.account_uid = $1 AND c.metadata @> $2\n            LIMIT $3\n            OFFSET $4\n            ",
+  "query": "\n            SELECT c.* FROM calendars AS c\n            WHERE c.account_uid = $1 AND c.metadata @> $2\n            LIMIT $3\n            OFFSET $4\n            ",
   "describe": {
     "columns": [
       {
@@ -57,5 +57,5 @@
       false
     ]
   },
-  "hash": "d09957b221a4cafb23ce339a4960a98821eacba2cff0401f55a3eeab334333b9"
+  "hash": "196df86fd298c49d6d7b407fd521abafff09a8731969743bb9f5a26f484b5059"
 }

@@ -297,10 +297,6 @@ impl IEventRepo for PostgresEventRepo {
             EventRaw,
             r#"
             SELECT e.* FROM calendar_events AS e
-            INNER JOIN calendars AS c
-                ON c.calendar_uid = e.calendar_uid
-            INNER JOIN users AS u
-                ON u.user_uid = c.user_uid
             WHERE e.event_uid = $1
             "#,
             event_id.as_ref(),
@@ -330,10 +326,6 @@ impl IEventRepo for PostgresEventRepo {
             EventRaw,
             r#"
             SELECT e.* FROM calendar_events AS e
-            INNER JOIN calendars AS c
-                ON c.calendar_uid = e.calendar_uid
-            INNER JOIN users AS u
-                ON u.user_uid = c.user_uid
             WHERE e.event_uid = $1 OR e.recurring_event_uid = $1
             "#,
             event_id.as_ref(),
@@ -361,11 +353,7 @@ impl IEventRepo for PostgresEventRepo {
             EventRaw,
             r#"
             SELECT e.* FROM calendar_events AS e
-            INNER JOIN calendars AS c
-                ON c.calendar_uid = e.calendar_uid
-            INNER JOIN users AS u
-                ON u.user_uid = c.user_uid
-            WHERE u.account_uid = $1 AND e.external_id = $2
+            WHERE e.account_uid = $1 AND e.external_id = $2
             "#,
             account_uid.as_ref(),
             external_id,
@@ -392,11 +380,7 @@ impl IEventRepo for PostgresEventRepo {
             EventRaw,
             r#"
             SELECT e.* FROM calendar_events AS e
-            INNER JOIN calendars AS c
-                ON c.calendar_uid = e.calendar_uid
-            INNER JOIN users AS u
-                ON u.user_uid = c.user_uid
-            WHERE u.account_uid = $1 AND e.external_id = any($2)
+            WHERE e.account_uid = $1 AND e.external_id = any($2)
             "#,
             account_uid.as_ref(),
             external_ids,
@@ -421,10 +405,6 @@ impl IEventRepo for PostgresEventRepo {
             EventRaw,
             r#"
             SELECT e.* FROM calendar_events AS e
-            INNER JOIN calendars AS c
-                ON c.calendar_uid = e.calendar_uid
-            INNER JOIN users AS u
-                ON u.user_uid = c.user_uid
             WHERE e.event_uid = ANY($1)
             "#,
             &ids
@@ -453,10 +433,6 @@ impl IEventRepo for PostgresEventRepo {
                 EventRaw,
                 r#"
                     SELECT e.* FROM calendar_events AS e
-                    INNER JOIN calendars AS c
-                        ON c.calendar_uid = e.calendar_uid
-                    INNER JOIN users AS u
-                        ON u.user_uid = c.user_uid
                     WHERE e.calendar_uid = $1
                     AND (
                         (e.start_time <= $2 AND e.end_time >= $3)
@@ -484,10 +460,6 @@ impl IEventRepo for PostgresEventRepo {
                 EventRaw,
                 r#"
                     SELECT e.* FROM calendar_events AS e
-                    INNER JOIN calendars AS c
-                        ON c.calendar_uid = e.calendar_uid
-                    INNER JOIN users AS u
-                        ON u.user_uid = c.user_uid
                     WHERE e.calendar_uid = $1
                     "#,
                 calendar_id.as_ref(),
@@ -520,10 +492,6 @@ impl IEventRepo for PostgresEventRepo {
             EventRaw,
             r#"
                     SELECT e.* FROM calendar_events AS e
-                    INNER JOIN calendars AS c
-                        ON c.calendar_uid = e.calendar_uid
-                    INNER JOIN users AS u
-                        ON u.user_uid = c.user_uid
                     WHERE e.calendar_uid  = any($1)
                     AND (
                         (e.start_time <= $2 AND e.end_time >= $3)
@@ -576,10 +544,6 @@ impl IEventRepo for PostgresEventRepo {
             EventRaw,
             r#"
                     SELECT e.* FROM calendar_events AS e
-                    INNER JOIN calendars AS c
-                        ON c.calendar_uid = e.calendar_uid
-                    INNER JOIN users AS u
-                        ON u.user_uid = c.user_uid
                     WHERE e.calendar_uid  = any($1)
                     AND (
                         (e.start_time < $2 AND e.end_time > $3)
@@ -619,24 +583,19 @@ impl IEventRepo for PostgresEventRepo {
         let mut query = QueryBuilder::new(
             r#"
             SELECT e.* FROM calendar_events AS e
-            INNER JOIN calendars AS c
-                ON c.calendar_uid = e.calendar_uid
-            INNER JOIN users AS u
-                ON u.user_uid = c.user_uid
-            WHERE u.user_uid = "#,
+            WHERE e.user_uid = "#,
         );
 
         query.push_bind::<Uuid>(params.user_id.into());
 
         apply_id_query(
             &mut query,
-            "e",
             "event_uid",
             &params.search_events_params.event_uid,
         );
 
         if let Some(calendar_ids) = params.calendar_ids {
-            query.push(" AND c.calendar_uid IN (");
+            query.push(" AND e.calendar_uid IN (");
             let mut separated = query.separated(", ");
             for value_type in calendar_ids.iter() {
                 separated.push_bind::<Uuid>(value_type.clone().into());
@@ -680,7 +639,6 @@ impl IEventRepo for PostgresEventRepo {
 
         apply_id_query(
             &mut query,
-            "e",
             "recurring_event_uid",
             &params.search_events_params.recurring_event_uid,
         );
@@ -772,25 +730,19 @@ impl IEventRepo for PostgresEventRepo {
         let mut query = QueryBuilder::new(
             r#"
             SELECT e.* FROM calendar_events AS e
-            INNER JOIN calendars AS c
-                ON c.calendar_uid = e.calendar_uid
-            INNER JOIN users AS u
-                ON u.user_uid = c.user_uid
-            WHERE u.account_uid = "#,
+            WHERE e.account_uid = "#,
         );
 
         query.push_bind::<Uuid>(params.account_id.into());
 
         apply_id_query(
             &mut query,
-            "e",
             "event_uid",
             &params.search_events_params.event_uid,
         );
 
         apply_id_query(
             &mut query,
-            "u",
             "user_uid",
             &params.search_events_params.user_uid,
         );
@@ -831,7 +783,6 @@ impl IEventRepo for PostgresEventRepo {
 
         apply_id_query(
             &mut query,
-            "e",
             "recurring_event_uid",
             &params.search_events_params.recurring_event_uid,
         );
@@ -923,12 +874,10 @@ impl IEventRepo for PostgresEventRepo {
             MostRecentCreatedServiceEventsRaw,
             r#"
             SELECT users.user_uid, events.created FROM users LEFT JOIN (
-                SELECT DISTINCT ON (c.user_uid) c.user_uid, e.created
+                SELECT DISTINCT ON (e.user_uid) e.user_uid, e.created
                 FROM calendar_events AS e
-                INNER JOIN calendars AS c
-                    ON c.calendar_uid = e.calendar_uid
                 WHERE service_uid = $1
-                ORDER BY c.user_uid, created DESC
+                ORDER BY e.user_uid, created DESC
             ) AS events ON events.user_uid = users.user_uid
             WHERE users.user_uid = ANY($2)
             "#,
@@ -963,12 +912,8 @@ impl IEventRepo for PostgresEventRepo {
             EventRaw,
             r#"
             SELECT e.* FROM calendar_events AS e
-            INNER JOIN calendars AS c
-                ON c.calendar_uid = e.calendar_uid
-            INNER JOIN users AS u
-                ON u.user_uid = c.user_uid
             WHERE e.service_uid = $1 AND
-            u.user_uid = ANY($2) AND
+            e.user_uid = ANY($2) AND
             e.start_time <= $3 AND e.end_time >= $4
             "#,
             service_id.as_ref(),
@@ -1002,11 +947,7 @@ impl IEventRepo for PostgresEventRepo {
             EventRaw,
             r#"
             SELECT e.* FROM calendar_events AS e
-            INNER JOIN calendars AS c
-                ON c.calendar_uid = e.calendar_uid
-            INNER JOIN users AS u
-                ON u.user_uid = c.user_uid
-            WHERE u.user_uid = $1 AND
+            WHERE e.user_uid = $1 AND
             e.busy = $2 AND
             e.service_uid IS NOT NULL AND
             e.start_time <= $3 AND e.end_time >= $4
@@ -1034,8 +975,8 @@ impl IEventRepo for PostgresEventRepo {
     async fn delete(&self, event_id: &ID) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
-            DELETE FROM calendar_events AS c
-            WHERE c.event_uid = $1
+            DELETE FROM calendar_events AS e
+            WHERE e.event_uid = $1
             RETURNING *
             "#,
             event_id.as_ref(),
@@ -1056,8 +997,8 @@ impl IEventRepo for PostgresEventRepo {
         let ids = event_ids.iter().map(|id| *id.as_ref()).collect::<Vec<_>>();
         sqlx::query!(
             r#"
-            DELETE FROM calendar_events AS c
-            WHERE c.event_uid = ANY($1)
+            DELETE FROM calendar_events AS e
+            WHERE e.event_uid = ANY($1)
             "#,
             &ids
         )
@@ -1076,8 +1017,8 @@ impl IEventRepo for PostgresEventRepo {
     async fn delete_by_service(&self, service_id: &ID) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
-            DELETE FROM calendar_events AS c
-            WHERE c.service_uid = $1
+            DELETE FROM calendar_events AS e
+            WHERE e.service_uid = $1
             "#,
             service_id.as_ref(),
         )
@@ -1101,11 +1042,7 @@ impl IEventRepo for PostgresEventRepo {
             EventRaw,
             r#"
             SELECT e.* FROM calendar_events AS e
-            INNER JOIN calendars AS c
-                ON c.calendar_uid = e.calendar_uid
-            INNER JOIN users AS u
-                ON u.user_uid = c.user_uid
-            WHERE u.account_uid = $1 AND e.metadata @> $2
+            WHERE e.account_uid = $1 AND e.metadata @> $2
             LIMIT $3
             OFFSET $4
             "#,

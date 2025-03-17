@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT c.* FROM calendars AS c\n            INNER JOIN users AS u\n                ON u.user_uid = c.user_uid\n            WHERE c.user_uid = $1 AND c.key = $2\n            ",
+  "query": "\n            SELECT c.* FROM calendars AS c\n            WHERE c.user_uid = $1 AND c.key = $2\n            ",
   "describe": {
     "columns": [
       {
@@ -55,5 +55,5 @@
       false
     ]
   },
-  "hash": "8c091446c1b60a831656d6539ad10c724248536161c56d3b98cea834b4383fbc"
+  "hash": "9a4bd7a94f17e7e577f8fcfce8106d99c902d1aac7e7bfd8bb37d24bed6890e9"
 }
