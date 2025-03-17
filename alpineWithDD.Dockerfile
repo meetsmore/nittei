@@ -27,6 +27,10 @@ COPY . .
 RUN cargo build --release --target ${ARCH}-unknown-linux-musl && \
   cp ./target/${ARCH}-unknown-linux-musl/release/${APP_NAME} /${APP_NAME}
 
+# Build migrate binary
+RUN cargo build --release --bin nittei-migrate --target ${ARCH}-unknown-linux-musl && \
+  cp ./target/${ARCH}-unknown-linux-musl/release/nittei-migrate /nittei-migrate
+
 # Install ddprof
 RUN ARCH_IN_URL=$(case "${ARCH}" in \
   x86_64) echo "amd64" ;; \
@@ -44,6 +48,7 @@ ARG APP_NAME=nittei
 ENV APP_NAME=${APP_NAME}
 
 COPY --from=builder /${APP_NAME} /${APP_NAME}
+COPY --from=builder /nittei-migrate /nittei-migrate
 COPY --from=builder /ddprof /ddprof
 
 CMD ["/bin/sh", "-c", "exec /ddprof --preset cpu_live_heap /${APP_NAME}"]
