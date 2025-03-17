@@ -85,10 +85,14 @@ spec:
               valueFrom: {{ toYaml $value.valueFrom | nindent 16 }}
               {{- end }}
             {{- end }}
+          {{ if .Values.migrationInitContainer.command }}
+          command: {{ .Values.migrationInitContainer.command }}
+          {{- else }}
           command:
             - /bin/sh
             - -c
-            - "/nittei-migrate"
+            - "exec /nittei-migrate"
+          {{- end }}
       {{- end }}
       containers:
         - name: {{ .Chart.Name }}

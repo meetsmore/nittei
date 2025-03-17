@@ -25,6 +25,7 @@ fullnameOverride: ""
 
 migrationInitContainer:
   enabled: false
+  command: []
 
 serviceAccount:
   # Specifies whether a service account should be created
