@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                    SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e\n                    INNER JOIN calendars AS c\n                        ON c.calendar_uid = e.calendar_uid\n                    INNER JOIN users AS u\n                        ON u.user_uid = c.user_uid\n                    WHERE e.calendar_uid = $1\n                    AND (\n                        (e.start_time <= $2 AND e.end_time >= $3)\n                        OR\n                        (e.start_time < $2 AND e.recurrence::text <> 'null')\n                    )\n                    ",
+  "query": "\n            SELECT e.*, u.user_uid AS user_uid_from_user, u.account_uid AS account_uid_from_user FROM calendar_events AS e\n            INNER JOIN calendars AS c\n                ON c.calendar_uid = e.calendar_uid\n            INNER JOIN users AS u\n                ON u.user_uid = c.user_uid\n            WHERE u.user_uid = $1 AND\n            e.busy = $2 AND\n            e.service_uid IS NOT NULL AND\n            e.start_time <= $3 AND e.end_time >= $4\n            ",
   "describe": {
     "columns": [
       {
@@ -132,11 +132,32 @@
         "ordinal": 25,
         "name": "account_uid",
         "type_info": "Uuid"
+      },
+      {
+        "ordinal": 26,
+        "name": "recurrence_jsonb",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 27,
+        "name": "reminders_jsonb",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 28,
+        "name": "user_uid_from_user",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 29,
+        "name": "account_uid_from_user",
+        "type_info": "Uuid"
       }
     ],
     "parameters": {
       "Left": [
         "Uuid",
+        "Bool",
         "Timestamptz",
         "Timestamptz"
       ]
@@ -166,9 +187,13 @@
       true,
       true,
       true,
+      true,
+      true,
+      true,
+      true,
       false,
       false
     ]
   },
-  "hash": "d5a94d74eb91eb11f7a1fa61173aaa678a334810d03fe9e05cef730134bcaae4"
+  "hash": "1514d9b1913915f25f9c81da90f30024b920962a9c288d3fc574a3bcb5edeac1"
 }
