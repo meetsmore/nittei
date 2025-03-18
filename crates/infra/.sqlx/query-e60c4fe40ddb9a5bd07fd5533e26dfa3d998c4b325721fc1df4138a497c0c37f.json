@@ -20,12 +20,12 @@
         "Bool",
         "Int8",
         "Int8",
-        "Jsonb",
+        "Json",
         "Timestamptz",
         "TimestamptzArray",
         "Uuid",
         "Timestamptz",
-        "Jsonb",
+        "Json",
         "Uuid",
         "Jsonb"
       ]

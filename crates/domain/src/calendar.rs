@@ -11,8 +11,8 @@ use crate::{
 #[derive(Debug, Clone, Default)]
 pub struct Calendar {
     pub id: ID,
-    pub account_id: ID,
     pub user_id: ID,
+    pub account_id: ID,
     pub name: Option<String>,
     pub key: Option<String>,
     pub settings: CalendarSettings,
