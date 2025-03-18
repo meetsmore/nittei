@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE calendar_events SET\n                external_parent_id = $2,\n                external_id = $3,\n                title = $4,\n                description = $5,\n                event_type = $6,\n                location = $7,\n                status = $8,\n                all_day = $9,\n                start_time = $10,\n                duration = $11,\n                end_time = $12,\n                busy = $13,\n                created = $14,\n                updated = $15,\n                recurrence = $16,\n                recurrence_jsonb = $17,\n                recurring_until = $18,\n                exdates = $19,\n                recurring_event_uid = $20,\n                original_start_time = $21,\n                reminders = $22,\n                reminders_jsonb = $23,\n                service_uid = $24,\n                metadata = $25\n            WHERE event_uid = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Bool",
+        "Timestamptz",
+        "Int8",
+        "Timestamptz",
+        "Bool",
+        "Int8",
+        "Int8",
+        "Json",
+        "Jsonb",
+        "Timestamptz",
+        "TimestamptzArray",
+        "Uuid",
+        "Timestamptz",
+        "Json",
+        "Jsonb",
+        "Uuid",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8d85442435ba1d3ba7d90a4e76886289d126919f47d2f252aadb9bde08722354"
+}
