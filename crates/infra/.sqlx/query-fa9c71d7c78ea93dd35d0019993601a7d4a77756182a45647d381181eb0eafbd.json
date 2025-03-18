@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                    SELECT e.* FROM calendar_events AS e\n                    INNER JOIN calendars AS c\n                        ON c.calendar_uid = e.calendar_uid\n                    INNER JOIN users AS u\n                        ON u.user_uid = c.user_uid\n                    WHERE e.calendar_uid = $1\n                    ",
+  "query": "\n            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e\n            INNER JOIN calendars AS c\n                ON c.calendar_uid = e.calendar_uid\n            INNER JOIN users AS u\n                ON u.user_uid = c.user_uid\n            WHERE e.event_uid = ANY($1)\n            ",
   "describe": {
     "columns": [
       {
@@ -136,7 +136,7 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "UuidArray"
       ]
     },
     "nullable": [
@@ -168,5 +168,5 @@
       false
     ]
   },
-  "hash": "444d1dc51664c0651e8cbced6aa27d579989df1aea84588e34e503a7ce9f12a3"
+  "hash": "fa9c71d7c78ea93dd35d0019993601a7d4a77756182a45647d381181eb0eafbd"
 }

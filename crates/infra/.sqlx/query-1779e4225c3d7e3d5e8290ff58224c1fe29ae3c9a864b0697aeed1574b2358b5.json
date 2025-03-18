@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT e.* FROM calendar_events AS e\n            INNER JOIN calendars AS c\n                ON c.calendar_uid = e.calendar_uid\n            INNER JOIN users AS u\n                ON u.user_uid = c.user_uid\n            WHERE u.user_uid = $1 AND\n            e.busy = $2 AND\n            e.service_uid IS NOT NULL AND\n            e.start_time <= $3 AND e.end_time >= $4\n            ",
+  "query": "\n            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e\n            INNER JOIN calendars AS c\n                ON c.calendar_uid = e.calendar_uid\n            INNER JOIN users AS u\n                ON u.user_uid = c.user_uid\n            WHERE u.account_uid = $1 AND e.external_id = any($2)\n            ",
   "describe": {
     "columns": [
       {
@@ -137,9 +137,7 @@
     "parameters": {
       "Left": [
         "Uuid",
-        "Bool",
-        "Timestamptz",
-        "Timestamptz"
+        "TextArray"
       ]
     },
     "nullable": [
@@ -171,5 +169,5 @@
       false
     ]
   },
-  "hash": "a79b014aa0f26a9fbe1458fc81e4bf1bc82da810c4a166af133e97511e0e3a86"
+  "hash": "1779e4225c3d7e3d5e8290ff58224c1fe29ae3c9a864b0697aeed1574b2358b5"
 }

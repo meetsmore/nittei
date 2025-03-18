@@ -122,16 +122,6 @@
         "ordinal": 23,
         "name": "recurring_until",
         "type_info": "Timestamptz"
-      },
-      {
-        "ordinal": 24,
-        "name": "user_uid",
-        "type_info": "Uuid"
-      },
-      {
-        "ordinal": 25,
-        "name": "account_uid",
-        "type_info": "Uuid"
       }
     ],
     "parameters": {
@@ -163,9 +153,7 @@
       true,
       true,
       true,
-      true,
-      false,
-      false
+      true
     ]
   },
   "hash": "501ef13a11ba2faacadd9a0dc484abdef01b81c9bba68250ed6ca2766be91adf"
