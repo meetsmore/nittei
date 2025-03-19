@@ -24,7 +24,9 @@ RUN --mount=type=bind,source=bins,target=/app/${APP_NAME}/bins \
   --mount=type=cache,target=/usr/local/cargo/git/db \
   --mount=type=cache,target=/usr/local/cargo/registry/ \
   cargo build --locked --release && \
-  cp ./target/release/$APP_NAME /bin/server
+  cp ./target/release/$APP_NAME /nittei && \
+  cargo build --locked --release --bin nittei-migrate && \
+  cp ./target/release/nittei-migrate /nittei-migrate
 
 FROM debian:stable-slim
 
@@ -47,6 +49,7 @@ RUN adduser \
   appuser
 USER appuser
 
-COPY --from=builder /bin/server /bin/
+COPY --from=builder /nittei /nittei
+COPY --from=builder /nittei-migrate /nittei-migrate
 
-CMD ["/bin/server"]
+CMD ["/nittei"]
