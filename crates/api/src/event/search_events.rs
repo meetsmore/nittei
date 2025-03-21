@@ -38,7 +38,7 @@ pub async fn search_events_controller(
         created_at: body.filter.created_at,
         updated_at: body.filter.updated_at,
         sort: body.sort,
-        limit: body.limit.or(Some(200)), // Default limit to 200
+        limit: body.limit.or(Some(1000)), // Default limit to 1000
     };
 
     execute(usecase, &ctx)
