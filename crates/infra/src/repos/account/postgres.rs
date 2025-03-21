@@ -6,6 +6,7 @@ use std::{
 
 use moka::future::Cache;
 use nittei_domain::{Account, ID, PEMKey};
+use nittei_utils::config::APP_CONFIG;
 use serde_json::Value;
 use sqlx::{
     FromRow,
@@ -83,6 +84,32 @@ impl IAccountRepo for PostgresAccountRepo {
                 account, e
             );
         })?;
+
+        // Create a partial index if the option is enabled
+        if APP_CONFIG.create_partial_index_for_new_accounts {
+            // Extract only the first 8 characters of the UUID
+            let index_name = account.id.to_string()[0..8].to_string();
+            sqlx::raw_sql(
+                format!(
+                    r#"
+                    CREATE INDEX CONCURRENTLY IF NOT EXISTS partial_idx__calendar_events__account_uid__{}
+                        ON calendar_events (status, event_type, end_time)
+                        WHERE account_uid = '{}'
+                    "#,
+                    index_name,
+                    account.id.as_ref(),
+                ).as_str(),
+            )
+            .execute(&self.pool)
+            .await
+            .inspect_err(|e| {
+                error!(
+                    "Unable to create partial index for account: {:?}. DB returned error: {:?}",
+                    account, e
+                );
+            })?;
+        }
+
         Ok(())
     }
 
