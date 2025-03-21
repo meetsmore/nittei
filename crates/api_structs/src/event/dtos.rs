@@ -83,6 +83,11 @@ pub struct CalendarEventDTO {
     #[ts(optional)]
     pub recurrence: Option<RRuleOptions>,
 
+    /// Optional recurring until date
+    /// This is the date until which the event will recur
+    #[ts(optional, type = "Date")]
+    pub recurring_until: Option<DateTime<Utc>>,
+
     /// List of exclusion dates for the recurrence rule
     #[ts(type = "Array<Date>")]
     pub exdates: Vec<DateTime<Utc>>,
@@ -132,6 +137,7 @@ impl CalendarEventDTO {
             updated: event.updated,
             created: event.created,
             recurrence: event.recurrence,
+            recurring_until: event.recurring_until,
             exdates: event.exdates,
             recurring_event_id: event.recurring_event_id,
             original_start_time: event.original_start_time,

@@ -2,9 +2,11 @@ import dayjs from 'dayjs'
 import timezone from 'dayjs/plugin/timezone'
 import utc from 'dayjs/plugin/utc'
 import {
+  type CalendarEventDTO,
   type INitteiClient,
   type INitteiUserClient,
   NitteiClient,
+  NotFoundError,
 } from '../lib'
 import { setupAccount, setupUserClient } from './helpers/fixtures'
 
@@ -196,7 +198,24 @@ describe('CalendarEvent API', () => {
       expect(res.event.eventType).toBe('job')
     })
 
-    it('should be able to create event with recurring schedule', async () => {
+    it('should be able to create a recurring block event', async () => {
+      const res = await adminClient.events.create(userId, {
+        calendarId,
+        startTime: new Date('2024-06-08T13:00:00.000Z'),
+        duration: 21599999,
+        eventType: 'block',
+        recurrence: {
+          freq: 'weekly',
+          interval: 1,
+        },
+      })
+      expect(res.event).toBeDefined()
+      expect(res.event.calendarId).toBe(calendarId)
+      expect(res.event.eventType).toBe('block')
+      expect(res.event.endTime.toISOString()).toBe('2024-06-08T18:59:59.999Z')
+    })
+
+    it('should be able to create events with recurring schedule', async () => {
       const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
       const res = await adminClient.events.create(userId, {
         calendarId,
@@ -236,6 +255,9 @@ describe('CalendarEvent API', () => {
 
       expect(resEventTokyo.event).toBeDefined()
       expect(resEventTokyo.event.calendarId).toBe(calendarTokyoId)
+      expect(resEventTokyo.event.recurringUntil).toEqual(
+        dayjs('2024-12-12T14:59:59.000Z').toDate()
+      )
       expect(resEventTokyo.event.recurrence).toEqual(
         expect.objectContaining({
           freq: 'weekly',
@@ -274,6 +296,38 @@ describe('CalendarEvent API', () => {
           until: '2024-10-16T14:59:59Z',
           byweekday: ['Thu'],
           bymonthday: [],
+        })
+      )
+
+      const by3rdFriday = await adminClient.events.create(userId, {
+        calendarId: calendarTokyoId,
+        startTime: dayjs('2022-03-10T09:30:00.000Z').toDate(),
+        duration: 1800000,
+        eventType: 'gcal',
+        recurrence: {
+          freq: 'monthly',
+          interval: 1,
+          count: undefined,
+          until: undefined,
+          bysetpos: undefined,
+          byweekday: ['3Fri'],
+          bymonthday: [],
+          bymonth: undefined,
+          byyearday: undefined,
+          byweekno: undefined,
+          weekstart: 'Sun',
+        },
+      })
+
+      expect(by3rdFriday.event).toBeDefined()
+      expect(by3rdFriday.event.calendarId).toBe(calendarTokyoId)
+      expect(by3rdFriday.event.recurrence).toEqual(
+        expect.objectContaining({
+          freq: 'monthly',
+          interval: 1,
+          byweekday: ['3Fri'],
+          bymonthday: [],
+          weekstart: 'Sun',
         })
       )
     })
@@ -749,6 +803,46 @@ describe('CalendarEvent API', () => {
         })
         expect(res.events.length).toBe(1)
         expect(res.events[0].id).toBe(metadataEventId1)
+      })
+    })
+
+    describe('Delete many events', () => {
+      it('should be able to delete many events', async () => {
+        const event1 = await adminClient.events.create(userId, {
+          calendarId,
+          duration: 1000,
+          startTime: new Date(1000),
+        })
+        const externalId = crypto.randomUUID()
+        await adminClient.events.create(userId, {
+          calendarId,
+          duration: 1000,
+          startTime: new Date(2000),
+          externalId,
+        })
+
+        await adminClient.events.removeMany({
+          eventIds: [event1.event.id],
+          externalIds: [externalId],
+        })
+
+        // Refetch the events
+        let event1Deleted: CalendarEventDTO | null
+        try {
+          const res = await adminClient.events.getById(event1.event.id)
+          event1Deleted = res.event
+        } catch (e) {
+          if (e instanceof NotFoundError) {
+            event1Deleted = null
+          } else {
+            throw e
+          }
+        }
+        const event2Deleted =
+          await adminClient.events.getByExternalId(externalId)
+
+        expect(event1Deleted).toBe(null)
+        expect(event2Deleted.events.length).toBe(0)
       })
     })
 

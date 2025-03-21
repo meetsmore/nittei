@@ -39,14 +39,20 @@ pub struct SearchEventsForAccountParams {
 
 #[derive(Debug, Clone)]
 pub struct SearchEventsParams {
-    pub user_id: Option<IDQuery>,
+    pub event_uid: Option<IDQuery>,
+    pub user_uid: Option<IDQuery>,
+    pub external_id: Option<StringQuery>,
     pub external_parent_id: Option<StringQuery>,
     pub start_time: Option<DateTimeQuery>,
     pub end_time: Option<DateTimeQuery>,
     pub status: Option<StringQuery>,
     pub event_type: Option<StringQuery>,
-    pub updated_at: Option<DateTimeQuery>,
+    pub recurring_event_uid: Option<IDQuery>,
+    pub original_start_time: Option<DateTimeQuery>,
+    pub is_recurring: Option<bool>,
     pub metadata: Option<serde_json::Value>,
+    pub created_at: Option<DateTimeQuery>,
+    pub updated_at: Option<DateTimeQuery>,
 }
 
 #[async_trait::async_trait]
@@ -62,6 +68,11 @@ pub trait IEventRepo: Send + Sync {
         &self,
         account_uid: &ID,
         external_id: &str,
+    ) -> anyhow::Result<Vec<CalendarEvent>>;
+    async fn find_many_by_external_ids(
+        &self,
+        account_uid: &ID,
+        external_ids: &[String],
     ) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn find_many(&self, event_ids: &[ID]) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn find_by_calendar(
@@ -108,6 +119,7 @@ pub trait IEventRepo: Send + Sync {
         max_time: DateTime<Utc>,
     ) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn delete(&self, event_id: &ID) -> anyhow::Result<()>;
+    async fn delete_many(&self, event_ids: &[ID]) -> anyhow::Result<()>;
     async fn delete_by_service(&self, service_id: &ID) -> anyhow::Result<()>;
     async fn find_by_metadata(
         &self,

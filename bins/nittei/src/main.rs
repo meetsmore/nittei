@@ -1,8 +1,6 @@
-mod telemetry;
-
+use nittei::telemetry::init_subscriber;
 use nittei_api::Application;
 use nittei_infra::setup_context;
-use telemetry::init_subscriber;
 use tikv_jemallocator::Jemalloc;
 use tokio::signal;
 use tracing::{error, info};
@@ -12,9 +10,6 @@ static GLOBAL: Jemalloc = Jemalloc;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    // Initialize the environment variables for SSL certificates
-    openssl_probe::init_ssl_cert_env_vars();
-
     // Initialize the subscriber for logging & tracing
     init_subscriber()?;
 

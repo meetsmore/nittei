@@ -1,7 +1,7 @@
 name: JavaScript client tests
 
 env:
-  RUST_VERSION: 1.85.0
+  RUST_VERSION: 1.85.1
   RUST_BACKTRACE: 1
 
 on:
@@ -22,7 +22,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:13
+        image: postgres:15.4-alpine
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: nittei
@@ -65,13 +65,19 @@ jobs:
           cargo install sqlx-cli --no-default-features --features postgres || true
           (cd crates/infra && sqlx migrate run)
 
-          export RUST_LOG=error,tracing=info
-
           cargo build
           ./target/debug/nittei &> output.log &
           echo "Started server in background"
 
-          sleep 10
+          # Wait for backend server to be ready
+          RETRIES=10
+          PORT=${NITTEI__HTTP_PORT}
+          until
+            curl localhost:$PORT/api/v1/healthcheck >/dev/null 2>&1 ||
+              [ $((RETRIES--)) -eq 0 ]
+          do
+            sleep 1
+          done
 
       - name: Install JS modules
         run: |
@@ -112,7 +118,13 @@ jobs:
           cd clients/javascript
           pnpm run test
 
+      - name: Run print output of server
+        if: always()
+        run: |
+          cat output.log
+
       - name: Stop server
+        if: always()
         run: |
           kill $(lsof -t -i:${NITTEI__HTTP_PORT}) || true
           echo "Stopped server"

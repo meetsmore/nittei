@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                    SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e\n                    INNER JOIN calendars AS c\n                        ON c.calendar_uid = e.calendar_uid\n                    INNER JOIN users AS u\n                        ON u.user_uid = c.user_uid\n                    WHERE e.calendar_uid = $1\n                    AND (\n                        (e.start_time <= $2 AND e.end_time >= $3)\n                        OR\n                        (e.start_time < $2 AND e.recurrence::text <> 'null')\n                    )\n                    ",
+  "query": "\n                    SELECT e.*, u.user_uid AS user_uid_from_user, u.account_uid AS account_uid_from_user FROM calendar_events AS e\n                    INNER JOIN calendars AS c\n                        ON c.calendar_uid = e.calendar_uid\n                    INNER JOIN users AS u\n                        ON u.user_uid = c.user_uid\n                    WHERE e.calendar_uid = $1\n                    AND (\n                        (e.start_time <= $2 AND e.end_time >= $3)\n                        OR\n                        (e.start_time < $2 AND e.recurrence::text <> 'null')\n                    )\n                    ",
   "describe": {
     "columns": [
       {
@@ -120,12 +120,37 @@
       },
       {
         "ordinal": 23,
+        "name": "recurring_until",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 24,
         "name": "user_uid",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 24,
+        "ordinal": 25,
         "name": "account_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 26,
+        "name": "recurrence_jsonb",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 27,
+        "name": "reminders_jsonb",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 28,
+        "name": "user_uid_from_user",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 29,
+        "name": "account_uid_from_user",
         "type_info": "Uuid"
       }
     ],
@@ -160,9 +185,14 @@
       true,
       true,
       true,
+      true,
+      true,
+      true,
+      true,
+      true,
       false,
       false
     ]
   },
-  "hash": "d5a94d74eb91eb11f7a1fa61173aaa678a334810d03fe9e05cef730134bcaae4"
+  "hash": "cd3b1d62180943a9686827a9f275a89e2ddb10402724c90cb73fc2802358efd5"
 }

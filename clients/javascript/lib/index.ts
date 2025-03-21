@@ -56,11 +56,17 @@ type ClientConfig = {
    * Keep the connection alive
    */
   keepAlive?: boolean
+
+  /**
+   * Timeout for requests in milliseconds (default: 1000)
+   */
+  timeout?: number
 }
 
 const DEFAULT_CONFIG: Required<ClientConfig> = {
   baseUrl: `http://localhost:${process.env.NITTEI__HTTP_PORT ?? '5000'}/api/v1`,
   keepAlive: false,
+  timeout: 1000,
 }
 
 /**
@@ -77,7 +83,7 @@ export const NitteiUserClient = (
 
   // User clients should not keep the connection alive (usually on the frontend)
   const axiosClient = createAxiosInstanceFrontend(
-    { baseUrl: finalConfig.baseUrl },
+    { baseUrl: finalConfig.baseUrl, timeout: finalConfig.timeout },
     creds
   )
 
@@ -107,7 +113,11 @@ export const NitteiClient = async (
   const finalConfig = { ...DEFAULT_CONFIG, ...config }
 
   const axiosClient = await createAxiosInstanceBackend(
-    { baseUrl: finalConfig.baseUrl, keepAlive: finalConfig.keepAlive },
+    {
+      baseUrl: finalConfig.baseUrl,
+      keepAlive: finalConfig.keepAlive,
+      timeout: finalConfig.timeout,
+    },
     creds
   )
 

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                    SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e\n                    INNER JOIN calendars AS c\n                        ON c.calendar_uid = e.calendar_uid\n                    INNER JOIN users AS u\n                        ON u.user_uid = c.user_uid\n                    WHERE e.calendar_uid  = any($1)\n                    AND (\n                        (e.start_time <= $2 AND e.end_time >= $3)\n                        OR \n                        (e.start_time < $2 AND e.recurrence::text <> 'null')\n                    )\n                    ",
+  "query": "\n            SELECT e.*, u.user_uid AS user_uid_from_user, u.account_uid AS account_uid_from_user FROM calendar_events AS e\n            INNER JOIN calendars AS c\n                ON c.calendar_uid = e.calendar_uid\n            INNER JOIN users AS u\n                ON u.user_uid = c.user_uid\n            WHERE e.event_uid = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -120,20 +120,43 @@
       },
       {
         "ordinal": 23,
+        "name": "recurring_until",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 24,
         "name": "user_uid",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 24,
+        "ordinal": 25,
         "name": "account_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 26,
+        "name": "recurrence_jsonb",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 27,
+        "name": "reminders_jsonb",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 28,
+        "name": "user_uid_from_user",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 29,
+        "name": "account_uid_from_user",
         "type_info": "Uuid"
       }
     ],
     "parameters": {
       "Left": [
-        "UuidArray",
-        "Timestamptz",
-        "Timestamptz"
+        "Uuid"
       ]
     },
     "nullable": [
@@ -160,9 +183,14 @@
       true,
       true,
       true,
+      true,
+      true,
+      true,
+      true,
+      true,
       false,
       false
     ]
   },
-  "hash": "a01aa726a30e658bca61f0ad0a12997c23f74627d2e5b3e13a1cd582bded7ea8"
+  "hash": "9d642f16a893948ac472b6c123098647dee73abf9aad7d505a990e36dea7add4"
 }

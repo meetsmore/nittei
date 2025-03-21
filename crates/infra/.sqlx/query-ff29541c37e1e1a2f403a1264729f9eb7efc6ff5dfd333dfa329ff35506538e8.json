@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT e.*, u.user_uid, account_uid FROM calendar_events AS e\n            INNER JOIN calendars AS c\n                ON c.calendar_uid = e.calendar_uid\n            INNER JOIN users AS u\n                ON u.user_uid = c.user_uid\n            WHERE e.event_uid = ANY($1)\n            ",
+  "query": "\n            SELECT e.*, u.user_uid AS user_uid_from_user, u.account_uid AS account_uid_from_user FROM calendar_events AS e\n            INNER JOIN calendars AS c\n                ON c.calendar_uid = e.calendar_uid\n            INNER JOIN users AS u\n                ON u.user_uid = c.user_uid\n            WHERE e.event_uid = ANY($1)\n            ",
   "describe": {
     "columns": [
       {
@@ -120,12 +120,37 @@
       },
       {
         "ordinal": 23,
+        "name": "recurring_until",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 24,
         "name": "user_uid",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 24,
+        "ordinal": 25,
         "name": "account_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 26,
+        "name": "recurrence_jsonb",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 27,
+        "name": "reminders_jsonb",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 28,
+        "name": "user_uid_from_user",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 29,
+        "name": "account_uid_from_user",
         "type_info": "Uuid"
       }
     ],
@@ -158,9 +183,14 @@
       true,
       true,
       true,
+      true,
+      true,
+      true,
+      true,
+      true,
       false,
       false
     ]
   },
-  "hash": "fa9c71d7c78ea93dd35d0019993601a7d4a77756182a45647d381181eb0eafbd"
+  "hash": "ff29541c37e1e1a2f403a1264729f9eb7efc6ff5dfd333dfa329ff35506538e8"
 }

@@ -51,6 +51,10 @@ pub struct AppConfig {
     /// Env var: NITTEI__DISABLE_REMINDERS
     pub disable_reminders: bool,
 
+    /// Max number of events returned that can be returned at once by search (u16)
+    /// Default to 1000
+    pub max_events_returned_by_search: u16,
+
     /// The account configuration
     /// This is used to find the superadmin account
     pub account: Option<AccountConfig>,
@@ -161,6 +165,8 @@ fn parse_config() -> AppConfig {
         .expect("Failed to set default skip_db_migrations")
         .set_default("disable_reminders", false)
         .expect("Failed to set default disable_reminders")
+        .set_default("max_events_returned_by_search", "1000")
+        .expect("Failed to set default max_events_returned_by_search")
         .set_default(
             "database_url",
             "postgresql://postgres:postgres@localhost:45432/nittei",

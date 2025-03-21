@@ -1,7 +1,7 @@
 name: Server test
 
 env:
-  RUST_VERSION: 1.85.0
+  RUST_VERSION: 1.85.1
 
 on:
   pull_request:
@@ -19,7 +19,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:13
+        image: postgres:15.4-alpine
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: nittei
