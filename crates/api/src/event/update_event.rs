@@ -163,7 +163,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for UpdateEventUseCase {
     type Response = CalendarEvent;
 
@@ -367,8 +367,7 @@ mod test {
 
     use super::*;
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn update_nonexisting_event() {
         let mut usecase = UpdateEventUseCase {
             start_time: Some(DateTime::from_timestamp_millis(500).unwrap()),

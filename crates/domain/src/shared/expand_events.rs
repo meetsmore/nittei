@@ -38,7 +38,7 @@ pub fn expand_event_and_remove_exceptions(
     calendar: &Calendar,
     event: &CalendarEvent,
     exceptions: &[DateTime<Utc>],
-    timespan: &TimeSpan,
+    timespan: TimeSpan,
 ) -> anyhow::Result<Vec<EventInstance>> {
     let expanded_events = event.expand(Some(timespan), &calendar.settings)?;
 
@@ -58,7 +58,7 @@ pub fn expand_event_and_remove_exceptions(
 pub fn expand_all_events_and_remove_exceptions(
     calendars: &HashMap<String, &Calendar>,
     events: &Vec<CalendarEvent>,
-    timespan: &TimeSpan,
+    timespan: TimeSpan,
 ) -> anyhow::Result<Vec<EventInstance>> {
     let map_recurring_event_id_to_exceptions = generate_map_exceptions_original_start_times(events);
 
@@ -74,6 +74,7 @@ pub fn expand_all_events_and_remove_exceptions(
             .map(Vec::as_slice)
             .unwrap_or(&[]);
 
+        let timespan = timespan.clone();
         let expanded_events =
             expand_event_and_remove_exceptions(calendar, event, exceptions, timespan)?;
 
@@ -209,7 +210,7 @@ mod test {
         );
 
         let instances =
-            expand_event_and_remove_exceptions(&calendar, &event, exceptions.as_slice(), &timespan)
+            expand_event_and_remove_exceptions(&calendar, &event, exceptions.as_slice(), timespan)
                 .unwrap();
 
         assert_eq!(instances.len(), 1);
@@ -240,7 +241,7 @@ mod test {
         );
 
         let instances =
-            expand_event_and_remove_exceptions(&calendar, &event, vec![now].as_slice(), &timespan)
+            expand_event_and_remove_exceptions(&calendar, &event, vec![now].as_slice(), timespan)
                 .unwrap();
 
         assert_eq!(instances.len(), 0);
@@ -274,7 +275,7 @@ mod test {
             .collect::<HashMap<_, _>>();
 
         let instances =
-            super::expand_all_events_and_remove_exceptions(&calendars, &events, &timespan).unwrap();
+            super::expand_all_events_and_remove_exceptions(&calendars, &events, timespan).unwrap();
 
         assert_eq!(instances.len(), 1);
     }

@@ -102,7 +102,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for GetCalendarEventsUseCase {
     type Response = UseCaseResponse;
 
@@ -129,7 +129,7 @@ impl UseCase for GetCalendarEventsUseCase {
                 let calendar_events = ctx
                     .repos
                     .events
-                    .find_by_calendar(&calendar.id, Some(&timespan))
+                    .find_by_calendar(&calendar.id, Some(timespan.clone()))
                     .await
                     .map_err(|e| {
                         error!("{:?}", e);
@@ -151,9 +151,10 @@ impl UseCase for GetCalendarEventsUseCase {
                             .map(Vec::as_slice)
                             .unwrap_or(&[]);
 
+                        let timespan = timespan.clone();
                         // Expand the event and remove the exceptions
                         let instances = expand_event_and_remove_exceptions(
-                            &calendar, &event, exceptions, &timespan,
+                            &calendar, &event, exceptions, timespan,
                         )
                         .map_err(|e| {
                             error!("Got an error while expanding an event {:?}", e);

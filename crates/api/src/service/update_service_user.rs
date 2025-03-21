@@ -79,7 +79,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for UpdateServiceUserUseCase {
     type Response = UseCaseRes;
 

@@ -14,7 +14,7 @@ use crate::shared::usecase::{Subscriber, execute};
 
 pub struct CreateRemindersOnEventCreated;
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl Subscriber<CreateEventUseCase> for CreateRemindersOnEventCreated {
     async fn notify(&self, e: &CalendarEvent, ctx: &nittei_infra::NitteiContext) {
         let sync_event_reminders = SyncEventRemindersUseCase {
@@ -28,7 +28,7 @@ impl Subscriber<CreateEventUseCase> for CreateRemindersOnEventCreated {
 
 pub struct SyncRemindersOnEventUpdated;
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl Subscriber<UpdateEventUseCase> for SyncRemindersOnEventUpdated {
     async fn notify(&self, e: &CalendarEvent, ctx: &nittei_infra::NitteiContext) {
         let sync_event_reminders = SyncEventRemindersUseCase {
@@ -42,7 +42,7 @@ impl Subscriber<UpdateEventUseCase> for SyncRemindersOnEventUpdated {
 
 pub struct CreateSyncedEventsOnEventCreated;
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl Subscriber<CreateEventUseCase> for CreateSyncedEventsOnEventCreated {
     async fn notify(&self, e: &CalendarEvent, ctx: &nittei_infra::NitteiContext) {
         let synced_calendars = match ctx
@@ -157,7 +157,7 @@ impl Subscriber<CreateEventUseCase> for CreateSyncedEventsOnEventCreated {
 
 pub struct UpdateSyncedEventsOnEventUpdated;
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl Subscriber<UpdateEventUseCase> for UpdateSyncedEventsOnEventUpdated {
     async fn notify(&self, e: &CalendarEvent, ctx: &nittei_infra::NitteiContext) {
         let synced_events = match ctx.repos.event_synced.find_by_event(&e.id).await {

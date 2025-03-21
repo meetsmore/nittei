@@ -26,7 +26,7 @@ pub fn get_start_delay(now_ts: usize, secs_before_min: usize) -> usize {
 
 /// Start the job scheduler for generating reminders
 pub fn start_reminder_generation_job(ctx: NitteiContext) {
-    actix_web::rt::spawn(async move {
+    tokio::spawn(async move {
         let mut interval = interval(Duration::from_secs(30 * 60));
         loop {
             interval.tick().await;
@@ -41,7 +41,7 @@ pub fn start_reminder_generation_job(ctx: NitteiContext) {
 
 /// Start the job scheduler for sending reminders
 pub fn start_send_reminders_job(ctx: NitteiContext) {
-    actix_web::rt::spawn(async move {
+    tokio::spawn(async move {
         let now = ctx.sys.get_timestamp_millis();
         let secs_to_next_run = get_start_delay(now as usize, 0);
         let start = Instant::now() + Duration::from_secs(secs_to_next_run as u64);

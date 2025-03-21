@@ -77,7 +77,7 @@ impl From<anyhow::Error> for UseCaseError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for AddAccountIntegrationUseCase {
     type Response = ();
 

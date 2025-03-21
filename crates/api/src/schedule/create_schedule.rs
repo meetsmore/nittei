@@ -87,7 +87,7 @@ struct UseCaseRes {
     pub schedule: Schedule,
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for CreateScheduleUseCase {
     type Response = UseCaseRes;
 

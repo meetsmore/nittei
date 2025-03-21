@@ -161,7 +161,7 @@ impl From<anyhow::Error> for UseCaseError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for CreateEventUseCase {
     type Response = CalendarEvent;
 
@@ -281,8 +281,7 @@ mod test {
         }
     }
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn creates_event_without_recurrence() {
         let TestContext {
             ctx,
@@ -303,8 +302,7 @@ mod test {
         assert!(res.is_ok());
     }
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn creates_event_with_recurrence() {
         let TestContext {
             ctx,
@@ -326,8 +324,7 @@ mod test {
         assert!(res.is_ok());
     }
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn rejects_invalid_calendar_id() {
         let TestContext {
             ctx,
