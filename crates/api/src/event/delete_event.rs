@@ -6,6 +6,7 @@ use nittei_infra::{
     google_calendar::GoogleCalendarProvider,
     outlook_calendar::OutlookCalendarProvider,
 };
+use nittei_utils::config::APP_CONFIG;
 use tracing::error;
 
 use crate::{
@@ -84,7 +85,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for DeleteEventUseCase {
     type Response = CalendarEvent;
 
@@ -105,7 +106,9 @@ impl UseCase for DeleteEventUseCase {
             _ => return Err(UseCaseError::NotFound(self.event_id.clone())),
         };
 
-        self.delete_synced_events(&e, ctx).await;
+        if !APP_CONFIG.disable_reminders {
+            self.delete_synced_events(&e, ctx).await;
+        }
 
         ctx.repos
             .events

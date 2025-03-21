@@ -74,7 +74,7 @@ pub struct DeleteCalendarUseCase {
     user_id: ID,
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for DeleteCalendarUseCase {
     type Response = Calendar;
 

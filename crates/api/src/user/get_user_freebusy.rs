@@ -89,7 +89,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for GetFreeBusyUseCase {
     type Response = GetFreeBusyResponse;
 
@@ -104,7 +104,7 @@ impl UseCase for GetFreeBusyUseCase {
         }
 
         let busy_event_instances = self
-            .get_event_instances_from_calendars(&timespan, ctx)
+            .get_event_instances_from_calendars(timespan, ctx)
             .await
             .map_err(|_| UseCaseError::InternalError)?
             .into_iter()
@@ -123,7 +123,7 @@ impl UseCase for GetFreeBusyUseCase {
 impl GetFreeBusyUseCase {
     async fn get_event_instances_from_calendars(
         &self,
-        timespan: &TimeSpan,
+        timespan: TimeSpan,
         ctx: &NitteiContext,
     ) -> anyhow::Result<Vec<EventInstance>> {
         // can probably make query to event repo instead
@@ -148,7 +148,7 @@ impl GetFreeBusyUseCase {
             .events
             .find_busy_events_and_recurring_events_for_calendars(
                 &calendar_ids,
-                timespan,
+                timespan.clone(),
                 self.include_tentative.unwrap_or(false),
             )
             .await?;
@@ -194,8 +194,7 @@ mod test {
         );
     }
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn test_freebusy_recurring() {
         let ctx = setup_context().await.unwrap();
         let account = Account::default();
