@@ -58,7 +58,7 @@ describe('Calendar API', () => {
       client.calendar.create({
         timezone: 'invalid',
       })
-    ).rejects.toThrow('Bad request')
+    ).rejects.toThrow('Unprocessable entity')
   })
 
   it('should fail to create calendar with an empty key', async () => {
@@ -93,7 +93,7 @@ describe('Calendar API', () => {
         adminClient.calendar.create(userId, {
           timezone: 'invalid',
         })
-      ).rejects.toThrow('Bad request')
+      ).rejects.toThrow('Unprocessable entity')
     })
 
     it('should fail to create calendar with an empty key for user', async () => {

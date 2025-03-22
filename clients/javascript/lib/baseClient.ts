@@ -9,6 +9,7 @@ import {
   ConflictError,
   NotFoundError,
   UnauthorizedError,
+  UnprocessableEntityError,
 } from './helpers/errors'
 
 /**
@@ -135,6 +136,10 @@ export abstract class NitteiBaseClient {
       if (res.status === 409) {
         throw new ConflictError(res.data)
       }
+      if (res.status === 422) {
+        throw new UnprocessableEntityError(res.data)
+      }
+
       throw new Error(`Request failed with status code ${res.status}`)
     }
   }

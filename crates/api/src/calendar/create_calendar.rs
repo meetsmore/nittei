@@ -1,4 +1,10 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{
+    Extension,
+    Json,
+    extract::Path,
+    http::{HeaderMap, StatusCode},
+};
+use axum_valid::Valid;
 use chrono::Weekday;
 use chrono_tz::Tz;
 use nittei_api_structs::create_calendar::{APIResponse, PathParams, RequestBody};
@@ -14,50 +20,50 @@ use crate::{
 };
 
 pub async fn create_calendar_admin_controller(
-    http_req: HttpRequest,
-    path_params: web::Path<PathParams>,
-    body: actix_web_validator::Json<RequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    path_params: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+    mut body: Valid<Json<RequestBody>>,
+) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
+    let account = protect_admin_route(&headers, &ctx).await?;
     let user = account_can_modify_user(&account, &path_params.user_id, &ctx).await?;
 
     let usecase = CreateCalendarUseCase {
         user_id: user.id,
         account_id: account.id,
         week_start: body.0.week_start,
-        name: body.0.name.clone(),
-        key: body.0.key.clone(),
+        name: body.0.name.take(),
+        key: body.0.key.take(),
         timezone: body.0.timezone,
-        metadata: body.0.metadata,
+        metadata: body.0.metadata.take(),
     };
 
     execute(usecase, &ctx)
         .await
-        .map(|calendar| HttpResponse::Created().json(APIResponse::new(calendar)))
+        .map(|calendar| (StatusCode::CREATED, Json(APIResponse::new(calendar))))
         .map_err(NitteiError::from)
 }
 
 pub async fn create_calendar_controller(
-    http_req: HttpRequest,
-    body: actix_web_validator::Json<RequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let (user, policy) = protect_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    Extension(ctx): Extension<NitteiContext>,
+    mut body: Valid<Json<RequestBody>>,
+) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
+    let (user, policy) = protect_route(&headers, &ctx).await?;
 
     let usecase = CreateCalendarUseCase {
         user_id: user.id,
         account_id: user.account_id,
         week_start: body.0.week_start,
-        name: body.0.name.clone(),
-        key: body.0.key.clone(),
+        name: body.0.name.take(),
+        key: body.0.key.take(),
         timezone: body.0.timezone,
-        metadata: body.0.metadata,
+        metadata: body.0.metadata.take(),
     };
 
     execute_with_policy(usecase, &policy, &ctx)
         .await
-        .map(|calendar| HttpResponse::Created().json(APIResponse::new(calendar)))
+        .map(|calendar| (StatusCode::CREATED, Json(APIResponse::new(calendar))))
         .map_err(NitteiError::from)
 }
 

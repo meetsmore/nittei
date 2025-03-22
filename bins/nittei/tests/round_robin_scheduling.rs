@@ -93,8 +93,7 @@ async fn create_default_service_host(
     (host, busy_calendar)
 }
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn test_round_robin_scheduling_simple_test() {
     let (app, sdk, address) = spawn_app().await;
     let res = sdk
@@ -234,8 +233,7 @@ async fn test_round_robin_scheduling_simple_test() {
     }
 }
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn test_round_robin_equal_distribution_scheduling() {
     let (app, sdk, address) = spawn_app().await;
     let res = sdk
@@ -408,8 +406,7 @@ async fn test_round_robin_equal_distribution_scheduling() {
     }
 }
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn test_round_robin_availability_scheduling() {
     let (app, sdk, address) = spawn_app().await;
     let res = sdk

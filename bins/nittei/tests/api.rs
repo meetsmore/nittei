@@ -26,15 +26,13 @@ use nittei_sdk::{
     UpdateServiceUserInput,
 };
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn test_status_ok() {
     let (_, sdk, _) = spawn_app().await;
     assert!(sdk.status.check_health().await.is_ok());
 }
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn test_create_account() {
     let (app, sdk, _) = spawn_app().await;
     assert!(
@@ -45,8 +43,7 @@ async fn test_create_account() {
     );
 }
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn test_get_account() {
     let (app, sdk, address) = spawn_app().await;
     let res = sdk
@@ -60,8 +57,7 @@ async fn test_get_account() {
     assert!(sdk.account.get().await.is_err());
 }
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn test_crud_user() {
     let (app, sdk, address) = spawn_app().await;
     let res = sdk
@@ -136,8 +132,7 @@ async fn test_crud_user() {
     assert!(admin_client.user.get(res.user.id.clone()).await.is_err());
 }
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn test_user_provide_id() {
     let (app, sdk, address) = spawn_app().await;
     let res = sdk
@@ -173,8 +168,7 @@ async fn test_user_provide_id() {
     );
 }
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn test_crud_schedule() {
     let (app, sdk, address) = spawn_app().await;
     let res = sdk
@@ -248,8 +242,7 @@ async fn test_crud_schedule() {
     );
 }
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn test_create_user() {
     let (app, sdk, address) = spawn_app().await;
     let res = sdk
@@ -285,8 +278,7 @@ async fn test_create_user() {
     assert!(get_user_res.is_err());
 }
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn test_crud_account() {
     let (app, sdk, address) = spawn_app().await;
     let res = sdk
@@ -341,8 +333,7 @@ async fn test_crud_account() {
     assert!(account.account.settings.webhook.is_none());
 }
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn test_crud_calendars() {
     let (app, sdk, address) = spawn_app().await;
     let res = sdk
@@ -453,8 +444,7 @@ async fn test_crud_calendars() {
     );
 }
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn test_crud_events() {
     let (app, sdk, address) = spawn_app().await;
     let res = sdk
@@ -585,8 +575,7 @@ async fn test_crud_events() {
     assert!(admin_client.event.get(event.id.clone()).await.is_err())
 }
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn test_crud_service() {
     let (app, sdk, address) = spawn_app().await;
     let res = sdk
@@ -715,8 +704,7 @@ async fn test_crud_service() {
     assert!(admin_client.service.get(service.id.clone()).await.is_err());
 }
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn test_freebusy_multiple() {
     let (app, sdk, address) = spawn_app().await;
     let res = sdk

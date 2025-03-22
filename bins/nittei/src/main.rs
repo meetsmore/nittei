@@ -3,7 +3,7 @@ use nittei_api::Application;
 use nittei_infra::setup_context;
 use tikv_jemallocator::Jemalloc;
 use tokio::signal;
-use tracing::{error, info};
+use tracing::info;
 
 #[global_allocator]
 static GLOBAL: Jemalloc = Jemalloc;
@@ -23,17 +23,32 @@ async fn main() -> anyhow::Result<()> {
     // It waits for a configurable amount of seconds (in order for the pod to be removed from the k8s service)
     // And then waits for the server to finish processing the current requests before shutting down
     tokio::spawn(async move {
-        if let Err(e) = signal::ctrl_c().await {
-            error!("[main] Failed to listen for SIGINT: {}", e);
+        let ctrl_c = async {
+            #[allow(clippy::expect_used)]
+            signal::ctrl_c()
+                .await
+                .expect("failed to install signal handler (ctrl_c)");
+        };
+
+        let terminate = async {
+            #[allow(clippy::expect_used)]
+            signal::unix::signal(signal::unix::SignalKind::terminate())
+                .expect("failed to install signal handler (terminate)")
+                .recv()
+                .await;
+        };
+
+        tokio::select! {
+            _ = ctrl_c => info!("[main_shutdown_handler] Received SIGINT"),
+            _ = terminate => info!("[main_shutdown_handler] Received SIGTERM"),
         }
-        info!("[shutdown] Received SIGINT, sending event on channel...");
         let _ = tx.send(());
     });
 
     // Start the application and block until it finishes
     app.start(rx).await?;
 
-    info!("[shutdown] shutdown complete");
+    info!("[main_shutdown_handler] shutdown complete");
 
     Ok(())
 }

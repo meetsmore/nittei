@@ -1,4 +1,9 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{
+    Extension,
+    Json,
+    extract::Path,
+    http::HeaderMap,
+};
 use nittei_api_structs::get_event::*;
 use nittei_domain::{CalendarEvent, ID};
 use nittei_infra::NitteiContext;
@@ -12,11 +17,11 @@ use crate::{
 };
 
 pub async fn get_event_admin_controller(
-    http_req: HttpRequest,
-    path_params: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    path_params: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let account = protect_admin_route(&headers, &ctx).await?;
     let e = account_can_modify_event(&account, &path_params.event_id, &ctx).await?;
 
     let usecase = GetEventUseCase {
@@ -26,16 +31,16 @@ pub async fn get_event_admin_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|event| HttpResponse::Ok().json(APIResponse::new(event)))
+        .map(|event| Json(APIResponse::new(event)))
         .map_err(NitteiError::from)
 }
 
 pub async fn get_event_controller(
-    http_req: HttpRequest,
-    path_params: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let (user, _policy) = protect_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    path_params: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let (user, _policy) = protect_route(&headers, &ctx).await?;
 
     let usecase = GetEventUseCase {
         event_id: path_params.event_id.clone(),
@@ -44,7 +49,7 @@ pub async fn get_event_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|calendar_event| HttpResponse::Ok().json(APIResponse::new(calendar_event)))
+        .map(|calendar_event| Json(APIResponse::new(calendar_event)))
         .map_err(NitteiError::from)
 }
 

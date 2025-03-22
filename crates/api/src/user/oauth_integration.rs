@@ -1,4 +1,10 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{
+    Extension,
+    Json,
+    extract::Path,
+    http::HeaderMap,
+};
+use axum_valid::Valid;
 use chrono::Utc;
 use nittei_api_structs::oauth_integration::*;
 use nittei_domain::{IntegrationProvider, User, UserIntegration};
@@ -13,42 +19,42 @@ use crate::{
 };
 
 pub async fn oauth_integration_admin_controller(
-    http_req: HttpRequest,
-    path: web::Path<PathParams>,
-    body: actix_web_validator::Json<RequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    path: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Valid<Json<RequestBody>>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let account = protect_admin_route(&headers, &ctx).await?;
     let user = account_can_modify_user(&account, &path.user_id, &ctx).await?;
 
     let usecase = OAuthIntegrationUseCase {
         user,
-        code: body.0.code,
-        provider: body.0.provider,
+        code: body.0.code.clone(),
+        provider: body.0.provider.clone(),
     };
 
     execute(usecase, &ctx)
         .await
-        .map(|usecase_res| HttpResponse::Ok().json(APIResponse::new(usecase_res.user)))
+        .map(|usecase_res| Json(APIResponse::new(usecase_res.user)))
         .map_err(NitteiError::from)
 }
 
 pub async fn oauth_integration_controller(
-    http_req: HttpRequest,
-    body: web::Json<RequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let (user, _) = protect_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Json<RequestBody>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let (user, _) = protect_route(&headers, &ctx).await?;
 
     let usecase = OAuthIntegrationUseCase {
         user,
-        code: body.0.code,
-        provider: body.0.provider,
+        code: body.0.code.clone(),
+        provider: body.0.provider.clone(),
     };
 
     execute(usecase, &ctx)
         .await
-        .map(|usecase_res| HttpResponse::Ok().json(APIResponse::new(usecase_res.user)))
+        .map(|usecase_res| Json(APIResponse::new(usecase_res.user)))
         .map_err(NitteiError::from)
 }
 
