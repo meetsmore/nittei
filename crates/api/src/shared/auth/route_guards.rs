@@ -315,8 +315,7 @@ mod test {
         }
     }
 
-    #[tokio::main]
-    #[test]
+    #[tokio::test]
     async fn decodes_valid_token_for_existing_user_in_account() {
         let ctx = setup_context().await.unwrap();
         let account = setup_account(&ctx).await;
@@ -333,8 +332,7 @@ mod test {
         assert!(res.is_ok());
     }
 
-    #[tokio::main]
-    #[test]
+    #[tokio::test]
     async fn decodes_valid_token_and_rejects_if_user_is_in_different_account() {
         let ctx = setup_context().await.unwrap();
         let account = setup_account(&ctx).await;
@@ -353,8 +351,7 @@ mod test {
         assert!(res.is_err());
     }
 
-    #[tokio::main]
-    #[test]
+    #[tokio::test]
     async fn rejects_expired_token() {
         let ctx = setup_context().await.unwrap();
         let account = setup_account(&ctx).await;
@@ -371,8 +368,7 @@ mod test {
         assert!(res.is_err());
     }
 
-    #[tokio::main]
-    #[test]
+    #[tokio::test]
     async fn rejects_valid_token_without_account_header() {
         let ctx = setup_context().await.unwrap();
         let account = setup_account(&ctx).await;
@@ -388,8 +384,7 @@ mod test {
         assert!(res.is_err());
     }
 
-    #[tokio::main]
-    #[test]
+    #[tokio::test]
     async fn rejects_valid_token_with_invalid_account_header() {
         let ctx = setup_context().await.unwrap();
         let account = setup_account(&ctx).await;
@@ -406,8 +401,7 @@ mod test {
         assert!(res.is_err());
     }
 
-    #[tokio::main]
-    #[test]
+    #[tokio::test]
     async fn rejects_garbage_token_with_valid_account_header() {
         let ctx = setup_context().await.unwrap();
         let _account = setup_account(&ctx).await;
@@ -421,8 +415,7 @@ mod test {
         assert!(res.is_err());
     }
 
-    #[tokio::main]
-    #[test]
+    #[tokio::test]
     async fn rejects_invalid_authz_header() {
         let ctx = setup_context().await.unwrap();
         let account = setup_account(&ctx).await;
@@ -438,8 +431,7 @@ mod test {
         assert!(res.is_err());
     }
 
-    #[tokio::main]
-    #[test]
+    #[tokio::test]
     async fn rejects_req_without_headers() {
         let ctx = setup_context().await.unwrap();
         let _account = setup_account(&ctx).await;

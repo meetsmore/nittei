@@ -152,6 +152,7 @@ impl UseCase for GetCalendarEventsUseCase {
                             .map(Vec::as_slice)
                             .unwrap_or(&[]);
 
+                        let timespan = timespan.clone();
                         // Expand the event and remove the exceptions
                         let timespan = timespan.clone();
                         let instances = expand_event_and_remove_exceptions(

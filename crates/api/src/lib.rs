@@ -98,7 +98,7 @@ impl Application {
     /// Start the background jobs of the application
     /// Note that the jobs are only started if the environment variable NITTEI_REMINDERS_JOB_ENABLED is set to true
     fn start_jobs(context: NitteiContext) {
-        if nittei_utils::config::APP_CONFIG.enable_reminders_job {
+        if !nittei_utils::config::APP_CONFIG.disable_reminders {
             start_send_reminders_job(context.clone());
             start_reminder_generation_job(context);
         }

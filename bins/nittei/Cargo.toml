@@ -5,6 +5,18 @@ authors = ["Fredrik Meringdal", "Meetsmore"]
 edition = "2024"
 default-run = "nittei"
 
+[lib]
+name = "nittei"
+path = "src/lib.rs"
+
+[[bin]]
+name = "nittei"
+path = "src/main.rs"
+
+[[bin]]
+name = "nittei-migrate"
+path = "src/bin/migrate.rs"
+
 [lints]
 workspace = true
 

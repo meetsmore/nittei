@@ -17,6 +17,7 @@ use nittei_domain::{
     User,
 };
 use nittei_infra::NitteiContext;
+use nittei_utils::config::APP_CONFIG;
 
 use crate::{
     error::NitteiError,
@@ -349,10 +350,14 @@ impl UseCase for UpdateEventUseCase {
     }
 
     fn subscribers() -> Vec<Box<dyn Subscriber<Self>>> {
-        vec![
-            Box::new(SyncRemindersOnEventUpdated),
-            Box::new(UpdateSyncedEventsOnEventUpdated),
-        ]
+        if APP_CONFIG.disable_reminders {
+            vec![]
+        } else {
+            vec![
+                Box::new(SyncRemindersOnEventUpdated),
+                Box::new(UpdateSyncedEventsOnEventUpdated),
+            ]
+        }
     }
 }
 

@@ -1,8 +1,6 @@
-mod telemetry;
-
+use nittei::telemetry::init_subscriber;
 use nittei_api::Application;
 use nittei_infra::setup_context;
-use telemetry::init_subscriber;
 use tikv_jemallocator::Jemalloc;
 use tokio::signal;
 use tracing::info;

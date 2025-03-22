@@ -83,7 +83,7 @@ pub trait IEventRepo: Send + Sync {
     async fn find_by_calendars(
         &self,
         calendar_ids: &[ID],
-        timespan: &TimeSpan,
+        timespan: TimeSpan,
     ) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn find_busy_events_and_recurring_events_for_calendars(
         &self,

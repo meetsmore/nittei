@@ -2,7 +2,7 @@
 # docker buildx build -f debian.Dockerfile -t image:tag --build-arg='ARCH=x86_64' --platform linux/amd64 .
 # docker buildx build -f debian.Dockerfile -t image:tag --build-arg='ARCH=aarch64' --platform linux/arm64 .
 
-ARG RUST_VERSION=1.85.0
+ARG RUST_VERSION=1.85.1
 ARG APP_NAME=nittei
 
 FROM rust:${RUST_VERSION}-slim AS builder
@@ -24,7 +24,9 @@ RUN --mount=type=bind,source=bins,target=/app/${APP_NAME}/bins \
   --mount=type=cache,target=/usr/local/cargo/git/db \
   --mount=type=cache,target=/usr/local/cargo/registry/ \
   cargo build --locked --release && \
-  cp ./target/release/$APP_NAME /bin/server
+  cp ./target/release/$APP_NAME /nittei && \
+  cargo build --locked --release --bin nittei-migrate && \
+  cp ./target/release/nittei-migrate /nittei-migrate
 
 FROM debian:stable-slim
 
@@ -47,6 +49,7 @@ RUN adduser \
   appuser
 USER appuser
 
-COPY --from=builder /bin/server /bin/
+COPY --from=builder /nittei /nittei
+COPY --from=builder /nittei-migrate /nittei-migrate
 
-CMD ["/bin/server"]
+CMD ["/nittei"]

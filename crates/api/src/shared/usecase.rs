@@ -19,7 +19,7 @@ pub trait Subscriber<U: UseCase>: Send + Sync {
 #[async_trait::async_trait]
 pub trait UseCase: Debug + Send {
     type Response: Debug + Send;
-    type Error: Send;
+    type Error: Debug + Send;
 
     /// UseCase name identifier
     const NAME: &'static str;

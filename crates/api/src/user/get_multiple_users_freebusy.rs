@@ -144,17 +144,17 @@ impl GetMultipleFreeBusyUseCase {
         // Fetch all events for all calendars
         // This is not executed yet (lazy)
         let all_events_futures = calendars.clone().into_iter().map(|calendar| {
-            let timespan_for_closure = timespan.clone();
-            let ctx = ctx.clone();
+            let timespan = timespan.clone();
 
             async move {
                 let events = ctx
                     .repos
                     .events
-                    .find_by_calendar(&calendar.id, Some(timespan_for_closure))
+                    .find_by_calendar(&calendar.id, Some(timespan))
                     .await
                     .unwrap_or_default(); // TODO: Handle error
-                Ok((calendar.user_id, events)) as Result<(ID, Vec<CalendarEvent>), UseCaseError>
+                Ok((calendar.user_id.clone(), events))
+                    as Result<(ID, Vec<CalendarEvent>), UseCaseError>
             }
             .boxed()
         });
@@ -169,6 +169,7 @@ impl GetMultipleFreeBusyUseCase {
             for event_result in events_res {
                 match event_result {
                     Ok((user_id, events)) => {
+                        let timespan = timespan.clone();
                         let expanded_events = expand_all_events_and_remove_exceptions(
                             &calendars_lookup,
                             &events,

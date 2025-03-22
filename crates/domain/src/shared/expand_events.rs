@@ -74,6 +74,7 @@ pub fn expand_all_events_and_remove_exceptions(
             .map(Vec::as_slice)
             .unwrap_or(&[]);
 
+        let timespan = timespan.clone();
         let expanded_events =
             expand_event_and_remove_exceptions(calendar, event, exceptions, timespan.clone())?;
 
