@@ -52,7 +52,8 @@ pub struct AppConfig {
     pub disable_reminders: bool,
 
     /// Max number of events returned that can be returned at once by search (u16)
-    /// Default to 1000
+    /// Default to 5000
+    /// Env var: NITTEI__MAX_EVENTS_RETURNED_BY_SEARCH
     pub max_events_returned_by_search: u16,
 
     /// The account configuration
@@ -165,7 +166,7 @@ fn parse_config() -> AppConfig {
         .expect("Failed to set default skip_db_migrations")
         .set_default("disable_reminders", false)
         .expect("Failed to set default disable_reminders")
-        .set_default("max_events_returned_by_search", "1000")
+        .set_default("max_events_returned_by_search", "5000")
         .expect("Failed to set default max_events_returned_by_search")
         .set_default(
             "database_url",
