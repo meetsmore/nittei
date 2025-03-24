@@ -42,13 +42,18 @@ pub struct AppConfig {
     /// Env var: NITTEI__SKIP_DB_MIGRATIONS
     pub skip_db_migrations: bool,
 
-    /// This is a flag to enable the reminders job
+    /// This is a flag for disabling the reminders features
+    /// Be careful, as this impacts what is saved in database
+    /// So changing from one to the other is only safe if the features aren't used
+    /// Otherwise, data might be missing
+    ///
     /// Default is false
-    /// Env var: NITTEI__ENABLE_REMINDERS_JOB
-    pub enable_reminders_job: bool,
+    /// Env var: NITTEI__DISABLE_REMINDERS
+    pub disable_reminders: bool,
 
     /// Max number of events returned that can be returned at once by search (u16)
-    /// Default to 1000
+    /// Default to 5000
+    /// Env var: NITTEI__MAX_EVENTS_RETURNED_BY_SEARCH
     pub max_events_returned_by_search: u16,
 
     /// The account configuration
@@ -159,10 +164,10 @@ fn parse_config() -> AppConfig {
         .expect("Failed to set default server_shutdown_timeout")
         .set_default("skip_db_migrations", false)
         .expect("Failed to set default skip_db_migrations")
-        .set_default("max_events_returned_by_search", "1000")
+        .set_default("disable_reminders", false)
+        .expect("Failed to set default disable_reminders")
+        .set_default("max_events_returned_by_search", "5000")
         .expect("Failed to set default max_events_returned_by_search")
-        .set_default("enable_reminders_job", false)
-        .expect("Failed to set default enable_reminders_job")
         .set_default(
             "database_url",
             "postgresql://postgres:postgres@localhost:45432/nittei",

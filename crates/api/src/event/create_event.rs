@@ -10,6 +10,7 @@ use nittei_domain::{
     User,
 };
 use nittei_infra::NitteiContext;
+use nittei_utils::config::APP_CONFIG;
 
 use super::subscribers::CreateRemindersOnEventCreated;
 use crate::{
@@ -160,7 +161,7 @@ impl From<anyhow::Error> for UseCaseError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for CreateEventUseCase {
     type Response = CalendarEvent;
 
@@ -233,10 +234,14 @@ impl UseCase for CreateEventUseCase {
     }
 
     fn subscribers() -> Vec<Box<dyn Subscriber<Self>>> {
-        vec![
-            Box::new(CreateRemindersOnEventCreated),
-            Box::new(CreateSyncedEventsOnEventCreated),
-        ]
+        if APP_CONFIG.disable_reminders {
+            vec![]
+        } else {
+            vec![
+                Box::new(CreateRemindersOnEventCreated),
+                Box::new(CreateSyncedEventsOnEventCreated),
+            ]
+        }
     }
 }
 
@@ -276,8 +281,7 @@ mod test {
         }
     }
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn creates_event_without_recurrence() {
         let TestContext {
             ctx,
@@ -298,8 +302,7 @@ mod test {
         assert!(res.is_ok());
     }
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn creates_event_with_recurrence() {
         let TestContext {
             ctx,
@@ -321,8 +324,7 @@ mod test {
         assert!(res.is_ok());
     }
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn rejects_invalid_calendar_id() {
         let TestContext {
             ctx,

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                    SELECT e.* FROM calendar_events AS e\n                    WHERE e.calendar_uid  = any($1)\n                    AND (\n                        (e.start_time <= $2 AND e.end_time >= $3)\n                        OR \n                        (e.start_time < $2 AND e.recurrence::text IS NOT NULL)\n                    )\n                    ",
+  "query": "\n                    SELECT e.* FROM calendar_events AS e\n                    WHERE e.calendar_uid  = any($1)\n                    AND (\n                        (e.start_time <= $2 AND e.end_time >= $3)\n                        OR \n                        (e.start_time < $2 AND e.recurrence::text <> 'null')\n                    )\n                    ",
   "describe": {
     "columns": [
       {
@@ -75,62 +75,72 @@
       },
       {
         "ordinal": 14,
+        "name": "recurrence",
+        "type_info": "Json"
+      },
+      {
+        "ordinal": 15,
         "name": "exdates",
         "type_info": "TimestamptzArray"
       },
       {
-        "ordinal": 15,
+        "ordinal": 16,
+        "name": "reminders",
+        "type_info": "Json"
+      },
+      {
+        "ordinal": 17,
         "name": "service_uid",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 16,
+        "ordinal": 18,
         "name": "metadata",
         "type_info": "Jsonb"
       },
       {
-        "ordinal": 17,
+        "ordinal": 19,
         "name": "external_id",
         "type_info": "Text"
       },
       {
-        "ordinal": 18,
+        "ordinal": 20,
         "name": "event_type",
         "type_info": "Text"
       },
       {
-        "ordinal": 19,
+        "ordinal": 21,
         "name": "recurring_event_uid",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 20,
+        "ordinal": 22,
         "name": "original_start_time",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 21,
+        "ordinal": 23,
         "name": "recurring_until",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 22,
+        "ordinal": 24,
         "name": "user_uid",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 23,
+        "ordinal": 25,
         "name": "account_uid",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 24,
-        "name": "recurrence",
+        "ordinal": 26,
+        "name": "recurrence_jsonb",
         "type_info": "Jsonb"
       },
       {
-        "ordinal": 25,
-        "name": "reminders",
+        "ordinal": 27,
+        "name": "reminders_jsonb",
         "type_info": "Jsonb"
       }
     ],
@@ -156,19 +166,21 @@
       false,
       false,
       false,
-      false,
       true,
       false,
       true,
       true,
-      true,
-      true,
-      true,
       false,
-      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
       true,
       true
     ]
   },
-  "hash": "4459f1e7cf21b38f62a28228c98ff2981e70a2666fbd855bd2bba8c4aca5e4c1"
+  "hash": "fac3fa55fe3835e97ddc20de76528ad7c037583770b0d64d94651349ea972385"
 }

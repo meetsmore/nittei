@@ -52,7 +52,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for SetAccountWebhookUseCase {
     type Response = Account;
 
@@ -87,8 +87,7 @@ mod tests {
 
     use super::*;
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn it_rejects_invalid_webhook_url() {
         let ctx = setup_context().await.unwrap();
         let bad_uris = vec!["1", "", "test.zzcom", "test.com", "google.com"];
@@ -111,8 +110,7 @@ mod tests {
         }
     }
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn it_accepts_valid_webhook_url() {
         let ctx = setup_context().await.unwrap();
 

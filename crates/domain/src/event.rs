@@ -84,9 +84,6 @@ pub enum CalendarEventSort {
 #[serde(rename_all = "camelCase")]
 pub struct CalendarEvent {
     pub id: ID,
-    pub account_id: ID,
-    pub user_id: ID,
-    pub calendar_id: ID,
     pub external_parent_id: Option<String>,
     pub external_id: Option<String>,
     pub title: Option<String>,
@@ -106,6 +103,9 @@ pub struct CalendarEvent {
     pub recurring_until: Option<DateTime<Utc>>,
     pub recurring_event_id: Option<ID>,
     pub original_start_time: Option<DateTime<Utc>>,
+    pub calendar_id: ID,
+    pub user_id: ID,
+    pub account_id: ID,
     pub reminders: Vec<CalendarEventReminder>,
     pub service_id: Option<ID>,
     pub metadata: Option<serde_json::Value>,
@@ -189,7 +189,7 @@ impl CalendarEvent {
 
     pub fn expand(
         &self,
-        timespan: Option<&TimeSpan>,
+        timespan: Option<TimeSpan>,
         calendar_settings: &CalendarSettings,
     ) -> anyhow::Result<Vec<EventInstance>> {
         match &self.recurrence {

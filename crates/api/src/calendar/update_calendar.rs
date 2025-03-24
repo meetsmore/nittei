@@ -92,7 +92,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for UpdateCalendarUseCase {
     type Response = Calendar;
 
@@ -150,8 +150,7 @@ mod test {
 
     use super::*;
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn it_update_settings_with_valid_wkst() {
         let ctx = setup_context().await.unwrap();
         let account = Account::default();

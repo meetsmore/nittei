@@ -125,7 +125,7 @@ impl From<BookingQueryError> for UseCaseError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for GetServiceBookingSlotsUseCase {
     type Response = UseCaseRes;
 
@@ -244,7 +244,7 @@ impl GetServiceBookingSlotsUseCase {
                 let all_calendar_events = ctx
                     .repos
                     .events
-                    .find_by_calendar(id, Some(timespan))
+                    .find_by_calendar(id, Some(timespan.clone()))
                     .await
                     .unwrap_or_default();
 
@@ -252,7 +252,7 @@ impl GetServiceBookingSlotsUseCase {
                     .iter()
                     // Todo: handle error
                     .flat_map(|e| {
-                        e.expand(Some(timespan), &calendar.settings)
+                        e.expand(Some(timespan.clone()), &calendar.settings)
                             .unwrap_or_default()
                     })
                     .collect::<Vec<_>>();
@@ -340,7 +340,7 @@ impl GetServiceBookingSlotsUseCase {
             match ctx
                 .repos
                 .events
-                .find_by_calendar(&cal.id, Some(timespan))
+                .find_by_calendar(&cal.id, Some(timespan.clone()))
                 .await
             {
                 Ok(calendar_events) => {
@@ -348,7 +348,7 @@ impl GetServiceBookingSlotsUseCase {
                         .into_iter()
                         .filter(|e| e.busy)
                         .map(|e| -> anyhow::Result<Vec<EventInstance>> {
-                            let mut instances = e.expand(Some(timespan), &cal.settings)?;
+                            let mut instances = e.expand(Some(timespan.clone()), &cal.settings)?;
 
                             // Add buffer to instances if event is a service event
                             if let Some(service_id) = e.service_id {
@@ -639,8 +639,7 @@ mod test {
         ctx.repos.service_users.insert(&resource2).await.unwrap();
     }
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn get_service_bookingslots() {
         let TestContext {
             ctx,
@@ -663,8 +662,7 @@ mod test {
         assert!(res.unwrap().booking_slots.dates.is_empty());
     }
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn get_bookingslots_with_multiple_users_in_service() {
         let TestContext {
             ctx,

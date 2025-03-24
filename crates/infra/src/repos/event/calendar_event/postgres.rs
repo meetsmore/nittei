@@ -65,8 +65,10 @@ impl TryFrom<MostRecentCreatedServiceEventsRaw> for MostRecentCreatedServiceEven
 struct EventRaw {
     event_uid: Uuid,
     calendar_uid: Uuid,
-    user_uid: Uuid,
-    account_uid: Uuid,
+    user_uid: Option<Uuid>,
+    user_uid_from_user: Uuid,
+    account_uid: Option<Uuid>,
+    account_uid_from_user: Uuid,
     external_parent_id: Option<String>,
     external_id: Option<String>,
     title: Option<String>,
@@ -82,11 +84,13 @@ struct EventRaw {
     created: i64,
     updated: i64,
     recurrence: Option<Value>,
+    recurrence_jsonb: Option<Value>,
     recurring_until: Option<DateTime<Utc>>,
     exdates: Vec<DateTime<Utc>>,
     recurring_event_uid: Option<Uuid>,
     original_start_time: Option<DateTime<Utc>>,
     reminders: Option<Value>,
+    reminders_jsonb: Option<Value>,
     service_uid: Option<Uuid>,
     metadata: Value,
 }
@@ -106,8 +110,8 @@ impl TryFrom<EventRaw> for CalendarEvent {
 
         Ok(Self {
             id: e.event_uid.into(),
-            user_id: e.user_uid.into(),
-            account_id: e.account_uid.into(),
+            user_id: e.user_uid_from_user.into(),
+            account_id: e.account_uid_from_user.into(),
             calendar_id: e.calendar_uid.into(),
             external_parent_id: e.external_parent_id,
             external_id: e.external_id,
@@ -171,15 +175,17 @@ impl IEventRepo for PostgresEventRepo {
                 created,
                 updated,
                 recurrence,
+                recurrence_jsonb,
                 recurring_until,
                 exdates,
                 recurring_event_uid,
                 original_start_time,
                 reminders,
+                reminders_jsonb,
                 service_uid,
                 metadata
             )
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28)
             "#,
             e.id.as_ref(),
             e.account_id.as_ref(),
@@ -199,11 +205,13 @@ impl IEventRepo for PostgresEventRepo {
             e.busy,
             e.created.timestamp_millis(),
             e.updated.timestamp_millis(),
+            Json(&e.recurrence) as _,
             &recurrence as _,
             e.recurring_until,
             &e.exdates,
             e.recurring_event_id.as_ref().map(|id| id.as_ref()),
             e.original_start_time,
+            Json(&e.reminders) as _,
             Json(&e.reminders) as _,
             e.service_id.as_ref().map(|id| id.as_ref()),
             Json(&e.metadata) as _,
@@ -246,13 +254,15 @@ impl IEventRepo for PostgresEventRepo {
                 created = $14,
                 updated = $15,
                 recurrence = $16,
-                recurring_until = $17,
-                exdates = $18,
-                recurring_event_uid = $19,
-                original_start_time = $20,
-                reminders = $21,
-                service_uid = $22,
-                metadata = $23
+                recurrence_jsonb = $17,
+                recurring_until = $18,
+                exdates = $19,
+                recurring_event_uid = $20,
+                original_start_time = $21,
+                reminders = $22,
+                reminders_jsonb = $23,
+                service_uid = $24,
+                metadata = $25
             WHERE event_uid = $1
             "#,
             e.id.as_ref(),
@@ -270,11 +280,13 @@ impl IEventRepo for PostgresEventRepo {
             e.busy,
             e.created.timestamp_millis(),
             e.updated.timestamp_millis(),
+            Json(&e.recurrence) as _,
             &recurrence as _,
             e.recurring_until,
             &e.exdates,
             e.recurring_event_id.as_ref().map(|id| id.as_ref()),
             e.original_start_time,
+            Json(&e.reminders) as _,
             Json(&e.reminders) as _,
             e.service_id.as_ref().map(|id| id.as_ref()),
             Json(&e.metadata) as _,
@@ -426,7 +438,7 @@ impl IEventRepo for PostgresEventRepo {
     async fn find_by_calendar(
         &self,
         calendar_id: &ID,
-        timespan: Option<&nittei_domain::TimeSpan>,
+        timespan: Option<nittei_domain::TimeSpan>,
     ) -> anyhow::Result<Vec<CalendarEvent>> {
         if let Some(timespan) = timespan {
             sqlx::query_as!(
@@ -437,7 +449,7 @@ impl IEventRepo for PostgresEventRepo {
                     AND (
                         (e.start_time <= $2 AND e.end_time >= $3)
                         OR
-                        (e.start_time < $2 AND e.recurrence IS NOT NULL)
+                        (e.start_time < $2 AND e.recurrence::text <> 'null')
                     )
                     "#,
                 calendar_id.as_ref(),
@@ -482,7 +494,7 @@ impl IEventRepo for PostgresEventRepo {
     async fn find_by_calendars(
         &self,
         calendar_ids: &[ID],
-        timespan: &nittei_domain::TimeSpan,
+        timespan: nittei_domain::TimeSpan,
     ) -> anyhow::Result<Vec<CalendarEvent>> {
         let calendar_ids = calendar_ids
             .iter()
@@ -496,7 +508,7 @@ impl IEventRepo for PostgresEventRepo {
                     AND (
                         (e.start_time <= $2 AND e.end_time >= $3)
                         OR 
-                        (e.start_time < $2 AND e.recurrence::text IS NOT NULL)
+                        (e.start_time < $2 AND e.recurrence::text <> 'null')
                     )
                     "#,
             &calendar_ids,
@@ -525,7 +537,7 @@ impl IEventRepo for PostgresEventRepo {
     async fn find_busy_events_and_recurring_events_for_calendars(
         &self,
         calendar_ids: &[ID],
-        timespan: &nittei_domain::TimeSpan,
+        timespan: nittei_domain::TimeSpan,
         include_tentative: bool,
     ) -> anyhow::Result<Vec<CalendarEvent>> {
         let calendar_ids = calendar_ids
@@ -548,7 +560,7 @@ impl IEventRepo for PostgresEventRepo {
                     AND (
                         (e.start_time < $2 AND e.end_time > $3)
                         OR
-                        (e.start_time < $2 AND e.recurrence IS NOT NULL)
+                        (e.start_time < $2 AND e.recurrence::text <> 'null')
                     )
                     AND busy = true
                     AND status = any($4)
@@ -652,12 +664,8 @@ impl IEventRepo for PostgresEventRepo {
 
         if let Some(is_recurring) = params.search_events_params.is_recurring {
             query.push(format!(
-                " AND e.recurrence::text {}",
-                if is_recurring {
-                    "IS NOT NULL"
-                } else {
-                    "IS NULL"
-                },
+                " AND e.recurrence::text {} 'null'",
+                if is_recurring { "<>" } else { "=" },
             ));
         }
 
@@ -796,12 +804,8 @@ impl IEventRepo for PostgresEventRepo {
 
         if let Some(is_recurring) = params.search_events_params.is_recurring {
             query.push(format!(
-                " AND e.recurrence {}",
-                if is_recurring {
-                    "IS NOT NULL"
-                } else {
-                    "IS NULL"
-                },
+                " AND e.recurrence::text {} 'null'",
+                if is_recurring { "<>" } else { "=" },
             ));
         }
 

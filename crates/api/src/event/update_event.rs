@@ -11,6 +11,7 @@ use nittei_domain::{
     User,
 };
 use nittei_infra::NitteiContext;
+use nittei_utils::config::APP_CONFIG;
 
 use crate::{
     error::NitteiError,
@@ -162,7 +163,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for UpdateEventUseCase {
     type Response = CalendarEvent;
 
@@ -343,10 +344,14 @@ impl UseCase for UpdateEventUseCase {
     }
 
     fn subscribers() -> Vec<Box<dyn Subscriber<Self>>> {
-        vec![
-            Box::new(SyncRemindersOnEventUpdated),
-            Box::new(UpdateSyncedEventsOnEventUpdated),
-        ]
+        if APP_CONFIG.disable_reminders {
+            vec![]
+        } else {
+            vec![
+                Box::new(SyncRemindersOnEventUpdated),
+                Box::new(UpdateSyncedEventsOnEventUpdated),
+            ]
+        }
     }
 }
 
@@ -362,8 +367,7 @@ mod test {
 
     use super::*;
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn update_nonexisting_event() {
         let mut usecase = UpdateEventUseCase {
             start_time: Some(DateTime::from_timestamp_millis(500).unwrap()),
