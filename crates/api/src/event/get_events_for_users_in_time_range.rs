@@ -94,12 +94,15 @@ impl UseCase for GetEventsForUsersInTimeRangeUseCase {
             return Err(UseCaseError::InvalidTimespan);
         }
 
-        let calendars = ctx
-            .repos
-            .calendars
-            .find_for_users(&self.user_ids)
-            .await
-            .map_err(|_| UseCaseError::InternalError)?;
+        let calendars = if self.generate_instances {
+            ctx.repos
+                .calendars
+                .find_for_users(&self.user_ids)
+                .await
+                .map_err(|_| UseCaseError::InternalError)?
+        } else {
+            vec![]
+        };
 
         let calendars_map = calendars
             .iter()
@@ -125,37 +128,48 @@ impl UseCase for GetEventsForUsersInTimeRangeUseCase {
         let map_recurring_event_id_to_exceptions =
             generate_map_exceptions_original_start_times(&events);
 
-        // For each event, expand it and keep the instances next to the event
-        let events = events
-            .into_iter()
-            .map(|event| {
-                let calendar = calendars_map.get(&event.calendar_id).ok_or_else(|| {
-                    UseCaseError::NotFound("Calendar".to_string(), event.calendar_id.to_string())
-                })?;
+        let events = if !self.generate_instances {
+            // If we don't want to generate instances, we just return the events
+            events
+                .into_iter()
+                .map(|event| EventWithInstances {
+                    event,
+                    instances: vec![],
+                })
+                .collect::<Vec<_>>()
+        } else {
+            // For each event, expand it and keep the instances next to the event
+            events
+                .into_iter()
+                .map(|event| {
+                    let calendar = calendars_map.get(&event.calendar_id).ok_or_else(|| {
+                        UseCaseError::NotFound(
+                            "Calendar".to_string(),
+                            event.calendar_id.to_string(),
+                        )
+                    })?;
+                    // Get the exceptions of the event
+                    let exceptions = map_recurring_event_id_to_exceptions
+                        .get(&event.id)
+                        .map(Vec::as_slice)
+                        .unwrap_or(&[]);
 
-                // Get the exceptions of the event
-                let exceptions = map_recurring_event_id_to_exceptions
-                    .get(&event.id)
-                    .map(Vec::as_slice)
-                    .unwrap_or(&[]);
+                    // Expand the event and remove the exceptions
+                    let timespan = timespan.clone();
 
-                // Expand the event and remove the exceptions
-                let timespan = timespan.clone();
-                let instances = if self.generate_instances {
-                    expand_event_and_remove_exceptions(calendar, &event, exceptions, timespan)
-                        .map_err(|e| {
-                            error!("Got an error while expanding an event {:?}", e);
-                            UseCaseError::InternalError
-                        })?
-                } else {
-                    vec![]
-                };
+                    let instances =
+                        expand_event_and_remove_exceptions(calendar, &event, exceptions, timespan)
+                            .map_err(|e| {
+                                error!("Got an error while expanding an event {:?}", e);
+                                UseCaseError::InternalError
+                            })?;
 
-                Ok(EventWithInstances { event, instances })
-            })
-            .collect::<Result<Vec<_>, _>>()?
-            .into_iter()
-            .collect::<Vec<_>>();
+                    Ok(EventWithInstances { event, instances })
+                })
+                .collect::<Result<Vec<_>, _>>()?
+                .into_iter()
+                .collect::<Vec<_>>()
+        };
 
         Ok(UseCaseResponse { events })
     }

@@ -41,7 +41,7 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
 
     // Get events of multiple users during a time range
     cfg.route(
-        "/events/time_span",
+        "/events/timespan",
         web::post()
             .to(get_events_for_users_in_time_range::get_events_for_users_in_time_range_controller),
     );

@@ -126,7 +126,7 @@ export class NitteiEventClient extends NitteiBaseClient {
     body: GetEventsForUsersInTimeRangeBody
   ): Promise<GetEventsForUsersInTimeSpanAPIResponse> {
     const res = await this.post<GetEventsForUsersInTimeSpanAPIResponse>(
-      '/events/user',
+      '/events/timespan',
       body
     )
 
