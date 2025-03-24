@@ -1,9 +1,9 @@
 use std::time::Duration;
 
 use actix_web::rt::time::{Instant, interval, sleep_until};
-use awc::Client;
 use nittei_api_structs::send_event_reminders::AccountRemindersDTO;
 use nittei_infra::NitteiContext;
+use reqwest::Client;
 use tracing::{debug, error};
 
 use crate::{
@@ -51,7 +51,7 @@ pub fn start_send_reminders_job(ctx: NitteiContext) {
         loop {
             minutely_interval.tick().await;
             let context = ctx.clone();
-            actix_web::rt::spawn(send_reminders(context));
+            tokio::spawn(send_reminders(context));
         }
     });
 }
@@ -82,8 +82,9 @@ async fn send_reminders(context: NitteiContext) {
             Some(webhook) => {
                 if let Err(e) = client
                     .post(webhook.url)
-                    .insert_header(("nittei-scheduler-webhook-key", webhook.key))
-                    .send_json(&AccountRemindersDTO::new(reminders))
+                    .header("nittei-scheduler-webhook-key", webhook.key)
+                    .json(&AccountRemindersDTO::new(reminders))
+                    .send()
                     .await
                 {
                     error!("Error informing client of reminders: {:?}", e);
