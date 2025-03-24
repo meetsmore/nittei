@@ -65,10 +65,8 @@ impl TryFrom<MostRecentCreatedServiceEventsRaw> for MostRecentCreatedServiceEven
 struct EventRaw {
     event_uid: Uuid,
     calendar_uid: Uuid,
-    user_uid: Option<Uuid>,
-    user_uid_from_user: Uuid,
-    account_uid: Option<Uuid>,
-    account_uid_from_user: Uuid,
+    user_uid: Uuid,
+    account_uid: Uuid,
     external_parent_id: Option<String>,
     external_id: Option<String>,
     title: Option<String>,
@@ -110,8 +108,8 @@ impl TryFrom<EventRaw> for CalendarEvent {
 
         Ok(Self {
             id: e.event_uid.into(),
-            user_id: e.user_uid_from_user.into(),
-            account_id: e.account_uid_from_user.into(),
+            user_id: e.user_uid.into(),
+            account_id: e.account_uid.into(),
             calendar_id: e.calendar_uid.into(),
             external_parent_id: e.external_parent_id,
             external_id: e.external_id,

@@ -27,8 +27,7 @@ impl PostgresCalendarRepo {
 struct CalendarRaw {
     calendar_uid: Uuid,
     user_uid: Uuid,
-    account_uid: Option<Uuid>,
-    account_uid_from_user: Uuid,
+    account_uid: Uuid,
     name: Option<String>,
     key: Option<String>,
     settings: Value,
@@ -42,7 +41,7 @@ impl TryFrom<CalendarRaw> for Calendar {
         Ok(Self {
             id: c.calendar_uid.into(),
             user_id: c.user_uid.into(),
-            account_id: c.account_uid_from_user.into(),
+            account_id: c.account_uid.into(),
             name: c.name,
             key: c.key,
             settings: serde_json::from_value(c.settings)?,
