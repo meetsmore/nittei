@@ -1,7 +1,14 @@
 use std::convert::{TryFrom, TryInto};
 
 use chrono::{DateTime, Utc};
-use nittei_domain::{CalendarEvent, CalendarEventReminder, CalendarEventStatus, ID, RRuleOptions};
+use nittei_domain::{
+    CalendarEvent,
+    CalendarEventReminder,
+    CalendarEventStatus,
+    ID,
+    RRuleOptions,
+    TimeSpan,
+};
 use serde_json::Value;
 use sqlx::{
     FromRow,
@@ -553,6 +560,48 @@ impl IEventRepo for PostgresEventRepo {
             error!(
                 "Find calendar events for calendar ids: {:?} failed. DB returned error: {:?}",
                 calendar_ids, e
+            );
+        })?
+        .into_iter()
+        .map(|e| e.try_into())
+        .collect()
+    }
+
+    /// Find events and recurring events for users
+    /// Events need to be "busy" and with the status "confirmed"
+    async fn find_busy_events_and_recurring_events_for_users(
+        &self,
+        user_ids: &[ID],
+        timespan: TimeSpan,
+    ) -> anyhow::Result<Vec<CalendarEvent>> {
+        let user_ids = user_ids.iter().map(|id| *id.as_ref()).collect::<Vec<_>>();
+        sqlx::query_as!(
+            EventRaw,
+            r#"
+                    SELECT e.*, u.user_uid AS user_uid_from_user, u.account_uid AS account_uid_from_user FROM calendar_events AS e
+                    INNER JOIN calendars AS c
+                        ON c.calendar_uid = e.calendar_uid
+                    INNER JOIN users AS u
+                        ON u.user_uid = c.user_uid
+                    WHERE u.user_uid = any($1)
+                    AND (
+                        (e.start_time < $2 AND e.end_time > $3)
+                        OR
+                        (e.start_time < $2 AND e.recurrence::text <> 'null')
+                    )
+                    AND busy = true
+                    AND status = 'confirmed'
+                    "#,
+            &user_ids,
+            timespan.end(),
+            timespan.start(),
+        )
+        .fetch_all(&self.pool)
+        .await
+        .inspect_err(|e| {
+            error!(
+                "Find calendar events for user ids: {:?} failed. DB returned error: {:?}",
+                user_ids, e
             );
         })?
         .into_iter()

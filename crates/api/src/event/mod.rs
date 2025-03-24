@@ -6,6 +6,7 @@ mod get_event_by_external_id;
 mod get_event_instances;
 mod get_events_by_calendars;
 mod get_events_by_meta;
+mod get_events_for_users_in_time_range;
 pub mod get_upcoming_reminders;
 mod search_events;
 mod subscribers;
@@ -36,6 +37,13 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.route(
         "/user/{user_id}/events",
         web::get().to(get_events_by_calendars::get_events_by_calendars_controller),
+    );
+
+    // Get events of multiple users during a time range
+    cfg.route(
+        "/events/time_span",
+        web::post()
+            .to(get_events_for_users_in_time_range::get_events_for_users_in_time_range_controller),
     );
 
     // Get events by metadata

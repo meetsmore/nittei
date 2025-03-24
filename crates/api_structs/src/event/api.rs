@@ -346,6 +346,56 @@ pub mod get_events_by_calendars {
     }
 }
 
+pub mod get_events_for_users_in_time_range {
+    use chrono::{DateTime, Utc};
+    use nittei_domain::EventWithInstances;
+
+    use super::*;
+    use crate::dtos::EventWithInstancesDTO;
+
+    /// Body for getting events for users in a time range
+    #[derive(Deserialize, Serialize, Validate, TS)]
+    #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "GetEventsForUsersInTimeRangeBody")]
+    pub struct RequestBody {
+        /// List of user IDs
+        #[validate(length(min = 1))]
+        pub user_ids: Vec<ID>,
+
+        /// Start time of the interval for getting the events (UTC)
+        #[ts(type = "Date")]
+        pub start_time: DateTime<Utc>,
+
+        /// End time of the interval for getting the events (UTC)
+        #[ts(type = "Date")]
+        pub end_time: DateTime<Utc>,
+
+        /// Generate instances of recurring events, default is false
+        #[ts(optional)]
+        pub generate_instances: Option<bool>,
+    }
+
+    /// API response for getting events by calendars
+    #[derive(Serialize, TS)]
+    #[serde(rename_all = "camelCase")]
+    #[ts(export, rename = "GetEventsForUsersInTimeSpanAPIResponse")]
+    pub struct APIResponse {
+        /// List of calendar events retrieved
+        pub events: Vec<EventWithInstancesDTO>,
+    }
+
+    impl APIResponse {
+        pub fn new(events: Vec<EventWithInstances>) -> Self {
+            Self {
+                events: events
+                    .into_iter()
+                    .map(|e| EventWithInstancesDTO::new(e.event, e.instances))
+                    .collect(),
+            }
+        }
+    }
+}
+
 pub mod search_events {
     use nittei_domain::{CalendarEventSort, DateTimeQuery, IDQuery, StringQuery};
 

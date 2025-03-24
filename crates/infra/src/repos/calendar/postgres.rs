@@ -215,6 +215,32 @@ impl ICalendarRepo for PostgresCalendarRepo {
         .transpose()
     }
 
+    /// Find calendars for multiple users
+    async fn find_for_users(&self, user_ids: &[ID]) -> anyhow::Result<Vec<Calendar>> {
+        let user_ids: Vec<Uuid> = user_ids.iter().map(|id| id.clone().into()).collect();
+        sqlx::query_as!(
+            CalendarRaw,
+            r#"
+            SELECT c.*, u.account_uid AS account_uid_from_user FROM calendars AS c
+            INNER JOIN users AS u
+                ON u.user_uid = c.user_uid
+            WHERE c.user_uid = any($1)
+            "#,
+            user_ids.as_slice()
+        )
+        .fetch_all(&self.pool)
+        .await
+        .inspect_err(|e| {
+            error!(
+                "Find calendars by user ids: {:?} failed. DB returned error: {:?}",
+                user_ids, e
+            );
+        })?
+        .into_iter()
+        .map(|c| c.try_into())
+        .collect()
+    }
+
     #[instrument]
     async fn delete(&self, calendar_id: &ID) -> anyhow::Result<()> {
         sqlx::query!(
