@@ -850,4 +850,70 @@ describe('CalendarEvent API', () => {
       await adminClient.user.remove(userId)
     })
   })
+
+  describe('Get events of users during timespan', () => {
+    let adminClient: INitteiClient
+    let userId: string
+    let calendarId: string
+    let eventId1: string
+    let eventId2: string
+    beforeAll(async () => {
+      const data = await setupAccount()
+      adminClient = data.client
+
+      const userRes = await adminClient.user.create()
+      userId = userRes.user.id
+      const calendarRes = await adminClient.calendar.create(userId, {
+        timezone: 'UTC',
+        key: 'test',
+      })
+      calendarId = calendarRes.calendar.id
+
+      const eventRes1 = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        status: 'confirmed',
+        busy: true,
+        startTime: new Date(1000),
+      })
+      eventId1 = eventRes1.event.id
+
+      const eventRes2 = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 50,
+        startTime: new Date(50),
+        status: 'confirmed',
+        busy: true,
+        recurrence: {
+          freq: 'daily',
+          interval: 1,
+        },
+      })
+      eventId2 = eventRes2.event.id
+    })
+
+    it('should be able to get events of users during timespan, with recurrence', async () => {
+      const res = await adminClient.events.getEventsOfUsersDuringTimespan({
+        userIds: [userId],
+        startTime: new Date(1000),
+        endTime: new Date(2000),
+      })
+
+      expect(res.events.length).toBe(2)
+      expect(res.events).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            event: expect.objectContaining({
+              id: eventId1,
+            }),
+          }),
+          expect.objectContaining({
+            event: expect.objectContaining({
+              id: eventId2,
+            }),
+          }),
+        ])
+      )
+    })
+  })
 })
