@@ -1,7 +1,14 @@
 use std::convert::{TryFrom, TryInto};
 
 use chrono::{DateTime, Utc};
-use nittei_domain::{CalendarEvent, CalendarEventReminder, CalendarEventStatus, ID, RRuleOptions};
+use nittei_domain::{
+    CalendarEvent,
+    CalendarEventReminder,
+    CalendarEventStatus,
+    ID,
+    RRuleOptions,
+    TimeSpan,
+};
 use serde_json::Value;
 use sqlx::{
     FromRow,
@@ -329,6 +336,44 @@ impl IEventRepo for PostgresEventRepo {
         .transpose()
     }
 
+    /// Find events by their recurring_event_ids during a timespan
+    /// This is used to find the exceptions for recurring events
+    async fn find_by_recurring_event_ids_for_timespan(
+        &self,
+        recurring_event_ids: &[ID],
+        timespan: TimeSpan,
+    ) -> anyhow::Result<Vec<CalendarEvent>> {
+        let recurring_event_ids = recurring_event_ids
+            .iter()
+            .map(|id| *id.as_ref())
+            .collect::<Vec<_>>();
+        sqlx::query_as!(
+            EventRaw,
+            r#"
+            SELECT e.*, u.user_uid AS user_uid_from_user, u.account_uid AS account_uid_from_user FROM calendar_events AS e
+            INNER JOIN calendars AS c
+                ON c.calendar_uid = e.calendar_uid
+            INNER JOIN users AS u
+                ON u.user_uid = c.user_uid
+            WHERE e.recurring_event_uid = ANY($1) AND e.original_start_time >= $2 AND e.original_start_time <= $3
+            "#,
+            &recurring_event_ids,
+            timespan.start(),
+            timespan.end(),
+        )
+        .fetch_all(&self.pool)
+        .await
+        .inspect_err(|err| {
+            error!(
+                "Find calendar events with recurring_event_ids: {:?} failed. DB returned error: {:?}",
+                recurring_event_ids, err
+            );
+        })?
+        .into_iter()
+        .map(|e| e.try_into())
+        .collect()
+    }
+
     /// Find a calendar event by its id or recurring_event_id
     /// For normal events, this will return a Vec with one element
     /// For recurring event, this can return the event + the exceptions
@@ -553,6 +598,69 @@ impl IEventRepo for PostgresEventRepo {
             error!(
                 "Find calendar events for calendar ids: {:?} failed. DB returned error: {:?}",
                 calendar_ids, e
+            );
+        })?
+        .into_iter()
+        .map(|e| e.try_into())
+        .collect()
+    }
+
+    /// Find events and recurring events for users
+    /// Events need to be "busy" and with the status "confirmed"
+    ///
+    /// It excludes events that have an original_start_time
+    /// This is used to find the normal events and the recurring events for a user
+    async fn find_events_and_recurring_events_for_users_for_timespan(
+        &self,
+        user_ids: &[ID],
+        timespan: TimeSpan,
+        include_tentative: bool,
+        include_non_busy: bool,
+    ) -> anyhow::Result<Vec<CalendarEvent>> {
+        let user_ids = user_ids.iter().map(|id| *id.as_ref()).collect::<Vec<_>>();
+        let expected_busy: Vec<bool> = if include_non_busy {
+            vec![true, false]
+        } else {
+            vec![true]
+        };
+        let expected_status: Vec<String> = if include_tentative {
+            vec![
+                CalendarEventStatus::Tentative.into(),
+                CalendarEventStatus::Confirmed.into(),
+            ]
+        } else {
+            vec![CalendarEventStatus::Confirmed.into()]
+        };
+        sqlx::query_as!(
+            EventRaw,
+                r#"
+                    SELECT e.*, u.user_uid AS user_uid_from_user, u.account_uid AS account_uid_from_user FROM calendar_events AS e
+                    INNER JOIN calendars AS c
+                        ON c.calendar_uid = e.calendar_uid
+                    INNER JOIN users AS u
+                        ON u.user_uid = c.user_uid
+                    WHERE u.user_uid = any($1)
+                    AND (
+                        (e.start_time < $2 AND e.end_time > $3)
+                        OR
+                        (e.start_time < $2 AND e.recurrence::text <> 'null')
+                    )
+                    AND busy = any($4)
+                    AND status = any($5)
+                    AND e.original_start_time IS NULL
+                    "#,
+            &user_ids,
+            timespan.end(),
+            timespan.start(),
+            &expected_busy,
+            &expected_status,
+        )
+        .fetch_all(&self.pool)
+        .await
+        .inspect_err(|e| {
+            error!(
+                "Find calendar events for user ids: {:?} failed. DB returned error: {:?}",
+                user_ids, e
             );
         })?
         .into_iter()

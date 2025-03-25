@@ -157,7 +157,12 @@ impl CalendarEvent {
             return Ok(false);
         }
 
-        self.recurring_until = recurrence.until;
+        // Add duration to until if it is set
+        self.recurring_until = recurrence
+            .until
+            .map(|until| until + TimeDelta::milliseconds(self.duration));
+
+        // Set the recurrence
         self.recurrence = Some(recurrence);
         Ok(true)
     }

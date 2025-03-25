@@ -17,6 +17,7 @@ pub trait ICalendarRepo: Send + Sync {
         user_id: &ID,
         key: &str,
     ) -> anyhow::Result<Option<Calendar>>;
+    async fn find_for_users(&self, user_ids: &[ID]) -> anyhow::Result<Vec<Calendar>>;
     async fn delete(&self, calendar_id: &ID) -> anyhow::Result<()>;
     async fn find_by_metadata(&self, query: MetadataFindQuery) -> anyhow::Result<Vec<Calendar>>;
 }

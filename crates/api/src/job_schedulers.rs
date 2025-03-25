@@ -51,7 +51,7 @@ pub fn start_send_reminders_job(ctx: NitteiContext) {
         loop {
             minutely_interval.tick().await;
             let context = ctx.clone();
-            tokio::spawn(async move { send_reminders(context).await });
+            tokio::spawn(send_reminders(context));
         }
     });
 }
