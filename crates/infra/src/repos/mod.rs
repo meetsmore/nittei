@@ -71,7 +71,8 @@ impl Repos {
     pub async fn create_postgres(connection_string: &str) -> anyhow::Result<Self> {
         info!("DB CHECKING CONNECTION ...");
         let pool = PgPoolOptions::new()
-            .max_connections(5)
+            .min_connections(nittei_utils::config::APP_CONFIG.pg.min_connections)
+            .max_connections(nittei_utils::config::APP_CONFIG.pg.max_connections)
             .connect(connection_string)
             .await
             .context(format!(
@@ -80,7 +81,7 @@ impl Repos {
             ))?;
         info!("DB CHECKING CONNECTION ... [done]");
 
-        if !nittei_utils::config::APP_CONFIG.skip_db_migrations {
+        if !nittei_utils::config::APP_CONFIG.pg.skip_migrations {
             info!("DB EXECUTING MIGRATION ...");
 
             // Run the migrations
