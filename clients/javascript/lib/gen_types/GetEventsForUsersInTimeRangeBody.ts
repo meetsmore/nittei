@@ -21,4 +21,12 @@ export type GetEventsForUsersInTimeRangeBody = {
    * Generate instances of recurring events, default is false
    */
   generateInstances?: boolean
+  /**
+   * Include tentative events, default is false
+   */
+  includeTentative?: boolean
+  /**
+   * Include non-busy events, default is false
+   */
+  includeNonBusy?: boolean
 }

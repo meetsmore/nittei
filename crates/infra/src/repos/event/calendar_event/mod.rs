@@ -64,6 +64,11 @@ pub trait IEventRepo: Send + Sync {
         &self,
         event_id: &ID,
     ) -> anyhow::Result<Vec<CalendarEvent>>;
+    async fn find_by_recurring_event_ids_for_timespan(
+        &self,
+        recurring_event_ids: &[ID],
+        timespan: TimeSpan,
+    ) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn get_by_external_id(
         &self,
         account_uid: &ID,
@@ -80,10 +85,12 @@ pub trait IEventRepo: Send + Sync {
         calendar_id: &ID,
         timespan: Option<TimeSpan>,
     ) -> anyhow::Result<Vec<CalendarEvent>>;
-    async fn find_busy_events_and_recurring_events_for_users(
+    async fn find_events_and_recurring_events_for_users_for_timespan(
         &self,
         user_ids: &[ID],
         timespan: TimeSpan,
+        include_tentative: bool,
+        include_non_busy: bool,
     ) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn find_by_calendars(
         &self,

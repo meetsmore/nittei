@@ -373,6 +373,14 @@ pub mod get_events_for_users_in_time_range {
         /// Generate instances of recurring events, default is false
         #[ts(optional)]
         pub generate_instances: Option<bool>,
+
+        /// Include tentative events, default is false
+        #[ts(optional)]
+        pub include_tentative: Option<bool>,
+
+        /// Include non-busy events, default is false
+        #[ts(optional)]
+        pub include_non_busy: Option<bool>,
     }
 
     /// API response for getting events by calendars
