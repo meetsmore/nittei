@@ -356,7 +356,7 @@ pub mod get_events_for_users_in_time_range {
     /// Body for getting events for users in a time range
     #[derive(Deserialize, Serialize, Validate, TS)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "GetEventsForUsersInTimeRangeBody")]
+    #[ts(export, rename = "GetEventsForUsersInTimeSpanBody")]
     pub struct RequestBody {
         /// List of user IDs
         #[validate(length(min = 1))]
@@ -372,7 +372,7 @@ pub mod get_events_for_users_in_time_range {
 
         /// Generate instances of recurring events, default is false
         #[ts(optional)]
-        pub generate_instances: Option<bool>,
+        pub generate_instances_for_recurring: Option<bool>,
 
         /// Include tentative events, default is false
         #[ts(optional)]

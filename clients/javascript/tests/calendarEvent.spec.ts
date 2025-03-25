@@ -897,7 +897,6 @@ describe('CalendarEvent API', () => {
         userIds: [userId],
         startTime: new Date(1000),
         endTime: new Date(2000),
-        generateInstances: false,
       })
 
       expect(res.events.length).toBe(2)

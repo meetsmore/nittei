@@ -4,7 +4,7 @@ import type { ID } from './ID'
 /**
  * Body for getting events for users in a time range
  */
-export type GetEventsForUsersInTimeRangeBody = {
+export type GetEventsForUsersInTimeSpanBody = {
   /**
    * List of user IDs
    */
@@ -20,7 +20,7 @@ export type GetEventsForUsersInTimeRangeBody = {
   /**
    * Generate instances of recurring events, default is false
    */
-  generateInstances?: boolean
+  generateInstancesForRecurring?: boolean
   /**
    * Include tentative events, default is false
    */

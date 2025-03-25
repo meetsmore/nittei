@@ -2,8 +2,8 @@ import { NitteiBaseClient } from './baseClient'
 import type {
   DeleteManyEventsRequestBody,
   GetEventsByExternalIdAPIResponse,
-  GetEventsForUsersInTimeRangeBody,
   GetEventsForUsersInTimeSpanAPIResponse,
+  GetEventsForUsersInTimeSpanBody,
   SearchEventsAPIResponse,
   SearchEventsRequestBody,
 } from './gen_types'
@@ -123,7 +123,7 @@ export class NitteiEventClient extends NitteiBaseClient {
    * @returns - the events found
    */
   public async getEventsOfUsersDuringTimespan(
-    body: GetEventsForUsersInTimeRangeBody
+    body: GetEventsForUsersInTimeSpanBody
   ): Promise<GetEventsForUsersInTimeSpanAPIResponse> {
     const res = await this.post<GetEventsForUsersInTimeSpanAPIResponse>(
       '/events/timespan',

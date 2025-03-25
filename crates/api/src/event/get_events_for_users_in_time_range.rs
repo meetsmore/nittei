@@ -37,7 +37,7 @@ pub async fn get_events_for_users_in_time_range_controller(
         user_ids: body.user_ids.clone(),
         start_time: body.start_time,
         end_time: body.end_time,
-        generate_instances: body.generate_instances.unwrap_or(false),
+        generate_instances_for_recurring: body.generate_instances_for_recurring.unwrap_or(false),
         include_tentative: body.include_tentative.unwrap_or(false),
         include_non_busy: body.include_non_busy.unwrap_or(false),
     };
@@ -54,7 +54,7 @@ pub struct GetEventsForUsersInTimeRangeUseCase {
     pub user_ids: Vec<ID>,
     pub start_time: DateTime<Utc>,
     pub end_time: DateTime<Utc>,
-    pub generate_instances: bool,
+    pub generate_instances_for_recurring: bool,
     pub include_tentative: bool,
     pub include_non_busy: bool,
 }
@@ -100,7 +100,7 @@ impl UseCase for GetEventsForUsersInTimeRangeUseCase {
             return Err(UseCaseError::InvalidTimespan);
         }
 
-        let calendars_map = if self.generate_instances {
+        let calendars_map = if self.generate_instances_for_recurring {
             let calendars = ctx
                 .repos
                 .calendars
@@ -160,7 +160,7 @@ impl UseCase for GetEventsForUsersInTimeRangeUseCase {
         // Concat the normal events and the recurring events with the exceptions
         let all_events = [normal_events_and_recurring_events, exceptions].concat();
 
-        let events_to_return = if !self.generate_instances {
+        let events_to_return = if !self.generate_instances_for_recurring {
             // If we don't want to generate instances, we just return the events
             all_events
                 .into_iter()
@@ -389,7 +389,7 @@ mod test {
                 .with_timezone(&Utc),
             user_ids: vec![user.id.clone()],
             account_id: account.id.clone(),
-            generate_instances: false,
+            generate_instances_for_recurring: false,
             include_tentative: false,
             include_non_busy: false,
         };
@@ -454,7 +454,7 @@ mod test {
                 .with_timezone(&Utc),
             user_ids: vec![user.id.clone()],
             account_id: account.id.clone(),
-            generate_instances: true,
+            generate_instances_for_recurring: true,
             include_tentative: false,
             include_non_busy: false,
         };
@@ -513,7 +513,7 @@ mod test {
                 .with_timezone(&Utc),
             user_ids: vec![user.id.clone()],
             account_id: account.id.clone(),
-            generate_instances: false,
+            generate_instances_for_recurring: false,
             include_tentative: false,
             include_non_busy: false,
         };
@@ -575,7 +575,7 @@ mod test {
                 .with_timezone(&Utc),
             user_ids: vec![user.id.clone()],
             account_id: account.id.clone(),
-            generate_instances: false,
+            generate_instances_for_recurring: false,
             include_tentative: false,
             include_non_busy: false,
         };
