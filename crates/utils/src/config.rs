@@ -27,20 +27,13 @@ pub struct AppConfig {
     /// Env var: NITTEI__SERVER_SHUTDOWN_TIMEOUT
     pub server_shutdown_timeout: u64,
 
-    /// The database URL
-    /// Default is postgresql://postgres:postgres@localhost:45432/nittei
-    /// Env var: NITTEI__DATABASE_URL
-    pub database_url: String,
+    /// Pg config
+    pub pg: PgConfig,
 
     /// The secret code to create accounts (superadmin)
     /// Default is a random 16 characters string
     /// Env var: NITTEI__CREATE_ACCOUNT_SECRET_CODE
     pub create_account_secret_code: Option<String>,
-
-    /// This is a flag to skip the database migration
-    /// Default is false
-    /// Env var: NITTEI__SKIP_DB_MIGRATIONS
-    pub skip_db_migrations: bool,
 
     /// This is a flag for disabling the reminders features
     /// Be careful, as this impacts what is saved in database
@@ -140,6 +133,31 @@ pub struct IntegrationConfig {
     pub redirect_uri: String,
 }
 
+/// Postgres configuration
+#[derive(Debug, Deserialize)]
+#[allow(unused)]
+pub struct PgConfig {
+    /// The database URL
+    /// Default is postgresql://postgres:postgres@localhost:45432/nittei
+    /// Env var: NITTEI__PG__DATABASE_URL
+    pub database_url: String,
+
+    /// This is a flag to skip the database migration
+    /// Default is false
+    /// Env var: NITTEI__PG__SKIP_MIGRATIONS
+    pub skip_migrations: bool,
+
+    /// The minimum number of connections to the database
+    /// Default is 2
+    /// Env var: NITTEI__PG__MIN_CONNECTIONS
+    pub min_connections: u32,
+
+    /// The maximum number of connections to the database
+    /// Default is 5
+    /// Env var: NITTEI__PG__MAX_CONNECTIONS
+    pub max_connections: u32,
+}
+
 /// Parse the configuration from the environment variables
 /// and return the configuration object
 ///
@@ -162,17 +180,21 @@ fn parse_config() -> AppConfig {
         .expect("Failed to set default server_shutdown_sleep")
         .set_default("server_shutdown_timeout", "10")
         .expect("Failed to set default server_shutdown_timeout")
-        .set_default("skip_db_migrations", false)
-        .expect("Failed to set default skip_db_migrations")
+        .set_default("pg.skip_migrations", false)
+        .expect("Failed to set default pg.skip_migrations")
+        .set_default("pg.min_connections", "2")
+        .expect("Failed to set default pg.min_connections")
+        .set_default("pg.max_connections", "5")
+        .expect("Failed to set default pg.max_connections")
         .set_default("disable_reminders", false)
         .expect("Failed to set default disable_reminders")
         .set_default("max_events_returned_by_search", "5000")
         .expect("Failed to set default max_events_returned_by_search")
         .set_default(
-            "database_url",
+            "pg.database_url",
             "postgresql://postgres:postgres@localhost:45432/nittei",
         )
-        .expect("Failed to set default database_url")
+        .expect("Failed to set default pg.database_url")
         .build()
         .expect("Failed to build the configuration object");
 
