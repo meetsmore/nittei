@@ -1,9 +1,4 @@
-use axum::{
-    Extension,
-    Json,
-    extract::Path,
-    http::HeaderMap,
-};
+use axum::{Extension, Json, extract::Path, http::HeaderMap};
 use nittei_api_structs::delete_schedule::*;
 use nittei_domain::{ID, Schedule};
 use nittei_infra::NitteiContext;

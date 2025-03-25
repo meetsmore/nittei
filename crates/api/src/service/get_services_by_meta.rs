@@ -1,9 +1,4 @@
-use axum::{
-    Extension,
-    Json,
-    extract::Query,
-    http::HeaderMap,
-};
+use axum::{Extension, Json, extract::Query, http::HeaderMap};
 use nittei_api_structs::get_services_by_meta::*;
 use nittei_domain::Metadata;
 use nittei_infra::{MetadataFindQuery, NitteiContext};

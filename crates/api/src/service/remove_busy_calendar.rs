@@ -1,9 +1,4 @@
-use axum::{
-    Extension,
-    Json,
-    extract::Path,
-    http::HeaderMap,
-};
+use axum::{Extension, Json, extract::Path, http::HeaderMap};
 use nittei_api_structs::remove_busy_calendar::*;
 use nittei_domain::{Account, BusyCalendarProvider, ID, IntegrationProvider};
 use nittei_infra::{BusyCalendarIdentifier, ExternalBusyCalendarIdentifier, NitteiContext};

@@ -1,9 +1,4 @@
-use axum::{
-    Extension,
-    Json,
-    extract::Path,
-    http::HeaderMap,
-};
+use axum::{Extension, Json, extract::Path, http::HeaderMap};
 use axum_valid::Valid;
 use chrono::Utc;
 use nittei_api_structs::oauth_integration::*;

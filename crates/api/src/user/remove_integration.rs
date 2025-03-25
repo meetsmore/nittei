@@ -1,9 +1,4 @@
-use axum::{
-    Extension,
-    Json,
-    extract::Path,
-    http::HeaderMap,
-};
+use axum::{Extension, Json, extract::Path, http::HeaderMap};
 use nittei_api_structs::remove_integration::*;
 use nittei_domain::{IntegrationProvider, User};
 use nittei_infra::NitteiContext;

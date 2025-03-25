@@ -1,9 +1,4 @@
-use axum::{
-    Extension,
-    Json,
-    extract::Path,
-    http::HeaderMap,
-};
+use axum::{Extension, Json, extract::Path, http::HeaderMap};
 use nittei_api_structs::delete_user::*;
 use nittei_domain::{Account, ID, User};
 use nittei_infra::NitteiContext;

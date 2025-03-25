@@ -1,9 +1,4 @@
-use axum::{
-    Extension,
-    Json,
-    extract::Path,
-    http::HeaderMap,
-};
+use axum::{Extension, Json, extract::Path, http::HeaderMap};
 use nittei_api_structs::update_service::*;
 use nittei_domain::{ID, Service, ServiceMultiPersonOptions};
 use nittei_infra::NitteiContext;

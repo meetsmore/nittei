@@ -1,9 +1,4 @@
-use axum::{
-    Extension,
-    Json,
-    extract::Path,
-    http::HeaderMap,
-};
+use axum::{Extension, Json, extract::Path, http::HeaderMap};
 use nittei_api_structs::get_event::*;
 use nittei_domain::{CalendarEvent, ID};
 use nittei_infra::NitteiContext;
