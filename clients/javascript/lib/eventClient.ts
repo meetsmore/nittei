@@ -2,6 +2,8 @@ import { NitteiBaseClient } from './baseClient'
 import type {
   DeleteManyEventsRequestBody,
   GetEventsByExternalIdAPIResponse,
+  GetEventsForUsersInTimeSpanAPIResponse,
+  GetEventsForUsersInTimeSpanBody,
   SearchEventsAPIResponse,
   SearchEventsRequestBody,
 } from './gen_types'
@@ -110,6 +112,29 @@ export class NitteiEventClient extends NitteiBaseClient {
 
     return {
       events: res.events.map(convertEventDates),
+    }
+  }
+
+  /**
+   * Get events for users in a time range
+   *
+   * Optionally, it can generate instances of recurring events
+   * @param body - body for getting events for users in a time range
+   * @returns - the events found
+   */
+  public async getEventsOfUsersDuringTimespan(
+    body: GetEventsForUsersInTimeSpanBody
+  ): Promise<GetEventsForUsersInTimeSpanAPIResponse> {
+    const res = await this.post<GetEventsForUsersInTimeSpanAPIResponse>(
+      '/events/timespan',
+      body
+    )
+
+    return {
+      events: res.events.map(e => ({
+        event: convertEventDates(e.event),
+        instances: e.instances.map(convertInstanceDates),
+      })),
     }
   }
 

@@ -84,6 +84,7 @@ export type CalendarEventDTO = {
   /**
    * Optional recurring until date
    * This is the date until which the event will recur
+   * This is calculated by adding the duration to the until date
    */
   recurringUntil?: Date
   /**
