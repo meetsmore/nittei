@@ -241,7 +241,7 @@ describe('CalendarEvent API', () => {
 
       const resEventTokyo = await adminClient.events.create(userId, {
         calendarId: calendarTokyoId,
-        duration: 1800000,
+        duration: 1800000, // 30 minutes
         startTime: dayjs('2024-11-29T07:00:00.000Z').toDate(),
         eventType: 'gcal',
         recurrence: {
@@ -256,7 +256,7 @@ describe('CalendarEvent API', () => {
       expect(resEventTokyo.event).toBeDefined()
       expect(resEventTokyo.event.calendarId).toBe(calendarTokyoId)
       expect(resEventTokyo.event.recurringUntil).toEqual(
-        dayjs('2024-12-12T14:59:59.000Z').toDate()
+        dayjs('2024-12-12T15:29:59.000Z').toDate() // 30 minutes after until
       )
       expect(resEventTokyo.event.recurrence).toEqual(
         expect.objectContaining({
