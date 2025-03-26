@@ -54,6 +54,10 @@ impl<B> MakeSpan<B> for NitteiTracingSpanBuilder {
             .map(|r| r.as_str().to_string())
             .unwrap_or_default();
 
+        if path == "/api/v1/healthcheck" {
+            return Span::none();
+        }
+
         let trace_id = request
             .headers()
             .get("traceparent")
@@ -61,7 +65,7 @@ impl<B> MakeSpan<B> for NitteiTracingSpanBuilder {
             .unwrap_or_default()
             .to_string();
 
-        let span = tracing::info_span!(
+        tracing::info_span!(
             "http.request",
             http.request.method = %http_method,
             http.route = Empty, // to set by router of "webframework" after
@@ -78,14 +82,7 @@ impl<B> MakeSpan<B> for NitteiTracingSpanBuilder {
             exception.message = Empty, // to set on response
             "span.type" = "web",
             level = Empty, // will be set in on_response based on status code
-        );
-
-        // Exclude health check from tracing
-        if path == "/api/v1/healthcheck" {
-            Span::none()
-        } else {
-            span
-        }
+        )
     }
 }
 
