@@ -45,7 +45,7 @@ impl TryFrom<UserRaw> for User {
 
 #[async_trait::async_trait]
 impl IUserRepo for PostgresUserRepo {
-    #[instrument]
+    #[instrument(name = "user::insert")]
     async fn insert(&self, user: &User) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -69,7 +69,7 @@ impl IUserRepo for PostgresUserRepo {
         Ok(())
     }
 
-    #[instrument]
+    #[instrument(name = "user::save")]
     async fn save(&self, user: &User) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -95,7 +95,7 @@ impl IUserRepo for PostgresUserRepo {
         Ok(())
     }
 
-    #[instrument]
+    #[instrument(name = "user::delete")]
     async fn delete(&self, user_id: &ID) -> anyhow::Result<Option<User>> {
         let res = sqlx::query_as!(
             UserRaw,
@@ -118,7 +118,7 @@ impl IUserRepo for PostgresUserRepo {
         res.map(|user| user.try_into()).transpose()
     }
 
-    #[instrument]
+    #[instrument(name = "user::find")]
     async fn find(&self, user_id: &ID) -> anyhow::Result<Option<User>> {
         let res = sqlx::query_as!(
             UserRaw,
@@ -140,7 +140,7 @@ impl IUserRepo for PostgresUserRepo {
         res.map(|user| user.try_into()).transpose()
     }
 
-    #[instrument]
+    #[instrument(name = "user::find_many")]
     async fn find_many(&self, user_ids: &[ID]) -> anyhow::Result<Vec<User>> {
         let user_ids = user_ids.iter().map(|id| *id.as_ref()).collect::<Vec<_>>();
 
@@ -164,7 +164,7 @@ impl IUserRepo for PostgresUserRepo {
         users.into_iter().map(|u| u.try_into()).collect()
     }
 
-    #[instrument]
+    #[instrument(name = "user::find_by_account_id")]
     async fn find_by_account_id(
         &self,
         user_id: &ID,
@@ -192,7 +192,7 @@ impl IUserRepo for PostgresUserRepo {
         res.map(|user| user.try_into()).transpose()
     }
 
-    #[instrument]
+    #[instrument(name = "user::get_by_external_id")]
     async fn get_by_external_id(&self, external_id: &str) -> anyhow::Result<Option<User>> {
         let res = sqlx::query_as!(
             UserRaw,
@@ -214,7 +214,7 @@ impl IUserRepo for PostgresUserRepo {
         res.map(|user| user.try_into()).transpose()
     }
 
-    #[instrument]
+    #[instrument(name = "user::find_by_metadata")]
     async fn find_by_metadata(&self, query: MetadataFindQuery) -> anyhow::Result<Vec<User>> {
         let users: Vec<UserRaw> = sqlx::query_as!(
             UserRaw,
