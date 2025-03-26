@@ -214,9 +214,7 @@ impl ICalendarRepo for PostgresCalendarRepo {
         sqlx::query_as!(
             CalendarRaw,
             r#"
-            SELECT c.*, u.account_uid AS account_uid_from_user FROM calendars AS c
-            INNER JOIN users AS u
-                ON u.user_uid = c.user_uid
+            SELECT c.* FROM calendars AS c
             WHERE c.user_uid = any($1)
             "#,
             user_ids.as_slice()

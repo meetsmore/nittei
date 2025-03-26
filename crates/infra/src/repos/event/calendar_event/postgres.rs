@@ -345,11 +345,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-            SELECT e.*, u.user_uid AS user_uid_from_user, u.account_uid AS account_uid_from_user FROM calendar_events AS e
-            INNER JOIN calendars AS c
-                ON c.calendar_uid = e.calendar_uid
-            INNER JOIN users AS u
-                ON u.user_uid = c.user_uid
+            SELECT e.* FROM calendar_events AS e
             WHERE e.recurring_event_uid = ANY($1) AND e.original_start_time >= $2 AND e.original_start_time <= $3
             "#,
             &recurring_event_ids,
@@ -606,22 +602,18 @@ impl IEventRepo for PostgresEventRepo {
         };
         sqlx::query_as!(
             EventRaw,
-                r#"
-                    SELECT e.*, u.user_uid AS user_uid_from_user, u.account_uid AS account_uid_from_user FROM calendar_events AS e
-                    INNER JOIN calendars AS c
-                        ON c.calendar_uid = e.calendar_uid
-                    INNER JOIN users AS u
-                        ON u.user_uid = c.user_uid
-                    WHERE u.user_uid = any($1)
-                    AND (
-                        (e.start_time < $2 AND e.end_time > $3)
-                        OR
-                        (e.start_time < $2 AND e.recurrence::text <> 'null')
-                    )
-                    AND busy = any($4)
-                    AND status = any($5)
-                    AND e.original_start_time IS NULL
-                    "#,
+            r#"
+            SELECT e.* FROM calendar_events AS e
+            WHERE e.user_uid = any($1)
+            AND (
+                (e.start_time < $2 AND e.end_time > $3)
+                OR
+                (e.start_time < $2 AND e.recurrence::text <> 'null')
+            )
+            AND busy = any($4)
+            AND status = any($5)
+            AND e.original_start_time IS NULL
+            "#,
             &user_ids,
             timespan.end(),
             timespan.start(),
