@@ -52,7 +52,7 @@ impl TryFrom<CalendarRaw> for Calendar {
 
 #[async_trait::async_trait]
 impl ICalendarRepo for PostgresCalendarRepo {
-    #[instrument]
+    #[instrument(name = "calendar::insert")]
     async fn insert(&self, calendar: &Calendar) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -80,7 +80,7 @@ impl ICalendarRepo for PostgresCalendarRepo {
         Ok(())
     }
 
-    #[instrument]
+    #[instrument(name = "calendar::save")]
     async fn save(&self, calendar: &Calendar) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -108,7 +108,7 @@ impl ICalendarRepo for PostgresCalendarRepo {
         Ok(())
     }
 
-    #[instrument]
+    #[instrument(name = "calendar::find")]
     async fn find(&self, calendar_id: &ID) -> anyhow::Result<Option<Calendar>> {
         sqlx::query_as!(
             CalendarRaw,
@@ -130,7 +130,7 @@ impl ICalendarRepo for PostgresCalendarRepo {
         .transpose()
     }
 
-    #[instrument]
+    #[instrument(name = "calendar::find_multiple")]
     async fn find_multiple(&self, calendar_ids: Vec<&ID>) -> anyhow::Result<Vec<Calendar>> {
         let calendar_ids: Vec<Uuid> = calendar_ids
             .into_iter()
@@ -157,7 +157,7 @@ impl ICalendarRepo for PostgresCalendarRepo {
         .collect()
     }
 
-    #[instrument]
+    #[instrument(name = "calendar::find_by_user")]
     async fn find_by_user(&self, user_id: &ID) -> anyhow::Result<Vec<Calendar>> {
         sqlx::query_as!(
             CalendarRaw,
@@ -180,6 +180,7 @@ impl ICalendarRepo for PostgresCalendarRepo {
         .collect()
     }
 
+    #[instrument(name = "calendar::find_by_user_and_key")]
     async fn find_by_user_and_key(
         &self,
         user_id: &ID,
@@ -206,7 +207,34 @@ impl ICalendarRepo for PostgresCalendarRepo {
         .transpose()
     }
 
-    #[instrument]
+    /// Find calendars for multiple users
+    #[instrument(name = "calendar::find_for_users")]
+    async fn find_for_users(&self, user_ids: &[ID]) -> anyhow::Result<Vec<Calendar>> {
+        let user_ids: Vec<Uuid> = user_ids.iter().map(|id| id.clone().into()).collect();
+        sqlx::query_as!(
+            CalendarRaw,
+            r#"
+            SELECT c.*, u.account_uid AS account_uid_from_user FROM calendars AS c
+            INNER JOIN users AS u
+                ON u.user_uid = c.user_uid
+            WHERE c.user_uid = any($1)
+            "#,
+            user_ids.as_slice()
+        )
+        .fetch_all(&self.pool)
+        .await
+        .inspect_err(|e| {
+            error!(
+                "Find calendars by user ids: {:?} failed. DB returned error: {:?}",
+                user_ids, e
+            );
+        })?
+        .into_iter()
+        .map(|c| c.try_into())
+        .collect()
+    }
+
+    #[instrument(name = "calendar::delete")]
     async fn delete(&self, calendar_id: &ID) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -227,7 +255,7 @@ impl ICalendarRepo for PostgresCalendarRepo {
         Ok(())
     }
 
-    #[instrument]
+    #[instrument(name = "calendar::find_by_metadata")]
     async fn find_by_metadata(&self, query: MetadataFindQuery) -> anyhow::Result<Vec<Calendar>> {
         sqlx::query_as!(
             CalendarRaw,

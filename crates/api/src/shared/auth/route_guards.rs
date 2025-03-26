@@ -3,7 +3,7 @@ use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
 use nittei_domain::{Account, Calendar, CalendarEvent, ID, Schedule, User};
 use nittei_infra::NitteiContext;
 use serde::{Deserialize, Serialize};
-use tracing::log::warn;
+use tracing::{instrument, log::warn};
 
 use crate::{
     error::NitteiError,
@@ -119,6 +119,7 @@ fn decode_token(account: &Account, token: &str) -> anyhow::Result<Claims> {
 ///
 /// This function will check if the request has a valid `Authorization` header
 /// and if the token is valid and signed by the `Account`'s public key
+#[instrument(name = "auth::protect_route", skip_all)]
 pub async fn protect_route(
     req: &HttpRequest,
     ctx: &NitteiContext,
@@ -147,6 +148,7 @@ pub async fn protect_route(
 ///
 /// This function will check if the request has a valid `x-api-key` header
 /// and if the token is the one stored in DB for the `Account`
+#[instrument(name = "auth::protect_admin_route", skip_all)]
 pub async fn protect_admin_route(
     req: &HttpRequest,
     ctx: &NitteiContext,
@@ -180,6 +182,7 @@ pub async fn protect_admin_route(
 /// Only checks which account the request is connected to.
 /// If it cannot decide from the request which account the
 /// client belongs to it will return `NitteiError`
+#[instrument(name = "auth::protect_public_account_route", skip_all)]
 pub async fn protect_public_account_route(
     http_req: &HttpRequest,
     ctx: &NitteiContext,
@@ -206,6 +209,7 @@ pub async fn protect_public_account_route(
 
 /// Used for account admin routes by checking that account
 /// is not modifying a user in another account
+#[instrument(name = "auth::account_can_modify_user", skip_all)]
 pub async fn account_can_modify_user(
     account: &Account,
     user_id: &ID,
@@ -223,6 +227,7 @@ pub async fn account_can_modify_user(
 
 /// Used for account admin routes by checking that account
 /// is not modifying a calendar in another account
+#[instrument(name = "auth::account_can_modify_calendar", skip_all)]
 pub async fn account_can_modify_calendar(
     account: &Account,
     calendar_id: &ID,
@@ -240,6 +245,7 @@ pub async fn account_can_modify_calendar(
 
 /// Used for account admin routes by checking that account
 /// is not modifying an event in another account
+#[instrument(name = "auth::account_can_modify_event", skip_all)]
 pub async fn account_can_modify_event(
     account: &Account,
     event_id: &ID,
@@ -257,6 +263,7 @@ pub async fn account_can_modify_event(
 
 /// Used for account admin routes by checking that account
 /// is not modifying a schedule in another account
+#[instrument(name = "auth::account_can_modify_schedule", skip_all)]
 pub async fn account_can_modify_schedule(
     account: &Account,
     schedule_id: &ID,

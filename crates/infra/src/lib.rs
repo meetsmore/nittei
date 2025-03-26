@@ -50,7 +50,7 @@ impl NitteiContext {
 /// Will setup the infrastructure context given the environment
 pub async fn setup_context() -> anyhow::Result<NitteiContext> {
     NitteiContext::create(ContextParams {
-        postgres_connection_string: nittei_utils::config::APP_CONFIG.database_url.clone(),
+        postgres_connection_string: nittei_utils::config::APP_CONFIG.pg.database_url.clone(),
     })
     .await
 }
@@ -62,7 +62,7 @@ pub async fn setup_context() -> anyhow::Result<NitteiContext> {
 pub async fn run_migration() -> anyhow::Result<()> {
     let pool = PgPoolOptions::new()
         .max_connections(5)
-        .connect(nittei_utils::config::APP_CONFIG.database_url.as_str())
+        .connect(nittei_utils::config::APP_CONFIG.pg.database_url.as_str())
         .await?;
 
     sqlx::migrate!().run(&pool).await.map_err(|e| e.into())

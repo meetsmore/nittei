@@ -17,6 +17,12 @@ pub trait Entity<T: PartialEq> {
 #[ts(export)]
 pub struct ID(Uuid);
 
+impl ID {
+    pub fn new_v4() -> Self {
+        Self(Uuid::new_v4())
+    }
+}
+
 impl AsMut<Uuid> for ID {
     fn as_mut(&mut self) -> &mut Uuid {
         &mut self.0
