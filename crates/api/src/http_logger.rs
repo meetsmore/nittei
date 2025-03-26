@@ -5,13 +5,11 @@ use axum::{
     middleware::Next,
     response::Response as AxumResponse,
 };
-use opentelemetry::{
-    global::{self},
-    trace::{Span as OtelSpan, Tracer},
-};
+use opentelemetry::global::{self};
 use opentelemetry_http::HeaderExtractor;
 use tower_http::trace::{MakeSpan, OnFailure, OnResponse};
 use tracing::{Span, field::Empty};
+use tracing_opentelemetry::OpenTelemetrySpanExt;
 
 /// Metadata for the request
 /// Used for logging and tracing
@@ -68,11 +66,8 @@ impl<B> MakeSpan<B> for NitteiTracingSpanBuilder {
             propagator.extract(&HeaderExtractor(request.headers()))
         });
 
-        // Create a span within the extracted context using the global tracer
-        let otel_span = global::tracer("http").start_with_context("http.request", &parent_cx);
-
         // Create a tracing span that wraps the OpenTelemetry span
-        tracing::info_span!(
+        let span = tracing::info_span!(
             "http.request",
             http.request.method = %http_method,
             http.route = Empty, // to set by router of "webframework" after
@@ -88,9 +83,12 @@ impl<B> MakeSpan<B> for NitteiTracingSpanBuilder {
             exception.message = Empty, // to set on response
             "span.type" = "web",
             level = Empty, // will be set in on_response based on status code
-            trace_id = %otel_span.span_context().trace_id().to_string(),
-            span_id = %otel_span.span_context().span_id().to_string(),
-        )
+        );
+
+        // Set the parent span for the OpenTelemetry span
+        span.set_parent(parent_cx);
+
+        span
     }
 }
 

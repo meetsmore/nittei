@@ -39,18 +39,18 @@ tracing-subscriber = { version = "0.3", features = [
     "json",
     "registry",
 ] }
-opentelemetry = { version = "0.23.0", default-features = false, features = [
+opentelemetry = { version = "0.28.0", default-features = false, features = [
     "trace",
 ] }
-opentelemetry_sdk = { version = "0.23.0", features = ["rt-tokio"] }
-tracing-opentelemetry = "0.24.0"
-opentelemetry-otlp = { version = "=0.16.0", features = [
+opentelemetry_sdk = { version = "0.28.0", features = ["rt-tokio"] }
+tracing-opentelemetry = "0.29.0"
+opentelemetry-otlp = { version = "0.28.0", features = [
     "reqwest-client",
     "reqwest-rustls",
     "http-proto",
     "tls",
 ] }
-opentelemetry-datadog = { version = "0.11.0", features = ["reqwest-client"] }
+opentelemetry-datadog = { version = "0.16.0", features = ["reqwest-client"] }
 
 chrono = "0.4.19"
 chrono-tz = "0.9.0"
