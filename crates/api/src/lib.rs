@@ -13,7 +13,9 @@ mod user;
 use std::sync::Arc;
 
 use axum::{Extension, Router, http::header};
+use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
 use futures::lock::Mutex;
+use http_logger::metadata_middleware;
 use job_schedulers::{start_reminder_generation_job, start_send_reminders_job};
 use nittei_domain::{
     Account,
@@ -38,6 +40,12 @@ use tower_http::{
     trace::TraceLayer,
 };
 use tracing::{error, info, warn};
+
+use crate::http_logger::{
+    NitteiTracingOnFailure,
+    NitteiTracingOnResponse,
+    NitteiTracingSpanBuilder,
+};
 
 /// Configure the Actix server API
 /// Add all the routes to the server
@@ -121,8 +129,11 @@ impl Application {
 
         let server = Router::new()
             .nest("/api/v1", api_router)
+            .layer(axum::middleware::from_fn(metadata_middleware))
             .layer(
                 ServiceBuilder::new()
+                    .layer(OtelInResponseLayer)
+                    .layer(OtelAxumLayer::default())
                     // Mark the `Authorization` header as sensitive so it doesn't show in logs
                     .layer(SetSensitiveHeadersLayer::new(sensitive_headers))
                     .layer(CorsLayer::permissive())
@@ -130,7 +141,13 @@ impl Application {
                     .layer(CompressionLayer::new())
                     // Catch panics and convert them into responses.
                     .layer(CatchPanicLayer::new())
-                    .layer(TraceLayer::new_for_http()),
+                    .layer(
+                        TraceLayer::new_for_http()
+                            .make_span_with(NitteiTracingSpanBuilder {})
+                            .on_request(())
+                            .on_response(NitteiTracingOnResponse {})
+                            .on_failure(NitteiTracingOnFailure {}),
+                    ),
             )
             .layer(Extension(context.clone()))
             .layer(Extension(shared_state.clone()));
