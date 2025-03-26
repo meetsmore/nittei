@@ -54,6 +54,13 @@ impl<B> MakeSpan<B> for NitteiTracingSpanBuilder {
             .map(|r| r.as_str().to_string())
             .unwrap_or_default();
 
+        let trace_id = request
+            .headers()
+            .get("traceparent")
+            .and_then(|h| h.to_str().ok())
+            .unwrap_or_default()
+            .to_string();
+
         let span = tracing::trace_span!(
             "http.request",
             http.request.method = %http_method,
@@ -66,7 +73,7 @@ impl<B> MakeSpan<B> for NitteiTracingSpanBuilder {
             otel.kind = ?opentelemetry::trace::SpanKind::Server,
             otel.status_code = Empty, // to set on response
             resource.name = %matched_path,
-            trace_id = Empty, // to set on response
+            trace_id = %trace_id,
             request_id = Empty, // to set
             exception.message = Empty, // to set on response
             "span.type" = "web",
@@ -97,23 +104,28 @@ impl<B> OnResponse<B> for NitteiTracingOnResponse {
         let path = uri.path();
         let matched_path = metadata.map(|m| m.matched_path.clone()).unwrap_or_default();
 
-        // Set Datadog-specific attributes
+        // Set OpenTelemetry status code and level based on status code
+        let (otel_status, level) = if status_code >= 500 {
+            ("error", tracing::Level::ERROR)
+        } else if status_code >= 400 {
+            ("warn", tracing::Level::WARN)
+        } else {
+            ("ok", tracing::Level::INFO)
+        };
+
+        // Exclude health check from logging
+        if path == "/api/v1/healthcheck" && status_code == 200 {
+            return;
+        }
+
+        // Update span attributes
         span.record("http.status_code", status_code);
         span.record("http.route", matched_path.clone());
         span.record("duration", latency.as_nanos() as f64 / 1_000_000.0); // Convert to milliseconds
         span.record("resource.name", matched_path.clone());
-
-        // Set OpenTelemetry status code and level based on status code
-        let (otel_status, level) = if status_code >= 500 {
-            ("error", "error")
-        } else if status_code >= 400 {
-            ("warn", "warn")
-        } else {
-            ("ok", "info")
-        };
-
         span.record("otel.status_code", otel_status);
-        span.record("level", level);
+        // Adjust span level dynamically
+        tracing::span::Span::current().record("level", tracing::field::display(level));
 
         let message = format!(
             "{} {} {} {}ns",
@@ -124,7 +136,7 @@ impl<B> OnResponse<B> for NitteiTracingOnResponse {
         );
 
         // Log with appropriate level
-        match level {
+        match otel_status {
             "error" => tracing::error!(
                 parent: span,
                 method = %method,

@@ -13,7 +13,6 @@ mod user;
 use std::sync::Arc;
 
 use axum::{Extension, Router, http::header};
-use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
 use futures::lock::Mutex;
 use http_logger::metadata_middleware;
 use job_schedulers::{start_reminder_generation_job, start_send_reminders_job};
@@ -132,8 +131,6 @@ impl Application {
             .layer(axum::middleware::from_fn(metadata_middleware))
             .layer(
                 ServiceBuilder::new()
-                    .layer(OtelInResponseLayer)
-                    .layer(OtelAxumLayer::default())
                     // Mark the `Authorization` header as sensitive so it doesn't show in logs
                     .layer(SetSensitiveHeadersLayer::new(sensitive_headers))
                     .layer(CorsLayer::permissive())
