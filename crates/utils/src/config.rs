@@ -49,6 +49,22 @@ pub struct AppConfig {
     /// Env var: NITTEI__MAX_EVENTS_RETURNED_BY_SEARCH
     pub max_events_returned_by_search: u16,
 
+    /// Maximum allowed duration in millis for querying event instances.
+    /// This is used to avoid having clients ask for `CalendarEvents` in a
+    /// timespan of several years which will take a lot of time to compute
+    /// and is also not very useful information to query about anyways.
+    /// Default is 200 days
+    /// Env var: NITTEI__EVENT_INSTANCES_QUERY_DURATION_LIMIT
+    pub event_instances_query_duration_limit: i64,
+
+    /// Maximum allowed duration in millis for querying booking slots
+    /// This is used to avoid having clients ask for `BookingSlot`s in a
+    /// timespan of several years which will take a lot of time to compute
+    /// and is also not very useful information to query about anyways.
+    /// Default is 100 days
+    /// Env var: NITTEI__BOOKING_SLOTS_QUERY_DURATION_LIMIT
+    pub booking_slots_query_duration_limit: i64,
+
     /// The account configuration
     /// This is used to find the superadmin account
     pub account: Option<AccountConfig>,
@@ -174,22 +190,32 @@ fn parse_config() -> AppConfig {
         )
         .set_default("http_host", "127.0.0.1")
         .expect("Failed to set default host")
-        .set_default("http_port", "5000")
+        .set_default("http_port", 5000)
         .expect("Failed to set default port")
-        .set_default("server_shutdown_sleep", "5")
+        .set_default("server_shutdown_sleep", 5)
         .expect("Failed to set default server_shutdown_sleep")
-        .set_default("server_shutdown_timeout", "10")
+        .set_default("server_shutdown_timeout", 10)
         .expect("Failed to set default server_shutdown_timeout")
         .set_default("pg.skip_migrations", false)
         .expect("Failed to set default pg.skip_migrations")
-        .set_default("pg.min_connections", "2")
+        .set_default("pg.min_connections", 2)
         .expect("Failed to set default pg.min_connections")
-        .set_default("pg.max_connections", "5")
+        .set_default("pg.max_connections", 2)
         .expect("Failed to set default pg.max_connections")
         .set_default("disable_reminders", false)
         .expect("Failed to set default disable_reminders")
-        .set_default("max_events_returned_by_search", "5000")
+        .set_default("max_events_returned_by_search", 5000)
         .expect("Failed to set default max_events_returned_by_search")
+        .set_default(
+            "event_instances_query_duration_limit",
+            200_i64 * 24 * 60 * 60 * 1000, // 200 days
+        )
+        .expect("Failed to set default event_instances_query_duration_limit")
+        .set_default(
+            "booking_slots_query_duration_limit",
+            100_i64 * 24 * 60 * 60 * 1000, // 100 days
+        )
+        .expect("Failed to set default booking_slots_query_duration_limit")
         .set_default(
             "pg.database_url",
             "postgresql://postgres:postgres@localhost:45432/nittei",
