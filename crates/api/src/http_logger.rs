@@ -61,7 +61,7 @@ impl<B> MakeSpan<B> for NitteiTracingSpanBuilder {
             .unwrap_or_default()
             .to_string();
 
-        let span = tracing::trace_span!(
+        let span = tracing::info_span!(
             "http.request",
             http.request.method = %http_method,
             http.route = Empty, // to set by router of "webframework" after
