@@ -8,6 +8,8 @@ use axum::{
 use tower_http::trace::{MakeSpan, OnFailure, OnResponse};
 use tracing::{Span, field::Empty};
 
+/// Metadata for the request
+/// Used for logging and tracing
 #[derive(Clone)]
 struct RequestMetadata {
     pub method: String,
@@ -15,6 +17,7 @@ struct RequestMetadata {
     pub matched_path: String,
 }
 
+/// Middleware for storing metadata for logging and tracing
 pub async fn metadata_middleware(request: Request<Body>, next: Next) -> AxumResponse {
     let uri = request.uri().clone();
     let method = request.method().to_string();
@@ -43,28 +46,35 @@ pub struct NitteiTracingSpanBuilder {}
 impl<B> MakeSpan<B> for NitteiTracingSpanBuilder {
     fn make_span(&mut self, request: &Request<B>) -> Span {
         let http_method = request.method().to_string();
+        let path = request.uri().path();
+        let query = request.uri().query().unwrap_or_default();
+        let matched_path = request
+            .extensions()
+            .get::<MatchedPath>()
+            .map(|r| r.as_str().to_string())
+            .unwrap_or_default();
 
         let span = tracing::trace_span!(
-            "HTTP request",
+            "http.request",
             http.request.method = %http_method,
             http.route = Empty, // to set by router of "webframework" after
-            http.client.address = Empty, //%$request.connection_info().realip_remote_addr().unwrap_or(""),
-            http.response.status_code = Empty, // to set on response
             http.status_code = Empty, // to set on response (datadog attribute)
-            url.path = request.uri().path(),
-            url.query = request.uri().query(),
-            // url.scheme = url_scheme(request.uri()),
-            otel.name = %http_method, // to set by router of "webframework" after
+            url.path = %path,
+            url.query = %query,
+            url.scheme = request.uri().scheme_str().unwrap_or("http"),
+            otel.name = %format!("{} {}", http_method, path),
             otel.kind = ?opentelemetry::trace::SpanKind::Server,
             otel.status_code = Empty, // to set on response
+            resource.name = %matched_path,
             trace_id = Empty, // to set on response
             request_id = Empty, // to set
             exception.message = Empty, // to set on response
-            "span.type" = "web", // non-official open-telemetry key, only supported by Datadog
+            "span.type" = "web",
+            level = Empty, // will be set in on_response based on status code
         );
 
         // Exclude health check from tracing
-        if request.uri().path() == "/api/v1/healthcheck" {
+        if path == "/api/v1/healthcheck" {
             Span::none()
         } else {
             span
@@ -83,32 +93,74 @@ impl<B> OnResponse<B> for NitteiTracingOnResponse {
         let metadata = response.extensions().get::<RequestMetadata>();
         let method = metadata.map(|m| m.method.clone()).unwrap_or_default();
         let uri = metadata.map(|m| m.uri.clone()).unwrap_or_default();
+        let uri_string = uri.to_string();
         let path = uri.path();
         let matched_path = metadata.map(|m| m.matched_path.clone()).unwrap_or_default();
 
-        // Log with custom fields in JSON format
+        // Set Datadog-specific attributes
+        span.record("http.status_code", status_code);
+        span.record("http.route", matched_path.clone());
+        span.record("duration", latency.as_nanos() as f64 / 1_000_000.0); // Convert to milliseconds
+        span.record("resource.name", matched_path.clone());
+
+        // Set OpenTelemetry status code and level based on status code
+        let (otel_status, level) = if status_code >= 500 {
+            ("error", "error")
+        } else if status_code >= 400 {
+            ("warn", "warn")
+        } else {
+            ("ok", "info")
+        };
+
+        span.record("otel.status_code", otel_status);
+        span.record("level", level);
+
         let message = format!(
             "{} {} {} {}ns",
             method,
-            path,
+            uri_string,
             status_code,
             latency.as_nanos()
         );
 
-        span.record("status_code", status_code);
-        span.record("latency", latency.as_nanos());
-        span.record("message", message.clone());
-        span.record("http.route", matched_path);
-
-        if status_code >= 500 {
-            span.record("level", "error");
-            tracing::error!(parent: span, method = method, path = path, message = message.as_str());
-        } else if status_code >= 400 {
-            span.record("level", "warn");
-            tracing::warn!(parent: span, method = method, path = path, message = message.as_str());
-        } else {
-            span.record("level", "info");
-            tracing::info!(parent: span, method = method, path = path, message = message.as_str());
+        // Log with appropriate level
+        match level {
+            "error" => tracing::error!(
+                parent: span,
+                method = %method,
+                path = %path,
+                status_code = %status_code,
+                duration = %latency.as_nanos(),
+                route = %matched_path,
+                message
+            ),
+            "warn" => tracing::warn!(
+                parent: span,
+                method = %method,
+                path = %path,
+                status_code = %status_code,
+                duration = %latency.as_nanos(),
+                route = %matched_path,
+                message
+            ),
+            "info" => tracing::info!(
+                parent: span,
+                method = %method,
+                path = %path,
+                status_code = %status_code,
+                duration = %latency.as_nanos(),
+                route = %matched_path,
+                message
+            ),
+            _ => tracing::info!(
+                parent: span,
+                method = %method,
+                path = %path,
+                status_code = %status_code,
+                duration = %latency.as_nanos(),
+                route = %matched_path,
+                message
+            ),
         }
     }
 }
@@ -118,10 +170,17 @@ impl<B> OnResponse<B> for NitteiTracingOnResponse {
 pub struct NitteiTracingOnFailure {}
 
 impl<E: std::fmt::Debug> OnFailure<E> for NitteiTracingOnFailure {
-    fn on_failure(&mut self, error: E, _latency: std::time::Duration, span: &Span) {
+    fn on_failure(&mut self, error: E, latency: std::time::Duration, span: &Span) {
+        span.record("level", "error");
+        span.record("otel.status_code", "error");
+        span.record("duration", latency.as_nanos());
+        span.record("exception.type", std::any::type_name_of_val(&error));
+        span.record("exception.message", format!("{:?}", error));
+
         tracing::error!(
             parent: span,
             error = ?error,
+            duration = %latency.as_nanos(),
             "Request failed"
         );
     }
