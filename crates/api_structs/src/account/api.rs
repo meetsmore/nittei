@@ -239,7 +239,7 @@ pub mod account_search_events {
     }
 
     /// API response for getting events by calendars
-    #[derive(Serialize, TS)]
+    #[derive(Serialize, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
     #[ts(export)]
     pub struct SearchEventsAPIResponse {

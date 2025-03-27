@@ -24,7 +24,7 @@ use crate::{
         content = AccountSearchEventsRequestBody,
     ),
     responses(
-        (status = 200, description = "The found events", body = [CalendarEventDTO])
+        (status = 200, description = "The found events", body = SearchEventsAPIResponse)
     )
 )]
 /// Search events inside an account

@@ -28,7 +28,11 @@ reqwest = { version = "0.12", default-features = false, features = [
 utoipa = { version = "5.3.1", features = ["actix_extras", "uuid", "chrono"] }
 utoipa-actix-web = { version = "0.1.2" }
 utoipa-swagger-ui = { version = "9.0.0", features = ["actix-web", "vendored"] }
+# Temporary fix for https://github.com/juhaku/utoipa/issues/1345
+# The `=` enforces the version to be exactly 2.3.0
+# TODO: Remove this once the issue is fixed
 zip = "=2.3.0"
+
 async-trait = "0.1.83"
 rrule = "0.13.0"
 chrono = { version = "0.4.19", features = ["serde"] }

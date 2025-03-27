@@ -15,7 +15,16 @@ use crate::{
     put,
     tag = "Account",
     path = "/api/v1/account/pubkey",
-    summary = "Set the public key for an account"
+    summary = "Set the public key for an account",
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = SetAccountPubKeyRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
 )]
 pub async fn set_account_pub_key_controller(
     http_req: HttpRequest,

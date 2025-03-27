@@ -85,7 +85,13 @@ pub async fn create_event_admin_controller(
     post,
     tag = "Event",
     path = "/api/v1/events",
-    summary = "Create an event"
+    summary = "Create an event",
+    request_body(
+        content = CreateEventRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
 )]
 pub async fn create_event_controller(
     http_req: HttpRequest,
