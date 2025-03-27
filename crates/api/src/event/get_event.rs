@@ -11,6 +11,12 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    get,
+    tag = "Event",
+    path = "/api/v1/user/events/{event_id}",
+    summary = "Get an event (admin only)"
+)]
 pub async fn get_event_admin_controller(
     http_req: HttpRequest,
     path_params: web::Path<PathParams>,
@@ -30,6 +36,12 @@ pub async fn get_event_admin_controller(
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    get,
+    tag = "Event",
+    path = "/api/v1/events/{event_id}",
+    summary = "Get an event (user only)"
+)]
 pub async fn get_event_controller(
     http_req: HttpRequest,
     path_params: web::Path<PathParams>,

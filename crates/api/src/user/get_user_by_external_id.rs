@@ -11,6 +11,12 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    get,
+    tag = "User",
+    path = "/api/v1/user/external_id/{external_id}",
+    summary = "Get a user by its external id (admin only)"
+)]
 pub async fn get_user_by_external_id_controller(
     http_req: HttpRequest,
     path_params: web::Path<PathParams>,

@@ -5,6 +5,12 @@ use nittei_infra::{MetadataFindQuery, NitteiContext};
 
 use crate::{error::NitteiError, shared::auth::protect_admin_route};
 
+#[utoipa::path(
+    get,
+    tag = "User",
+    path = "/api/v1/user/meta",
+    summary = "Get users by metadata"
+)]
 pub async fn get_users_by_meta_controller(
     http_req: HttpRequest,
     query_params: web::Query<QueryParams>,

@@ -12,6 +12,12 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    post,
+    tag = "Event",
+    path = "/api/v1/user/events/delete_many",
+    summary = "Delete many events (admin only)"
+)]
 pub async fn delete_many_events_admin_controller(
     http_req: HttpRequest,
     body: actix_web_validator::Json<DeleteManyEventsRequestBody>,

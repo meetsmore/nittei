@@ -384,7 +384,7 @@ pub mod multiple_freebusy {
     use super::*;
 
     /// Request body for getting multiple free/busy
-    #[derive(Debug, Deserialize, Serialize, TS)]
+    #[derive(Debug, Deserialize, Serialize, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "MultipleFreeBusyRequestBody")]
     pub struct RequestBody {

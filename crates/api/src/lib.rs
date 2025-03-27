@@ -413,6 +413,38 @@ impl Application {
         calendar::get_outlook_calendars::get_outlook_calendars_admin_controller,
         calendar::remove_sync_calendar::remove_sync_calendar_admin_controller,
         calendar::add_sync_calendar::add_sync_calendar_admin_controller,
+
+        // Event
+        event::create_event::create_event_controller,
+        event::create_event::create_event_admin_controller,
+        event::delete_event::delete_event_controller,
+        event::delete_event::delete_event_admin_controller,
+        event::delete_many_events::delete_many_events_admin_controller,
+        event::get_event::get_event_controller,
+        event::get_event::get_event_admin_controller,
+        event::get_event_by_external_id::get_event_by_external_id_admin_controller,
+        event::get_event_instances::get_event_instances_controller,
+        event::get_event_instances::get_event_instances_admin_controller,
+        event::get_events_by_calendars::get_events_by_calendars_controller,
+        event::get_events_by_meta::get_events_by_meta_controller,
+        event::search_events::search_events_controller,
+        event::update_event::update_event_controller,
+        event::update_event::update_event_admin_controller,
+
+        // User
+        user::create_user::create_user_controller,
+        user::get_me::get_me_controller,
+        user::get_user::get_user_controller,
+        user::get_user_by_external_id::get_user_by_external_id_controller,
+        user::get_multiple_users_freebusy::get_multiple_freebusy_controller,
+        user::get_user_freebusy::get_freebusy_controller,
+        user::update_user::update_user_controller,
+        user::delete_user::delete_user_controller,
+        user::oauth_integration::oauth_integration_controller,
+        user::remove_integration::remove_integration_controller,
+        user::oauth_integration::oauth_integration_admin_controller,
+        user::remove_integration::remove_integration_admin_controller,
+        
     ),
 )]
 struct ApiDoc;

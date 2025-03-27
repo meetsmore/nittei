@@ -11,6 +11,12 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    get,
+    tag = "Event",
+    path = "/api/v1/user/events/external_id/{external_id}",
+    summary = "Get an event by its external id (admin only)"
+)]
 pub async fn get_event_by_external_id_admin_controller(
     http_req: HttpRequest,
     path_params: web::Path<PathParams>,

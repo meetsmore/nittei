@@ -1,6 +1,7 @@
 use nittei_domain::{CalendarEvent, CalendarEventReminder, EventInstance, ID, RRuleOptions};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
+use utoipa::ToSchema;
 use validator::{Validate, ValidationError};
 
 use crate::dtos::CalendarEventDTO;
@@ -48,7 +49,7 @@ pub mod create_event {
     }
 
     /// Request body for creating an event
-    #[derive(Serialize, Deserialize, Validate, TS)]
+    #[derive(Serialize, Deserialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "CreateEventRequestBody")]
     #[validate(schema(function = "validate_recurring_event_id_and_original_start_time"))]
@@ -198,7 +199,7 @@ pub mod delete_many_events {
     use super::*;
 
     /// Request body for deleting many events (by event_ids and/or by external_ids)
-    #[derive(Serialize, Deserialize, Validate, TS)]
+    #[derive(Serialize, Deserialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "DeleteManyEventsRequestBody")]
     pub struct DeleteManyEventsRequestBody {
@@ -354,7 +355,7 @@ pub mod get_events_for_users_in_time_range {
     use crate::dtos::EventWithInstancesDTO;
 
     /// Body for getting events for users in a time range
-    #[derive(Deserialize, Serialize, Validate, TS)]
+    #[derive(Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "GetEventsForUsersInTimeSpanBody")]
     pub struct RequestBody {
@@ -410,7 +411,7 @@ pub mod search_events {
     use super::*;
 
     /// Request body for searching events for one user
-    #[derive(Deserialize, Serialize, Validate, TS)]
+    #[derive(Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase", deny_unknown_fields)]
     #[ts(export, rename = "SearchEventsRequestBody")]
     pub struct RequestBody {
@@ -429,7 +430,7 @@ pub mod search_events {
 
     /// Part of the Request body for searching events for a user
     /// This is the filter
-    #[derive(Deserialize, Serialize, Validate, TS)]
+    #[derive(Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase", deny_unknown_fields)]
     #[ts(
         export,
@@ -567,7 +568,7 @@ pub mod update_event {
     }
 
     /// Request body for updating an event
-    #[derive(Deserialize, Serialize, Validate, TS)]
+    #[derive(Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "UpdateEventRequestBody")]
     #[validate(schema(function = "validate_recurring_event_id_and_original_start_time"))]

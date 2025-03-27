@@ -30,6 +30,12 @@ pub fn parse_vec_query_value(val: &Option<String>) -> Option<Vec<ID>> {
     })
 }
 
+#[utoipa::path(
+    get,
+    tag = "User",
+    path = "/api/v1/user/{user_id}/freebusy",
+    summary = "Get freebusy for a user"
+)]
 pub async fn get_freebusy_controller(
     http_req: HttpRequest,
     mut query_params: web::Query<QueryParams>,

@@ -12,6 +12,12 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    post,
+    tag = "User",
+    path = "/api/v1/user",
+    summary = "Create a user (admin only)"
+)]
 pub async fn create_user_controller(
     http_req: HttpRequest,
     body: web::Json<RequestBody>,

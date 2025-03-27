@@ -5,6 +5,12 @@ use nittei_infra::{MetadataFindQuery, NitteiContext};
 
 use crate::{error::NitteiError, shared::auth::protect_admin_route};
 
+#[utoipa::path(
+    get,
+    tag = "Event",
+    path = "/api/v1/events/meta",
+    summary = "Get events by metadata (admin only)"
+)]
 pub async fn get_events_by_meta_controller(
     http_req: HttpRequest,
     query_params: web::Query<QueryParams>,

@@ -11,6 +11,12 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    delete,
+    tag = "User",
+    path = "/api/v1/user/{user_id}",
+    summary = "Delete a user (admin only)"
+)]
 pub async fn delete_user_controller(
     http_req: HttpRequest,
     path_params: web::Path<PathParams>,

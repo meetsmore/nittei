@@ -11,6 +11,12 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    put,
+    tag = "User",
+    path = "/api/v1/user/{user_id}",
+    summary = "Update a user (admin only)"
+)]
 pub async fn update_user_controller(
     http_req: HttpRequest,
     body: web::Json<RequestBody>,

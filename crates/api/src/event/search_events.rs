@@ -12,6 +12,12 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    post,
+    tag = "Event",
+    path = "/api/v1/events/search",
+    summary = "Search events for a user (admin only)"
+)]
 pub async fn search_events_controller(
     http_req: HttpRequest,
     body: actix_web_validator::Json<RequestBody>,

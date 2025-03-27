@@ -1,6 +1,7 @@
 use nittei_domain::{ID, User};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
+use utoipa::ToSchema;
 use validator::Validate;
 
 use crate::dtos::UserDTO;
@@ -43,7 +44,7 @@ pub mod create_user {
     use super::*;
 
     /// Request body for creating a user
-    #[derive(Debug, Deserialize, Serialize, TS)]
+    #[derive(Debug, Deserialize, Serialize, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "CreateUserRequestBody")]
     pub struct RequestBody {
@@ -74,7 +75,7 @@ pub mod oauth_integration {
     use super::*;
 
     /// Request body for creating an OAuth integration
-    #[derive(Debug, Deserialize, Serialize, Validate, TS)]
+    #[derive(Debug, Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "OAuthIntegrationRequestBody")]
     pub struct RequestBody {
@@ -131,7 +132,7 @@ pub mod update_user {
     use super::*;
 
     /// Request body for updating a user
-    #[derive(Debug, Deserialize, Serialize, TS)]
+    #[derive(Debug, Deserialize, Serialize, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "UpdateUserRequestBody")]
     pub struct RequestBody {

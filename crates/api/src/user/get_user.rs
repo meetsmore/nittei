@@ -11,6 +11,12 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    get,
+    tag = "User",
+    path = "/api/v1/user/{user_id}",
+    summary = "Get a user (admin only)"
+)]
 pub async fn get_user_controller(
     http_req: HttpRequest,
     path_params: web::Path<PathParams>,

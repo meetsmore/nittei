@@ -22,6 +22,12 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    post,
+    tag = "Event",
+    path = "/api/v1/events/timespan",
+    summary = "Get events for users in a time range (admin only)"
+)]
 /// Get events for users in a time range
 ///
 /// Optionally, it can generate the instances of the recurring events

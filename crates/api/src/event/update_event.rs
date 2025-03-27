@@ -28,6 +28,12 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    put,
+    tag = "Event",
+    path = "/api/v1/user/events/{event_id}",
+    summary = "Update an event (admin only)"
+)]
 pub async fn update_event_admin_controller(
     http_req: HttpRequest,
     body: web::Json<RequestBody>,
@@ -70,6 +76,12 @@ pub async fn update_event_admin_controller(
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    put,
+    tag = "Event",
+    path = "/api/v1/events/{event_id}",
+    summary = "Update an event (user only)"
+)]
 pub async fn update_event_controller(
     http_req: HttpRequest,
     body: web::Json<RequestBody>,

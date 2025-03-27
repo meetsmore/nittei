@@ -11,6 +11,12 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    delete,
+    tag = "User",
+    path = "/api/v1/user/{user_id}/oauth/{provider}",
+    summary = "Remove an integration (admin only)"
+)]
 pub async fn remove_integration_admin_controller(
     http_req: HttpRequest,
     mut path: web::Path<PathParams>,
@@ -30,6 +36,12 @@ pub async fn remove_integration_admin_controller(
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    delete,
+    tag = "User",
+    path = "/api/v1/me/oauth/{provider}",
+    summary = "Remove an integration"
+)]
 pub async fn remove_integration_controller(
     http_req: HttpRequest,
     mut path: web::Path<PathParams>,

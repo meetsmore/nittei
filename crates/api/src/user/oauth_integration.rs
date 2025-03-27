@@ -12,6 +12,12 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    post,
+    tag = "User",
+    path = "/api/v1/user/{user_id}/oauth",
+    summary = "OAuth integration (admin only)"
+)]
 pub async fn oauth_integration_admin_controller(
     http_req: HttpRequest,
     path: web::Path<PathParams>,
@@ -33,6 +39,12 @@ pub async fn oauth_integration_admin_controller(
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    post,
+    tag = "User",
+    path = "/api/v1/me/oauth",
+    summary = "OAuth integration"
+)]
 pub async fn oauth_integration_controller(
     http_req: HttpRequest,
     body: web::Json<RequestBody>,

@@ -19,6 +19,12 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    get,
+    tag = "Event",
+    path = "/api/v1/user/{user_id}/events",
+    summary = "Get events by calendars (admin only)"
+)]
 pub async fn get_events_by_calendars_controller(
     http_req: HttpRequest,
     path_params: web::Path<PathParams>,

@@ -23,6 +23,12 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    post,
+    tag = "User",
+    path = "/api/v1/user/freebusy",
+    summary = "Get freebusy for multiple users"
+)]
 pub async fn get_multiple_freebusy_controller(
     http_req: HttpRequest,
     body: web::Json<RequestBody>,
