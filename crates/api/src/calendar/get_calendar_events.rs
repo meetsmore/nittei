@@ -10,6 +10,7 @@ use nittei_domain::{
     generate_map_exceptions_original_start_times,
 };
 use nittei_infra::NitteiContext;
+use nittei_utils::config::APP_CONFIG;
 use tracing::error;
 
 use crate::{
@@ -131,7 +132,7 @@ impl UseCase for GetCalendarEventsUseCase {
             .map_err(|_| UseCaseError::IntervalServerError)?;
 
         let timespan = TimeSpan::new(self.start_time, self.end_time);
-        if timespan.greater_than(ctx.config.event_instances_query_duration_limit) {
+        if timespan.greater_than(APP_CONFIG.event_instances_query_duration_limit) {
             return Err(UseCaseError::InvalidTimespan);
         }
 
