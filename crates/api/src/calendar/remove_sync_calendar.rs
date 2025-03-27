@@ -1,5 +1,9 @@
 use actix_web::{HttpRequest, HttpResponse, web};
-use nittei_api_structs::remove_sync_calendar::{APIResponse, PathParams, RequestBody};
+use nittei_api_structs::remove_sync_calendar::{
+    APIResponse,
+    RemoveSyncCalendarPathParams,
+    RemoveSyncCalendarRequestBody,
+};
 use nittei_domain::{ID, IntegrationProvider};
 use nittei_infra::NitteiContext;
 
@@ -24,12 +28,24 @@ fn error_handler(e: UseCaseError) -> NitteiError {
     delete,
     tag = "Calendar",
     path = "/api/v1/user/{user_id}/calendar/sync",
-    summary = "Remove a calendar sync (admin only)"
+    summary = "Remove a calendar sync (admin only)",
+    params(
+        ("user_id" = ID, Path, description = "The id of the user to remove the calendar sync for"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = RemoveSyncCalendarRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
 )]
 pub async fn remove_sync_calendar_admin_controller(
     http_req: HttpRequest,
-    path_params: web::Path<PathParams>,
-    body: web::Json<RequestBody>,
+    path_params: web::Path<RemoveSyncCalendarPathParams>,
+    body: web::Json<RemoveSyncCalendarRequestBody>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
     let account = protect_admin_route(&http_req, &ctx).await?;

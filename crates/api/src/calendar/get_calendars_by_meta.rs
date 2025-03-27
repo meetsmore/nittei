@@ -9,7 +9,19 @@ use crate::{error::NitteiError, shared::auth::protect_admin_route};
     get,
     tag = "Calendar",
     path = "/api/v1/calendar/meta",
-    summary = "Get calendars by metadata"
+    summary = "Get calendars by metadata (admin only)",
+    security(
+        ("api_key" = [])
+    ),
+    params(
+        ("key" = String, Query, description = "The key of the metadata to search for"),
+        ("value" = String, Query, description = "The value of the metadata to search for"),
+        ("skip" = Option<usize>, Query, description = "The number of calendars to skip"),
+        ("limit" = Option<usize>, Query, description = "The number of calendars to return"),
+    ),
+    responses(
+        (status = 200, body = GetCalendarsByMetaAPIResponse)
+    )
 )]
 pub async fn get_calendars_by_meta_controller(
     http_req: HttpRequest,
@@ -30,5 +42,5 @@ pub async fn get_calendars_by_meta_controller(
         .find_by_metadata(query)
         .await
         .map_err(|_| NitteiError::InternalError)?;
-    Ok(HttpResponse::Ok().json(APIResponse::new(calendars)))
+    Ok(HttpResponse::Ok().json(GetCalendarsByMetaAPIResponse::new(calendars)))
 }

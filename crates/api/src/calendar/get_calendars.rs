@@ -1,5 +1,9 @@
 use actix_web::{HttpRequest, HttpResponse, web};
-use nittei_api_structs::get_calendars_by_user::{APIResponse, PathParams, QueryParams};
+use nittei_api_structs::get_calendars_by_user::{
+    GetCalendarsByUserAPIResponse,
+    PathParams,
+    QueryParams,
+};
 use nittei_domain::{Calendar, ID};
 use nittei_infra::NitteiContext;
 
@@ -15,7 +19,17 @@ use crate::{
     get,
     tag = "Calendar",
     path = "/api/v1/calendar/{user_id}",
-    summary = "Get calendars for a user (admin only)"
+    summary = "Get calendars for a user (admin only)",
+    params(
+        ("user_id" = ID, Path, description = "The id of the user to get calendars for"),
+        ("key" = Option<String>, Query, description = "Optional key of the calendar to get"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = GetCalendarsByUserAPIResponse)
+    )
 )]
 pub async fn get_calendars_admin_controller(
     http_req: HttpRequest,
@@ -32,7 +46,7 @@ pub async fn get_calendars_admin_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|calendars| HttpResponse::Ok().json(APIResponse::new(calendars)))
+        .map(|calendars| HttpResponse::Ok().json(GetCalendarsByUserAPIResponse::new(calendars)))
         .map_err(NitteiError::from)
 }
 
@@ -40,7 +54,14 @@ pub async fn get_calendars_admin_controller(
     get,
     tag = "Calendar",
     path = "/api/v1/calendar",
-    summary = "Get calendars for a user"
+    summary = "Get calendars for a user",
+    params(
+        ("user_id" = ID, Path, description = "The id of the user to get calendars for"),
+        ("key" = Option<String>, Query, description = "Optional key of the calendar to get"),
+    ),
+    responses(
+        (status = 200, body = GetCalendarsByUserAPIResponse)
+    )
 )]
 /// Get calendars for a user
 pub async fn get_calendars_controller(
@@ -57,7 +78,7 @@ pub async fn get_calendars_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|calendars| HttpResponse::Ok().json(APIResponse::new(calendars)))
+        .map(|calendars| HttpResponse::Ok().json(GetCalendarsByUserAPIResponse::new(calendars)))
         .map_err(NitteiError::from)
 }
 

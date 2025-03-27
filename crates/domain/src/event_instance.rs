@@ -3,18 +3,24 @@ use std::collections::VecDeque;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
+use utoipa::ToSchema;
 
 use crate::CalendarEvent;
 
 /// Occurrence of a `CalendarEvent`
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, TS)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct EventInstance {
+    /// Start time of the event instance (UTC)
     #[ts(type = "Date")]
     pub start_time: DateTime<Utc>,
+
+    /// End time of the event instance (UTC)
     #[ts(type = "Date")]
     pub end_time: DateTime<Utc>,
+
+    /// Whether the event is busy or not
     pub busy: bool,
 }
 

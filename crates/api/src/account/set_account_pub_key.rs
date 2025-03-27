@@ -1,5 +1,5 @@
 use actix_web::{HttpRequest, HttpResponse, web};
-use nittei_api_structs::set_account_pub_key::{APIResponse, RequestBody};
+use nittei_api_structs::set_account_pub_key::{APIResponse, SetAccountPubKeyRequestBody};
 use nittei_domain::{Account, PEMKey};
 use nittei_infra::NitteiContext;
 
@@ -20,7 +20,7 @@ use crate::{
 pub async fn set_account_pub_key_controller(
     http_req: HttpRequest,
     ctx: web::Data<NitteiContext>,
-    body: actix_web_validator::Json<RequestBody>,
+    body: actix_web_validator::Json<SetAccountPubKeyRequestBody>,
 ) -> Result<HttpResponse, NitteiError> {
     let account = protect_admin_route(&http_req, &ctx).await?;
 

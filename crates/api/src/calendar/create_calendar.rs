@@ -1,7 +1,7 @@
 use actix_web::{HttpRequest, HttpResponse, web};
 use chrono::Weekday;
 use chrono_tz::Tz;
-use nittei_api_structs::create_calendar::{APIResponse, PathParams, RequestBody};
+use nittei_api_structs::create_calendar::{APIResponse, CreateCalendarRequestBody, PathParams};
 use nittei_domain::{Calendar, CalendarSettings, ID};
 use nittei_infra::NitteiContext;
 
@@ -17,12 +17,21 @@ use crate::{
     post,
     tag = "Calendar",
     path = "/api/v1/user/{user_id}/calendar",
-    summary = "Create a calendar (admin only)"
+    summary = "Create a calendar (admin only)",
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = CreateCalendarRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
 )]
 pub async fn create_calendar_admin_controller(
     http_req: HttpRequest,
     path_params: web::Path<PathParams>,
-    body: actix_web_validator::Json<RequestBody>,
+    body: actix_web_validator::Json<CreateCalendarRequestBody>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
     let account = protect_admin_route(&http_req, &ctx).await?;
@@ -48,11 +57,17 @@ pub async fn create_calendar_admin_controller(
     post,
     tag = "Calendar",
     path = "/api/v1/calendar",
-    summary = "Create a calendar"
+    summary = "Create a calendar",
+    request_body(
+        content = CreateCalendarRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
 )]
 pub async fn create_calendar_controller(
     http_req: HttpRequest,
-    body: actix_web_validator::Json<RequestBody>,
+    body: actix_web_validator::Json<CreateCalendarRequestBody>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
     let (user, policy) = protect_route(&http_req, &ctx).await?;

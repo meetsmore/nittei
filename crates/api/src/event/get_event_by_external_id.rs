@@ -15,7 +15,16 @@ use crate::{
     get,
     tag = "Event",
     path = "/api/v1/user/events/external_id/{external_id}",
-    summary = "Get an event by its external id (admin only)"
+    summary = "Get an event by its external id (admin only)",
+    params(
+        ("external_id" = String, Path, description = "The external id of the event to get"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = GetEventsByExternalIdAPIResponse)
+    )
 )]
 pub async fn get_event_by_external_id_admin_controller(
     http_req: HttpRequest,
@@ -31,7 +40,7 @@ pub async fn get_event_by_external_id_admin_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|events| HttpResponse::Ok().json(APIResponse::new(events)))
+        .map(|events| HttpResponse::Ok().json(GetEventsByExternalIdAPIResponse::new(events)))
         .map_err(NitteiError::from)
 }
 

@@ -152,7 +152,7 @@ impl CalendarEventDTO {
 }
 
 /// Calendar event with instances
-#[derive(Serialize, Deserialize, Debug, Clone, TS)]
+#[derive(Serialize, Deserialize, Debug, Clone, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct EventWithInstancesDTO {

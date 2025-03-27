@@ -16,7 +16,16 @@ use crate::{
     post,
     tag = "Event",
     path = "/api/v1/user/events/delete_many",
-    summary = "Delete many events (admin only)"
+    summary = "Delete many events (admin only)",
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = DeleteManyEventsRequestBody,
+    ),
+    responses(
+        (status = 200)
+    )
 )]
 pub async fn delete_many_events_admin_controller(
     http_req: HttpRequest,

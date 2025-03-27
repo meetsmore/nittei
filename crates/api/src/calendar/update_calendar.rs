@@ -1,7 +1,7 @@
 use actix_web::{HttpRequest, HttpResponse, web};
 use chrono::Weekday;
 use chrono_tz::Tz;
-use nittei_api_structs::update_calendar::{APIResponse, PathParams, RequestBody};
+use nittei_api_structs::update_calendar::{APIResponse, PathParams, UpdateCalendarRequestBody};
 use nittei_domain::{Calendar, ID, User};
 use nittei_infra::NitteiContext;
 
@@ -23,13 +23,25 @@ use crate::{
     put,
     tag = "Calendar",
     path = "/api/v1/user/calendar/{calendar_id}",
-    summary = "Update a calendar (admin only)"
+    summary = "Update a calendar (admin only)",
+    params(
+        ("calendar_id" = ID, Path, description = "The id of the calendar to update"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = UpdateCalendarRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
 )]
 pub async fn update_calendar_admin_controller(
     http_req: HttpRequest,
     ctx: web::Data<NitteiContext>,
     path: web::Path<PathParams>,
-    body: actix_web_validator::Json<RequestBody>,
+    body: actix_web_validator::Json<UpdateCalendarRequestBody>,
 ) -> Result<HttpResponse, NitteiError> {
     let account = protect_admin_route(&http_req, &ctx).await?;
     let cal = account_can_modify_calendar(&account, &path.calendar_id, &ctx).await?;
@@ -54,13 +66,22 @@ pub async fn update_calendar_admin_controller(
     put,
     tag = "Calendar",
     path = "/api/v1/calendar/{calendar_id}",
-    summary = "Update a calendar"
+    summary = "Update a calendar",
+    params(
+        ("calendar_id" = ID, Path, description = "The id of the calendar to update"),
+    ),
+    request_body(
+        content = UpdateCalendarRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
 )]
 pub async fn update_calendar_controller(
     http_req: HttpRequest,
     ctx: web::Data<NitteiContext>,
     mut path: web::Path<PathParams>,
-    body: web::Json<RequestBody>,
+    body: web::Json<UpdateCalendarRequestBody>,
 ) -> Result<HttpResponse, NitteiError> {
     let (user, policy) = protect_route(&http_req, &ctx).await?;
 

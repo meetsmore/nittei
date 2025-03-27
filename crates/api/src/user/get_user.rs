@@ -15,7 +15,16 @@ use crate::{
     get,
     tag = "User",
     path = "/api/v1/user/{user_id}",
-    summary = "Get a user (admin only)"
+    summary = "Get a user (admin only)",
+    params(
+        ("user_id" = ID, Path, description = "The id of the user to get"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
 )]
 pub async fn get_user_controller(
     http_req: HttpRequest,

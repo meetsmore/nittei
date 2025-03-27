@@ -27,7 +27,13 @@ use crate::{
     post,
     tag = "Event",
     path = "/api/v1/events/timespan",
-    summary = "Get events for users in a time range (admin only)"
+    summary = "Get events for users in a time range (admin only)",
+    request_body(
+        content = GetEventsForUsersInTimeSpanBody,
+    ),
+    responses(
+        (status = 200, body = GetEventsForUsersInTimeSpanAPIResponse)
+    )
 )]
 /// Get events for users in a time range
 ///
@@ -35,7 +41,7 @@ use crate::{
 pub async fn get_events_for_users_in_time_range_controller(
     http_req: HttpRequest,
     ctx: web::Data<NitteiContext>,
-    Json(body): Json<RequestBody>,
+    Json(body): Json<GetEventsForUsersInTimeSpanBody>,
 ) -> Result<HttpResponse, NitteiError> {
     let account = protect_admin_route(&http_req, &ctx).await?;
 
@@ -51,7 +57,9 @@ pub async fn get_events_for_users_in_time_range_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|events| HttpResponse::Ok().json(APIResponse::new(events.events)))
+        .map(|events| {
+            HttpResponse::Ok().json(GetEventsForUsersInTimeSpanAPIResponse::new(events.events))
+        })
         .map_err(NitteiError::from)
 }
 

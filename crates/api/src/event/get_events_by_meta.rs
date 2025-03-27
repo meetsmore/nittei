@@ -9,7 +9,19 @@ use crate::{error::NitteiError, shared::auth::protect_admin_route};
     get,
     tag = "Event",
     path = "/api/v1/events/meta",
-    summary = "Get events by metadata (admin only)"
+    summary = "Get events by metadata (admin only)",
+    params(
+        ("key" = String, Query, description = "The key of the metadata to search for"),
+        ("value" = String, Query, description = "The value of the metadata to search for"),
+        ("skip" = Option<usize>, Query, description = "The number of events to skip"),
+        ("limit" = Option<usize>, Query, description = "The number of events to return"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = GetEventsByMetaAPIResponse)
+    )
 )]
 pub async fn get_events_by_meta_controller(
     http_req: HttpRequest,
@@ -30,5 +42,5 @@ pub async fn get_events_by_meta_controller(
         .find_by_metadata(query)
         .await
         .map_err(|_| NitteiError::InternalError)?;
-    Ok(HttpResponse::Ok().json(APIResponse::new(events)))
+    Ok(HttpResponse::Ok().json(GetEventsByMetaAPIResponse::new(events)))
 }

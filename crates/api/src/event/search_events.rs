@@ -16,11 +16,20 @@ use crate::{
     post,
     tag = "Event",
     path = "/api/v1/events/search",
-    summary = "Search events for a user (admin only)"
+    summary = "Search events for a user (admin only)",
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = SearchEventsRequestBody,
+    ),
+    responses(
+        (status = 200, body = SearchEventsAPIResponse)
+    )
 )]
 pub async fn search_events_controller(
     http_req: HttpRequest,
-    body: actix_web_validator::Json<RequestBody>,
+    body: actix_web_validator::Json<SearchEventsRequestBody>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
     let account = protect_admin_route(&http_req, &ctx).await?;
@@ -49,7 +58,7 @@ pub async fn search_events_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|events| HttpResponse::Ok().json(APIResponse::new(events.events)))
+        .map(|events| HttpResponse::Ok().json(SearchEventsAPIResponse::new(events.events)))
         .map_err(NitteiError::from)
 }
 

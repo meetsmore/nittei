@@ -2,7 +2,11 @@ use std::collections::HashMap;
 
 use actix_web::{HttpRequest, HttpResponse, web};
 use chrono::{DateTime, Utc};
-use nittei_api_structs::get_user_freebusy::{APIResponse, PathParams, QueryParams};
+use nittei_api_structs::get_user_freebusy::{
+    GetUserFreeBusyAPIResponse,
+    GetUserFreeBusyQueryParams,
+    PathParams,
+};
 use nittei_domain::{
     CompatibleInstances,
     EventInstance,
@@ -35,11 +39,20 @@ pub fn parse_vec_query_value(val: &Option<String>) -> Option<Vec<ID>> {
     get,
     tag = "User",
     path = "/api/v1/user/{user_id}/freebusy",
-    summary = "Get freebusy for a user"
+    summary = "Get freebusy for a user",
+    params(
+        ("user_id" = ID, Path, description = "The id of the user to get freebusy for"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = GetUserFreeBusyAPIResponse)
+    )
 )]
 pub async fn get_freebusy_controller(
     http_req: HttpRequest,
-    mut query_params: web::Query<QueryParams>,
+    mut query_params: web::Query<GetUserFreeBusyQueryParams>,
     mut params: web::Path<PathParams>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
@@ -56,7 +69,7 @@ pub async fn get_freebusy_controller(
     execute(usecase, &ctx)
         .await
         .map(|usecase_res| {
-            HttpResponse::Ok().json(APIResponse {
+            HttpResponse::Ok().json(GetUserFreeBusyAPIResponse {
                 busy: usecase_res.busy.inner().into(),
                 user_id: usecase_res.user_id.to_string(),
             })

@@ -113,7 +113,7 @@ impl CalendarEventClient {
     pub async fn get_instances(
         &self,
         input: GetEventsInstancesInput,
-    ) -> APIResponse<get_event_instances::APIResponse> {
+    ) -> APIResponse<get_event_instances::GetEventInstancesAPIResponse> {
         self.base
             .get(
                 format!("user/events/{}/instances", input.event_id),
@@ -128,7 +128,7 @@ impl CalendarEventClient {
 
     pub async fn create(&self, input: CreateEventInput) -> APIResponse<create_event::APIResponse> {
         let user_id = input.user_id.clone();
-        let body = create_event::RequestBody {
+        let body = create_event::CreateEventRequestBody {
             external_parent_id: input.external_parent_id,
             external_id: input.external_id,
             title: input.title,
@@ -164,7 +164,7 @@ impl CalendarEventClient {
     pub async fn get_by_meta(
         &self,
         input: MetadataFindInput,
-    ) -> APIResponse<get_events_by_meta::APIResponse> {
+    ) -> APIResponse<get_events_by_meta::GetEventsByMetaAPIResponse> {
         self.base
             .get(
                 "events/meta".to_string(),
@@ -176,7 +176,7 @@ impl CalendarEventClient {
 
     pub async fn update(&self, input: UpdateEventInput) -> APIResponse<update_event::APIResponse> {
         let event_id = input.event_id.clone();
-        let body = update_event::RequestBody {
+        let body = update_event::UpdateEventRequestBody {
             title: input.title,
             description: input.description,
             event_type: input.event_type,

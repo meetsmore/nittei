@@ -15,7 +15,16 @@ use crate::{
     delete,
     tag = "User",
     path = "/api/v1/user/{user_id}",
-    summary = "Delete a user (admin only)"
+    summary = "Delete a user (admin only)",
+    params(
+        ("user_id" = ID, Path, description = "The id of the user to delete"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
 )]
 pub async fn delete_user_controller(
     http_req: HttpRequest,

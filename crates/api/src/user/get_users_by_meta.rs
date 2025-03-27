@@ -9,7 +9,19 @@ use crate::{error::NitteiError, shared::auth::protect_admin_route};
     get,
     tag = "User",
     path = "/api/v1/user/meta",
-    summary = "Get users by metadata"
+    summary = "Get users by metadata",
+    params(
+        ("key" = String, Query, description = "The key of the metadata to search for"),
+        ("value" = String, Query, description = "The value of the metadata to search for"),
+        ("skip" = Option<usize>, Query, description = "The number of users to skip"),
+        ("limit" = Option<usize>, Query, description = "The number of users to return"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = GetUsersByMetaAPIResponse)
+    )
 )]
 pub async fn get_users_by_meta_controller(
     http_req: HttpRequest,
@@ -30,5 +42,5 @@ pub async fn get_users_by_meta_controller(
         .find_by_metadata(query)
         .await
         .map_err(|_| NitteiError::InternalError)?;
-    Ok(HttpResponse::Ok().json(APIResponse::new(users)))
+    Ok(HttpResponse::Ok().json(GetUsersByMetaAPIResponse::new(users)))
 }

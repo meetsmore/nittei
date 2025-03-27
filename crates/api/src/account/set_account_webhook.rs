@@ -1,5 +1,5 @@
 use actix_web::{HttpRequest, HttpResponse, web};
-use nittei_api_structs::set_account_webhook::{APIResponse, RequestBody};
+use nittei_api_structs::set_account_webhook::{APIResponse, SetAccountWebhookRequestBody};
 use nittei_domain::Account;
 use nittei_infra::NitteiContext;
 
@@ -20,7 +20,7 @@ use crate::{
 pub async fn set_account_webhook_controller(
     http_req: HttpRequest,
     ctx: web::Data<NitteiContext>,
-    body: actix_web_validator::Json<RequestBody>,
+    body: actix_web_validator::Json<SetAccountWebhookRequestBody>,
 ) -> Result<HttpResponse, NitteiError> {
     let account = protect_admin_route(&http_req, &ctx).await?;
 

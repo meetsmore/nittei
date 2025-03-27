@@ -12,7 +12,13 @@ use crate::{
     delete,
     tag = "Account",
     path = "/api/v1/account/webhook",
-    summary = "Delete the webhook for an account"
+    summary = "Delete the webhook for an account",
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
 )]
 pub async fn delete_account_webhook_controller(
     http_req: HttpRequest,

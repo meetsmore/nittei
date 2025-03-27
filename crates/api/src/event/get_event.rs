@@ -15,7 +15,16 @@ use crate::{
     get,
     tag = "Event",
     path = "/api/v1/user/events/{event_id}",
-    summary = "Get an event (admin only)"
+    summary = "Get an event (admin only)",
+    params(
+        ("event_id" = ID, Path, description = "The id of the event to get"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
 )]
 pub async fn get_event_admin_controller(
     http_req: HttpRequest,
@@ -40,7 +49,13 @@ pub async fn get_event_admin_controller(
     get,
     tag = "Event",
     path = "/api/v1/events/{event_id}",
-    summary = "Get an event (user only)"
+    summary = "Get an event (user only)",
+    params(
+        ("event_id" = ID, Path, description = "The id of the event to get"),
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
 )]
 pub async fn get_event_controller(
     http_req: HttpRequest,
