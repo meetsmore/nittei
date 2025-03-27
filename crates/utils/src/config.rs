@@ -200,7 +200,7 @@ fn parse_config() -> AppConfig {
         .expect("Failed to set default pg.skip_migrations")
         .set_default("pg.min_connections", 2)
         .expect("Failed to set default pg.min_connections")
-        .set_default("pg.max_connections", 2)
+        .set_default("pg.max_connections", 5)
         .expect("Failed to set default pg.max_connections")
         .set_default("disable_reminders", false)
         .expect("Failed to set default disable_reminders")
