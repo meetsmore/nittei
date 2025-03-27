@@ -444,7 +444,6 @@ impl Application {
         user::remove_integration::remove_integration_controller,
         user::oauth_integration::oauth_integration_admin_controller,
         user::remove_integration::remove_integration_admin_controller,
-        
     ),
 )]
 struct ApiDoc;
