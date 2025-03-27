@@ -12,6 +12,7 @@ use nittei_domain::{
     generate_map_exceptions_original_start_times,
 };
 use nittei_infra::NitteiContext;
+use nittei_utils::config::APP_CONFIG;
 use tracing::error;
 
 use crate::{
@@ -76,7 +77,7 @@ impl From<UseCaseError> for NitteiError {
         match e {
             UseCaseError::InternalError => Self::InternalError,
             UseCaseError::InvalidTimespan => {
-                Self::BadClientData("The provided start_ts and end_ts is invalid".into())
+                Self::BadClientData("The provided start_ts and end_ts are invalid".into())
             }
             UseCaseError::NotFound(entity, event_id) => Self::NotFound(format!(
                 "The {} with id: {}, was not found.",
@@ -96,7 +97,7 @@ impl UseCase for GetEventsForUsersInTimeRangeUseCase {
 
     async fn execute(&mut self, ctx: &NitteiContext) -> Result<UseCaseResponse, UseCaseError> {
         let timespan = TimeSpan::new(self.start_time, self.end_time);
-        if timespan.greater_than(ctx.config.event_instances_query_duration_limit) {
+        if timespan.greater_than(APP_CONFIG.event_instances_query_duration_limit) {
             return Err(UseCaseError::InvalidTimespan);
         }
 

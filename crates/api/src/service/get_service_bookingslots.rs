@@ -37,6 +37,7 @@ use nittei_infra::{
     google_calendar::GoogleCalendarProvider,
     outlook_calendar::OutlookCalendarProvider,
 };
+use nittei_utils::config::APP_CONFIG;
 use tracing::{error, warn};
 
 use crate::{
@@ -168,7 +169,7 @@ impl UseCase for GetServiceBookingSlotsUseCase {
         let mut usecase_futures: Vec<_> = Vec::with_capacity(service.users.len());
 
         let timespan = TimeSpan::new(booking_timespan.start_time, booking_timespan.end_time);
-        if timespan.greater_than(ctx.config.booking_slots_query_duration_limit) {
+        if timespan.greater_than(APP_CONFIG.booking_slots_query_duration_limit) {
             return Err(UseCaseError::InvalidTimespan);
         }
 
@@ -465,7 +466,7 @@ impl GetServiceBookingSlotsUseCase {
             }
         }
 
-        if timespan.greater_than(ctx.config.booking_slots_query_duration_limit) {
+        if timespan.greater_than(APP_CONFIG.booking_slots_query_duration_limit) {
             Err(())
         } else {
             Ok(timespan)
