@@ -11,6 +11,15 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    put,
+    tag = "Account",
+    path = "/api/v1/account/integration",
+    summary = "Add an integration to an account",
+    responses(
+        (status = 200, description = "The integration was added successfully")
+    )
+)]
 pub async fn add_account_integration_controller(
     http_req: HttpRequest,
     body: actix_web_validator::Json<RequestBody>,

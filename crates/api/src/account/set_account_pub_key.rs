@@ -11,6 +11,12 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    put,
+    tag = "Account",
+    path = "/api/v1/account/pubkey",
+    summary = "Set the public key for an account"
+)]
 pub async fn set_account_pub_key_controller(
     http_req: HttpRequest,
     ctx: web::Data<NitteiContext>,

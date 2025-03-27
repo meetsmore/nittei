@@ -5,6 +5,12 @@ use nittei_infra::{MetadataFindQuery, NitteiContext};
 
 use crate::{error::NitteiError, shared::auth::protect_admin_route};
 
+#[utoipa::path(
+    get,
+    tag = "Calendar",
+    path = "/api/v1/calendar/meta",
+    summary = "Get calendars by metadata"
+)]
 pub async fn get_calendars_by_meta_controller(
     http_req: HttpRequest,
     query_params: web::Query<QueryParams>,

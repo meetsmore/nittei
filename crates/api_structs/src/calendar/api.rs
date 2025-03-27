@@ -1,6 +1,7 @@
 use nittei_domain::{Calendar, EventInstance, ID, Tz, Weekday};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
+use utoipa::ToSchema;
 use validator::Validate;
 
 use crate::{
@@ -58,6 +59,7 @@ pub mod get_calendars_by_user {
 }
 
 pub mod create_calendar {
+
     use super::*;
 
     #[derive(Deserialize)]
@@ -66,17 +68,19 @@ pub mod create_calendar {
     }
 
     /// Request body for creating a calendar
-    #[derive(Deserialize, Serialize, Validate, TS)]
+    #[derive(Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "CreateCalendarRequestBody")]
     pub struct RequestBody {
         /// Timezone for the calendar (e.g. "America/New_York")
         #[ts(type = "string")]
+        #[schema(value_type = Type::String)]
         pub timezone: Tz,
         /// Weekday for the calendar
         /// Default is Monday
         #[serde(default = "default_weekday")]
         #[ts(optional, as = "Option<_>")]
+        #[schema(value_type = Type::String)]
         pub week_start: Weekday,
 
         /// Optional name for the calendar
@@ -117,7 +121,7 @@ pub mod add_sync_calendar {
     }
 
     /// Request body for adding a sync calendar
-    #[derive(Deserialize, Serialize, Validate, TS)]
+    #[derive(Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "AddSyncCalendarRequestBody")]
     pub struct RequestBody {
@@ -149,7 +153,7 @@ pub mod remove_sync_calendar {
     }
 
     /// Request body for removing a sync calendar
-    #[derive(Deserialize, Serialize, Validate, TS)]
+    #[derive(Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "RemoveSyncCalendarRequestBody")]
     pub struct RequestBody {
@@ -415,22 +419,24 @@ pub mod update_calendar {
     }
 
     /// Request body for updating a calendar's settings
-    #[derive(Deserialize, Serialize, TS)]
+    #[derive(Deserialize, Serialize, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "UpdateCalendarSettings")]
     pub struct CalendarSettings {
         /// Optional weekday for the calendar
         #[serde(default)]
         #[ts(optional)]
+        #[schema(value_type = Type::String)]
         pub week_start: Option<Weekday>,
 
         /// Optional timezone for the calendar (e.g. "America/New_York")
         #[ts(type = "string", optional)]
+        #[schema(value_type = Type::String)]
         pub timezone: Option<Tz>,
     }
 
     /// Request body for updating a calendar
-    #[derive(Deserialize, Serialize, Validate, TS)]
+    #[derive(Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "UpdateCalendarRequestBody")]
     pub struct RequestBody {

@@ -13,6 +13,12 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    post,
+    tag = "Calendar",
+    path = "/api/v1/user/{user_id}/calendar",
+    summary = "Create a calendar (admin only)"
+)]
 pub async fn create_calendar_admin_controller(
     http_req: HttpRequest,
     path_params: web::Path<PathParams>,
@@ -38,6 +44,12 @@ pub async fn create_calendar_admin_controller(
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    post,
+    tag = "Calendar",
+    path = "/api/v1/calendar",
+    summary = "Create a calendar"
+)]
 pub async fn create_calendar_controller(
     http_req: HttpRequest,
     body: actix_web_validator::Json<RequestBody>,

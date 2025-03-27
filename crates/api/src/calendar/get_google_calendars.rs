@@ -14,6 +14,12 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    get,
+    tag = "Calendar",
+    path = "/api/v1/user/{user_id}/calendar/provider/google",
+    summary = "Get google calendars for a user (admin only)"
+)]
 pub async fn get_google_calendars_admin_controller(
     http_req: HttpRequest,
     path: web::Path<PathParams>,
@@ -34,6 +40,12 @@ pub async fn get_google_calendars_admin_controller(
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    get,
+    tag = "Calendar",
+    path = "/api/v1/calendar/provider/google",
+    summary = "Get google calendars for a user"
+)]
 pub async fn get_google_calendars_controller(
     http_req: HttpRequest,
     query: web::Query<QueryParams>,

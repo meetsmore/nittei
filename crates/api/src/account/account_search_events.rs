@@ -12,6 +12,16 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    get,
+    tag = "Account",
+    path = "/api/v1/account/search-events",
+    summary = "Search events inside an account",
+    responses(
+        (status = 200, description = "The found events", body = [CalendarEventDTO])
+    )
+)]
+/// Search events inside an account
 pub async fn account_search_events_controller(
     http_req: HttpRequest,
     body: actix_web_validator::Json<RequestBody>,

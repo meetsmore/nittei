@@ -14,6 +14,12 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    get,
+    tag = "Calendar",
+    path = "/api/v1/user/{user_id}/calendar/provider/outlook",
+    summary = "Get outlook calendars for a user (admin only)"
+)]
 pub async fn get_outlook_calendars_admin_controller(
     http_req: HttpRequest,
     path: web::Path<PathParams>,
@@ -34,6 +40,12 @@ pub async fn get_outlook_calendars_admin_controller(
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    get,
+    tag = "Calendar",
+    path = "/api/v1/calendar/provider/outlook",
+    summary = "Get outlook calendars for a user"
+)]
 pub async fn get_outlook_calendars_controller(
     http_req: HttpRequest,
     query: web::Query<QueryParams>,

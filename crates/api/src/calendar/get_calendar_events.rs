@@ -20,6 +20,12 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    get,
+    tag = "Calendar",
+    path = "/api/v1/user/calendar/{calendar_id}/events",
+    summary = "Get events for a calendar (admin only)"
+)]
 pub async fn get_calendar_events_admin_controller(
     http_req: HttpRequest,
     query_params: web::Query<QueryParams>,
@@ -44,6 +50,12 @@ pub async fn get_calendar_events_admin_controller(
         })
 }
 
+#[utoipa::path(
+    get,
+    tag = "Calendar",
+    path = "/api/v1/calendar/{calendar_id}/events",
+    summary = "Get events for a calendar"
+)]
 pub async fn get_calendar_events_controller(
     http_req: HttpRequest,
     query_params: web::Query<QueryParams>,

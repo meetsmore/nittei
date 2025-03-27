@@ -4,6 +4,12 @@ use nittei_infra::NitteiContext;
 
 use crate::{error::NitteiError, shared::auth::protect_admin_route};
 
+#[utoipa::path(
+    get,
+    tag = "Account",
+    path = "/api/v1/account",
+    summary = "Get the current account details"
+)]
 pub async fn get_account_controller(
     http_req: HttpRequest,
     ctx: web::Data<NitteiContext>,

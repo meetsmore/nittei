@@ -20,6 +20,12 @@ fn error_handler(e: UseCaseError) -> NitteiError {
     }
 }
 
+#[utoipa::path(
+    delete,
+    tag = "Calendar",
+    path = "/api/v1/user/{user_id}/calendar/sync",
+    summary = "Remove a calendar sync (admin only)"
+)]
 pub async fn remove_sync_calendar_admin_controller(
     http_req: HttpRequest,
     path_params: web::Path<PathParams>,

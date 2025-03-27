@@ -19,6 +19,12 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    put,
+    tag = "Calendar",
+    path = "/api/v1/user/calendar/{calendar_id}",
+    summary = "Update a calendar (admin only)"
+)]
 pub async fn update_calendar_admin_controller(
     http_req: HttpRequest,
     ctx: web::Data<NitteiContext>,
@@ -44,6 +50,12 @@ pub async fn update_calendar_admin_controller(
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    put,
+    tag = "Calendar",
+    path = "/api/v1/calendar/{calendar_id}",
+    summary = "Update a calendar"
+)]
 pub async fn update_calendar_controller(
     http_req: HttpRequest,
     ctx: web::Data<NitteiContext>,

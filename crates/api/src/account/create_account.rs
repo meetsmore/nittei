@@ -8,6 +8,15 @@ use crate::{
     shared::usecase::{UseCase, execute},
 };
 
+#[utoipa::path(
+    post,
+    tag = "Account",
+    path = "/api/v1/account",
+    summary = "Create a new account",
+    responses(
+        (status = 200, description = "The account was created successfully")
+    )
+)]
 pub async fn create_account_controller(
     ctx: web::Data<NitteiContext>,
     body: actix_web_validator::Json<RequestBody>,

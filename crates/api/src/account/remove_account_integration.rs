@@ -11,6 +11,12 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    delete,
+    tag = "Account",
+    path = "/api/v1/account/integration/{provider}",
+    summary = "Remove an integration from an account"
+)]
 pub async fn remove_account_integration_controller(
     http_req: HttpRequest,
     mut path: web::Path<PathParams>,

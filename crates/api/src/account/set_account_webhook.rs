@@ -11,6 +11,12 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    put,
+    tag = "Account",
+    path = "/api/v1/account/webhook",
+    summary = "Set the webhook for an account"
+)]
 pub async fn set_account_webhook_controller(
     http_req: HttpRequest,
     ctx: web::Data<NitteiContext>,

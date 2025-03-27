@@ -1,6 +1,7 @@
 use nittei_domain::Account;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
+use utoipa::ToSchema;
 use validator::Validate;
 
 use crate::dtos::AccountDTO;
@@ -26,7 +27,7 @@ pub mod create_account {
     use super::*;
 
     /// Request body for creating an account
-    #[derive(Deserialize, Serialize, Validate, TS)]
+    #[derive(Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "CreateAccountRequestBody")]
     pub struct RequestBody {
@@ -67,7 +68,7 @@ pub mod set_account_pub_key {
     use super::*;
 
     /// Request body for setting the public JWT key of an account
-    #[derive(Debug, Deserialize, Serialize, Validate, TS)]
+    #[derive(Debug, Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "SetAccountPubKeyRequestBody")]
     pub struct RequestBody {
@@ -84,7 +85,7 @@ pub mod set_account_webhook {
     use super::*;
 
     /// Request body for setting the webhook of an account
-    #[derive(Debug, Deserialize, Serialize, Validate, TS)]
+    #[derive(Debug, Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "SetAccountWebhookRequestBody")]
     pub struct RequestBody {
@@ -108,7 +109,7 @@ pub mod add_account_integration {
     use super::*;
 
     /// Request body for adding an integration to an account
-    #[derive(Debug, Deserialize, Serialize, Validate, TS)]
+    #[derive(Debug, Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "AddAccountIntegrationRequestBody")]
     pub struct RequestBody {
@@ -149,14 +150,12 @@ pub mod remove_account_integration {
 /// Request body for searching events for a whole account (across all users)
 pub mod account_search_events {
     use nittei_domain::{CalendarEventSort, DateTimeQuery, IDQuery, StringQuery};
-    use serde::{Deserialize, Serialize};
-    use ts_rs::TS;
-    use validator::Validate;
 
+    use super::*;
     use crate::dtos::CalendarEventDTO;
 
     /// Request body for searching events for a whole account (across all users)
-    #[derive(Deserialize, Serialize, Validate, TS)]
+    #[derive(Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase", deny_unknown_fields)]
     #[ts(
         export,
@@ -178,7 +177,7 @@ pub mod account_search_events {
     }
 
     /// Request body for searching events for a whole account (across all users)
-    #[derive(Deserialize, Serialize, Validate, TS)]
+    #[derive(Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase", deny_unknown_fields)]
     #[ts(
         export,

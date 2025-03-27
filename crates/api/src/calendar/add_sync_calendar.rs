@@ -21,6 +21,12 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    post,
+    tag = "Calendar",
+    path = "/api/v1/calendar/sync",
+    summary = "Add a sync calendar (admin only)"
+)]
 pub async fn add_sync_calendar_admin_controller(
     http_req: HttpRequest,
     path_params: web::Path<PathParams>,

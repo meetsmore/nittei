@@ -34,6 +34,9 @@ use nittei_domain::{
 use nittei_infra::NitteiContext;
 use tracing::{error, info, warn};
 use tracing_actix_web::TracingLogger;
+use utoipa::OpenApi;
+use utoipa_actix_web::AppExt;
+use utoipa_swagger_ui::SwaggerUi;
 
 /// Configure the Actix server API
 /// Add all the routes to the server
@@ -124,12 +127,20 @@ impl Application {
             let shared_state = shared_state.clone();
 
             App::new()
-                .wrap(Cors::permissive())
-                .wrap(middleware::Compress::default())
-                .wrap(TracingLogger::<NitteiTracingRootSpanBuilder>::new())
-                .app_data(Data::new(ctx))
-                .app_data(Data::new(shared_state))
-                .service(web::scope("/api/v1").configure(configure_server_api))
+                .into_utoipa_app()
+                .openapi(ApiDoc::openapi())
+                .map(|app| {
+                    app.wrap(Cors::permissive())
+                        .wrap(middleware::Compress::default())
+                        .wrap(TracingLogger::<NitteiTracingRootSpanBuilder>::new())
+                        .app_data(Data::new(ctx))
+                        .app_data(Data::new(shared_state))
+                        .service(web::scope("/api/v1").configure(configure_server_api))
+                })
+                .openapi_service(|api| {
+                    SwaggerUi::new("/swagger-ui/{_:.*}").url("/api-docs/openapi.json", api)
+                })
+                .into_app()
         })
         // Disable signals to avoid conflicts with the signal handler
         // This is handled by the signal handler in the binary and the `schedule_shutdown` function
@@ -356,3 +367,52 @@ impl Application {
         });
     }
 }
+
+#[derive(OpenApi)]
+#[openapi(
+    info(
+        title = "Nittei API",
+        version = "1.0.0",
+        description = "OpenAPI documentation for the Nittei API",
+    ),
+    tags(
+        {name = "Account", description = "Account API endpoints"}, 
+        {name = "Calendar", description = "Calendar API endpoints"},
+        {name = "Event", description = "Event API endpoints"},
+        {name = "Schedule", description = "Schedule API endpoints"},
+        {name = "Service", description = "Service API endpoints"},
+        {name = "Status", description = "Status API endpoints"},
+        {name = "User", description = "User API endpoints"},
+    ),
+    paths(
+        // Account
+        account::account_search_events::account_search_events_controller,
+        account::create_account::create_account_controller,
+        account::get_account::get_account_controller,
+        account::set_account_pub_key::set_account_pub_key_controller,
+        account::set_account_webhook::set_account_webhook_controller,
+        account::delete_account_webhook::delete_account_webhook_controller,
+        account::add_account_integration::add_account_integration_controller,
+        account::remove_account_integration::remove_account_integration_controller,
+
+        // Calendar
+        calendar::get_calendars::get_calendars_controller,
+        calendar::get_calendars::get_calendars_admin_controller,
+        calendar::get_calendars_by_meta::get_calendars_by_meta_controller,
+        calendar::get_calendar::get_calendar_controller,
+        calendar::get_calendar::get_calendar_admin_controller,
+        calendar::delete_calendar::delete_calendar_controller,
+        calendar::delete_calendar::delete_calendar_admin_controller,
+        calendar::update_calendar::update_calendar_controller,
+        calendar::update_calendar::update_calendar_admin_controller,
+        calendar::get_calendar_events::get_calendar_events_controller,
+        calendar::get_calendar_events::get_calendar_events_admin_controller,
+        calendar::get_google_calendars::get_google_calendars_controller,
+        calendar::get_google_calendars::get_google_calendars_admin_controller,
+        calendar::get_outlook_calendars::get_outlook_calendars_controller,
+        calendar::get_outlook_calendars::get_outlook_calendars_admin_controller,
+        calendar::remove_sync_calendar::remove_sync_calendar_admin_controller,
+        calendar::add_sync_calendar::add_sync_calendar_admin_controller,
+    ),
+)]
+struct ApiDoc;
