@@ -405,7 +405,7 @@ pub mod get_events_for_users_in_time_range {
 }
 
 pub mod search_events {
-    use nittei_domain::{CalendarEventSort, DateTimeQuery, IDQuery, StringQuery};
+    use nittei_domain::{CalendarEventSort, DateTimeQuery, IDQuery, RecurrenceQuery, StringQuery};
 
     use super::*;
 
@@ -483,8 +483,9 @@ pub mod search_events {
         pub original_start_time: Option<DateTimeQuery>,
 
         /// Optional filter on the recurrence (existence)
+        /// This allows to filter on the existence or not of a recurrence, or the existence of a recurrence at a specific date
         #[ts(optional)]
-        pub is_recurring: Option<bool>,
+        pub recurrence: Option<RecurrenceQuery>,
 
         /// Optional list of metadata key-value pairs
         #[ts(optional)]

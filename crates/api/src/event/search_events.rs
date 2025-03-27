@@ -1,6 +1,6 @@
 use actix_web::{HttpRequest, HttpResponse, web};
 use nittei_api_structs::{dtos::CalendarEventDTO, search_events::*};
-use nittei_domain::{CalendarEventSort, DateTimeQuery, ID, IDQuery, StringQuery};
+use nittei_domain::{CalendarEventSort, DateTimeQuery, ID, IDQuery, RecurrenceQuery, StringQuery};
 use nittei_infra::{NitteiContext, SearchEventsForUserParams, SearchEventsParams};
 use nittei_utils::config::APP_CONFIG;
 
@@ -33,7 +33,7 @@ pub async fn search_events_controller(
         status: body.filter.status,
         recurring_event_uid: body.filter.recurring_event_uid,
         original_start_time: body.filter.original_start_time,
-        is_recurring: body.filter.is_recurring,
+        recurrence: body.filter.recurrence,
         metadata: body.filter.metadata,
         created_at: body.filter.created_at,
         updated_at: body.filter.updated_at,
@@ -86,8 +86,9 @@ pub struct SearchEventsUseCase {
     /// Optional query on original start time - "lower than or equal", or "great than or equal" (UTC)
     pub original_start_time: Option<DateTimeQuery>,
 
-    /// Optional filter on the recurrence (existence)
-    pub is_recurring: Option<bool>,
+    /// Optional filter on the recurrence
+    /// This allows to filter on the existence or not of a recurrence, or the existence of a recurrence at a specific date
+    pub recurrence: Option<RecurrenceQuery>,
 
     /// Optional list of metadata key-value pairs
     pub metadata: Option<serde_json::Value>,
@@ -200,7 +201,7 @@ impl UseCase for SearchEventsUseCase {
                     status: self.status.take(),
                     recurring_event_uid: self.recurring_event_uid.take(),
                     original_start_time: self.original_start_time.take(),
-                    is_recurring: self.is_recurring.take(),
+                    recurrence: self.recurrence.take(),
                     metadata: self.metadata.take(),
                     created_at: self.created_at.take(),
                     updated_at: self.updated_at.take(),
