@@ -1,6 +1,6 @@
 use opentelemetry::{global, propagation::TextMapCompositePropagator, trace::TracerProvider};
 use opentelemetry_datadog::{ApiVersion, DatadogPipelineBuilder, DatadogPropagator};
-use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_otlp::{WithExportConfig, WithHttpConfig};
 use opentelemetry_sdk::{
     Resource,
     propagation::TraceContextPropagator,
@@ -126,7 +126,9 @@ fn get_tracer_datadog(
     service_version: String,
     service_env: String,
 ) -> anyhow::Result<SdkTracerProvider> {
+    let http_client = reqwest::blocking::Client::new();
     DatadogPipelineBuilder::default()
+        .with_http_client(http_client)
         .with_service_name(service_name)
         .with_version(service_version)
         .with_env(service_env)
@@ -151,8 +153,10 @@ fn get_tracer_otlp(
     service_version: String,
     service_env: String,
 ) -> anyhow::Result<SdkTracerProvider> {
+    let http_client = reqwest::blocking::Client::new();
     let otlp_exporter = opentelemetry_otlp::SpanExporter::builder()
         .with_http()
+        .with_http_client(http_client)
         .with_protocol(opentelemetry_otlp::Protocol::HttpJson)
         .with_endpoint(otlp_endpoint)
         .build()?;

@@ -1653,6 +1653,7 @@ dependencies = [
  "opentelemetry-datadog",
  "opentelemetry-otlp",
  "opentelemetry_sdk",
+ "reqwest",
  "serde_json",
  "test-log",
  "tikv-jemallocator",
