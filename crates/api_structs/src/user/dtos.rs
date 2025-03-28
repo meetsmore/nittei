@@ -1,9 +1,9 @@
 use nittei_domain::{ID, User};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
-
+use utoipa::ToSchema;
 /// User object
-#[derive(Deserialize, Serialize, Debug, Clone, TS)]
+#[derive(Deserialize, Serialize, Debug, Clone, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct UserDTO {

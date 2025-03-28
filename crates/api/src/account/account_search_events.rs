@@ -12,9 +12,25 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    get,
+    tag = "Account",
+    path = "/api/v1/account/search-events",
+    summary = "Search events inside an account",
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = AccountSearchEventsRequestBody,
+    ),
+    responses(
+        (status = 200, description = "The found events", body = SearchEventsAPIResponse)
+    )
+)]
+/// Search events inside an account
 pub async fn account_search_events_controller(
     http_req: HttpRequest,
-    body: actix_web_validator::Json<RequestBody>,
+    body: actix_web_validator::Json<AccountSearchEventsRequestBody>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
     let account = protect_admin_route(&http_req, &ctx).await?;
@@ -42,7 +58,7 @@ pub async fn account_search_events_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|events| HttpResponse::Ok().json(APIResponse::new(events.events)))
+        .map(|events| HttpResponse::Ok().json(SearchEventsAPIResponse::new(events.events)))
         .map_err(NitteiError::from)
 }
 

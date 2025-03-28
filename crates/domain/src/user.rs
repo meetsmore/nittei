@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
+use utoipa::ToSchema;
 
 use crate::{
     Meta,
@@ -47,7 +48,7 @@ pub struct UserIntegration {
     pub access_token_expires_ts: i64,
 }
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq, TS)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub enum IntegrationProvider {

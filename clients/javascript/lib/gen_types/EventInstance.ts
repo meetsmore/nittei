@@ -3,4 +3,17 @@
 /**
  * Occurrence of a `CalendarEvent`
  */
-export type EventInstance = { startTime: Date; endTime: Date; busy: boolean }
+export type EventInstance = {
+  /**
+   * Start time of the event instance (UTC)
+   */
+  startTime: Date
+  /**
+   * End time of the event instance (UTC)
+   */
+  endTime: Date
+  /**
+   * Whether the event is busy or not
+   */
+  busy: boolean
+}

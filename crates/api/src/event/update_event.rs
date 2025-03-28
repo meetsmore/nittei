@@ -28,9 +28,27 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    put,
+    tag = "Event",
+    path = "/api/v1/user/events/{event_id}",
+    summary = "Update an event (admin only)",
+    params(
+        ("event_id" = ID, Path, description = "The id of the event to update"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = UpdateEventRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn update_event_admin_controller(
     http_req: HttpRequest,
-    body: web::Json<RequestBody>,
+    body: web::Json<UpdateEventRequestBody>,
     path_params: web::Path<PathParams>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
@@ -70,9 +88,24 @@ pub async fn update_event_admin_controller(
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    put,
+    tag = "Event",
+    path = "/api/v1/events/{event_id}",
+    summary = "Update an event (user only)",
+    params(
+        ("event_id" = ID, Path, description = "The id of the event to update"),
+    ),
+    request_body(
+        content = UpdateEventRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn update_event_controller(
     http_req: HttpRequest,
-    body: web::Json<RequestBody>,
+    body: web::Json<UpdateEventRequestBody>,
     path_params: web::Path<PathParams>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {

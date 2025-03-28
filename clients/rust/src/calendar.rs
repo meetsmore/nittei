@@ -77,11 +77,11 @@ impl CalendarClient {
         &self,
         input: UpdateCalendarInput,
     ) -> APIResponse<update_calendar::APIResponse> {
-        let settings = update_calendar::CalendarSettings {
+        let settings = update_calendar::UpdateCalendarSettings {
             timezone: input.timezone,
             week_start: input.week_start,
         };
-        let body = update_calendar::RequestBody {
+        let body = update_calendar::UpdateCalendarRequestBody {
             settings,
             name: input.name,
             metadata: input.metadata,
@@ -115,7 +115,7 @@ impl CalendarClient {
         &self,
         user_id: ID,
         key: Option<String>,
-    ) -> APIResponse<get_calendars_by_user::APIResponse> {
+    ) -> APIResponse<get_calendars_by_user::GetCalendarsByUserAPIResponse> {
         match key {
             Some(key) => {
                 self.base
@@ -137,7 +137,7 @@ impl CalendarClient {
     pub async fn get_events(
         &self,
         input: GetCalendarEventsInput,
-    ) -> APIResponse<get_calendar_events::APIResponse> {
+    ) -> APIResponse<get_calendar_events::GetCalendarEventsAPIResponse> {
         self.base
             .get(
                 format!("user/calendar/{}/events", input.calendar_id),
@@ -153,7 +153,7 @@ impl CalendarClient {
     pub async fn get_by_meta(
         &self,
         input: MetadataFindInput,
-    ) -> APIResponse<get_calendars_by_meta::APIResponse> {
+    ) -> APIResponse<get_calendars_by_meta::GetCalendarsByMetaAPIResponse> {
         self.base
             .get(
                 "calendar/meta".to_string(),
@@ -167,7 +167,7 @@ impl CalendarClient {
         &self,
         input: CreateCalendarInput,
     ) -> APIResponse<create_calendar::APIResponse> {
-        let body = create_calendar::RequestBody {
+        let body = create_calendar::CreateCalendarRequestBody {
             timezone: input.timezone,
             name: input.name,
             key: input.key,
@@ -187,7 +187,7 @@ impl CalendarClient {
         &self,
         input: SyncCalendarInput,
     ) -> APIResponse<add_sync_calendar::APIResponse> {
-        let body = add_sync_calendar::RequestBody {
+        let body = add_sync_calendar::AddSyncCalendarRequestBody {
             calendar_id: input.calendar_id,
             ext_calendar_id: input.ext_calendar_id,
             provider: input.provider,
@@ -205,7 +205,7 @@ impl CalendarClient {
         &self,
         input: StopCalendarSyncInput,
     ) -> APIResponse<remove_sync_calendar::APIResponse> {
-        let body = remove_sync_calendar::RequestBody {
+        let body = remove_sync_calendar::RemoveSyncCalendarRequestBody {
             calendar_id: input.calendar_id,
             ext_calendar_id: input.ext_calendar_id,
             provider: input.provider,
@@ -222,7 +222,7 @@ impl CalendarClient {
     pub async fn get_google(
         &self,
         input: GetGoogleCalendars,
-    ) -> APIResponse<get_google_calendars::APIResponse> {
+    ) -> APIResponse<get_google_calendars::GetGoogleCalendarsAPIResponse> {
         self.base
             .get(
                 format!("user/{:?}/calendar/provider/google", input.user_id),
@@ -238,7 +238,7 @@ impl CalendarClient {
     pub async fn get_outlook(
         &self,
         input: GetOutlookCalendars,
-    ) -> APIResponse<get_outlook_calendars::APIResponse> {
+    ) -> APIResponse<get_outlook_calendars::GetOutlookCalendarsAPIResponse> {
         self.base
             .get(
                 format!("user/{:?}/calendar/provider/outlook", input.user_id),

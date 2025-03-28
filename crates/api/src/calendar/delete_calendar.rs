@@ -11,6 +11,21 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    delete,
+    tag = "Calendar",
+    path = "/api/v1/user/calendar/{calendar_id}",
+    summary = "Delete a calendar (admin only)",
+    params(
+        ("calendar_id" = ID, Path, description = "The id of the calendar to delete"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn delete_calendar_admin_controller(
     http_req: HttpRequest,
     path: web::Path<PathParams>,
@@ -30,6 +45,18 @@ pub async fn delete_calendar_admin_controller(
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    delete,
+    tag = "Calendar",
+    path = "/api/v1/calendar/{calendar_id}",
+    summary = "Delete a calendar",
+    params(
+        ("calendar_id" = ID, Path, description = "The id of the calendar to delete"),
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn delete_calendar_controller(
     http_req: HttpRequest,
     path: web::Path<PathParams>,

@@ -1,12 +1,13 @@
 use nittei_domain::Account;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
+use utoipa::ToSchema;
 use validator::Validate;
 
 use crate::dtos::AccountDTO;
 
 /// Account response object
-#[derive(Deserialize, Serialize, TS)]
+#[derive(Deserialize, Serialize, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct AccountResponse {
@@ -26,10 +27,10 @@ pub mod create_account {
     use super::*;
 
     /// Request body for creating an account
-    #[derive(Deserialize, Serialize, Validate, TS)]
+    #[derive(Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "CreateAccountRequestBody")]
-    pub struct RequestBody {
+    #[ts(export)]
+    pub struct CreateAccountRequestBody {
         /// Code used for authentifying the request
         /// Creating accounts is an admin operation, so it requires a specific code
         #[validate(length(min = 1))]
@@ -37,17 +38,17 @@ pub mod create_account {
     }
 
     /// Response body for creating an account
-    #[derive(Serialize, Deserialize, TS)]
+    #[derive(Serialize, Deserialize, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "CreateAccountResponseBody")]
-    pub struct APIResponse {
+    #[ts(export)]
+    pub struct CreateAccountResponseBody {
         /// Account created
         pub account: AccountDTO,
         /// API Key that can be used for doing requests for this account
         pub secret_api_key: String,
     }
 
-    impl APIResponse {
+    impl CreateAccountResponseBody {
         pub fn new(account: Account) -> Self {
             Self {
                 account: AccountDTO::new(&account),
@@ -67,10 +68,10 @@ pub mod set_account_pub_key {
     use super::*;
 
     /// Request body for setting the public JWT key of an account
-    #[derive(Debug, Deserialize, Serialize, Validate, TS)]
+    #[derive(Debug, Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "SetAccountPubKeyRequestBody")]
-    pub struct RequestBody {
+    #[ts(export)]
+    pub struct SetAccountPubKeyRequestBody {
         /// Public JWT key
         #[validate(length(min = 1))]
         pub public_jwt_key: Option<String>,
@@ -84,10 +85,10 @@ pub mod set_account_webhook {
     use super::*;
 
     /// Request body for setting the webhook of an account
-    #[derive(Debug, Deserialize, Serialize, Validate, TS)]
+    #[derive(Debug, Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "SetAccountWebhookRequestBody")]
-    pub struct RequestBody {
+    #[ts(export)]
+    pub struct SetAccountWebhookRequestBody {
         /// Webhook URL
         #[validate(url)]
         pub webhook_url: String,
@@ -108,10 +109,10 @@ pub mod add_account_integration {
     use super::*;
 
     /// Request body for adding an integration to an account
-    #[derive(Debug, Deserialize, Serialize, Validate, TS)]
+    #[derive(Debug, Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "AddAccountIntegrationRequestBody")]
-    pub struct RequestBody {
+    #[ts(export)]
+    pub struct AddAccountIntegrationRequestBody {
         /// Client ID of the integration
         #[validate(length(min = 1))]
         pub client_id: String,
@@ -149,23 +150,17 @@ pub mod remove_account_integration {
 /// Request body for searching events for a whole account (across all users)
 pub mod account_search_events {
     use nittei_domain::{CalendarEventSort, DateTimeQuery, IDQuery, RecurrenceQuery, StringQuery};
-    use serde::{Deserialize, Serialize};
-    use ts_rs::TS;
-    use validator::Validate;
 
+    use super::*;
     use crate::dtos::CalendarEventDTO;
 
     /// Request body for searching events for a whole account (across all users)
-    #[derive(Deserialize, Serialize, Validate, TS)]
+    #[derive(Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase", deny_unknown_fields)]
-    #[ts(
-        export,
-        rename = "AccountSearchEventsRequestBody",
-        rename_all = "camelCase"
-    )]
-    pub struct RequestBody {
+    #[ts(export, rename_all = "camelCase")]
+    pub struct AccountSearchEventsRequestBody {
         /// Filter to use for searching events
-        pub filter: RequestBodyFilter,
+        pub filter: AccountSearchEventsRequestBodyFilter,
 
         /// Optional sort to use when searching events
         #[ts(optional)]
@@ -178,14 +173,10 @@ pub mod account_search_events {
     }
 
     /// Request body for searching events for a whole account (across all users)
-    #[derive(Deserialize, Serialize, Validate, TS)]
+    #[derive(Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase", deny_unknown_fields)]
-    #[ts(
-        export,
-        rename = "AccountSearchEventsRequestBodyFilter",
-        rename_all = "camelCase"
-    )]
-    pub struct RequestBodyFilter {
+    #[ts(export, rename_all = "camelCase")]
+    pub struct AccountSearchEventsRequestBodyFilter {
         /// Optional query on event ID
         #[ts(optional)]
         pub event_uid: Option<IDQuery>,
@@ -249,15 +240,15 @@ pub mod account_search_events {
     }
 
     /// API response for getting events by calendars
-    #[derive(Serialize, TS)]
+    #[derive(Serialize, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "SearchEventsAPIResponse")]
-    pub struct APIResponse {
+    #[ts(export)]
+    pub struct SearchEventsAPIResponse {
         /// List of calendar events retrieved
         pub events: Vec<CalendarEventDTO>,
     }
 
-    impl APIResponse {
+    impl SearchEventsAPIResponse {
         pub fn new(events: Vec<CalendarEventDTO>) -> Self {
             Self { events }
         }

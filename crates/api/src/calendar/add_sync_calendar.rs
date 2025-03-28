@@ -1,5 +1,9 @@
 use actix_web::{HttpRequest, HttpResponse, web};
-use nittei_api_structs::add_sync_calendar::{APIResponse, PathParams, RequestBody};
+use nittei_api_structs::add_sync_calendar::{
+    APIResponse,
+    AddSyncCalendarPathParams,
+    AddSyncCalendarRequestBody,
+};
 use nittei_domain::{
     ID,
     IntegrationProvider,
@@ -21,10 +25,28 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    post,
+    tag = "Calendar",
+    path = "/api/v1/calendar/sync",
+    summary = "Add a sync calendar (admin only)",
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = AddSyncCalendarRequestBody,
+    ),
+    params(
+        ("user_id" = ID, Path, description = "The user id of the user to add the sync calendar to"),
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn add_sync_calendar_admin_controller(
     http_req: HttpRequest,
-    path_params: web::Path<PathParams>,
-    body: actix_web_validator::Json<RequestBody>,
+    path_params: web::Path<AddSyncCalendarPathParams>,
+    body: actix_web_validator::Json<AddSyncCalendarRequestBody>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
     let account = protect_admin_route(&http_req, &ctx).await?;

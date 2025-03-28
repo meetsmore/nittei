@@ -1,6 +1,11 @@
 use actix_web::{HttpRequest, HttpResponse, web};
-use nittei_api_structs::get_outlook_calendars::{APIResponse, PathParams, QueryParams};
+use nittei_api_structs::get_outlook_calendars::{
+    GetOutlookCalendarsAPIResponse,
+    PathParams,
+    QueryParams,
+};
 use nittei_domain::{
+    ID,
     User,
     providers::outlook::{OutlookCalendar, OutlookCalendarAccessRole},
 };
@@ -14,6 +19,22 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    get,
+    tag = "Calendar",
+    path = "/api/v1/user/{user_id}/calendar/provider/outlook",
+    summary = "Get outlook calendars for a user (admin only)",
+    params(
+        ("user_id" = ID, Path, description = "The id of the user to get outlook calendars for"),
+        ("min_access_role" = OutlookCalendarAccessRole, Query, description = "The minimum access role to get outlook calendars for"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = GetOutlookCalendarsAPIResponse)
+    )
+)]
 pub async fn get_outlook_calendars_admin_controller(
     http_req: HttpRequest,
     path: web::Path<PathParams>,
@@ -30,10 +51,22 @@ pub async fn get_outlook_calendars_admin_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|calendars| HttpResponse::Ok().json(APIResponse::new(calendars)))
+        .map(|calendars| HttpResponse::Ok().json(GetOutlookCalendarsAPIResponse::new(calendars)))
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    get,
+    tag = "Calendar",
+    path = "/api/v1/calendar/provider/outlook",
+    summary = "Get outlook calendars for a user",
+    params(
+        ("min_access_role" = OutlookCalendarAccessRole, Query, description = "The minimum access role to get outlook calendars for"),
+    ),
+    responses(
+        (status = 200, body = GetOutlookCalendarsAPIResponse)
+    )
+)]
 pub async fn get_outlook_calendars_controller(
     http_req: HttpRequest,
     query: web::Query<QueryParams>,
@@ -48,7 +81,7 @@ pub async fn get_outlook_calendars_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|calendars| HttpResponse::Ok().json(APIResponse::new(calendars)))
+        .map(|calendars| HttpResponse::Ok().json(GetOutlookCalendarsAPIResponse::new(calendars)))
         .map_err(NitteiError::from)
 }
 
