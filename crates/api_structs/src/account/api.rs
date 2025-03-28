@@ -149,7 +149,7 @@ pub mod remove_account_integration {
 
 /// Request body for searching events for a whole account (across all users)
 pub mod account_search_events {
-    use nittei_domain::{CalendarEventSort, DateTimeQuery, IDQuery, StringQuery};
+    use nittei_domain::{CalendarEventSort, DateTimeQuery, IDQuery, RecurrenceQuery, StringQuery};
 
     use super::*;
     use crate::dtos::CalendarEventDTO;
@@ -221,9 +221,10 @@ pub mod account_search_events {
         #[ts(optional)]
         pub original_start_time: Option<DateTimeQuery>,
 
-        /// Optional filter on the recurrence (existence)
+        /// Optional filter on the recurrence
+        /// This allows to filter on the existence or not of a recurrence, or the existence of a recurrence at a specific date
         #[ts(optional)]
-        pub is_recurring: Option<bool>,
+        pub recurrence: Option<RecurrenceQuery>,
 
         /// Optional query on metadata
         #[ts(optional)]

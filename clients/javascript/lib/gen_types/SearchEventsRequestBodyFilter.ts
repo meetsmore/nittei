@@ -2,6 +2,7 @@
 import type { DateTimeQuery } from './DateTimeQuery'
 import type { ID } from './ID'
 import type { IDQuery } from './IDQuery'
+import type { RecurrenceQuery } from './RecurrenceQuery'
 import type { StringQuery } from './StringQuery'
 import type { JsonValue } from './serde_json/JsonValue'
 
@@ -57,8 +58,9 @@ export type SearchEventsRequestBodyFilter = {
   originalStartTime?: DateTimeQuery
   /**
    * Optional filter on the recurrence (existence)
+   * This allows to filter on the existence or not of a recurrence, or the existence of a recurrence at a specific date
    */
-  isRecurring?: boolean
+  recurrence?: RecurrenceQuery
   /**
    * Optional list of metadata key-value pairs
    */
