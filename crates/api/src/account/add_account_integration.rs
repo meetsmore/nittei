@@ -1,4 +1,5 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, http::HeaderMap};
+use axum_valid::Valid;
 use nittei_api_structs::add_account_integration::{APIResponse, AddAccountIntegrationRequestBody};
 use nittei_domain::{Account, AccountIntegration, IntegrationProvider};
 use nittei_infra::NitteiContext;
@@ -27,24 +28,24 @@ use crate::{
     )
 )]
 pub async fn add_account_integration_controller(
-    http_req: HttpRequest,
-    body: actix_web_validator::Json<AddAccountIntegrationRequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Valid<Json<AddAccountIntegrationRequestBody>>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let account = protect_admin_route(&headers, &ctx).await?;
 
     let body = body.0;
     let usecase = AddAccountIntegrationUseCase {
         account,
-        client_id: body.client_id,
-        client_secret: body.client_secret,
-        redirect_uri: body.redirect_uri,
-        provider: body.provider,
+        client_id: body.client_id.clone(),
+        client_secret: body.client_secret.clone(),
+        redirect_uri: body.redirect_uri.clone(),
+        provider: body.provider.clone(),
     };
 
     execute(usecase, &ctx)
         .await
-        .map(|_| HttpResponse::Ok().json(APIResponse::from("Integration enabled for account")))
+        .map(|_| Json(APIResponse::from("Integration enabled for account")))
         .map_err(NitteiError::from)
 }
 

@@ -93,8 +93,7 @@ async fn create_default_service_host(
     (host, busy_calendar)
 }
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn test_group_team_scheduling() {
     let (app, sdk, address) = spawn_app().await;
     let res = sdk
@@ -250,8 +249,7 @@ async fn test_group_team_scheduling() {
     }
 }
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn test_group_team_scheduling_is_collective() {
     let (app, sdk, address) = spawn_app().await;
     let res = sdk
@@ -366,8 +364,7 @@ async fn test_group_team_scheduling_is_collective() {
     assert!(bookingslots.is_empty());
 }
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn test_group_team_scheduling_increase_max_count() {
     let (app, sdk, address) = spawn_app().await;
     let res = sdk
@@ -802,8 +799,7 @@ async fn test_group_team_scheduling_increase_max_count() {
     }
 }
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn test_group_team_scheduling_decrease_max_count() {
     let (app, sdk, address) = spawn_app().await;
     let res = sdk
@@ -1028,8 +1024,7 @@ async fn test_group_team_scheduling_decrease_max_count() {
 // When a reservation is made in a group service it should still allow more bookings
 // to that service (if max invitees is more than one). But other services should then
 // not allow bookings at that time
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn test_combination_of_services() {
     let (app, sdk, address) = spawn_app().await;
     let res = sdk

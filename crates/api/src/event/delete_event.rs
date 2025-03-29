@@ -1,4 +1,4 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, extract::Path, http::HeaderMap};
 use nittei_api_structs::delete_event::*;
 use nittei_domain::{CalendarEvent, ID, IntegrationProvider, User};
 use nittei_infra::{
@@ -39,11 +39,11 @@ use crate::{
     )
 )]
 pub async fn delete_event_admin_controller(
-    http_req: HttpRequest,
-    path_params: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    path_params: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let account = protect_admin_route(&headers, &ctx).await?;
     let e = account_can_modify_event(&account, &path_params.event_id, &ctx).await?;
     let user = account_can_modify_user(&account, &e.user_id, &ctx).await?;
 
@@ -54,7 +54,7 @@ pub async fn delete_event_admin_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|event| HttpResponse::Ok().json(APIResponse::new(event)))
+        .map(|event| Json(APIResponse::new(event)))
         .map_err(NitteiError::from)
 }
 
@@ -71,11 +71,11 @@ pub async fn delete_event_admin_controller(
     )
 )]
 pub async fn delete_event_controller(
-    http_req: HttpRequest,
-    path_params: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let (user, policy) = protect_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    path_params: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let (user, policy) = protect_route(&headers, &ctx).await?;
 
     let usecase = DeleteEventUseCase {
         user,
@@ -84,7 +84,7 @@ pub async fn delete_event_controller(
 
     execute_with_policy(usecase, &policy, &ctx)
         .await
-        .map(|event| HttpResponse::Ok().json(APIResponse::new(event)))
+        .map(|event| Json(APIResponse::new(event)))
         .map_err(NitteiError::from)
 }
 

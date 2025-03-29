@@ -1,4 +1,4 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, extract::Path, http::HeaderMap};
 use nittei_api_structs::update_service_user::*;
 use nittei_domain::{Account, ID, ServiceResource, TimePlan};
 use nittei_infra::NitteiContext;
@@ -17,12 +17,12 @@ use crate::{
 };
 
 pub async fn update_service_user_controller(
-    http_req: HttpRequest,
-    mut body: web::Json<RequestBody>,
-    mut path: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    mut path: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+    mut body: Json<RequestBody>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let account = protect_admin_route(&headers, &ctx).await?;
 
     let usecase = UpdateServiceUserUseCase {
         account,
@@ -37,7 +37,7 @@ pub async fn update_service_user_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|usecase_res| HttpResponse::Ok().json(APIResponse::new(usecase_res.user)))
+        .map(|usecase_res| Json(APIResponse::new(usecase_res.user)))
         .map_err(NitteiError::from)
 }
 

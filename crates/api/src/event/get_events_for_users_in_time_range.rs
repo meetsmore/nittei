@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use actix_web::{HttpRequest, HttpResponse, web};
-use actix_web_validator::Json;
+use axum::{Extension, Json, http::HeaderMap};
+use axum_valid::Valid;
 use chrono::{DateTime, Utc};
 use nittei_api_structs::get_events_for_users_in_time_range::*;
 use nittei_domain::{
@@ -39,11 +39,11 @@ use crate::{
 ///
 /// Optionally, it can generate the instances of the recurring events
 pub async fn get_events_for_users_in_time_range_controller(
-    http_req: HttpRequest,
-    ctx: web::Data<NitteiContext>,
-    Json(body): Json<GetEventsForUsersInTimeSpanBody>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Valid<Json<GetEventsForUsersInTimeSpanBody>>,
+) -> Result<Json<GetEventsForUsersInTimeSpanAPIResponse>, NitteiError> {
+    let account = protect_admin_route(&headers, &ctx).await?;
 
     let usecase = GetEventsForUsersInTimeRangeUseCase {
         account_id: account.id,
@@ -57,9 +57,7 @@ pub async fn get_events_for_users_in_time_range_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|events| {
-            HttpResponse::Ok().json(GetEventsForUsersInTimeSpanAPIResponse::new(events.events))
-        })
+        .map(|events| Json(GetEventsForUsersInTimeSpanAPIResponse::new(events.events)))
         .map_err(NitteiError::from)
 }
 

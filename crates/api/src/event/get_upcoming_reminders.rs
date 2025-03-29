@@ -1,10 +1,10 @@
 use std::{collections::HashMap, time::Duration};
 
-use actix_web::rt::time::Instant;
 use chrono::TimeDelta;
 use nittei_api_structs::send_event_reminders::{AccountEventReminder, AccountReminders};
 use nittei_domain::{Account, CalendarEvent, Reminder};
 use nittei_infra::NitteiContext;
+use tokio::time::Instant;
 use tracing::error;
 
 use crate::{error::NitteiError, shared::usecase::UseCase};

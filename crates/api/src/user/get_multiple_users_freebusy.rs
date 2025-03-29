@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, http::HeaderMap};
 use chrono::{DateTime, Utc};
 use futures::{FutureExt, StreamExt, future::join_all, stream};
 use nittei_api_structs::multiple_freebusy::{
@@ -43,11 +43,11 @@ use crate::{
     )
 )]
 pub async fn get_multiple_freebusy_controller(
-    http_req: HttpRequest,
-    body: web::Json<MultipleFreeBusyRequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let _account = protect_public_account_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Json<MultipleFreeBusyRequestBody>,
+) -> Result<Json<MultipleFreeBusyAPIResponse>, NitteiError> {
+    let _account = protect_public_account_route(&headers, &ctx).await?;
 
     let usecase = GetMultipleFreeBusyUseCase {
         user_ids: body.user_ids.clone(),
@@ -57,7 +57,7 @@ pub async fn get_multiple_freebusy_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|usecase_res| HttpResponse::Ok().json(MultipleFreeBusyAPIResponse(usecase_res.0)))
+        .map(|usecase_res| Json(MultipleFreeBusyAPIResponse(usecase_res.0)))
         .map_err(NitteiError::from)
 }
 
@@ -192,7 +192,7 @@ impl GetMultipleFreeBusyUseCase {
                         let expanded_events = expand_all_events_and_remove_exceptions(
                             &calendars_lookup,
                             &events,
-                            timespan,
+                            timespan.clone(),
                         )
                         .map_err(|e| {
                             error!("Got an error when expanding events {:?}", e);

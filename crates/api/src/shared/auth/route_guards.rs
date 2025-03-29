@@ -1,4 +1,4 @@
-use actix_web::HttpRequest;
+use axum::http::HeaderMap;
 use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
 use nittei_domain::{Account, Calendar, CalendarEvent, ID, Schedule, User};
 use nittei_infra::NitteiContext;
@@ -38,11 +38,11 @@ fn parse_authtoken_header(token_header_value: &str) -> String {
 /// and decodes the token to find out which `User` is making the request
 /// and what `Policy` it has
 pub async fn auth_user_req(
-    req: &HttpRequest,
+    headers: &HeaderMap,
     account: &Account,
     ctx: &NitteiContext,
 ) -> anyhow::Result<Option<(User, Policy)>> {
-    let token = req.headers().get("authorization");
+    let token = headers.get("authorization");
     let token = match token {
         Some(token) => {
             let token = match token.to_str() {
@@ -60,8 +60,8 @@ pub async fn auth_user_req(
                     .await
                     .map_err(|_| NitteiError::InternalError)?
                     .map(|user| (user, claims.scheduler_policy.unwrap_or_default())),
-                Err(e) => {
-                    warn!("Decode token error: {:?}", e);
+                Err(_) => {
+                    warn!("Decode token error");
                     None
                 }
             }
@@ -73,18 +73,18 @@ pub async fn auth_user_req(
 
 /// Finds out which `Account` the client is associated with.
 pub async fn get_client_account(
-    req: &HttpRequest,
+    headers: &HeaderMap,
     ctx: &NitteiContext,
 ) -> anyhow::Result<Option<Account>> {
-    match get_nittei_account_header(req) {
+    match get_nittei_account_header(headers) {
         Some(Ok(account_id)) => ctx.repos.accounts.find(&account_id).await,
         _ => Ok(None),
     }
 }
 
 /// Parses the `nittei-account` header and returns the `ID` of the `Account`
-pub fn get_nittei_account_header(req: &HttpRequest) -> Option<Result<ID, NitteiError>> {
-    if let Some(account_id) = req.headers().get("nittei-account") {
+pub fn get_nittei_account_header(headers: &HeaderMap) -> Option<Result<ID, NitteiError>> {
+    if let Some(account_id) = headers.get("nittei-account") {
         let err = NitteiError::UnidentifiableClient(format!(
             "Malformed nittei account header provided: {:?}",
             account_id
@@ -105,10 +105,10 @@ pub fn get_nittei_account_header(req: &HttpRequest) -> Option<Result<ID, NitteiE
 /// Decodes the JWT token by checking if the signature matches the public
 /// key provided by the `Account`
 fn decode_token(account: &Account, token: &str) -> anyhow::Result<Claims> {
-    let public_key = match &account.public_jwt_key {
-        Some(val) => val,
-        None => return Err(anyhow::Error::msg("Account does not support user tokens")),
-    };
+    let public_key = account
+        .public_jwt_key
+        .as_ref()
+        .ok_or_else(|| anyhow::anyhow!("Account does not support user tokens"))?;
     let decoding_key = DecodingKey::from_rsa_pem(public_key.as_bytes())?;
     let claims = decode::<Claims>(token, &decoding_key, &Validation::new(Algorithm::RS256))?.claims;
 
@@ -121,10 +121,10 @@ fn decode_token(account: &Account, token: &str) -> anyhow::Result<Claims> {
 /// and if the token is valid and signed by the `Account`'s public key
 #[instrument(name = "auth::protect_route", skip_all)]
 pub async fn protect_route(
-    req: &HttpRequest,
+    headers: &HeaderMap,
     ctx: &NitteiContext,
 ) -> Result<(User, Policy), NitteiError> {
-    let account = get_client_account(req, ctx)
+    let account = get_client_account(headers, ctx)
         .await
         .map_err(|_| NitteiError::InternalError)?
         .ok_or_else(|| {
@@ -132,7 +132,8 @@ pub async fn protect_route(
                 "Could not find out which account the client belongs to".into(),
             )
         })?;
-    let res = auth_user_req(req, &account, ctx)
+
+    let res = auth_user_req(headers, &account, ctx)
         .await
         .map_err(|_| NitteiError::InternalError)?;
 
@@ -150,10 +151,10 @@ pub async fn protect_route(
 /// and if the token is the one stored in DB for the `Account`
 #[instrument(name = "auth::protect_admin_route", skip_all)]
 pub async fn protect_admin_route(
-    req: &HttpRequest,
+    headers: &HeaderMap,
     ctx: &NitteiContext,
 ) -> Result<Account, NitteiError> {
-    let api_key = match req.headers().get("x-api-key") {
+    let api_key = match headers.get("x-api-key") {
         Some(api_key) => match api_key.to_str() {
             Ok(api_key) => api_key,
             Err(_) => {
@@ -184,10 +185,10 @@ pub async fn protect_admin_route(
 /// client belongs to it will return `NitteiError`
 #[instrument(name = "auth::protect_public_account_route", skip_all)]
 pub async fn protect_public_account_route(
-    http_req: &HttpRequest,
+    headers: &HeaderMap,
     ctx: &NitteiContext,
 ) -> Result<Account, NitteiError> {
-    match get_nittei_account_header(http_req) {
+    match get_nittei_account_header(headers) {
         Some(res) => {
             let account_id = res?;
 
@@ -203,7 +204,7 @@ pub async fn protect_public_account_route(
                 })
         }
         // No nittei-account header, then check if this is an admin client
-        None => protect_admin_route(http_req, ctx).await,
+        None => protect_admin_route(headers, ctx).await,
     }
 }
 
@@ -281,7 +282,7 @@ pub async fn account_can_modify_schedule(
 
 #[cfg(test)]
 mod test {
-    use actix_web::test::TestRequest;
+    use axum::{body::Body, http::Request};
     use jsonwebtoken::{Algorithm, EncodingKey, Header, encode};
     use nittei_domain::PEMKey;
     use nittei_infra::setup_context;
@@ -329,11 +330,12 @@ mod test {
         ctx.repos.users.insert(&user).await.unwrap();
         let token = get_token(false, user.id.clone());
 
-        let req = TestRequest::default()
-            .insert_header(("nittei-account", account.id.to_string()))
-            .insert_header(("Authorization", format!("Bearer {}", token)))
-            .to_http_request();
-        let res = protect_route(&req, &ctx).await;
+        let req = Request::builder()
+            .header("nittei-account", account.id.to_string())
+            .header("Authorization", format!("Bearer {}", token))
+            .body(Body::empty())
+            .unwrap();
+        let res = protect_route(req.headers(), &ctx).await;
         assert!(res.is_ok());
     }
 
@@ -347,11 +349,12 @@ mod test {
         // account1 tries to sign a token with user_id that belongs to account2
         let token = get_token(false, user.id.clone());
 
-        let req = TestRequest::default()
-            .insert_header(("nittei-account", account.id.to_string()))
-            .insert_header(("Authorization", format!("Bearer {}", token)))
-            .to_http_request();
-        let res = protect_route(&req, &ctx).await;
+        let req = Request::builder()
+            .header("nittei-account", account.id.to_string())
+            .header("Authorization", format!("Bearer {}", token))
+            .body(Body::empty())
+            .unwrap();
+        let res = protect_route(req.headers(), &ctx).await;
         assert!(res.is_err());
     }
 
@@ -363,11 +366,12 @@ mod test {
         ctx.repos.users.insert(&user).await.unwrap();
         let token = get_token(true, user.id.clone());
 
-        let req = TestRequest::default()
-            .insert_header(("nittei-account", account.id.to_string()))
-            .insert_header(("Authorization", format!("Bearer {}", token)))
-            .to_http_request();
-        let res = protect_route(&req, &ctx).await;
+        let req = Request::builder()
+            .header("nittei-account", account.id.to_string())
+            .header("Authorization", format!("Bearer {}", token))
+            .body(Body::empty())
+            .unwrap();
+        let res = protect_route(req.headers(), &ctx).await;
         assert!(res.is_err());
     }
 
@@ -379,10 +383,11 @@ mod test {
         ctx.repos.users.insert(&user).await.unwrap();
         let token = get_token(true, user.id.clone());
 
-        let req = TestRequest::default()
-            .insert_header(("Authorization", format!("Bearer {}", token)))
-            .to_http_request();
-        let res = protect_route(&req, &ctx).await;
+        let req = Request::builder()
+            .header("Authorization", format!("Bearer {}", token))
+            .body(Body::empty())
+            .unwrap();
+        let res = protect_route(req.headers(), &ctx).await;
         assert!(res.is_err());
     }
 
@@ -394,11 +399,12 @@ mod test {
         ctx.repos.users.insert(&user).await.unwrap();
         let token = get_token(true, user.id.clone());
 
-        let req = TestRequest::default()
-            .insert_header(("nittei-account", account.id.to_string() + "s"))
-            .insert_header(("Authorization", format!("Bearer {}", token)))
-            .to_http_request();
-        let res = protect_route(&req, &ctx).await;
+        let req = Request::builder()
+            .header("nittei-account", account.id.to_string() + "s")
+            .header("Authorization", format!("Bearer {}", token))
+            .body(Body::empty())
+            .unwrap();
+        let res = protect_route(req.headers(), &ctx).await;
         assert!(res.is_err());
     }
 
@@ -408,10 +414,11 @@ mod test {
         let _account = setup_account(&ctx).await;
         let token = "sajfosajfposajfopaso12";
 
-        let req = TestRequest::default()
-            .insert_header(("Authorization", format!("Bearer {}", token)))
-            .to_http_request();
-        let res = protect_route(&req, &ctx).await;
+        let req = Request::builder()
+            .header("Authorization", format!("Bearer {}", token))
+            .body(Body::empty())
+            .unwrap();
+        let res = protect_route(req.headers(), &ctx).await;
         assert!(res.is_err());
     }
 
@@ -422,11 +429,12 @@ mod test {
         let user = User::new(account.id.clone(), None);
         ctx.repos.users.insert(&user).await.unwrap();
 
-        let req = TestRequest::default()
-            .insert_header(("nittei-account", account.id.to_string()))
-            .insert_header(("Authorization", "Bea"))
-            .to_http_request();
-        let res = protect_route(&req, &ctx).await;
+        let req = Request::builder()
+            .header("nittei-account", account.id.to_string())
+            .header("Authorization", "Bea")
+            .body(Body::empty())
+            .unwrap();
+        let res = protect_route(req.headers(), &ctx).await;
         assert!(res.is_err());
     }
 
@@ -435,8 +443,8 @@ mod test {
         let ctx = setup_context().await.unwrap();
         let _account = setup_account(&ctx).await;
 
-        let req = TestRequest::default().to_http_request();
-        let res = protect_route(&req, &ctx).await;
+        let req = Request::builder().body(Body::empty()).unwrap();
+        let res = protect_route(req.headers(), &ctx).await;
         assert!(res.is_err());
     }
 }

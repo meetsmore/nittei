@@ -1,4 +1,5 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, extract::Path, http::HeaderMap};
+use axum_valid::Valid;
 use chrono::Weekday;
 use chrono_tz::Tz;
 use nittei_api_structs::update_calendar::{APIResponse, PathParams, UpdateCalendarRequestBody};
@@ -38,12 +39,12 @@ use crate::{
     )
 )]
 pub async fn update_calendar_admin_controller(
-    http_req: HttpRequest,
-    ctx: web::Data<NitteiContext>,
-    path: web::Path<PathParams>,
-    body: actix_web_validator::Json<UpdateCalendarRequestBody>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    Extension(ctx): Extension<NitteiContext>,
+    path: Path<PathParams>,
+    mut body: Valid<Json<UpdateCalendarRequestBody>>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let account = protect_admin_route(&headers, &ctx).await?;
     let cal = account_can_modify_calendar(&account, &path.calendar_id, &ctx).await?;
     let user = account_can_modify_user(&account, &cal.user_id, &ctx).await?;
 
@@ -53,12 +54,12 @@ pub async fn update_calendar_admin_controller(
         name: body.0.name.clone(),
         week_start: body.0.settings.week_start,
         timezone: body.0.settings.timezone,
-        metadata: body.0.metadata,
+        metadata: body.0.metadata.take(),
     };
 
     execute(usecase, &ctx)
         .await
-        .map(|calendar| HttpResponse::Ok().json(APIResponse::new(calendar)))
+        .map(|calendar| Json(APIResponse::new(calendar)))
         .map_err(NitteiError::from)
 }
 
@@ -78,12 +79,12 @@ pub async fn update_calendar_admin_controller(
     )
 )]
 pub async fn update_calendar_controller(
-    http_req: HttpRequest,
-    ctx: web::Data<NitteiContext>,
-    mut path: web::Path<PathParams>,
-    body: web::Json<UpdateCalendarRequestBody>,
-) -> Result<HttpResponse, NitteiError> {
-    let (user, policy) = protect_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    Extension(ctx): Extension<NitteiContext>,
+    mut path: Path<PathParams>,
+    mut body: Valid<Json<UpdateCalendarRequestBody>>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let (user, policy) = protect_route(&headers, &ctx).await?;
 
     let usecase = UpdateCalendarUseCase {
         user,
@@ -91,12 +92,12 @@ pub async fn update_calendar_controller(
         name: body.0.name.clone(),
         week_start: body.0.settings.week_start,
         timezone: body.0.settings.timezone,
-        metadata: body.0.metadata,
+        metadata: body.0.metadata.take(),
     };
 
     execute_with_policy(usecase, &policy, &ctx)
         .await
-        .map(|calendar| HttpResponse::Ok().json(APIResponse::new(calendar)))
+        .map(|calendar| Json(APIResponse::new(calendar)))
         .map_err(NitteiError::from)
 }
 

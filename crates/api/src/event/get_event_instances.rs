@@ -1,4 +1,9 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{
+    Extension,
+    Json,
+    extract::{Path, Query},
+    http::HeaderMap,
+};
 use nittei_api_structs::get_event_instances::*;
 use nittei_domain::{
     CalendarEvent,
@@ -36,12 +41,12 @@ use crate::{
     )
 )]
 pub async fn get_event_instances_admin_controller(
-    http_req: HttpRequest,
-    path_params: web::Path<PathParams>,
-    query_params: web::Query<QueryParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    path_params: Path<PathParams>,
+    query_params: Query<QueryParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<GetEventInstancesAPIResponse>, NitteiError> {
+    let account = protect_admin_route(&headers, &ctx).await?;
     let e = account_can_modify_event(&account, &path_params.event_id, &ctx).await?;
 
     let usecase = GetEventInstancesUseCase {
@@ -53,7 +58,7 @@ pub async fn get_event_instances_admin_controller(
     execute(usecase, &ctx)
         .await
         .map(|usecase_res| {
-            HttpResponse::Ok().json(GetEventInstancesAPIResponse::new(
+            Json(GetEventInstancesAPIResponse::new(
                 usecase_res.event,
                 usecase_res.instances,
             ))
@@ -74,12 +79,12 @@ pub async fn get_event_instances_admin_controller(
     )
 )]
 pub async fn get_event_instances_controller(
-    http_req: HttpRequest,
-    path_params: web::Path<PathParams>,
-    query_params: web::Query<QueryParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let (user, _policy) = protect_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    path_params: Path<PathParams>,
+    query_params: Query<QueryParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<GetEventInstancesAPIResponse>, NitteiError> {
+    let (user, _policy) = protect_route(&headers, &ctx).await?;
 
     let usecase = GetEventInstancesUseCase {
         user_id: user.id.clone(),
@@ -90,7 +95,7 @@ pub async fn get_event_instances_controller(
     execute(usecase, &ctx)
         .await
         .map(|usecase_res| {
-            HttpResponse::Ok().json(GetEventInstancesAPIResponse::new(
+            Json(GetEventInstancesAPIResponse::new(
                 usecase_res.event,
                 usecase_res.instances,
             ))

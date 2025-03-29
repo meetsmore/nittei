@@ -10,18 +10,11 @@ mod shared;
 mod status;
 mod user;
 
-use std::{net::TcpListener, sync::Arc};
+use std::sync::Arc;
 
-use actix_cors::Cors;
-use actix_web::{
-    App,
-    HttpServer,
-    dev::Server,
-    middleware::{self},
-    web::{self, Data},
-};
+use axum::{Extension, Router, http::header};
 use futures::lock::Mutex;
-use http_logger::NitteiTracingRootSpanBuilder;
+use http_logger::metadata_middleware;
 use job_schedulers::{start_reminder_generation_job, start_send_reminders_job};
 use nittei_domain::{
     Account,
@@ -32,71 +25,88 @@ use nittei_domain::{
     PEMKey,
 };
 use nittei_infra::NitteiContext;
+use tokio::{
+    net::TcpListener,
+    sync::oneshot::{self, Sender},
+};
+use tower::ServiceBuilder;
+use tower_http::{
+    catch_panic::CatchPanicLayer,
+    compression::CompressionLayer,
+    cors::CorsLayer,
+    decompression::RequestDecompressionLayer,
+    sensitive_headers::SetSensitiveHeadersLayer,
+    trace::TraceLayer,
+};
 use tracing::{error, info, warn};
-use tracing_actix_web::TracingLogger;
 use utoipa::{
     Modify,
     OpenApi,
     openapi::security::{ApiKey, ApiKeyValue, SecurityScheme},
 };
-use utoipa_actix_web::AppExt;
+use utoipa_axum::router::OpenApiRouter;
 use utoipa_swagger_ui::SwaggerUi;
+
+use crate::http_logger::{
+    NitteiTracingOnFailure,
+    NitteiTracingOnResponse,
+    NitteiTracingSpanBuilder,
+};
 
 /// Configure the Actix server API
 /// Add all the routes to the server
-pub fn configure_server_api(cfg: &mut web::ServiceConfig) {
-    account::configure_routes(cfg);
-    calendar::configure_routes(cfg);
-    event::configure_routes(cfg);
-    schedule::configure_routes(cfg);
-    service::configure_routes(cfg);
-    status::configure_routes(cfg);
-    user::configure_routes(cfg);
+pub fn configure_server_api() -> OpenApiRouter {
+    OpenApiRouter::new()
+        .merge(account::configure_routes())
+        .merge(calendar::configure_routes())
+        .merge(event::configure_routes())
+        .merge(schedule::configure_routes())
+        .merge(service::configure_routes())
+        .merge(status::configure_routes())
+        .merge(user::configure_routes())
 }
 
 /// Struct for storing the main application state
 pub struct Application {
-    /// The Actix server instance
-    server: Server,
-    /// The port the server is running on
-    port: u16,
+    /// The Axum server instance
+    server: Router,
+
+    /// Listener for the server
+    listener: TcpListener,
+
     /// The application context (database connections, etc.)
     context: NitteiContext,
 
     /// Shutdown data
     /// Shared state of the server
-    shared_state: ServerSharedState,
+    shared_state: Arc<Mutex<ServerSharedState>>,
 }
-
 /// Struct for storing the shared state of the server
 /// Mainly useful for sharing the shutdown flag between the binary crate and the status endpoint
-#[derive(Clone)]
 pub struct ServerSharedState {
-    /// Flag to indicate if the application is shutting down
-    pub is_shutting_down: Arc<Mutex<bool>>,
+    /// Channel to send shutdown signal
+    pub shutdown_tx: Option<Sender<()>>,
 }
 
 impl Application {
     pub async fn new(context: NitteiContext) -> anyhow::Result<Self> {
-        let shared_state = ServerSharedState {
-            is_shutting_down: Arc::new(Mutex::new(false)),
-        };
+        let shared_state = Arc::new(Mutex::new(ServerSharedState { shutdown_tx: None }));
 
-        let (server, port) =
+        let (server, listener) =
             Application::configure_server(context.clone(), shared_state.clone()).await?;
 
         Application::start_jobs(context.clone());
 
         Ok(Self {
             server,
-            port,
+            listener,
             context,
             shared_state,
         })
     }
 
-    pub fn port(&self) -> u16 {
-        self.port
+    pub fn get_port(&self) -> anyhow::Result<u16> {
+        Ok(self.listener.local_addr()?.port())
     }
 
     /// Start the background jobs of the application
@@ -108,7 +118,7 @@ impl Application {
         }
     }
 
-    /// Configure the Actix server
+    /// Configure the Axum server
     /// This function creates the server and adds all the routes to it
     ///
     /// This adds the following middleware:
@@ -117,59 +127,81 @@ impl Application {
     /// - Tracing logger
     async fn configure_server(
         context: NitteiContext,
-        shared_state: ServerSharedState,
-    ) -> anyhow::Result<(Server, u16)> {
+        shared_state: Arc<Mutex<ServerSharedState>>,
+    ) -> anyhow::Result<(Router, TcpListener)> {
+        let api_router = configure_server_api();
+
+        let sensitive_headers = vec![header::AUTHORIZATION];
+
+        let (router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
+            .nest("/api/v1", api_router)
+            .layer(axum::middleware::from_fn(metadata_middleware))
+            .layer(
+                ServiceBuilder::new()
+                    // Mark the `Authorization` header as sensitive so it doesn't show in logs
+                    .layer(SetSensitiveHeadersLayer::new(sensitive_headers))
+                    .layer(CorsLayer::permissive())
+                    .layer(RequestDecompressionLayer::new())
+                    .layer(CompressionLayer::new())
+                    // Catch panics and convert them into responses.
+                    .layer(CatchPanicLayer::new())
+                    .layer(
+                        TraceLayer::new_for_http()
+                            .make_span_with(NitteiTracingSpanBuilder {})
+                            .on_request(())
+                            .on_response(NitteiTracingOnResponse {})
+                            .on_failure(NitteiTracingOnFailure {}),
+                    ),
+            )
+            .layer(Extension(context.clone()))
+            .layer(Extension(shared_state.clone()))
+            .split_for_parts();
+
+        let router =
+            router.merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", api.clone()));
+
         let port = context.config.port;
         let address = nittei_utils::config::APP_CONFIG.http_host.clone();
         let address_and_port = format!("{}:{}", address, port);
-        info!("Starting server on: {}", address_and_port);
-        let listener = TcpListener::bind(address_and_port)?;
-        let port = listener.local_addr()?.port();
 
-        let server = HttpServer::new(move || {
-            let ctx = context.clone();
-            let shared_state = shared_state.clone();
+        let listener = TcpListener::bind(address_and_port).await?;
+        info!("Starting server on: {}", listener.local_addr()?);
 
-            App::new()
-                .into_utoipa_app()
-                .openapi(ApiDoc::openapi())
-                .map(|app| {
-                    app.wrap(Cors::permissive())
-                        .wrap(middleware::Compress::default())
-                        .wrap(TracingLogger::<NitteiTracingRootSpanBuilder>::new())
-                        .app_data(Data::new(ctx))
-                        .app_data(Data::new(shared_state))
-                        .service(web::scope("/api/v1").configure(configure_server_api))
-                })
-                .openapi_service(|api| {
-                    SwaggerUi::new("/swagger-ui/{_:.*}").url("/api-docs/openapi.json", api)
-                })
-                .into_app()
-        })
-        // Disable signals to avoid conflicts with the signal handler
-        // This is handled by the signal handler in the binary and the `schedule_shutdown` function
-        .disable_signals()
-        // Set the shutdown timeout (time to wait for the server to finish processing requests)
-        // Default is 30 seconds
-        .shutdown_timeout(nittei_utils::config::APP_CONFIG.server_shutdown_timeout)
-        .listen(listener)?
-        .workers(4)
-        .run();
-
-        Ok((server, port))
+        Ok((router, listener))
     }
 
     /// Init the default account and start the Actix server
     ///
     /// It also sets up the shutdown handler
     pub async fn start(
-        self,
+        mut self,
         shutdown_channel: tokio::sync::oneshot::Receiver<()>,
     ) -> anyhow::Result<()> {
         self.setup_shutdown_handler(shutdown_channel);
 
         self.init_default_account().await?;
-        self.server.await.map_err(|e| anyhow::anyhow!(e))
+
+        // Create a shutdown signal channel
+        let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
+        self.shared_state.lock().await.shutdown_tx = Some(shutdown_tx);
+
+        axum::serve(self.listener, self.server)
+            .with_graceful_shutdown(async {
+                shutdown_rx.await.unwrap_or_else(|e| {
+                    error!("[server] Failed to listen for shutdown signal: {}", e)
+                });
+                info!("[server] Server stopped");
+            })
+            .await
+            .unwrap_or_else(|e| {
+                error!("[server] Server error: {:?}", e);
+                // Exit the process with an error code
+                std::process::exit(1);
+            });
+
+        info!("[server] Server closed");
+
+        Ok(())
     }
 
     /// Initialize the default account
@@ -328,44 +360,54 @@ impl Application {
     }
 
     /// Setup the shutdown handler
-    fn setup_shutdown_handler(&self, shutdown_channel: tokio::sync::oneshot::Receiver<()>) {
-        let server_handle = self.server.handle();
+    fn setup_shutdown_handler(&mut self, shutdown_channel: tokio::sync::oneshot::Receiver<()>) {
+        // Clone shutdown_tx before entering the async block
         let shared_state = self.shared_state.clone();
 
         // Listen to shutdown channel
         tokio::spawn(async move {
             // Wait for the shutdown channel to receive a message
             if let Err(e) = shutdown_channel.await {
-                error!("[server] Failed to listen for shutdown channel: {}", e);
+                error!(
+                    "[shutdown_handler] Failed to listen for shutdown channel: {}",
+                    e
+                );
             } else {
-                info!("[server] Received shutdown signal",);
+                info!("[shutdown_handler] Received shutdown signal",);
 
                 if cfg!(debug_assertions) {
                     // In debug mode, stop the server immediately
-                    info!("[server] Stopping server...");
-                    server_handle.stop(true).await;
-                    info!("[server] Server stopped");
+                    info!("[shutdown_handler] Stopping server...");
+                    if let Some(server_handle) = shared_state.lock().await.shutdown_tx.take() {
+                        server_handle.send(()).unwrap_or_else(|_| {
+                            error!("[shutdown_handler] Failed to send shutdown signal");
+                            // Exit the process with an error code
+                            std::process::exit(1);
+                        });
+                    }
+                    info!("[shutdown_handler] api crate - shutdown complete");
                 } else {
-                    // In production, do the whole graceful shutdown process
-
-                    // Update flag
-                    *shared_state.is_shutting_down.lock().await = true;
-
-                    info!("[server] is_shutting_down flag is now true");
+                    // In production, do the whole graceful shutdown process (wait for a timeout before stopping the server)
 
                     let duration = nittei_utils::config::APP_CONFIG.server_shutdown_sleep;
 
-                    info!("[server] Waiting {}s before stopping", duration);
+                    info!("[shutdown_handler] Waiting {}s before stopping", duration);
 
                     // Wait for the timeout
                     tokio::time::sleep(std::time::Duration::from_secs(duration)).await;
 
-                    info!("[server] Stopping server...");
+                    info!("[shutdown_handler] Stopping server...");
 
                     // Shutdown the server
-                    server_handle.stop(true).await;
+                    if let Some(server_handle) = shared_state.lock().await.shutdown_tx.take() {
+                        server_handle.send(()).unwrap_or_else(|_| {
+                            error!("[shutdown_handler] Failed to send shutdown signal");
+                            // Exit the process with an error code
+                            std::process::exit(1);
+                        });
+                    }
 
-                    info!("[server] Server stopped");
+                    info!("[shutdown_handler] api crate - shutdown complete");
                 }
             }
         });

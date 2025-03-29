@@ -358,7 +358,7 @@ impl std::cmp::PartialOrd for Day {
 }
 
 impl Schedule {
-    pub fn freebusy(&self, timespan: &TimeSpan) -> CompatibleInstances {
+    pub fn freebusy(&self, timespan: TimeSpan) -> CompatibleInstances {
         let start = timespan.start().with_timezone(&self.timezone);
         let end = timespan.end().with_timezone(&self.timezone);
 
@@ -523,7 +523,7 @@ mod test {
             DateTime::from_timestamp_millis(0).unwrap(),
             DateTime::from_timestamp_millis(1000 * 60 * 60 * 24 * 30).unwrap(),
         );
-        let freebusy = schedule.freebusy(&timespan).inner();
+        let freebusy = schedule.freebusy(timespan).inner();
 
         assert_eq!(freebusy.len(), 4);
         assert_eq!(
@@ -653,7 +653,7 @@ mod test {
             DateTime::from_timestamp_millis(1602108000000).unwrap(),
             DateTime::from_timestamp_millis(1602194400000).unwrap(),
         );
-        let free = schedule.freebusy(&timespan);
+        let free = schedule.freebusy(timespan);
         assert!(!free.is_empty());
     }
 
@@ -692,7 +692,7 @@ mod test {
         );
         let noon_utc = Utc.with_ymd_and_hms(2021, 4, 1, 0, 0, 0).unwrap();
 
-        let free = schedule.freebusy(&timespan).inner();
+        let free = schedule.freebusy(timespan.clone()).inner();
         assert_eq!(free.len(), 2);
         assert_eq!(free[0].start_time, timespan.start());
         assert_eq!(

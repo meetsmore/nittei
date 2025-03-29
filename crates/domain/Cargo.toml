@@ -29,5 +29,5 @@ ts-rs = { version = "10.1.0", features = [
   "chrono-impl",
   "serde-json-impl",
 ] }
-validator = { version = "0.18", features = ["derive"] }
+validator = { version = "0.20", features = ["derive"] }
 utoipa = { version = "5.3.1", features = ["uuid", "chrono"] }
