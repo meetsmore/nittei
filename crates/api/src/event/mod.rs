@@ -1,22 +1,19 @@
-mod create_event;
-mod delete_event;
-mod delete_many_events;
-mod get_event;
-mod get_event_by_external_id;
-mod get_event_instances;
-mod get_events_by_calendars;
-mod get_events_by_meta;
-mod get_events_for_users_in_time_range;
+pub mod create_event;
+pub mod delete_event;
+pub mod delete_many_events;
+pub mod get_event;
+pub mod get_event_by_external_id;
+pub mod get_event_instances;
+pub mod get_events_by_calendars;
+pub mod get_events_by_meta;
+pub mod get_events_for_users_in_time_range;
 pub mod get_upcoming_reminders;
-mod search_events;
-mod subscribers;
+pub mod search_events;
+pub mod subscribers;
 pub mod sync_event_reminders;
-mod update_event;
+pub mod update_event;
 
-use axum::{
-    Router,
-    routing::{delete, get, post, put},
-};
+use axum::routing::{delete, get, post, put};
 use create_event::{create_event_admin_controller, create_event_controller};
 use delete_event::{delete_event_admin_controller, delete_event_controller};
 use delete_many_events::delete_many_events_admin_controller;
@@ -25,10 +22,11 @@ use get_event_instances::{get_event_instances_admin_controller, get_event_instan
 use get_events_by_meta::get_events_by_meta_controller;
 use search_events::search_events_controller;
 use update_event::{update_event_admin_controller, update_event_controller};
+use utoipa_axum::router::OpenApiRouter;
 
 // Configure the routes for the event module
-pub fn configure_routes() -> Router {
-    Router::new()
+pub fn configure_routes() -> OpenApiRouter {
+    OpenApiRouter::new()
         // Create an event
         .route("/events", post(create_event_controller))
         // Create an event for a user (admin route)

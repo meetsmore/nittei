@@ -2,7 +2,7 @@ use axum::{Extension, Json, extract::Path, http::HeaderMap};
 use axum_valid::Valid;
 use chrono::Weekday;
 use chrono_tz::Tz;
-use nittei_api_structs::update_calendar::{APIResponse, PathParams, RequestBody};
+use nittei_api_structs::update_calendar::{APIResponse, PathParams, UpdateCalendarRequestBody};
 use nittei_domain::{Calendar, ID, User};
 use nittei_infra::NitteiContext;
 
@@ -20,11 +20,29 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    put,
+    tag = "Calendar",
+    path = "/api/v1/user/calendar/{calendar_id}",
+    summary = "Update a calendar (admin only)",
+    params(
+        ("calendar_id" = ID, Path, description = "The id of the calendar to update"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = UpdateCalendarRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn update_calendar_admin_controller(
     headers: HeaderMap,
     Extension(ctx): Extension<NitteiContext>,
     path: Path<PathParams>,
-    mut body: Valid<Json<RequestBody>>,
+    mut body: Valid<Json<UpdateCalendarRequestBody>>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
     let cal = account_can_modify_calendar(&account, &path.calendar_id, &ctx).await?;
@@ -45,11 +63,26 @@ pub async fn update_calendar_admin_controller(
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    put,
+    tag = "Calendar",
+    path = "/api/v1/calendar/{calendar_id}",
+    summary = "Update a calendar",
+    params(
+        ("calendar_id" = ID, Path, description = "The id of the calendar to update"),
+    ),
+    request_body(
+        content = UpdateCalendarRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn update_calendar_controller(
     headers: HeaderMap,
     Extension(ctx): Extension<NitteiContext>,
     mut path: Path<PathParams>,
-    mut body: Valid<Json<RequestBody>>,
+    mut body: Valid<Json<UpdateCalendarRequestBody>>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let (user, policy) = protect_route(&headers, &ctx).await?;
 

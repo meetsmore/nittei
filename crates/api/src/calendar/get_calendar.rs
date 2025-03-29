@@ -11,6 +11,21 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    get,
+    tag = "Calendar",
+    path = "/api/v1/user/calendar/{calendar_id}",
+    summary = "Get a calendar (admin only)",
+    security(
+        ("api_key" = [])
+    ),
+    params(
+        ("calendar_id" = ID, Path, description = "The id of the calendar to get"),
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn get_calendar_admin_controller(
     headers: HeaderMap,
     path: Path<PathParams>,
@@ -30,6 +45,18 @@ pub async fn get_calendar_admin_controller(
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    get,
+    tag = "Calendar",
+    path = "/api/v1/calendar/{calendar_id}",
+    summary = "Get a calendar",
+    params(
+        ("calendar_id" = ID, Path, description = "The id of the calendar to get"),
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn get_calendar_controller(
     headers: HeaderMap,
     path: Path<PathParams>,

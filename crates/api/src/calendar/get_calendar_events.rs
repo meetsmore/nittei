@@ -5,7 +5,11 @@ use axum::{
     http::HeaderMap,
 };
 use chrono::{DateTime, Utc};
-use nittei_api_structs::get_calendar_events::{APIResponse, PathParams, QueryParams};
+use nittei_api_structs::get_calendar_events::{
+    GetCalendarEventsAPIResponse,
+    PathParams,
+    QueryParams,
+};
 use nittei_domain::{
     Calendar,
     EventWithInstances,
@@ -26,12 +30,29 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    get,
+    tag = "Calendar",
+    path = "/api/v1/user/calendar/{calendar_id}/events",
+    summary = "Get events for a calendar (admin only)",
+    security(
+        ("api_key" = [])
+    ),
+    params(
+        ("calendar_id" = ID, Path, description = "The id of the calendar to get events for"),
+        ("start_time" = DateTime<Utc>, Query, description = "The start time of the events to get"),
+        ("end_time" = DateTime<Utc>, Query, description = "The end time of the events to get"),
+    ),
+    responses(
+        (status = 200, body = GetCalendarEventsAPIResponse)
+    )
+)]
 pub async fn get_calendar_events_admin_controller(
     headers: HeaderMap,
     query_params: Query<QueryParams>,
     path: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
-) -> Result<Json<APIResponse>, NitteiError> {
+) -> Result<Json<GetCalendarEventsAPIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
     let cal = account_can_modify_calendar(&account, &path.calendar_id, &ctx).await?;
 
@@ -45,15 +66,29 @@ pub async fn get_calendar_events_admin_controller(
     execute(usecase, &ctx)
         .await
         .map_err(NitteiError::from)
-        .map(|usecase_res| Json(APIResponse::new(usecase_res.calendar, usecase_res.events)))
+        .map(|usecase_res| {
+            Json(GetCalendarEventsAPIResponse::new(
+                usecase_res.calendar,
+                usecase_res.events,
+            ))
+        })
 }
 
+#[utoipa::path(
+    get,
+    tag = "Calendar",
+    path = "/api/v1/calendar/{calendar_id}/events",
+    summary = "Get events for a calendar",
+    responses(
+        (status = 200, body = GetCalendarEventsAPIResponse)
+    )
+)]
 pub async fn get_calendar_events_controller(
     headers: HeaderMap,
     query_params: Query<QueryParams>,
     path: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
-) -> Result<Json<APIResponse>, NitteiError> {
+) -> Result<Json<GetCalendarEventsAPIResponse>, NitteiError> {
     let (user, _policy) = protect_route(&headers, &ctx).await?;
 
     let usecase = GetCalendarEventsUseCase {
@@ -66,7 +101,12 @@ pub async fn get_calendar_events_controller(
     execute(usecase, &ctx)
         .await
         .map_err(NitteiError::from)
-        .map(|usecase_res| Json(APIResponse::new(usecase_res.calendar, usecase_res.events)))
+        .map(|usecase_res| {
+            Json(GetCalendarEventsAPIResponse::new(
+                usecase_res.calendar,
+                usecase_res.events,
+            ))
+        })
 }
 #[derive(Debug)]
 pub struct GetCalendarEventsUseCase {

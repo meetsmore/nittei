@@ -23,14 +23,26 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    post,
+    tag = "Event",
+    path = "/api/v1/events/timespan",
+    summary = "Get events for users in a time range (admin only)",
+    request_body(
+        content = GetEventsForUsersInTimeSpanBody,
+    ),
+    responses(
+        (status = 200, body = GetEventsForUsersInTimeSpanAPIResponse)
+    )
+)]
 /// Get events for users in a time range
 ///
 /// Optionally, it can generate the instances of the recurring events
 pub async fn get_events_for_users_in_time_range_controller(
     headers: HeaderMap,
     Extension(ctx): Extension<NitteiContext>,
-    body: Valid<Json<RequestBody>>,
-) -> Result<Json<APIResponse>, NitteiError> {
+    body: Valid<Json<GetEventsForUsersInTimeSpanBody>>,
+) -> Result<Json<GetEventsForUsersInTimeSpanAPIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
 
     let usecase = GetEventsForUsersInTimeRangeUseCase {
@@ -45,7 +57,7 @@ pub async fn get_events_for_users_in_time_range_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|events| Json(APIResponse::new(events.events)))
+        .map(|events| Json(GetEventsForUsersInTimeSpanAPIResponse::new(events.events)))
         .map_err(NitteiError::from)
 }
 

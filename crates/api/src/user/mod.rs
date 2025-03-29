@@ -1,19 +1,16 @@
 pub mod create_user;
-mod delete_user;
-mod get_me;
-mod get_multiple_users_freebusy;
-mod get_user;
-mod get_user_by_external_id;
-mod get_user_freebusy;
-mod get_users_by_meta;
-mod oauth_integration;
-mod remove_integration;
-mod update_user;
+pub mod delete_user;
+pub mod get_me;
+pub mod get_multiple_users_freebusy;
+pub mod get_user;
+pub mod get_user_by_external_id;
+pub mod get_user_freebusy;
+pub mod get_users_by_meta;
+pub mod oauth_integration;
+pub mod remove_integration;
+pub mod update_user;
 
-use axum::{
-    Router,
-    routing::{delete, get, post, put},
-};
+use axum::routing::{delete, get, post, put};
 use create_user::create_user_controller;
 use delete_user::delete_user_controller;
 use get_me::get_me_controller;
@@ -26,10 +23,11 @@ use get_users_by_meta::get_users_by_meta_controller;
 use oauth_integration::*;
 use remove_integration::{remove_integration_admin_controller, remove_integration_controller};
 use update_user::update_user_controller;
+use utoipa_axum::router::OpenApiRouter;
 
 // Configure the routes for the user module
-pub fn configure_routes() -> Router {
-    Router::new()
+pub fn configure_routes() -> OpenApiRouter {
+    OpenApiRouter::new()
         // Create a new user
         .route("/user", post(create_user_controller))
         // Get the current user

@@ -11,11 +11,29 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    put,
+    tag = "User",
+    path = "/api/v1/user/{user_id}",
+    summary = "Update a user (admin only)",
+    params(
+        ("user_id" = ID, Path, description = "The id of the user to update"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = UpdateUserRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn update_user_controller(
     headers: HeaderMap,
     mut path: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
-    mut body: Json<RequestBody>,
+    mut body: Json<UpdateUserRequestBody>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
 

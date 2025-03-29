@@ -5,11 +5,12 @@ use rrule::{Frequency, RRule, RRuleSet};
 use serde::{Deserialize, Serialize, de::Visitor};
 use thiserror::Error;
 use ts_rs::TS;
+use utoipa::ToSchema;
 
 use crate::CalendarSettings;
 
 /// Frequency rule for recurring events
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, TS)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, TS, ToSchema)]
 #[serde(rename_all = "lowercase")]
 #[ts(export)]
 pub enum RRuleFrequency {
@@ -20,7 +21,7 @@ pub enum RRuleFrequency {
 }
 
 /// Options for recurring events
-#[derive(Clone, Debug, Serialize, Deserialize, TS)]
+#[derive(Clone, Debug, Serialize, Deserialize, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct RRuleOptions {
@@ -55,6 +56,7 @@ pub struct RRuleOptions {
     /// Select specific months
     /// E.g. `["January"]`, `["January", "February"]`, `[1, 2]`
     #[ts(optional)]
+    #[schema(value_type = Type::String)]
     pub bymonth: Option<Vec<Month>>,
 
     /// Select specific year days
@@ -69,6 +71,7 @@ pub struct RRuleOptions {
     /// Default: CalendarSettings.week_start (Week start configured in the calendar settings)
     /// Possible values: "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"
     #[ts(optional)]
+    #[schema(value_type = Type::String)]
     pub weekstart: Option<Weekday>,
 }
 
@@ -205,10 +208,11 @@ impl Default for RRuleOptions {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, TS)]
+#[derive(Clone, Debug, PartialEq, TS, ToSchema)]
 #[ts(export, type = "string")]
 pub struct WeekDayRecurrence {
     n: Option<isize>,
+    #[schema(value_type = Type::String)]
     weekday: Weekday,
 }
 

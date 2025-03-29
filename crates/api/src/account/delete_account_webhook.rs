@@ -8,6 +8,18 @@ use crate::{
     shared::{auth::protect_admin_route, usecase::execute},
 };
 
+#[utoipa::path(
+    delete,
+    tag = "Account",
+    path = "/api/v1/account/webhook",
+    summary = "Delete the webhook for an account",
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn delete_account_webhook_controller(
     headers: HeaderMap,
     Extension(ctx): Extension<NitteiContext>,

@@ -1,9 +1,10 @@
 use nittei_domain::{Calendar, CalendarSettings, ID, Weekday};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
+use utoipa::ToSchema;
 
 /// Calendar object
-#[derive(Debug, Deserialize, Serialize, Clone, TS)]
+#[derive(Debug, Deserialize, Serialize, Clone, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct CalendarDTO {
@@ -31,11 +32,12 @@ pub struct CalendarDTO {
 }
 
 /// Calendar settings
-#[derive(Debug, Deserialize, Serialize, Clone, TS)]
+#[derive(Debug, Deserialize, Serialize, Clone, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct CalendarSettingsDTO {
     /// Week start day
+    #[schema(value_type = Type::String)]
     pub week_start: Weekday,
     /// Timezone (e.g. "America/New_York")
     pub timezone: String,

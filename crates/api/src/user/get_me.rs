@@ -4,6 +4,15 @@ use nittei_infra::NitteiContext;
 
 use crate::{error::NitteiError, shared::auth::protect_route};
 
+#[utoipa::path(
+    get,
+    tag = "User",
+    path = "/api/v1/me",
+    summary = "Get the current user",
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn get_me_controller(
     headers: HeaderMap,
     Extension(ctx): Extension<NitteiContext>,

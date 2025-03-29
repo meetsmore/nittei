@@ -25,12 +25,27 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    get,
+    tag = "Event",
+    path = "/api/v1/user/events/{event_id}/instances",
+    summary = "Get event instances (admin only)",
+    params(
+        ("event_id" = ID, Path, description = "The id of the event to get instances for"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = GetEventInstancesAPIResponse)
+    )
+)]
 pub async fn get_event_instances_admin_controller(
     headers: HeaderMap,
     path_params: Path<PathParams>,
     query_params: Query<QueryParams>,
     Extension(ctx): Extension<NitteiContext>,
-) -> Result<Json<APIResponse>, NitteiError> {
+) -> Result<Json<GetEventInstancesAPIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
     let e = account_can_modify_event(&account, &path_params.event_id, &ctx).await?;
 
@@ -42,16 +57,33 @@ pub async fn get_event_instances_admin_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|usecase_res| Json(APIResponse::new(usecase_res.event, usecase_res.instances)))
+        .map(|usecase_res| {
+            Json(GetEventInstancesAPIResponse::new(
+                usecase_res.event,
+                usecase_res.instances,
+            ))
+        })
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    get,
+    tag = "Event",
+    path = "/api/v1/events/{event_id}/instances",
+    summary = "Get event instances (user only)",
+    params(
+        ("event_id" = ID, Path, description = "The id of the event to get instances for"),
+    ),
+    responses(
+        (status = 200, body = GetEventInstancesAPIResponse)
+    )
+)]
 pub async fn get_event_instances_controller(
     headers: HeaderMap,
     path_params: Path<PathParams>,
     query_params: Query<QueryParams>,
     Extension(ctx): Extension<NitteiContext>,
-) -> Result<Json<APIResponse>, NitteiError> {
+) -> Result<Json<GetEventInstancesAPIResponse>, NitteiError> {
     let (user, _policy) = protect_route(&headers, &ctx).await?;
 
     let usecase = GetEventInstancesUseCase {
@@ -62,7 +94,12 @@ pub async fn get_event_instances_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|usecase_res| Json(APIResponse::new(usecase_res.event, usecase_res.instances)))
+        .map(|usecase_res| {
+            Json(GetEventInstancesAPIResponse::new(
+                usecase_res.event,
+                usecase_res.instances,
+            ))
+        })
         .map_err(NitteiError::from)
 }
 

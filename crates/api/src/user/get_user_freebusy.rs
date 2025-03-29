@@ -7,7 +7,11 @@ use axum::{
     http::HeaderMap,
 };
 use chrono::{DateTime, Utc};
-use nittei_api_structs::get_user_freebusy::{APIResponse, PathParams, QueryParams};
+use nittei_api_structs::get_user_freebusy::{
+    GetUserFreeBusyAPIResponse,
+    GetUserFreeBusyQueryParams,
+    PathParams,
+};
 use nittei_domain::{
     CompatibleInstances,
     EventInstance,
@@ -36,12 +40,27 @@ pub fn parse_vec_query_value(val: &Option<String>) -> Option<Vec<ID>> {
     })
 }
 
+#[utoipa::path(
+    get,
+    tag = "User",
+    path = "/api/v1/user/{user_id}/freebusy",
+    summary = "Get freebusy for a user",
+    params(
+        ("user_id" = ID, Path, description = "The id of the user to get freebusy for"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = GetUserFreeBusyAPIResponse)
+    )
+)]
 pub async fn get_freebusy_controller(
     headers: HeaderMap,
-    mut query_params: Query<QueryParams>,
+    mut query_params: Query<GetUserFreeBusyQueryParams>,
     mut params: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
-) -> Result<Json<APIResponse>, NitteiError> {
+) -> Result<Json<GetUserFreeBusyAPIResponse>, NitteiError> {
     let _account = protect_public_account_route(&headers, &ctx).await?;
 
     let usecase = GetFreeBusyUseCase {
@@ -55,7 +74,7 @@ pub async fn get_freebusy_controller(
     execute(usecase, &ctx)
         .await
         .map(|usecase_res| {
-            Json(APIResponse {
+            Json(GetUserFreeBusyAPIResponse {
                 busy: usecase_res.busy.inner().into(),
                 user_id: usecase_res.user_id.to_string(),
             })

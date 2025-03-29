@@ -3,7 +3,10 @@ use std::collections::HashMap;
 use axum::{Extension, Json, http::HeaderMap};
 use chrono::{DateTime, Utc};
 use futures::{FutureExt, StreamExt, future::join_all, stream};
-use nittei_api_structs::multiple_freebusy::{APIResponse, RequestBody};
+use nittei_api_structs::multiple_freebusy::{
+    MultipleFreeBusyAPIResponse,
+    MultipleFreeBusyRequestBody,
+};
 use nittei_domain::{
     Calendar,
     CalendarEvent,
@@ -24,11 +27,26 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    post,
+    tag = "User",
+    path = "/api/v1/user/freebusy",
+    summary = "Get freebusy for multiple users",
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = MultipleFreeBusyRequestBody,
+    ),
+    responses(
+        (status = 200, body = MultipleFreeBusyAPIResponse)
+    )
+)]
 pub async fn get_multiple_freebusy_controller(
     headers: HeaderMap,
     Extension(ctx): Extension<NitteiContext>,
-    body: Json<RequestBody>,
-) -> Result<Json<APIResponse>, NitteiError> {
+    body: Json<MultipleFreeBusyRequestBody>,
+) -> Result<Json<MultipleFreeBusyAPIResponse>, NitteiError> {
     let _account = protect_public_account_route(&headers, &ctx).await?;
 
     let usecase = GetMultipleFreeBusyUseCase {
@@ -39,7 +57,7 @@ pub async fn get_multiple_freebusy_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|usecase_res| Json(APIResponse(usecase_res.0)))
+        .map(|usecase_res| Json(MultipleFreeBusyAPIResponse(usecase_res.0)))
         .map_err(NitteiError::from)
 }
 

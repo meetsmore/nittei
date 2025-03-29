@@ -1,6 +1,6 @@
 use axum::{Extension, Json, http::HeaderMap};
 use axum_valid::Valid;
-use nittei_api_structs::set_account_pub_key::{APIResponse, RequestBody};
+use nittei_api_structs::set_account_pub_key::{APIResponse, SetAccountPubKeyRequestBody};
 use nittei_domain::{Account, PEMKey};
 use nittei_infra::NitteiContext;
 
@@ -12,10 +12,25 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    put,
+    tag = "Account",
+    path = "/api/v1/account/pubkey",
+    summary = "Set the public key for an account",
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = SetAccountPubKeyRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn set_account_pub_key_controller(
     headers: HeaderMap,
     Extension(ctx): Extension<NitteiContext>,
-    body: Valid<Json<RequestBody>>,
+    body: Valid<Json<SetAccountPubKeyRequestBody>>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
 

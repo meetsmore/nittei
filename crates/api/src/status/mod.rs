@@ -1,6 +1,7 @@
-use axum::{Extension, Json, Router, http::StatusCode, routing::get};
+use axum::{Extension, Json, http::StatusCode, routing::get};
 use nittei_api_structs::get_service_health::*;
 use nittei_infra::NitteiContext;
+use utoipa_axum::router::OpenApiRouter;
 
 /// Get the status of the service
 async fn status(Extension(ctx): Extension<NitteiContext>) -> (StatusCode, Json<APIResponse>) {
@@ -21,8 +22,8 @@ async fn status(Extension(ctx): Extension<NitteiContext>) -> (StatusCode, Json<A
 }
 
 /// Configure the routes for the status module
-pub fn configure_routes() -> Router {
-    Router::new()
+pub fn configure_routes() -> OpenApiRouter {
+    OpenApiRouter::new()
         // Get the health status of the service
         .route("/healthcheck", get(status))
 }

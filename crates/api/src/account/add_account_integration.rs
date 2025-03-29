@@ -1,6 +1,6 @@
 use axum::{Extension, Json, http::HeaderMap};
 use axum_valid::Valid;
-use nittei_api_structs::add_account_integration::{APIResponse, RequestBody};
+use nittei_api_structs::add_account_integration::{APIResponse, AddAccountIntegrationRequestBody};
 use nittei_domain::{Account, AccountIntegration, IntegrationProvider};
 use nittei_infra::NitteiContext;
 
@@ -12,10 +12,25 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    put,
+    tag = "Account",
+    path = "/api/v1/account/integration",
+    summary = "Add an integration to an account",
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = AddAccountIntegrationRequestBody,
+    ),
+    responses(
+        (status = 200, description = "The integration was added successfully", body = APIResponse)
+    )
+)]
 pub async fn add_account_integration_controller(
     headers: HeaderMap,
     Extension(ctx): Extension<NitteiContext>,
-    body: Valid<Json<RequestBody>>,
+    body: Valid<Json<AddAccountIntegrationRequestBody>>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
 

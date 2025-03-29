@@ -39,6 +39,13 @@ use tower_http::{
     trace::TraceLayer,
 };
 use tracing::{error, info, warn};
+use utoipa::{
+    Modify,
+    OpenApi,
+    openapi::security::{ApiKey, ApiKeyValue, SecurityScheme},
+};
+use utoipa_axum::router::OpenApiRouter;
+use utoipa_swagger_ui::SwaggerUi;
 
 use crate::http_logger::{
     NitteiTracingOnFailure,
@@ -48,8 +55,8 @@ use crate::http_logger::{
 
 /// Configure the Actix server API
 /// Add all the routes to the server
-pub fn configure_server_api() -> Router {
-    Router::new()
+pub fn configure_server_api() -> OpenApiRouter {
+    OpenApiRouter::new()
         .merge(account::configure_routes())
         .merge(calendar::configure_routes())
         .merge(event::configure_routes())
@@ -126,7 +133,7 @@ impl Application {
 
         let sensitive_headers = vec![header::AUTHORIZATION];
 
-        let server = Router::new()
+        let (router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
             .nest("/api/v1", api_router)
             .layer(axum::middleware::from_fn(metadata_middleware))
             .layer(
@@ -147,7 +154,11 @@ impl Application {
                     ),
             )
             .layer(Extension(context.clone()))
-            .layer(Extension(shared_state.clone()));
+            .layer(Extension(shared_state.clone()))
+            .split_for_parts();
+
+        let router =
+            router.merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", api.clone()));
 
         let port = context.config.port;
         let address = nittei_utils::config::APP_CONFIG.http_host.clone();
@@ -156,7 +167,7 @@ impl Application {
         let listener = TcpListener::bind(address_and_port).await?;
         info!("Starting server on: {}", listener.local_addr()?);
 
-        Ok((server, listener))
+        Ok((router, listener))
     }
 
     /// Init the default account and start the Actix server
@@ -400,5 +411,99 @@ impl Application {
                 }
             }
         });
+    }
+}
+
+#[derive(OpenApi)]
+#[openapi(
+    info(
+        title = "Nittei API",
+        version = "1.0.0",
+        description = "OpenAPI documentation for the Nittei API",
+    ),
+    tags(
+        {name = "Account", description = "Account API endpoints"}, 
+        {name = "Calendar", description = "Calendar API endpoints"},
+        {name = "Event", description = "Event API endpoints"},
+        {name = "Schedule", description = "Schedule API endpoints"},
+        {name = "Service", description = "Service API endpoints"},
+        {name = "Status", description = "Status API endpoints"},
+        {name = "User", description = "User API endpoints"},
+    ),
+    modifiers(&SecurityAddon),
+    paths(
+        // Account
+        account::account_search_events::account_search_events_controller,
+        account::create_account::create_account_controller,
+        account::get_account::get_account_controller,
+        account::set_account_pub_key::set_account_pub_key_controller,
+        account::set_account_webhook::set_account_webhook_controller,
+        account::delete_account_webhook::delete_account_webhook_controller,
+        account::add_account_integration::add_account_integration_controller,
+        account::remove_account_integration::remove_account_integration_controller,
+
+        // Calendar
+        calendar::get_calendars::get_calendars_controller,
+        calendar::get_calendars::get_calendars_admin_controller,
+        calendar::get_calendars_by_meta::get_calendars_by_meta_controller,
+        calendar::get_calendar::get_calendar_controller,
+        calendar::get_calendar::get_calendar_admin_controller,
+        calendar::delete_calendar::delete_calendar_controller,
+        calendar::delete_calendar::delete_calendar_admin_controller,
+        calendar::update_calendar::update_calendar_controller,
+        calendar::update_calendar::update_calendar_admin_controller,
+        calendar::get_calendar_events::get_calendar_events_controller,
+        calendar::get_calendar_events::get_calendar_events_admin_controller,
+        calendar::get_google_calendars::get_google_calendars_controller,
+        calendar::get_google_calendars::get_google_calendars_admin_controller,
+        calendar::get_outlook_calendars::get_outlook_calendars_controller,
+        calendar::get_outlook_calendars::get_outlook_calendars_admin_controller,
+        calendar::remove_sync_calendar::remove_sync_calendar_admin_controller,
+        calendar::add_sync_calendar::add_sync_calendar_admin_controller,
+
+        // Event
+        event::create_event::create_event_controller,
+        event::create_event::create_event_admin_controller,
+        event::delete_event::delete_event_controller,
+        event::delete_event::delete_event_admin_controller,
+        event::delete_many_events::delete_many_events_admin_controller,
+        event::get_event::get_event_controller,
+        event::get_event::get_event_admin_controller,
+        event::get_event_by_external_id::get_event_by_external_id_admin_controller,
+        event::get_event_instances::get_event_instances_controller,
+        event::get_event_instances::get_event_instances_admin_controller,
+        event::get_events_by_calendars::get_events_by_calendars_controller,
+        event::get_events_by_meta::get_events_by_meta_controller,
+        event::search_events::search_events_controller,
+        event::update_event::update_event_controller,
+        event::update_event::update_event_admin_controller,
+
+        // User
+        user::create_user::create_user_controller,
+        user::get_me::get_me_controller,
+        user::get_user::get_user_controller,
+        user::get_user_by_external_id::get_user_by_external_id_controller,
+        user::get_multiple_users_freebusy::get_multiple_freebusy_controller,
+        user::get_user_freebusy::get_freebusy_controller,
+        user::update_user::update_user_controller,
+        user::delete_user::delete_user_controller,
+        user::oauth_integration::oauth_integration_controller,
+        user::remove_integration::remove_integration_controller,
+        user::oauth_integration::oauth_integration_admin_controller,
+        user::remove_integration::remove_integration_admin_controller,
+    ),
+)]
+struct ApiDoc;
+
+struct SecurityAddon;
+
+impl Modify for SecurityAddon {
+    fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
+        if let Some(components) = openapi.components.as_mut() {
+            components.add_security_scheme(
+                "api_key",
+                SecurityScheme::ApiKey(ApiKey::Header(ApiKeyValue::new("x-api-key"))),
+            )
+        }
     }
 }

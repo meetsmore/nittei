@@ -1,6 +1,6 @@
 use axum::{Extension, Json, http::HeaderMap};
 use axum_valid::Valid;
-use nittei_api_structs::set_account_webhook::{APIResponse, RequestBody};
+use nittei_api_structs::set_account_webhook::{APIResponse, SetAccountWebhookRequestBody};
 use nittei_domain::Account;
 use nittei_infra::NitteiContext;
 
@@ -12,10 +12,25 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    put,
+    tag = "Account",
+    path = "/api/v1/account/webhook",
+    summary = "Set the webhook for an account",
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = SetAccountWebhookRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn set_account_webhook_controller(
     headers: HeaderMap,
     Extension(ctx): Extension<NitteiContext>,
-    body: Valid<Json<RequestBody>>,
+    body: Valid<Json<SetAccountWebhookRequestBody>>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
 

@@ -25,12 +25,30 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    get,
+    tag = "Event",
+    path = "/api/v1/user/{user_id}/events",
+    summary = "Get events by calendars (admin only)",
+    params(
+        ("user_id" = ID, Path, description = "The id of the user to get events for"),
+        ("calendar_ids" = Vec<ID>, Query, description = "The ids of the calendars to get events for"),
+        ("start_time" = DateTime<Utc>, Query, description = "The start time of the events to get"),
+        ("end_time" = DateTime<Utc>, Query, description = "The end time of the events to get"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = GetEventsByCalendarsAPIResponse)
+    )
+)]
 pub async fn get_events_by_calendars_controller(
     headers: HeaderMap,
     path_params: Path<PathParams>,
-    query: Query<QueryParams>,
+    query: Query<GetEventsByCalendarsQueryParams>,
     Extension(ctx): Extension<NitteiContext>,
-) -> Result<Json<APIResponse>, NitteiError> {
+) -> Result<Json<GetEventsByCalendarsAPIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
 
     let calendar_ids = match &query.calendar_ids {
@@ -48,7 +66,7 @@ pub async fn get_events_by_calendars_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|events| Json(APIResponse::new(events.events)))
+        .map(|events| Json(GetEventsByCalendarsAPIResponse::new(events.events)))
         .map_err(NitteiError::from)
 }
 

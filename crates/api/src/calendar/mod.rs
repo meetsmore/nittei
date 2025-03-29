@@ -1,20 +1,17 @@
-mod add_sync_calendar;
-mod create_calendar;
-mod delete_calendar;
-mod get_calendar;
-mod get_calendar_events;
-mod get_calendars;
-mod get_calendars_by_meta;
-mod get_google_calendars;
-mod get_outlook_calendars;
-mod remove_sync_calendar;
-mod update_calendar;
+pub mod add_sync_calendar;
+pub mod create_calendar;
+pub mod delete_calendar;
+pub mod get_calendar;
+pub mod get_calendar_events;
+pub mod get_calendars;
+pub mod get_calendars_by_meta;
+pub mod get_google_calendars;
+pub mod get_outlook_calendars;
+pub mod remove_sync_calendar;
+pub mod update_calendar;
 
 use add_sync_calendar::add_sync_calendar_admin_controller;
-use axum::{
-    Router,
-    routing::{delete, get, post, put},
-};
+use axum::routing::{delete, get, post, put};
 use create_calendar::{create_calendar_admin_controller, create_calendar_controller};
 use delete_calendar::{delete_calendar_admin_controller, delete_calendar_controller};
 use get_calendar::{get_calendar_admin_controller, get_calendar_controller};
@@ -30,10 +27,11 @@ use get_outlook_calendars::{
 };
 use remove_sync_calendar::remove_sync_calendar_admin_controller;
 use update_calendar::{update_calendar_admin_controller, update_calendar_controller};
+use utoipa_axum::router::OpenApiRouter;
 
 /// Configure the routes for the calendar module
-pub fn configure_routes() -> Router {
-    Router::new()
+pub fn configure_routes() -> OpenApiRouter {
+    OpenApiRouter::new()
         // Create a calendar
         .route("/calendar", post(create_calendar_controller))
         // Create a calendar for a user (admin route)

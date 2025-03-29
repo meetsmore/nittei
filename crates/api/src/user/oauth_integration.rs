@@ -2,7 +2,7 @@ use axum::{Extension, Json, extract::Path, http::HeaderMap};
 use axum_valid::Valid;
 use chrono::Utc;
 use nittei_api_structs::oauth_integration::*;
-use nittei_domain::{IntegrationProvider, User, UserIntegration};
+use nittei_domain::{ID, IntegrationProvider, User, UserIntegration};
 use nittei_infra::{CodeTokenRequest, NitteiContext, ProviderOAuth};
 
 use crate::{
@@ -13,11 +13,29 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    post,
+    tag = "User",
+    path = "/api/v1/user/{user_id}/oauth",
+    summary = "OAuth integration (admin only)",
+    params(
+        ("user_id" = ID, Path, description = "The id of the user to integrate with"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = OAuthIntegrationRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn oauth_integration_admin_controller(
     headers: HeaderMap,
     path: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
-    body: Valid<Json<RequestBody>>,
+    body: Valid<Json<OAuthIntegrationRequestBody>>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
     let user = account_can_modify_user(&account, &path.user_id, &ctx).await?;
@@ -34,10 +52,22 @@ pub async fn oauth_integration_admin_controller(
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    post,
+    tag = "User",
+    path = "/api/v1/me/oauth",
+    summary = "OAuth integration",
+    request_body(
+        content = OAuthIntegrationRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn oauth_integration_controller(
     headers: HeaderMap,
     Extension(ctx): Extension<NitteiContext>,
-    body: Json<RequestBody>,
+    body: Json<OAuthIntegrationRequestBody>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let (user, _) = protect_route(&headers, &ctx).await?;
 

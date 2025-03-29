@@ -28,11 +28,29 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    post,
+    tag = "Event",
+    path = "/api/v1/user/{user_id}/events",
+    summary = "Create an event (admin only)",
+    params(
+        ("user_id" = ID, Path, description = "The id of the user to create the event for"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = CreateEventRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn create_event_admin_controller(
     headers: HeaderMap,
     path_params: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
-    body: Valid<Json<RequestBody>>,
+    body: Valid<Json<CreateEventRequestBody>>,
 ) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
     let user = account_can_modify_user(&account, &path_params.user_id, &ctx).await?;
@@ -69,10 +87,22 @@ pub async fn create_event_admin_controller(
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    post,
+    tag = "Event",
+    path = "/api/v1/events",
+    summary = "Create an event",
+    request_body(
+        content = CreateEventRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn create_event_controller(
     headers: HeaderMap,
     Extension(ctx): Extension<NitteiContext>,
-    body: Valid<Json<RequestBody>>,
+    body: Valid<Json<CreateEventRequestBody>>,
 ) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
     let (user, policy) = protect_route(&headers, &ctx).await?;
 

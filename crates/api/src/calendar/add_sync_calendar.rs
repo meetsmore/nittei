@@ -1,6 +1,10 @@
 use axum::{Extension, Json, extract::Path, http::HeaderMap};
 use axum_valid::Valid;
-use nittei_api_structs::add_sync_calendar::{APIResponse, PathParams, RequestBody};
+use nittei_api_structs::add_sync_calendar::{
+    APIResponse,
+    AddSyncCalendarPathParams,
+    AddSyncCalendarRequestBody,
+};
 use nittei_domain::{
     ID,
     IntegrationProvider,
@@ -22,11 +26,29 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    post,
+    tag = "Calendar",
+    path = "/api/v1/calendar/sync",
+    summary = "Add a sync calendar (admin only)",
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = AddSyncCalendarRequestBody,
+    ),
+    params(
+        ("user_id" = ID, Path, description = "The user id of the user to add the sync calendar to"),
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn add_sync_calendar_admin_controller(
     headers: HeaderMap,
-    path_params: Path<PathParams>,
+    path_params: Path<AddSyncCalendarPathParams>,
     Extension(ctx): Extension<NitteiContext>,
-    body: Valid<Json<RequestBody>>,
+    body: Valid<Json<AddSyncCalendarRequestBody>>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
     let user = account_can_modify_user(&account, &path_params.user_id, &ctx).await?;

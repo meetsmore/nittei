@@ -4,8 +4,13 @@ use axum::{
     extract::{Path, Query},
     http::HeaderMap,
 };
-use nittei_api_structs::get_outlook_calendars::{APIResponse, PathParams, QueryParams};
+use nittei_api_structs::get_outlook_calendars::{
+    GetOutlookCalendarsAPIResponse,
+    PathParams,
+    QueryParams,
+};
 use nittei_domain::{
+    ID,
     User,
     providers::outlook::{OutlookCalendar, OutlookCalendarAccessRole},
 };
@@ -19,12 +24,28 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    get,
+    tag = "Calendar",
+    path = "/api/v1/user/{user_id}/calendar/provider/outlook",
+    summary = "Get outlook calendars for a user (admin only)",
+    params(
+        ("user_id" = ID, Path, description = "The id of the user to get outlook calendars for"),
+        ("min_access_role" = OutlookCalendarAccessRole, Query, description = "The minimum access role to get outlook calendars for"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = GetOutlookCalendarsAPIResponse)
+    )
+)]
 pub async fn get_outlook_calendars_admin_controller(
     headers: HeaderMap,
     path: Path<PathParams>,
     query: Query<QueryParams>,
     Extension(ctx): Extension<NitteiContext>,
-) -> Result<Json<APIResponse>, NitteiError> {
+) -> Result<Json<GetOutlookCalendarsAPIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
     let user = account_can_modify_user(&account, &path.user_id, &ctx).await?;
 
@@ -35,15 +56,27 @@ pub async fn get_outlook_calendars_admin_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|calendars| Json(APIResponse::new(calendars)))
+        .map(|calendars| Json(GetOutlookCalendarsAPIResponse::new(calendars)))
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    get,
+    tag = "Calendar",
+    path = "/api/v1/calendar/provider/outlook",
+    summary = "Get outlook calendars for a user",
+    params(
+        ("min_access_role" = OutlookCalendarAccessRole, Query, description = "The minimum access role to get outlook calendars for"),
+    ),
+    responses(
+        (status = 200, body = GetOutlookCalendarsAPIResponse)
+    )
+)]
 pub async fn get_outlook_calendars_controller(
     headers: HeaderMap,
     query: Query<QueryParams>,
     Extension(ctx): Extension<NitteiContext>,
-) -> Result<Json<APIResponse>, NitteiError> {
+) -> Result<Json<GetOutlookCalendarsAPIResponse>, NitteiError> {
     let (user, _policy) = protect_route(&headers, &ctx).await?;
 
     let usecase = GetOutlookCalendarsUseCase {
@@ -53,7 +86,7 @@ pub async fn get_outlook_calendars_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|calendars| Json(APIResponse::new(calendars)))
+        .map(|calendars| Json(GetOutlookCalendarsAPIResponse::new(calendars)))
         .map_err(NitteiError::from)
 }
 

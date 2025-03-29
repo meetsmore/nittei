@@ -5,11 +5,29 @@ use nittei_infra::{MetadataFindQuery, NitteiContext};
 
 use crate::{error::NitteiError, shared::auth::protect_admin_route};
 
+#[utoipa::path(
+    get,
+    tag = "User",
+    path = "/api/v1/user/meta",
+    summary = "Get users by metadata",
+    params(
+        ("key" = String, Query, description = "The key of the metadata to search for"),
+        ("value" = String, Query, description = "The value of the metadata to search for"),
+        ("skip" = Option<usize>, Query, description = "The number of users to skip"),
+        ("limit" = Option<usize>, Query, description = "The number of users to return"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = GetUsersByMetaAPIResponse)
+    )
+)]
 pub async fn get_users_by_meta_controller(
     headers: HeaderMap,
     query_params: Query<QueryParams>,
     Extension(ctx): Extension<NitteiContext>,
-) -> Result<Json<APIResponse>, NitteiError> {
+) -> Result<Json<GetUsersByMetaAPIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
 
     let query = MetadataFindQuery {
@@ -24,5 +42,5 @@ pub async fn get_users_by_meta_controller(
         .find_by_metadata(query)
         .await
         .map_err(|_| NitteiError::InternalError)?;
-    Ok(Json(APIResponse::new(users)))
+    Ok(Json(GetUsersByMetaAPIResponse::new(users)))
 }

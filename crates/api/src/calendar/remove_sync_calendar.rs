@@ -1,6 +1,10 @@
 use axum::{Extension, Json, extract::Path, http::HeaderMap};
 use axum_valid::Valid;
-use nittei_api_structs::remove_sync_calendar::{APIResponse, PathParams, RequestBody};
+use nittei_api_structs::remove_sync_calendar::{
+    APIResponse,
+    RemoveSyncCalendarPathParams,
+    RemoveSyncCalendarRequestBody,
+};
 use nittei_domain::{ID, IntegrationProvider};
 use nittei_infra::NitteiContext;
 
@@ -21,11 +25,29 @@ fn error_handler(e: UseCaseError) -> NitteiError {
     }
 }
 
+#[utoipa::path(
+    delete,
+    tag = "Calendar",
+    path = "/api/v1/user/{user_id}/calendar/sync",
+    summary = "Remove a calendar sync (admin only)",
+    params(
+        ("user_id" = ID, Path, description = "The id of the user to remove the calendar sync for"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = RemoveSyncCalendarRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn remove_sync_calendar_admin_controller(
     headers: HeaderMap,
-    path_params: Path<PathParams>,
+    path_params: Path<RemoveSyncCalendarPathParams>,
     Extension(ctx): Extension<NitteiContext>,
-    body: Valid<Json<RequestBody>>,
+    body: Valid<Json<RemoveSyncCalendarRequestBody>>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
     // Check if user exists and can be modified by the account

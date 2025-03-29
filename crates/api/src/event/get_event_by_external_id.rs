@@ -11,11 +11,26 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    get,
+    tag = "Event",
+    path = "/api/v1/user/events/external_id/{external_id}",
+    summary = "Get an event by its external id (admin only)",
+    params(
+        ("external_id" = String, Path, description = "The external id of the event to get"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = GetEventsByExternalIdAPIResponse)
+    )
+)]
 pub async fn get_event_by_external_id_admin_controller(
     headers: HeaderMap,
     path_params: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
-) -> Result<Json<APIResponse>, NitteiError> {
+) -> Result<Json<GetEventsByExternalIdAPIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
 
     let usecase = GetEventByExternalIdUseCase {
@@ -25,7 +40,7 @@ pub async fn get_event_by_external_id_admin_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|events| Json(APIResponse::new(events)))
+        .map(|events| Json(GetEventsByExternalIdAPIResponse::new(events)))
         .map_err(NitteiError::from)
 }
 

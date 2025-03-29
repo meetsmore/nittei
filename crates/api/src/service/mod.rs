@@ -14,10 +14,7 @@ mod update_service_user;
 
 use add_busy_calendar::add_busy_calendar_controller;
 use add_user_to_service::add_user_to_service_controller;
-use axum::{
-    Router,
-    routing::{delete, get, post, put},
-};
+use axum::routing::{delete, get, post, put};
 use create_service::create_service_controller;
 use create_service_event_intend::create_service_event_intend_controller;
 use delete_service::delete_service_controller;
@@ -29,9 +26,10 @@ use remove_service_event_intend::remove_service_event_intend_controller;
 use remove_user_from_service::remove_user_from_service_controller;
 use update_service::update_service_controller;
 use update_service_user::update_service_user_controller;
+use utoipa_axum::router::OpenApiRouter;
 
-pub fn configure_routes() -> Router {
-    Router::new()
+pub fn configure_routes() -> OpenApiRouter {
+    OpenApiRouter::new()
         .route("/service", post(create_service_controller))
         .route("/service/meta", get(get_services_by_meta_controller))
         .route("/service/{service_id}", get(get_service_controller))

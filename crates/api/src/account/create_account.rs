@@ -1,6 +1,6 @@
 use axum::{Extension, extract::Json, http::StatusCode};
 use axum_valid::Valid;
-use nittei_api_structs::create_account::{APIResponse, RequestBody};
+use nittei_api_structs::create_account::{CreateAccountRequestBody, CreateAccountResponseBody};
 use nittei_domain::Account;
 use nittei_infra::NitteiContext;
 
@@ -9,17 +9,36 @@ use crate::{
     shared::usecase::{UseCase, execute},
 };
 
-// #[axum::debug_handler]
+#[utoipa::path(
+    post,
+    tag = "Account",
+    path = "/api/v1/account",
+    summary = "Create a new account",
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = CreateAccountRequestBody,
+    ),
+    responses(
+        (status = 200, description = "The account was created successfully", body = CreateAccountResponseBody)
+    )
+)]
 pub async fn create_account_controller(
     Extension(ctx): Extension<NitteiContext>,
-    body: Valid<Json<RequestBody>>,
-) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
+    body: Valid<Json<CreateAccountRequestBody>>,
+) -> Result<(StatusCode, Json<CreateAccountResponseBody>), NitteiError> {
     let usecase = CreateAccountUseCase {
-        code: body.0.code.clone(),
+        code: body.code.clone(),
     };
     execute(usecase, &ctx)
         .await
-        .map(|account| (StatusCode::CREATED, Json(APIResponse::new(account))))
+        .map(|account| {
+            (
+                StatusCode::CREATED,
+                Json(CreateAccountResponseBody::new(account)),
+            )
+        })
         .map_err(NitteiError::from)
 }
 

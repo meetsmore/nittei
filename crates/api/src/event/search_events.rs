@@ -1,7 +1,7 @@
 use axum::{Extension, Json, http::HeaderMap};
 use axum_valid::Valid;
 use nittei_api_structs::{dtos::CalendarEventDTO, search_events::*};
-use nittei_domain::{CalendarEventSort, DateTimeQuery, ID, IDQuery, StringQuery};
+use nittei_domain::{CalendarEventSort, DateTimeQuery, ID, IDQuery, RecurrenceQuery, StringQuery};
 use nittei_infra::{NitteiContext, SearchEventsForUserParams, SearchEventsParams};
 use nittei_utils::config::APP_CONFIG;
 
@@ -13,11 +13,26 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    post,
+    tag = "Event",
+    path = "/api/v1/events/search",
+    summary = "Search events for a user (admin only)",
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = SearchEventsRequestBody,
+    ),
+    responses(
+        (status = 200, body = SearchEventsAPIResponse)
+    )
+)]
 pub async fn search_events_controller(
     headers: HeaderMap,
     Extension(ctx): Extension<NitteiContext>,
-    body: Valid<Json<RequestBody>>,
-) -> Result<Json<APIResponse>, NitteiError> {
+    body: Valid<Json<SearchEventsRequestBody>>,
+) -> Result<Json<SearchEventsAPIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
 
     let mut body = body.0;
@@ -34,7 +49,7 @@ pub async fn search_events_controller(
         status: body.filter.status.take(),
         recurring_event_uid: body.filter.recurring_event_uid.take(),
         original_start_time: body.filter.original_start_time.take(),
-        is_recurring: body.filter.is_recurring,
+        recurrence: body.filter.recurrence.take(),
         metadata: body.filter.metadata.take(),
         created_at: body.filter.created_at.take(),
         updated_at: body.filter.updated_at.take(),
@@ -44,7 +59,7 @@ pub async fn search_events_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|events| Json(APIResponse::new(events.events)))
+        .map(|events| Json(SearchEventsAPIResponse::new(events.events)))
         .map_err(NitteiError::from)
 }
 
@@ -87,8 +102,9 @@ pub struct SearchEventsUseCase {
     /// Optional query on original start time - "lower than or equal", or "great than or equal" (UTC)
     pub original_start_time: Option<DateTimeQuery>,
 
-    /// Optional filter on the recurrence (existence)
-    pub is_recurring: Option<bool>,
+    /// Optional filter on the recurrence
+    /// This allows to filter on the existence or not of a recurrence, or the existence of a recurrence at a specific date
+    pub recurrence: Option<RecurrenceQuery>,
 
     /// Optional list of metadata key-value pairs
     pub metadata: Option<serde_json::Value>,
@@ -201,7 +217,7 @@ impl UseCase for SearchEventsUseCase {
                     status: self.status.take(),
                     recurring_event_uid: self.recurring_event_uid.take(),
                     original_start_time: self.original_start_time.take(),
-                    is_recurring: self.is_recurring.take(),
+                    recurrence: self.recurrence.take(),
                     metadata: self.metadata.take(),
                     created_at: self.created_at.take(),
                     updated_at: self.updated_at.take(),

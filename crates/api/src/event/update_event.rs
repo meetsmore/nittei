@@ -29,11 +29,29 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    put,
+    tag = "Event",
+    path = "/api/v1/user/events/{event_id}",
+    summary = "Update an event (admin only)",
+    params(
+        ("event_id" = ID, Path, description = "The id of the event to update"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = UpdateEventRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn update_event_admin_controller(
     headers: HeaderMap,
     path_params: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
-    body: Valid<Json<RequestBody>>,
+    body: Valid<Json<UpdateEventRequestBody>>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
     let e = account_can_modify_event(&account, &path_params.event_id, &ctx).await?;
@@ -71,11 +89,26 @@ pub async fn update_event_admin_controller(
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    put,
+    tag = "Event",
+    path = "/api/v1/events/{event_id}",
+    summary = "Update an event (user only)",
+    params(
+        ("event_id" = ID, Path, description = "The id of the event to update"),
+    ),
+    request_body(
+        content = UpdateEventRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn update_event_controller(
     headers: HeaderMap,
     path_params: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
-    body: Valid<Json<RequestBody>>,
+    body: Valid<Json<UpdateEventRequestBody>>,
 ) -> Result<Json<APIResponse>, NitteiError> {
     let (user, policy) = protect_route(&headers, &ctx).await?;
 

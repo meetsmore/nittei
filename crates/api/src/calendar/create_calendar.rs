@@ -7,7 +7,7 @@ use axum::{
 use axum_valid::Valid;
 use chrono::Weekday;
 use chrono_tz::Tz;
-use nittei_api_structs::create_calendar::{APIResponse, PathParams, RequestBody};
+use nittei_api_structs::create_calendar::{APIResponse, CreateCalendarRequestBody, PathParams};
 use nittei_domain::{Calendar, CalendarSettings, ID};
 use nittei_infra::NitteiContext;
 
@@ -19,11 +19,26 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    post,
+    tag = "Calendar",
+    path = "/api/v1/user/{user_id}/calendar",
+    summary = "Create a calendar (admin only)",
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = CreateCalendarRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn create_calendar_admin_controller(
     headers: HeaderMap,
     path_params: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
-    mut body: Valid<Json<RequestBody>>,
+    mut body: Valid<Json<CreateCalendarRequestBody>>,
 ) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
     let user = account_can_modify_user(&account, &path_params.user_id, &ctx).await?;
@@ -44,10 +59,22 @@ pub async fn create_calendar_admin_controller(
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    post,
+    tag = "Calendar",
+    path = "/api/v1/calendar",
+    summary = "Create a calendar",
+    request_body(
+        content = CreateCalendarRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn create_calendar_controller(
     headers: HeaderMap,
     Extension(ctx): Extension<NitteiContext>,
-    mut body: Valid<Json<RequestBody>>,
+    mut body: Valid<Json<CreateCalendarRequestBody>>,
 ) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
     let (user, policy) = protect_route(&headers, &ctx).await?;
 

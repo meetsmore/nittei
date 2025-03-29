@@ -5,11 +5,29 @@ use nittei_infra::{MetadataFindQuery, NitteiContext};
 
 use crate::{error::NitteiError, shared::auth::protect_admin_route};
 
+#[utoipa::path(
+    get,
+    tag = "Event",
+    path = "/api/v1/events/meta",
+    summary = "Get events by metadata (admin only)",
+    params(
+        ("key" = String, Query, description = "The key of the metadata to search for"),
+        ("value" = String, Query, description = "The value of the metadata to search for"),
+        ("skip" = Option<usize>, Query, description = "The number of events to skip"),
+        ("limit" = Option<usize>, Query, description = "The number of events to return"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = GetEventsByMetaAPIResponse)
+    )
+)]
 pub async fn get_events_by_meta_controller(
     headers: HeaderMap,
     query_params: Query<QueryParams>,
     Extension(ctx): Extension<NitteiContext>,
-) -> Result<Json<APIResponse>, NitteiError> {
+) -> Result<Json<GetEventsByMetaAPIResponse>, NitteiError> {
     let account = protect_admin_route(&headers, &ctx).await?;
 
     let query = MetadataFindQuery {
@@ -24,5 +42,5 @@ pub async fn get_events_by_meta_controller(
         .find_by_metadata(query)
         .await
         .map_err(|_| NitteiError::InternalError)?;
-    Ok(Json(APIResponse::new(events)))
+    Ok(Json(GetEventsByMetaAPIResponse::new(events)))
 }
