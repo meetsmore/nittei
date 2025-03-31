@@ -1,5 +1,5 @@
 use actix_web::{HttpRequest, HttpResponse, web};
-use nittei_api_structs::add_account_integration::{APIResponse, RequestBody};
+use nittei_api_structs::add_account_integration::{APIResponse, AddAccountIntegrationRequestBody};
 use nittei_domain::{Account, AccountIntegration, IntegrationProvider};
 use nittei_infra::NitteiContext;
 
@@ -11,9 +11,24 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    put,
+    tag = "Account",
+    path = "/api/v1/account/integration",
+    summary = "Add an integration to an account",
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = AddAccountIntegrationRequestBody,
+    ),
+    responses(
+        (status = 200, description = "The integration was added successfully", body = APIResponse)
+    )
+)]
 pub async fn add_account_integration_controller(
     http_req: HttpRequest,
-    body: actix_web_validator::Json<RequestBody>,
+    body: actix_web_validator::Json<AddAccountIntegrationRequestBody>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
     let account = protect_admin_route(&http_req, &ctx).await?;

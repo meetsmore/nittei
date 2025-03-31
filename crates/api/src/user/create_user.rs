@@ -12,9 +12,21 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    post,
+    tag = "User",
+    path = "/api/v1/user",
+    summary = "Create a user (admin only)",
+    request_body(
+        content = CreateUserRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn create_user_controller(
     http_req: HttpRequest,
-    body: web::Json<RequestBody>,
+    body: web::Json<CreateUserRequestBody>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
     let account = protect_admin_route(&http_req, &ctx).await?;

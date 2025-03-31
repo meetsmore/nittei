@@ -3,7 +3,10 @@ use std::collections::HashMap;
 use actix_web::{HttpRequest, HttpResponse, web};
 use chrono::{DateTime, Utc};
 use futures::{FutureExt, StreamExt, future::join_all, stream};
-use nittei_api_structs::multiple_freebusy::{APIResponse, RequestBody};
+use nittei_api_structs::multiple_freebusy::{
+    MultipleFreeBusyAPIResponse,
+    MultipleFreeBusyRequestBody,
+};
 use nittei_domain::{
     Calendar,
     CalendarEvent,
@@ -13,6 +16,7 @@ use nittei_domain::{
     expand_all_events_and_remove_exceptions,
 };
 use nittei_infra::NitteiContext;
+use nittei_utils::config::APP_CONFIG;
 use tracing::error;
 
 use crate::{
@@ -23,9 +27,24 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    post,
+    tag = "User",
+    path = "/api/v1/user/freebusy",
+    summary = "Get freebusy for multiple users",
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = MultipleFreeBusyRequestBody,
+    ),
+    responses(
+        (status = 200, body = MultipleFreeBusyAPIResponse)
+    )
+)]
 pub async fn get_multiple_freebusy_controller(
     http_req: HttpRequest,
-    body: web::Json<RequestBody>,
+    body: web::Json<MultipleFreeBusyRequestBody>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
     let _account = protect_public_account_route(&http_req, &ctx).await?;
@@ -38,7 +57,7 @@ pub async fn get_multiple_freebusy_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|usecase_res| HttpResponse::Ok().json(APIResponse(usecase_res.0)))
+        .map(|usecase_res| HttpResponse::Ok().json(MultipleFreeBusyAPIResponse(usecase_res.0)))
         .map_err(NitteiError::from)
 }
 
@@ -63,7 +82,7 @@ impl From<UseCaseError> for NitteiError {
         match e {
             UseCaseError::InternalError => Self::InternalError,
             UseCaseError::InvalidTimespan => {
-                Self::BadClientData("The provided start_ts and end_ts is invalid".into())
+                Self::BadClientData("The provided start_ts and end_ts are invalid".into())
             }
         }
     }
@@ -79,7 +98,7 @@ impl UseCase for GetMultipleFreeBusyUseCase {
 
     async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         let timespan = TimeSpan::new(self.start_time, self.end_time);
-        if timespan.greater_than(ctx.config.event_instances_query_duration_limit) {
+        if timespan.greater_than(APP_CONFIG.event_instances_query_duration_limit) {
             return Err(UseCaseError::InvalidTimespan);
         }
 

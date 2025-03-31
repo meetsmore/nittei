@@ -19,15 +19,18 @@ impl AccountClient {
         self.base.get("account".into(), None, StatusCode::OK).await
     }
 
-    pub async fn create(&self, code: &str) -> APIResponse<create_account::APIResponse> {
-        let body = create_account::RequestBody { code: code.into() };
+    pub async fn create(
+        &self,
+        code: &str,
+    ) -> APIResponse<create_account::CreateAccountResponseBody> {
+        let body = create_account::CreateAccountRequestBody { code: code.into() };
         self.base
             .post(body, "account".into(), StatusCode::CREATED)
             .await
     }
 
     pub async fn create_webhook(&self, url: &str) -> APIResponse<set_account_webhook::APIResponse> {
-        let body = set_account_webhook::RequestBody {
+        let body = set_account_webhook::SetAccountWebhookRequestBody {
             webhook_url: url.into(),
         };
         self.base
@@ -45,7 +48,7 @@ impl AccountClient {
         &self,
         key: Option<String>,
     ) -> APIResponse<set_account_pub_key::APIResponse> {
-        let body = set_account_pub_key::RequestBody {
+        let body = set_account_pub_key::SetAccountPubKeyRequestBody {
             public_jwt_key: key,
         };
         self.base

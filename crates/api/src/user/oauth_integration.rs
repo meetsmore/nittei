@@ -1,7 +1,7 @@
 use actix_web::{HttpRequest, HttpResponse, web};
 use chrono::Utc;
 use nittei_api_structs::oauth_integration::*;
-use nittei_domain::{IntegrationProvider, User, UserIntegration};
+use nittei_domain::{ID, IntegrationProvider, User, UserIntegration};
 use nittei_infra::{CodeTokenRequest, NitteiContext, ProviderOAuth};
 
 use crate::{
@@ -12,10 +12,28 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    post,
+    tag = "User",
+    path = "/api/v1/user/{user_id}/oauth",
+    summary = "OAuth integration (admin only)",
+    params(
+        ("user_id" = ID, Path, description = "The id of the user to integrate with"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = OAuthIntegrationRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn oauth_integration_admin_controller(
     http_req: HttpRequest,
     path: web::Path<PathParams>,
-    body: actix_web_validator::Json<RequestBody>,
+    body: actix_web_validator::Json<OAuthIntegrationRequestBody>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
     let account = protect_admin_route(&http_req, &ctx).await?;
@@ -33,9 +51,21 @@ pub async fn oauth_integration_admin_controller(
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    post,
+    tag = "User",
+    path = "/api/v1/me/oauth",
+    summary = "OAuth integration",
+    request_body(
+        content = OAuthIntegrationRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn oauth_integration_controller(
     http_req: HttpRequest,
-    body: web::Json<RequestBody>,
+    body: web::Json<OAuthIntegrationRequestBody>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
     let (user, _) = protect_route(&http_req, &ctx).await?;

@@ -1,8 +1,9 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
+use utoipa::ToSchema;
 
-#[derive(Deserialize, Serialize, TS, Debug, Clone)]
+#[derive(Deserialize, Serialize, TS, Debug, Clone, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[ts(export, rename = "DateTimeQueryRange", rename_all = "camelCase")]
 pub struct DateTimeQueryRange {
@@ -26,7 +27,7 @@ pub struct DateTimeQueryRange {
 }
 
 /// Query parameters for searching on a date time
-#[derive(Deserialize, Serialize, TS, Debug, Clone)]
+#[derive(Deserialize, Serialize, TS, Debug, Clone, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[ts(export, rename = "DateTimeQuery", rename_all = "camelCase")]
 pub enum DateTimeQuery {

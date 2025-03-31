@@ -2,10 +2,7 @@ use std::sync::Arc;
 
 use chrono::{DateTime, Utc};
 // Re-export API structs
-pub use multiple_freebusy::{
-    APIResponse as MultipleFreeBusyAPIResponse,
-    RequestBody as MultipleFreeBusyRequestBody,
-};
+pub use multiple_freebusy::{MultipleFreeBusyAPIResponse, MultipleFreeBusyRequestBody};
 use nittei_api_structs::*;
 use nittei_domain::IntegrationProvider;
 use reqwest::StatusCode;
@@ -22,7 +19,7 @@ pub struct UpdateUserInput {
     pub external_id: Option<String>,
 }
 
-pub type CreateUserInput = create_user::RequestBody;
+pub type CreateUserInput = create_user::CreateUserRequestBody;
 
 pub struct GetUserFreeBusyInput {
     pub user_id: ID,
@@ -98,7 +95,7 @@ impl UserClient {
     }
 
     pub async fn update(&self, input: UpdateUserInput) -> APIResponse<update_user::APIResponse> {
-        let body = update_user::RequestBody {
+        let body = update_user::UpdateUserRequestBody {
             external_id: input.external_id,
             metadata: input.metadata,
         };
@@ -110,7 +107,7 @@ impl UserClient {
     pub async fn free_busy(
         &self,
         query: GetUserFreeBusyInput,
-    ) -> APIResponse<get_user_freebusy::APIResponse> {
+    ) -> APIResponse<get_user_freebusy::GetUserFreeBusyAPIResponse> {
         let user_id = query.user_id.clone();
         self.base
             .get(
@@ -135,7 +132,7 @@ impl UserClient {
 
     pub async fn oauth(&self, input: OAuthInput) -> APIResponse<oauth_integration::APIResponse> {
         let user_id = input.user_id.clone();
-        let body = oauth_integration::RequestBody {
+        let body = oauth_integration::OAuthIntegrationRequestBody {
             code: input.code,
             provider: input.provider,
         };
@@ -160,7 +157,7 @@ impl UserClient {
     pub async fn get_by_meta(
         &self,
         input: MetadataFindInput,
-    ) -> APIResponse<get_users_by_meta::APIResponse> {
+    ) -> APIResponse<get_users_by_meta::GetUsersByMetaAPIResponse> {
         self.base
             .get(
                 "user/meta".to_string(),

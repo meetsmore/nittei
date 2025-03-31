@@ -7,6 +7,7 @@ use nittei_domain::{
     DateTimeQuery,
     ID,
     IDQuery,
+    RecurrenceQuery,
     StringQuery,
     TimeSpan,
 };
@@ -49,7 +50,7 @@ pub struct SearchEventsParams {
     pub event_type: Option<StringQuery>,
     pub recurring_event_uid: Option<IDQuery>,
     pub original_start_time: Option<DateTimeQuery>,
-    pub is_recurring: Option<bool>,
+    pub recurrence: Option<RecurrenceQuery>,
     pub metadata: Option<serde_json::Value>,
     pub created_at: Option<DateTimeQuery>,
     pub updated_at: Option<DateTimeQuery>,

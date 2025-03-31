@@ -7,6 +7,7 @@ use nittei_domain::{
     CalendarEventStatus,
     ID,
     RRuleOptions,
+    RecurrenceQuery,
     TimeSpan,
 };
 use serde_json::Value;
@@ -769,11 +770,23 @@ impl IEventRepo for PostgresEventRepo {
             false,
         );
 
-        if let Some(is_recurring) = params.search_events_params.is_recurring {
-            query.push(format!(
-                " AND e.recurrence::text {} 'null'",
-                if is_recurring { "<>" } else { "=" },
-            ));
+        if let Some(recurrence) = params.search_events_params.recurrence {
+            match recurrence {
+                RecurrenceQuery::ExistsAndRecurringAt(date) => {
+                    query.push(
+                        " AND e.recurrence::text <> 'null' AND (e.recurring_until IS NULL OR e.recurring_until >= ",
+                    );
+                    query.push_bind(date);
+                    query.push(")");
+                }
+                RecurrenceQuery::Exists(exists) => {
+                    if exists {
+                        query.push(" AND e.recurrence::text <> 'null'");
+                    } else {
+                        query.push(" AND e.recurrence::text = 'null'");
+                    }
+                }
+            }
         }
 
         if let Some(metadata) = params.search_events_params.metadata {
@@ -910,11 +923,23 @@ impl IEventRepo for PostgresEventRepo {
             false,
         );
 
-        if let Some(is_recurring) = params.search_events_params.is_recurring {
-            query.push(format!(
-                " AND e.recurrence::text {} 'null'",
-                if is_recurring { "<>" } else { "=" },
-            ));
+        if let Some(recurrence) = params.search_events_params.recurrence {
+            match recurrence {
+                RecurrenceQuery::ExistsAndRecurringAt(date) => {
+                    query.push(
+                        " AND e.recurrence::text <> 'null' AND (e.recurring_until IS NULL OR e.recurring_until >=",
+                    );
+                    query.push_bind(date);
+                    query.push(")");
+                }
+                RecurrenceQuery::Exists(exists) => {
+                    if exists {
+                        query.push(" AND e.recurrence::text <> 'null'");
+                    } else {
+                        query.push(" AND e.recurrence::text = 'null'");
+                    }
+                }
+            }
         }
 
         if let Some(metadata) = params.search_events_params.metadata {

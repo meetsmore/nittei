@@ -1,6 +1,6 @@
 use actix_web::{HttpRequest, HttpResponse, web};
 use nittei_api_structs::remove_integration::*;
-use nittei_domain::{IntegrationProvider, User};
+use nittei_domain::{ID, IntegrationProvider, User};
 use nittei_infra::NitteiContext;
 
 use crate::{
@@ -11,6 +11,22 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    delete,
+    tag = "User",
+    path = "/api/v1/user/{user_id}/oauth/{provider}",
+    summary = "Remove an integration (admin only)",
+    params(
+        ("user_id" = ID, Path, description = "The id of the user to remove the integration from"),
+        ("provider" = IntegrationProvider, Path, description = "The provider of the integration to remove"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn remove_integration_admin_controller(
     http_req: HttpRequest,
     mut path: web::Path<PathParams>,
@@ -30,6 +46,18 @@ pub async fn remove_integration_admin_controller(
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    delete,
+    tag = "User",
+    path = "/api/v1/me/oauth/{provider}",
+    summary = "Remove an integration",
+    params(
+        ("provider" = IntegrationProvider, Path, description = "The provider of the integration to remove"),
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn remove_integration_controller(
     http_req: HttpRequest,
     mut path: web::Path<PathParams>,

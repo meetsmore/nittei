@@ -1,14 +1,14 @@
 pub mod create_user;
-mod delete_user;
-mod get_me;
-mod get_multiple_users_freebusy;
-mod get_user;
-mod get_user_by_external_id;
-mod get_user_freebusy;
-mod get_users_by_meta;
-mod oauth_integration;
-mod remove_integration;
-mod update_user;
+pub mod delete_user;
+pub mod get_me;
+pub mod get_multiple_users_freebusy;
+pub mod get_user;
+pub mod get_user_by_external_id;
+pub mod get_user_freebusy;
+pub mod get_users_by_meta;
+pub mod oauth_integration;
+pub mod remove_integration;
+pub mod update_user;
 
 use actix_web::web;
 use create_user::create_user_controller;

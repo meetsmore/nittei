@@ -1,10 +1,11 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
+use utoipa::ToSchema;
 
 use crate::ID;
 
 /// Query parameters for searching on an ID (or list of IDs)
-#[derive(Deserialize, Serialize, TS, Debug, Clone)]
+#[derive(Deserialize, Serialize, TS, Debug, Clone, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[ts(export, rename = "IDQuery", rename_all = "camelCase")]
 pub enum IDQuery {

@@ -1,11 +1,11 @@
-mod account_search_events;
-mod add_account_integration;
-mod create_account;
-mod delete_account_webhook;
-mod get_account;
-mod remove_account_integration;
-mod set_account_pub_key;
-mod set_account_webhook;
+pub mod account_search_events;
+pub mod add_account_integration;
+pub mod create_account;
+pub mod delete_account_webhook;
+pub mod get_account;
+pub mod remove_account_integration;
+pub mod set_account_pub_key;
+pub mod set_account_webhook;
 
 use account_search_events::account_search_events_controller;
 use actix_web::web;
