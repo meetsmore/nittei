@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            DELETE FROM calendar_events AS e\n            WHERE e.service_uid = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "465978f4e10b6b64613cb773d93ce6d0fc132dd571220537ae6bc0ed0d47e7a8"
+}

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            DELETE FROM calendar_events AS c\n            WHERE c.event_uid = $1\n            RETURNING *\n            ",
+  "query": "\n                    SELECT e.* FROM calendar_events AS e\n                    WHERE e.calendar_uid  = any($1)\n                    AND (\n                        (e.start_time < $2 AND e.end_time > $3)\n                        OR\n                        (e.start_time < $2 AND e.recurrence::text <> 'null')\n                    )\n                    AND busy = true\n                    AND status = any($4)\n                    ",
   "describe": {
     "columns": [
       {
@@ -146,7 +146,10 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "UuidArray",
+        "Timestamptz",
+        "Timestamptz",
+        "TextArray"
       ]
     },
     "nullable": [
@@ -174,11 +177,11 @@
       true,
       true,
       true,
-      true,
-      true,
+      false,
+      false,
       true,
       true
     ]
   },
-  "hash": "501ef13a11ba2faacadd9a0dc484abdef01b81c9bba68250ed6ca2766be91adf"
+  "hash": "4ad1194e1750d863b0c21ca9237e24f78c1c51be8948f3c55e19d606c17ac330"
 }
