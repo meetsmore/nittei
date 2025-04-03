@@ -32,6 +32,9 @@ metadata:
   name: {{ include "nittei.fullname" . }}
   labels:
     {{- include "nittei.labels" . | nindent 4 }}
+    {{- with .Values.deploymentLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
