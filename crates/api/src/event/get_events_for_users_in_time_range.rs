@@ -12,6 +12,7 @@ use nittei_domain::{
     generate_map_exceptions_original_start_times,
 };
 use nittei_infra::NitteiContext;
+use nittei_utils::config::APP_CONFIG;
 use tracing::error;
 
 use crate::{
@@ -22,13 +23,25 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    post,
+    tag = "Event",
+    path = "/api/v1/events/timespan",
+    summary = "Get events for users in a time range (admin only)",
+    request_body(
+        content = GetEventsForUsersInTimeSpanBody,
+    ),
+    responses(
+        (status = 200, body = GetEventsForUsersInTimeSpanAPIResponse)
+    )
+)]
 /// Get events for users in a time range
 ///
 /// Optionally, it can generate the instances of the recurring events
 pub async fn get_events_for_users_in_time_range_controller(
     http_req: HttpRequest,
     ctx: web::Data<NitteiContext>,
-    Json(body): Json<RequestBody>,
+    Json(body): Json<GetEventsForUsersInTimeSpanBody>,
 ) -> Result<HttpResponse, NitteiError> {
     let account = protect_admin_route(&http_req, &ctx).await?;
 
@@ -44,7 +57,9 @@ pub async fn get_events_for_users_in_time_range_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|events| HttpResponse::Ok().json(APIResponse::new(events.events)))
+        .map(|events| {
+            HttpResponse::Ok().json(GetEventsForUsersInTimeSpanAPIResponse::new(events.events))
+        })
         .map_err(NitteiError::from)
 }
 
@@ -76,7 +91,7 @@ impl From<UseCaseError> for NitteiError {
         match e {
             UseCaseError::InternalError => Self::InternalError,
             UseCaseError::InvalidTimespan => {
-                Self::BadClientData("The provided start_ts and end_ts is invalid".into())
+                Self::BadClientData("The provided start_ts and end_ts are invalid".into())
             }
             UseCaseError::NotFound(entity, event_id) => Self::NotFound(format!(
                 "The {} with id: {}, was not found.",
@@ -96,7 +111,7 @@ impl UseCase for GetEventsForUsersInTimeRangeUseCase {
 
     async fn execute(&mut self, ctx: &NitteiContext) -> Result<UseCaseResponse, UseCaseError> {
         let timespan = TimeSpan::new(self.start_time, self.end_time);
-        if timespan.greater_than(ctx.config.event_instances_query_duration_limit) {
+        if timespan.greater_than(APP_CONFIG.event_instances_query_duration_limit) {
             return Err(UseCaseError::InvalidTimespan);
         }
 

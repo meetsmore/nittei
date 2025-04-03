@@ -1,12 +1,13 @@
 use nittei_domain::{CalendarEvent, CalendarEventReminder, EventInstance, ID, RRuleOptions};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
+use utoipa::ToSchema;
 use validator::{Validate, ValidationError};
 
 use crate::dtos::CalendarEventDTO;
 
 /// Calendar event response object
-#[derive(Deserialize, Serialize, TS)]
+#[derive(Deserialize, Serialize, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct CalendarEventResponse {
@@ -35,7 +36,7 @@ pub mod create_event {
 
     /// Validate that recurring_event_id and original_start_time are both provided or both omitted
     fn validate_recurring_event_id_and_original_start_time(
-        body: &RequestBody,
+        body: &CreateEventRequestBody,
     ) -> Result<(), ValidationError> {
         if (body.recurring_event_id.is_some() && body.original_start_time.is_none())
             || (body.recurring_event_id.is_none() && body.original_start_time.is_some())
@@ -48,11 +49,11 @@ pub mod create_event {
     }
 
     /// Request body for creating an event
-    #[derive(Serialize, Deserialize, Validate, TS)]
+    #[derive(Serialize, Deserialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "CreateEventRequestBody")]
+    #[ts(export)]
     #[validate(schema(function = "validate_recurring_event_id_and_original_start_time"))]
-    pub struct RequestBody {
+    pub struct CreateEventRequestBody {
         /// UUID of the calendar where the event will be created
         pub calendar_id: ID,
 
@@ -198,7 +199,7 @@ pub mod delete_many_events {
     use super::*;
 
     /// Request body for deleting many events (by event_ids and/or by external_ids)
-    #[derive(Serialize, Deserialize, Validate, TS)]
+    #[derive(Serialize, Deserialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "DeleteManyEventsRequestBody")]
     pub struct DeleteManyEventsRequestBody {
@@ -234,17 +235,17 @@ pub mod get_event_instances {
     }
 
     /// API response for getting event instances
-    #[derive(Deserialize, Serialize, TS)]
+    #[derive(Deserialize, Serialize, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "GetEventInstancesAPIResponse")]
-    pub struct APIResponse {
+    #[ts(export)]
+    pub struct GetEventInstancesAPIResponse {
         /// Calendar event
         pub event: CalendarEventDTO,
         /// List of event instances (occurrences)
         pub instances: Vec<EventInstance>,
     }
 
-    impl APIResponse {
+    impl GetEventInstancesAPIResponse {
         pub fn new(event: CalendarEvent, instances: Vec<EventInstance>) -> Self {
             Self {
                 event: CalendarEventDTO::new(event),
@@ -273,16 +274,16 @@ pub mod get_event_by_external_id {
         pub external_id: String,
     }
 
-    #[derive(Serialize, TS)]
+    #[derive(Serialize, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "GetEventsByExternalIdAPIResponse")]
-    pub struct APIResponse {
+    #[ts(export)]
+    pub struct GetEventsByExternalIdAPIResponse {
         /// Calendar events retrieved
         pub events: Vec<CalendarEventDTO>,
     }
 
     /// API response for getting events by calendars
-    impl APIResponse {
+    impl GetEventsByExternalIdAPIResponse {
         pub fn new(events: Vec<CalendarEventDTO>) -> Self {
             Self { events }
         }
@@ -309,8 +310,8 @@ pub mod get_events_by_calendars {
     /// Query parameters for getting events by calendars
     #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "GetEventsByCalendarsQueryParams")]
-    pub struct QueryParams {
+    #[ts(export)]
+    pub struct GetEventsByCalendarsQueryParams {
         /// Optional list of calendar UUIDs
         /// If not provided, all calendars will be used
         #[serde(default, deserialize_with = "deserialize_stringified_uuids_list")]
@@ -326,15 +327,15 @@ pub mod get_events_by_calendars {
     }
 
     /// API response for getting events by calendars
-    #[derive(Serialize, TS)]
+    #[derive(Serialize, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "GetEventsByCalendarsAPIResponse")]
-    pub struct APIResponse {
+    #[ts(export)]
+    pub struct GetEventsByCalendarsAPIResponse {
         /// List of calendar events retrieved
         pub events: Vec<EventWithInstancesDTO>,
     }
 
-    impl APIResponse {
+    impl GetEventsByCalendarsAPIResponse {
         pub fn new(events: Vec<EventWithInstances>) -> Self {
             Self {
                 events: events
@@ -354,10 +355,10 @@ pub mod get_events_for_users_in_time_range {
     use crate::dtos::EventWithInstancesDTO;
 
     /// Body for getting events for users in a time range
-    #[derive(Deserialize, Serialize, Validate, TS)]
+    #[derive(Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "GetEventsForUsersInTimeSpanBody")]
-    pub struct RequestBody {
+    #[ts(export)]
+    pub struct GetEventsForUsersInTimeSpanBody {
         /// List of user IDs
         #[validate(length(min = 1))]
         pub user_ids: Vec<ID>,
@@ -384,15 +385,15 @@ pub mod get_events_for_users_in_time_range {
     }
 
     /// API response for getting events by calendars
-    #[derive(Serialize, TS)]
+    #[derive(Serialize, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "GetEventsForUsersInTimeSpanAPIResponse")]
-    pub struct APIResponse {
+    #[ts(export)]
+    pub struct GetEventsForUsersInTimeSpanAPIResponse {
         /// List of calendar events retrieved
         pub events: Vec<EventWithInstancesDTO>,
     }
 
-    impl APIResponse {
+    impl GetEventsForUsersInTimeSpanAPIResponse {
         pub fn new(events: Vec<EventWithInstances>) -> Self {
             Self {
                 events: events
@@ -405,17 +406,17 @@ pub mod get_events_for_users_in_time_range {
 }
 
 pub mod search_events {
-    use nittei_domain::{CalendarEventSort, DateTimeQuery, IDQuery, StringQuery};
+    use nittei_domain::{CalendarEventSort, DateTimeQuery, IDQuery, RecurrenceQuery, StringQuery};
 
     use super::*;
 
     /// Request body for searching events for one user
-    #[derive(Deserialize, Serialize, Validate, TS)]
+    #[derive(Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase", deny_unknown_fields)]
-    #[ts(export, rename = "SearchEventsRequestBody")]
-    pub struct RequestBody {
+    #[ts(export)]
+    pub struct SearchEventsRequestBody {
         /// Filter to use for searching events
-        pub filter: RequestBodyFilter,
+        pub filter: SearchEventsRequestBodyFilter,
 
         /// Optional sort to use when searching events
         #[ts(optional)]
@@ -429,14 +430,10 @@ pub mod search_events {
 
     /// Part of the Request body for searching events for a user
     /// This is the filter
-    #[derive(Deserialize, Serialize, Validate, TS)]
+    #[derive(Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase", deny_unknown_fields)]
-    #[ts(
-        export,
-        rename = "SearchEventsRequestBodyFilter",
-        rename_all = "camelCase"
-    )]
-    pub struct RequestBodyFilter {
+    #[ts(export, rename_all = "camelCase")]
+    pub struct SearchEventsRequestBodyFilter {
         /// User ID
         pub user_id: ID,
 
@@ -483,8 +480,9 @@ pub mod search_events {
         pub original_start_time: Option<DateTimeQuery>,
 
         /// Optional filter on the recurrence (existence)
+        /// This allows to filter on the existence or not of a recurrence, or the existence of a recurrence at a specific date
         #[ts(optional)]
-        pub is_recurring: Option<bool>,
+        pub recurrence: Option<RecurrenceQuery>,
 
         /// Optional list of metadata key-value pairs
         #[ts(optional)]
@@ -500,15 +498,15 @@ pub mod search_events {
     }
 
     /// API response for searching events for one user
-    #[derive(Serialize, TS)]
+    #[derive(Serialize, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "SearchEventsAPIResponse")]
-    pub struct APIResponse {
+    #[ts(export)]
+    pub struct SearchEventsAPIResponse {
         /// List of calendar events retrieved
         pub events: Vec<CalendarEventDTO>,
     }
 
-    impl APIResponse {
+    impl SearchEventsAPIResponse {
         pub fn new(events: Vec<CalendarEventDTO>) -> Self {
             Self { events }
         }
@@ -529,15 +527,15 @@ pub mod get_events_by_meta {
     }
 
     /// API response for getting events by metadata
-    #[derive(Deserialize, Serialize, TS)]
+    #[derive(Deserialize, Serialize, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "GetEventsByMetaAPIResponse")]
-    pub struct APIResponse {
+    #[ts(export)]
+    pub struct GetEventsByMetaAPIResponse {
         /// List of calendar events retrieved
         pub events: Vec<CalendarEventDTO>,
     }
 
-    impl APIResponse {
+    impl GetEventsByMetaAPIResponse {
         pub fn new(events: Vec<CalendarEvent>) -> Self {
             Self {
                 events: events.into_iter().map(CalendarEventDTO::new).collect(),
@@ -554,7 +552,7 @@ pub mod update_event {
 
     /// Validate that recurring_event_id and original_start_time are both provided or both omitted
     fn validate_recurring_event_id_and_original_start_time(
-        body: &RequestBody,
+        body: &UpdateEventRequestBody,
     ) -> Result<(), ValidationError> {
         if (body.recurring_event_id.is_some() && body.original_start_time.is_none())
             || (body.recurring_event_id.is_none() && body.original_start_time.is_some())
@@ -567,11 +565,11 @@ pub mod update_event {
     }
 
     /// Request body for updating an event
-    #[derive(Deserialize, Serialize, Validate, TS)]
+    #[derive(Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "UpdateEventRequestBody")]
+    #[ts(export)]
     #[validate(schema(function = "validate_recurring_event_id_and_original_start_time"))]
-    pub struct RequestBody {
+    pub struct UpdateEventRequestBody {
         /// Optional start time of the event (UTC)
         #[serde(default)]
         #[ts(optional, type = "Date")]

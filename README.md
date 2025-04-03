@@ -123,6 +123,10 @@ cd clients/javascript/
 pnpm run test
 ```
 
+### OpenAPI UI
+
+The API also provides an OpenAPI UI (Swagger) that allows to see, and test, all endpoints. When running the API in your local environment, you can find it at <http://localhost:5000/swagger-ui/#/>.
+
 ### Additional tools
 
 You can install additional tools by running

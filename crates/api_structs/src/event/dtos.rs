@@ -9,9 +9,10 @@ use nittei_domain::{
 };
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
+use utoipa::ToSchema;
 
 /// Calendar event object
-#[derive(Debug, Deserialize, Serialize, Clone, TS)]
+#[derive(Debug, Deserialize, Serialize, Clone, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct CalendarEventDTO {
@@ -151,7 +152,7 @@ impl CalendarEventDTO {
 }
 
 /// Calendar event with instances
-#[derive(Serialize, Deserialize, Debug, Clone, TS)]
+#[derive(Serialize, Deserialize, Debug, Clone, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct EventWithInstancesDTO {

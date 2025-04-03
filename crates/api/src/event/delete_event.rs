@@ -23,6 +23,21 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    delete,
+    tag = "Event",
+    path = "/api/v1/user/events/{event_id}",
+    summary = "Delete an event (admin only)",
+    params(
+        ("event_id" = ID, Path, description = "The id of the event to delete"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn delete_event_admin_controller(
     http_req: HttpRequest,
     path_params: web::Path<PathParams>,
@@ -43,6 +58,18 @@ pub async fn delete_event_admin_controller(
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    delete,
+    tag = "Event",
+    path = "/api/v1/events/{event_id}",
+    summary = "Delete an event (user only)",
+    params(
+        ("event_id" = ID, Path, description = "The id of the event to delete"),
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn delete_event_controller(
     http_req: HttpRequest,
     path_params: web::Path<PathParams>,

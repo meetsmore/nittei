@@ -22,10 +22,28 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    post,
+    tag = "Event",
+    path = "/api/v1/user/{user_id}/events",
+    summary = "Create an event (admin only)",
+    params(
+        ("user_id" = ID, Path, description = "The id of the user to create the event for"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = CreateEventRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn create_event_admin_controller(
     http_req: HttpRequest,
     path_params: web::Path<PathParams>,
-    body: actix_web_validator::Json<RequestBody>,
+    body: actix_web_validator::Json<CreateEventRequestBody>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
     let account = protect_admin_route(&http_req, &ctx).await?;
@@ -63,9 +81,21 @@ pub async fn create_event_admin_controller(
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    post,
+    tag = "Event",
+    path = "/api/v1/events",
+    summary = "Create an event",
+    request_body(
+        content = CreateEventRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn create_event_controller(
     http_req: HttpRequest,
-    body: web::Json<RequestBody>,
+    body: web::Json<CreateEventRequestBody>,
     ctx: web::Data<NitteiContext>,
 ) -> Result<HttpResponse, NitteiError> {
     let (user, policy) = protect_route(&http_req, &ctx).await?;

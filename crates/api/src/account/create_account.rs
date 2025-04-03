@@ -1,5 +1,5 @@
 use actix_web::{HttpResponse, web};
-use nittei_api_structs::create_account::{APIResponse, RequestBody};
+use nittei_api_structs::create_account::{CreateAccountRequestBody, CreateAccountResponseBody};
 use nittei_domain::Account;
 use nittei_infra::NitteiContext;
 
@@ -8,14 +8,29 @@ use crate::{
     shared::usecase::{UseCase, execute},
 };
 
+#[utoipa::path(
+    post,
+    tag = "Account",
+    path = "/api/v1/account",
+    summary = "Create a new account",
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = CreateAccountRequestBody,
+    ),
+    responses(
+        (status = 200, description = "The account was created successfully", body = CreateAccountResponseBody)
+    )
+)]
 pub async fn create_account_controller(
     ctx: web::Data<NitteiContext>,
-    body: actix_web_validator::Json<RequestBody>,
+    body: actix_web_validator::Json<CreateAccountRequestBody>,
 ) -> Result<HttpResponse, NitteiError> {
     let usecase = CreateAccountUseCase { code: body.0.code };
     execute(usecase, &ctx)
         .await
-        .map(|account| HttpResponse::Created().json(APIResponse::new(account)))
+        .map(|account| HttpResponse::Created().json(CreateAccountResponseBody::new(account)))
         .map_err(NitteiError::from)
 }
 
