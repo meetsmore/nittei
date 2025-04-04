@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                    SELECT e.* FROM calendar_events AS e\n                    WHERE e.calendar_uid  = any($1)\n                    AND (\n                        (e.start_time <= $2 AND e.end_time >= $3)\n                        OR \n                        (e.start_time < $2 AND e.recurrence::text <> 'null')\n                    )\n                    ",
+  "query": "\n                    SELECT e.* FROM calendar_events AS e\n                    WHERE e.calendar_uid  = any($1)\n                    AND (\n                        (e.start_time < $2 AND e.end_time > $3)\n                        OR\n                        (e.start_time < $2 AND e.recurrence::text <> 'null' AND (e.recurring_until IS NULL OR e.recurring_until > $3))\n                    )\n                    AND busy = true\n                    AND status = any($4)\n                    ",
   "describe": {
     "columns": [
       {
@@ -148,7 +148,8 @@
       "Left": [
         "UuidArray",
         "Timestamptz",
-        "Timestamptz"
+        "Timestamptz",
+        "TextArray"
       ]
     },
     "nullable": [
@@ -182,5 +183,5 @@
       true
     ]
   },
-  "hash": "fac3fa55fe3835e97ddc20de76528ad7c037583770b0d64d94651349ea972385"
+  "hash": "0f49b3cd8c6e3f8a0b212bd04ccb61b3a2ddd198e11b43424fa9d18a82c403d0"
 }

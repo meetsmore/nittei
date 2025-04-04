@@ -494,7 +494,7 @@ impl IEventRepo for PostgresEventRepo {
                     AND (
                         (e.start_time <= $2 AND e.end_time >= $3)
                         OR
-                        (e.start_time < $2 AND e.recurrence::text <> 'null')
+                        (e.start_time < $2 AND e.recurrence::text <> 'null' AND (e.recurring_until IS NULL OR e.recurring_until > $3))
                     )
                     "#,
                 calendar_id.as_ref(),
@@ -554,7 +554,7 @@ impl IEventRepo for PostgresEventRepo {
                     AND (
                         (e.start_time <= $2 AND e.end_time >= $3)
                         OR 
-                        (e.start_time < $2 AND e.recurrence::text <> 'null')
+                        (e.start_time < $2 AND e.recurrence::text <> 'null' AND (e.recurring_until IS NULL OR e.recurring_until > $3))
                     )
                     "#,
             &calendar_ids,
@@ -609,7 +609,7 @@ impl IEventRepo for PostgresEventRepo {
             AND (
                 (e.start_time < $2 AND e.end_time > $3)
                 OR
-                (e.start_time < $2 AND e.recurrence::text <> 'null')
+                (e.start_time < $2 AND e.recurrence::text <> 'null' AND (e.recurring_until IS NULL OR e.recurring_until > $3))
             )
             AND busy = any($4)
             AND status = any($5)
@@ -667,7 +667,7 @@ impl IEventRepo for PostgresEventRepo {
                     AND (
                         (e.start_time < $2 AND e.end_time > $3)
                         OR
-                        (e.start_time < $2 AND e.recurrence::text <> 'null')
+                        (e.start_time < $2 AND e.recurrence::text <> 'null' AND (e.recurring_until IS NULL OR e.recurring_until > $3))
                     )
                     AND busy = true
                     AND status = any($4)
