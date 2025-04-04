@@ -1,7 +1,10 @@
+use std::sync::Arc;
+
 use reqwest::{Client, Method, RequestBuilder, Response, StatusCode};
 use serde::{Deserialize, Serialize};
 
 pub(crate) struct BaseClient {
+    client: Arc<Client>,
     address: String,
     api_key: Option<String>,
 }
@@ -25,6 +28,7 @@ pub type APIResponse<T> = Result<T, APIError>;
 impl BaseClient {
     pub fn new(address: String) -> Self {
         Self {
+            client: Arc::new(Client::new()),
             address,
             api_key: None,
         }
@@ -40,14 +44,13 @@ impl BaseClient {
         path: String,
         query: Option<Vec<(String, String)>>,
     ) -> RequestBuilder {
-        let client = Client::new();
         let prefix = "/api/v1/";
         let url = format!("{}{}{}", self.address, prefix, path);
         let builder = match method {
-            Method::GET => client.get(&url).query(&query.unwrap_or_default()),
-            Method::POST => client.post(&url),
-            Method::PUT => client.put(&url),
-            Method::DELETE => client.delete(&url),
+            Method::GET => self.client.get(&url).query(&query.unwrap_or_default()),
+            Method::POST => self.client.post(&url),
+            Method::PUT => self.client.put(&url),
+            Method::DELETE => self.client.delete(&url),
             _ => unimplemented!(),
         };
 

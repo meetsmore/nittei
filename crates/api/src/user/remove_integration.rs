@@ -1,4 +1,4 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, extract::Path, http::HeaderMap};
 use nittei_api_structs::remove_integration::*;
 use nittei_domain::{ID, IntegrationProvider, User};
 use nittei_infra::NitteiContext;
@@ -28,11 +28,11 @@ use crate::{
     )
 )]
 pub async fn remove_integration_admin_controller(
-    http_req: HttpRequest,
-    mut path: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    mut path: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let account = protect_admin_route(&headers, &ctx).await?;
     let user = account_can_modify_user(&account, &path.user_id, &ctx).await?;
 
     let usecase = OAuthIntegrationUseCase {
@@ -42,7 +42,7 @@ pub async fn remove_integration_admin_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|res| HttpResponse::Ok().json(APIResponse::new(res.user)))
+        .map(|res| Json(APIResponse::new(res.user)))
         .map_err(NitteiError::from)
 }
 
@@ -59,11 +59,11 @@ pub async fn remove_integration_admin_controller(
     )
 )]
 pub async fn remove_integration_controller(
-    http_req: HttpRequest,
-    mut path: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let (user, _) = protect_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    mut path: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let (user, _) = protect_route(&headers, &ctx).await?;
 
     let usecase = OAuthIntegrationUseCase {
         user,
@@ -72,7 +72,7 @@ pub async fn remove_integration_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|res| HttpResponse::Ok().json(APIResponse::new(res.user)))
+        .map(|res| Json(APIResponse::new(res.user)))
         .map_err(NitteiError::from)
 }
 

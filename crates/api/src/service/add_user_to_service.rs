@@ -1,4 +1,4 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, extract::Path, http::HeaderMap};
 use nittei_api_structs::add_user_to_service::*;
 use nittei_domain::{Account, ID, ServiceResource, TimePlan};
 use nittei_infra::NitteiContext;
@@ -12,12 +12,12 @@ use crate::{
 };
 
 pub async fn add_user_to_service_controller(
-    http_req: HttpRequest,
-    mut body: web::Json<RequestBody>,
-    mut path: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    mut path: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+    mut body: Json<RequestBody>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let account = protect_admin_route(&headers, &ctx).await?;
 
     let usecase = AddUserToServiceUseCase {
         account,
@@ -32,7 +32,7 @@ pub async fn add_user_to_service_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|res| HttpResponse::Ok().json(APIResponse::new(res.user)))
+        .map(|res| Json(APIResponse::new(res.user)))
         .map_err(NitteiError::from)
 }
 

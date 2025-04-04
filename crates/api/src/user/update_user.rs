@@ -1,4 +1,4 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, extract::Path, http::HeaderMap};
 use nittei_api_structs::update_user::*;
 use nittei_domain::{ID, User};
 use nittei_infra::NitteiContext;
@@ -30,23 +30,23 @@ use crate::{
     )
 )]
 pub async fn update_user_controller(
-    http_req: HttpRequest,
-    body: web::Json<UpdateUserRequestBody>,
-    mut path: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    mut path: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+    mut body: Json<UpdateUserRequestBody>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let account = protect_admin_route(&headers, &ctx).await?;
 
     let usecase = UpdateUserUseCase {
         account_id: account.id,
-        external_id: body.0.external_id,
+        external_id: body.0.external_id.take(),
         user_id: std::mem::take(&mut path.user_id),
-        metadata: body.0.metadata,
+        metadata: body.0.metadata.take(),
     };
 
     execute(usecase, &ctx)
         .await
-        .map(|usecase_res| HttpResponse::Ok().json(APIResponse::new(usecase_res.user)))
+        .map(|usecase_res| Json(APIResponse::new(usecase_res.user)))
         .map_err(NitteiError::from)
 }
 

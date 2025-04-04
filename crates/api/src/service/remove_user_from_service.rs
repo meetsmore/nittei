@@ -1,4 +1,4 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, extract::Path, http::HeaderMap};
 use nittei_api_structs::remove_user_from_service::*;
 use nittei_domain::{Account, ID};
 use nittei_infra::NitteiContext;
@@ -12,11 +12,11 @@ use crate::{
 };
 
 pub async fn remove_user_from_service_controller(
-    http_req: HttpRequest,
-    mut path: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    mut path: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let account = protect_admin_route(&headers, &ctx).await?;
 
     let usecase = RemoveUserFromServiceUseCase {
         account,
@@ -26,7 +26,7 @@ pub async fn remove_user_from_service_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|_usecase_res| HttpResponse::Ok().json(APIResponse::from("User removed from service")))
+        .map(|_usecase_res| Json(APIResponse::from("User removed from service")))
         .map_err(NitteiError::from)
 }
 

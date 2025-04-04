@@ -76,7 +76,7 @@ pub fn expand_all_events_and_remove_exceptions(
 
         let timespan = timespan.clone();
         let expanded_events =
-            expand_event_and_remove_exceptions(calendar, event, exceptions, timespan)?;
+            expand_event_and_remove_exceptions(calendar, event, exceptions, timespan.clone())?;
 
         all_expanded_events.extend(expanded_events);
     }

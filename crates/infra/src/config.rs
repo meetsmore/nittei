@@ -3,10 +3,11 @@ use tracing::info;
 
 #[derive(Debug, Clone)]
 pub struct Config {
+    /// The port to run the application on
+    pub port: usize,
+
     /// Secret code used to create new `Account`s
     pub create_account_secret_code: String,
-    /// Port for the application to run on
-    pub port: usize,
 }
 
 impl Config {
@@ -38,11 +39,10 @@ impl Config {
                 }
             }
         };
-        let port = nittei_utils::config::APP_CONFIG.http_port;
 
         Self {
+            port: nittei_utils::config::APP_CONFIG.http_port,
             create_account_secret_code,
-            port,
         }
     }
 }

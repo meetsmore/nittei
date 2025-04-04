@@ -1,4 +1,4 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, extract::Path, http::HeaderMap};
 use nittei_api_structs::remove_busy_calendar::*;
 use nittei_domain::{Account, BusyCalendarProvider, ID, IntegrationProvider};
 use nittei_infra::{BusyCalendarIdentifier, ExternalBusyCalendarIdentifier, NitteiContext};
@@ -12,12 +12,12 @@ use crate::{
 };
 
 pub async fn remove_busy_calendar_controller(
-    http_req: HttpRequest,
-    mut path: web::Path<PathParams>,
-    body: web::Json<RequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    mut path: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Json<RequestBody>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let account = protect_admin_route(&headers, &ctx).await?;
 
     let body = body.0;
 
@@ -25,12 +25,12 @@ pub async fn remove_busy_calendar_controller(
         account,
         service_id: std::mem::take(&mut path.service_id),
         user_id: std::mem::take(&mut path.user_id),
-        busy: body.busy,
+        busy: body.busy.clone(),
     };
 
     execute(usecase, &ctx)
         .await
-        .map(|_| HttpResponse::Ok().json(APIResponse::from("Busy calendar added to service user")))
+        .map(|_| Json(APIResponse::from("Busy calendar added to service user")))
         .map_err(NitteiError::from)
 }
 

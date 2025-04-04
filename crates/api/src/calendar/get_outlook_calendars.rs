@@ -1,4 +1,9 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{
+    Extension,
+    Json,
+    extract::{Path, Query},
+    http::HeaderMap,
+};
 use nittei_api_structs::get_outlook_calendars::{
     GetOutlookCalendarsAPIResponse,
     PathParams,
@@ -36,12 +41,12 @@ use crate::{
     )
 )]
 pub async fn get_outlook_calendars_admin_controller(
-    http_req: HttpRequest,
-    path: web::Path<PathParams>,
-    query: web::Query<QueryParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    path: Path<PathParams>,
+    query: Query<QueryParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<GetOutlookCalendarsAPIResponse>, NitteiError> {
+    let account = protect_admin_route(&headers, &ctx).await?;
     let user = account_can_modify_user(&account, &path.user_id, &ctx).await?;
 
     let usecase = GetOutlookCalendarsUseCase {
@@ -51,7 +56,7 @@ pub async fn get_outlook_calendars_admin_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|calendars| HttpResponse::Ok().json(GetOutlookCalendarsAPIResponse::new(calendars)))
+        .map(|calendars| Json(GetOutlookCalendarsAPIResponse::new(calendars)))
         .map_err(NitteiError::from)
 }
 
@@ -68,11 +73,11 @@ pub async fn get_outlook_calendars_admin_controller(
     )
 )]
 pub async fn get_outlook_calendars_controller(
-    http_req: HttpRequest,
-    query: web::Query<QueryParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let (user, _policy) = protect_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    query: Query<QueryParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<GetOutlookCalendarsAPIResponse>, NitteiError> {
+    let (user, _policy) = protect_route(&headers, &ctx).await?;
 
     let usecase = GetOutlookCalendarsUseCase {
         user,
@@ -81,7 +86,7 @@ pub async fn get_outlook_calendars_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|calendars| HttpResponse::Ok().json(GetOutlookCalendarsAPIResponse::new(calendars)))
+        .map(|calendars| Json(GetOutlookCalendarsAPIResponse::new(calendars)))
         .map_err(NitteiError::from)
 }
 

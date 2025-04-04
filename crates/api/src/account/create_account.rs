@@ -1,4 +1,5 @@
-use actix_web::{HttpResponse, web};
+use axum::{Extension, extract::Json, http::StatusCode};
+use axum_valid::Valid;
 use nittei_api_structs::create_account::{CreateAccountRequestBody, CreateAccountResponseBody};
 use nittei_domain::Account;
 use nittei_infra::NitteiContext;
@@ -24,13 +25,20 @@ use crate::{
     )
 )]
 pub async fn create_account_controller(
-    ctx: web::Data<NitteiContext>,
-    body: actix_web_validator::Json<CreateAccountRequestBody>,
-) -> Result<HttpResponse, NitteiError> {
-    let usecase = CreateAccountUseCase { code: body.0.code };
+    Extension(ctx): Extension<NitteiContext>,
+    body: Valid<Json<CreateAccountRequestBody>>,
+) -> Result<(StatusCode, Json<CreateAccountResponseBody>), NitteiError> {
+    let usecase = CreateAccountUseCase {
+        code: body.code.clone(),
+    };
     execute(usecase, &ctx)
         .await
-        .map(|account| HttpResponse::Created().json(CreateAccountResponseBody::new(account)))
+        .map(|account| {
+            (
+                StatusCode::CREATED,
+                Json(CreateAccountResponseBody::new(account)),
+            )
+        })
         .map_err(NitteiError::from)
 }
 

@@ -1,4 +1,4 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, extract::Path, http::HeaderMap};
 use nittei_api_structs::get_schedule::*;
 use nittei_domain::{ID, Schedule};
 use nittei_infra::NitteiContext;
@@ -12,11 +12,11 @@ use crate::{
 };
 
 pub async fn get_schedule_admin_controller(
-    http_req: HttpRequest,
-    path: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    path: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let account = protect_admin_route(&headers, &ctx).await?;
     let schedule = account_can_modify_schedule(&account, &path.schedule_id, &ctx).await?;
 
     let usecase = GetScheduleUseCase {
@@ -25,16 +25,16 @@ pub async fn get_schedule_admin_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|schedule| HttpResponse::Ok().json(APIResponse::new(schedule)))
+        .map(|schedule| Json(APIResponse::new(schedule)))
         .map_err(NitteiError::from)
 }
 
 pub async fn get_schedule_controller(
-    http_req: HttpRequest,
-    req: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let (_user, _policy) = protect_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    req: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let (_user, _policy) = protect_route(&headers, &ctx).await?;
 
     let usecase = GetScheduleUseCase {
         schedule_id: req.schedule_id.clone(),
@@ -42,7 +42,7 @@ pub async fn get_schedule_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|schedule| HttpResponse::Ok().json(APIResponse::new(schedule)))
+        .map(|schedule| Json(APIResponse::new(schedule)))
         .map_err(NitteiError::from)
 }
 

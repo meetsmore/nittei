@@ -14,8 +14,7 @@ use nittei_sdk::{
     RRuleOptions,
 };
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn test_create_event_validation() {
     let (app, sdk, address) = spawn_app().await;
     let res = sdk
@@ -78,8 +77,7 @@ async fn test_create_event_validation() {
     assert!(event.is_err());
 }
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn test_expand_daily_recurring_event() {
     let (app, sdk, address) = spawn_app().await;
     let res = sdk
@@ -174,8 +172,7 @@ async fn test_expand_daily_recurring_event() {
     }
 }
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn test_expand_weekly_recurring_event() {
     let (app, sdk, address) = spawn_app().await;
     let res = sdk
@@ -266,8 +263,7 @@ async fn test_expand_weekly_recurring_event() {
     assert_eq!(expanded_events.instances.len(), 2);
 }
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn test_expand_monthly_recurring_event() {
     let (app, sdk, address) = spawn_app().await;
     let res = sdk
@@ -353,8 +349,7 @@ async fn test_expand_monthly_recurring_event() {
     assert_eq!(expanded_events.instances.len(), 2);
 }
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn test_expand_recurring_event_and_remove_exceptions() {
     let (app, sdk, address) = spawn_app().await;
     let res = sdk

@@ -1,9 +1,9 @@
 use std::time::Duration;
 
-use actix_web::rt::time::{Instant, interval, sleep_until};
 use nittei_api_structs::send_event_reminders::AccountRemindersDTO;
 use nittei_infra::NitteiContext;
 use reqwest::Client;
+use tokio::time::{Instant, interval, sleep_until};
 use tracing::{debug, error};
 
 use crate::{

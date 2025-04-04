@@ -1,4 +1,10 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{
+    Extension,
+    Json,
+    extract::Path,
+    http::{HeaderMap, StatusCode},
+};
+use axum_valid::Valid;
 use chrono::{DateTime, TimeDelta, Utc};
 use nittei_api_structs::create_event::*;
 use nittei_domain::{
@@ -41,43 +47,43 @@ use crate::{
     )
 )]
 pub async fn create_event_admin_controller(
-    http_req: HttpRequest,
-    path_params: web::Path<PathParams>,
-    body: actix_web_validator::Json<CreateEventRequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    path_params: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Valid<Json<CreateEventRequestBody>>,
+) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
+    let account = protect_admin_route(&headers, &ctx).await?;
     let user = account_can_modify_user(&account, &path_params.user_id, &ctx).await?;
 
-    let body = body.0;
+    let mut body = body.0;
     let usecase = CreateEventUseCase {
-        external_parent_id: body.external_parent_id,
-        external_id: body.external_id,
-        title: body.title,
-        description: body.description,
-        event_type: body.event_type,
-        location: body.location,
-        status: body.status,
+        external_parent_id: body.external_parent_id.take(),
+        external_id: body.external_id.take(),
+        title: body.title.take(),
+        description: body.description.take(),
+        event_type: body.event_type.take(),
+        location: body.location.take(),
+        status: body.status.clone(),
         busy: body.busy.unwrap_or(false),
         all_day: body.all_day.unwrap_or(false),
         start_time: body.start_time,
         duration: body.duration,
         user,
-        calendar_id: body.calendar_id,
-        recurrence: body.recurrence,
-        exdates: body.exdates.unwrap_or_default(),
-        recurring_event_id: body.recurring_event_id,
+        calendar_id: body.calendar_id.clone(),
+        recurrence: body.recurrence.take(),
+        exdates: body.exdates.clone().unwrap_or_default(),
+        recurring_event_id: body.recurring_event_id.take(),
         original_start_time: body.original_start_time,
-        reminders: body.reminders,
-        service_id: body.service_id,
-        metadata: body.metadata,
+        reminders: body.reminders.clone(),
+        service_id: body.service_id.take(),
+        metadata: body.metadata.take(),
         created: body.created,
         updated: body.updated,
     };
 
     execute(usecase, &ctx)
         .await
-        .map(|event| HttpResponse::Created().json(APIResponse::new(event)))
+        .map(|event| (StatusCode::CREATED, Json(APIResponse::new(event))))
         .map_err(NitteiError::from)
 }
 
@@ -94,41 +100,41 @@ pub async fn create_event_admin_controller(
     )
 )]
 pub async fn create_event_controller(
-    http_req: HttpRequest,
-    body: web::Json<CreateEventRequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let (user, policy) = protect_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Valid<Json<CreateEventRequestBody>>,
+) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
+    let (user, policy) = protect_route(&headers, &ctx).await?;
 
-    let body = body.0;
+    let mut body = body.0;
     let usecase = CreateEventUseCase {
-        external_parent_id: body.external_parent_id,
-        external_id: body.external_id,
-        title: body.title,
-        description: body.description,
-        event_type: body.event_type,
-        location: body.location,
-        status: body.status,
+        external_parent_id: body.external_parent_id.take(),
+        external_id: body.external_id.take(),
+        title: body.title.take(),
+        description: body.description.take(),
+        event_type: body.event_type.take(),
+        location: body.location.take(),
+        status: body.status.clone(),
         busy: body.busy.unwrap_or(false),
         all_day: body.all_day.unwrap_or(false),
         start_time: body.start_time,
         duration: body.duration,
-        calendar_id: body.calendar_id,
-        recurrence: body.recurrence,
-        exdates: body.exdates.unwrap_or_default(),
-        recurring_event_id: body.recurring_event_id,
+        calendar_id: body.calendar_id.clone(),
+        recurrence: body.recurrence.take(),
+        exdates: body.exdates.clone().unwrap_or_default(),
+        recurring_event_id: body.recurring_event_id.take(),
         original_start_time: body.original_start_time,
         user,
-        reminders: body.reminders,
-        service_id: body.service_id,
-        metadata: body.metadata,
+        reminders: body.reminders.clone(),
+        service_id: body.service_id.take(),
+        metadata: body.metadata.take(),
         created: body.created,
         updated: body.updated,
     };
 
     execute_with_policy(usecase, &policy, &ctx)
         .await
-        .map(|event| HttpResponse::Created().json(APIResponse::new(event)))
+        .map(|event| (StatusCode::CREATED, Json(APIResponse::new(event))))
         .map_err(NitteiError::from)
 }
 
