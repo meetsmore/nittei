@@ -20,7 +20,17 @@ pub async fn get_account_controller(
     headers: HeaderMap,
     Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_admin_route(&headers, &ctx).await?;
+    let account_possibly_stale = protect_admin_route(&headers, &ctx).await?;
+
+    // Refetch the account, as the protect_admin_route uses a cached method
+    // Meaning that the account could have been deleted in the meantime (or updated)
+    let account = ctx
+        .repos
+        .accounts
+        .find(&account_possibly_stale.id)
+        .await
+        .map_err(|_| NitteiError::InternalError)?
+        .ok_or(NitteiError::NotFound("Account not found".to_string()))?;
 
     Ok(Json(APIResponse::new(account)))
 }
