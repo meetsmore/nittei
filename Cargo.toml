@@ -19,3 +19,8 @@ print_stdout = "deny"
 print_err = "deny"
 unwrap_used = "deny"
 expect_used = "deny"
+
+[profile.release]
+# Can improve slightly the performance at the cost of increased compile time
+# https://doc.rust-lang.org/cargo/reference/profiles.html#lto
+lto = "thin"
