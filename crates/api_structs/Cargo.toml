@@ -15,7 +15,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 validator = { version = "0.20", features = ["derive"] }
 chrono = { version = "0.4.19", features = ["serde"] }
-chrono-tz = { version = "0.9.0", features = ["serde"] }
+chrono-tz = { version = "0.10.3", features = ["serde"] }
 uuid = { version = "1.1.2", features = ["serde"] }
 ts-rs = { version = "10.1.0", features = [
   "uuid-impl",
