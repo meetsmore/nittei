@@ -53,7 +53,7 @@ pub struct AppConfig {
     /// This is used to avoid having clients ask for `CalendarEvents` in a
     /// timespan of several years which will take a lot of time to compute
     /// and is also not very useful information to query about anyways.
-    /// Default is 200 days
+    /// Default is 300 days
     /// Env var: NITTEI__EVENT_INSTANCES_QUERY_DURATION_LIMIT
     pub event_instances_query_duration_limit: i64,
 
@@ -208,7 +208,7 @@ fn parse_config() -> AppConfig {
         .expect("Failed to set default max_events_returned_by_search")
         .set_default(
             "event_instances_query_duration_limit",
-            200_i64 * 24 * 60 * 60 * 1000, // 200 days
+            300_i64 * 24 * 60 * 60 * 1000, // 300 days
         )
         .expect("Failed to set default event_instances_query_duration_limit")
         .set_default(
