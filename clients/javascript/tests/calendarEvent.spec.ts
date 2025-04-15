@@ -874,14 +874,14 @@ describe('CalendarEvent API', () => {
         duration: 1000,
         status: 'confirmed',
         busy: true,
-        startTime: new Date(1000),
+        startTime: new Date('2025-04-10T00:00:00.000Z'),
       })
       eventId1 = eventRes1.event.id
 
       const eventRes2 = await adminClient.events.create(userId, {
         calendarId,
         duration: 50,
-        startTime: new Date(50),
+        startTime: new Date('2025-04-11T00:00:00.000Z'),
         status: 'confirmed',
         busy: true,
         recurrence: {
@@ -895,8 +895,8 @@ describe('CalendarEvent API', () => {
     it('should be able to get events of users during timespan, with recurrence', async () => {
       const res = await adminClient.events.getEventsOfUsersDuringTimespan({
         userIds: [userId],
-        startTime: new Date(1000),
-        endTime: new Date(2000),
+        startTime: new Date('2025-04-09T00:00:00.000Z'),
+        endTime: new Date('2025-11-09T00:00:00.000Z'),
       })
 
       expect(res.events.length).toBe(2)
