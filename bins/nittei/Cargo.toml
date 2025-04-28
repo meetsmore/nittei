@@ -58,7 +58,7 @@ reqwest = { version = "0.12", default-features = false, features = [
 ] }
 
 chrono = "0.4.19"
-chrono-tz = "0.9.0"
+chrono-tz = "0.10.3"
 
 # Use the `jemallocator` crate to use jemalloc as the global allocator.
 tikv-jemallocator = "0.6"
