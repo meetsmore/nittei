@@ -67,20 +67,19 @@ pub mod add_user_to_service {
 
     #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "AddUserToServiceRequestBody")]
+    #[ts(export, rename = "AddUserToServiceRequestBody", optional_fields)]
     pub struct RequestBody {
         pub user_id: ID,
-        #[ts(optional)]
         pub availability: Option<TimePlan>,
         #[serde(default)]
-        #[ts(optional, type = "number")]
+        #[ts(type = "number")]
         pub buffer_after: Option<i64>,
         #[serde(default)]
-        #[ts(optional, type = "number")]
+        #[ts(type = "number")]
         pub buffer_before: Option<i64>,
-        #[ts(optional, type = "number")]
+        #[ts(type = "number")]
         pub closest_booking_time: Option<i64>,
-        #[ts(optional, type = "number")]
+        #[ts(type = "number")]
         pub furthest_booking_time: Option<i64>,
     }
 
@@ -262,9 +261,9 @@ pub mod get_service_bookingslots {
 
     #[derive(Debug, Deserialize, TS)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "GetServiceBookingSlotsQueryParams")]
+    #[ts(export, rename = "GetServiceBookingSlotsQueryParams", optional_fields)]
     pub struct QueryParams {
-        #[ts(optional, type = "string")]
+        #[ts(type = "string")]
         pub timezone: Option<Tz>,
         #[ts(type = "number")]
         pub duration: i64,
@@ -273,7 +272,6 @@ pub mod get_service_bookingslots {
         pub start_date: String,
         pub end_date: String,
         #[serde(default)]
-        #[ts(optional)]
         pub host_user_ids: Option<String>,
     }
 

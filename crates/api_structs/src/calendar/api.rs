@@ -421,16 +421,15 @@ pub mod update_calendar {
     /// Request body for updating a calendar's settings
     #[derive(Deserialize, Serialize, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export)]
+    #[ts(export, optional_fields)]
     pub struct UpdateCalendarSettings {
         /// Optional weekday for the calendar
         #[serde(default)]
-        #[ts(optional)]
         #[schema(value_type = Type::String)]
         pub week_start: Option<Weekday>,
 
         /// Optional timezone for the calendar (e.g. "America/New_York")
-        #[ts(type = "string", optional)]
+        #[ts(type = "string")]
         #[schema(value_type = Type::String)]
         pub timezone: Option<Tz>,
     }

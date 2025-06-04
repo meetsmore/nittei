@@ -13,9 +13,9 @@ nittei_domain = { workspace = true }
 nittei_infra = { workspace = true }
 nittei_utils = { workspace = true }
 
-axum = { version = "0.8.1", features = ["macros"] }
-axum-valid = { version = "0.23.0", features = ["into_json"] }
-tower-http = { version = "0.6.2", features = [
+axum = { version = "0.8", features = ["macros"] }
+axum-valid = { version = "0.23", features = ["into_json"] }
+tower-http = { version = "0.6", features = [
   "cors",
   "compression-full",
   "decompression-full",
@@ -23,7 +23,7 @@ tower-http = { version = "0.6.2", features = [
   "sensitive-headers",
   "catch-panic",
 ] }
-tower = "0.5.2"
+tower = "0.5"
 
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -34,28 +34,24 @@ reqwest = { version = "0.12", default-features = false, features = [
   "json",
   "rustls-tls",
 ] }
-utoipa = { version = "5.3.1", features = ["axum_extras", "uuid", "chrono"] }
-utoipa-axum = { version = "0.2.0" }
-utoipa-swagger-ui = { version = "9.0.0", features = ["axum", "vendored"] }
-# Temporary fix for https://github.com/juhaku/utoipa/issues/1345
-# The `=` enforces the version to be exactly 2.3.0
-# TODO: Remove this once the issue is fixed
-zip = "=2.3.0"
+utoipa = { version = "5.3", features = ["axum_extras", "uuid", "chrono"] }
+utoipa-axum = { version = "0.2" }
+utoipa-swagger-ui = { version = "9.0", features = ["axum", "vendored"] }
 
-async-trait = "0.1.83"
-rrule = "0.13.0"
-chrono = { version = "0.4.19", features = ["serde"] }
-chrono-tz = "0.9.0"
+async-trait = "0.1"
+rrule = "0.14"
+chrono = { version = "0.4.39", features = ["serde"] }
+chrono-tz = "0.10.1"
 anyhow = "1.0"
-jsonwebtoken = "7"
+jsonwebtoken = "9"
 thiserror = "2.0"
 tokio = { version = "1.0", features = ["full"] }
 
 opentelemetry = "0.28.0"
 opentelemetry-http = "0.28.0"
 tracing-opentelemetry = "0.29.0"
-tracing = "0.1.25"
-tracing-futures = "0.2.5"
+tracing = "0.1"
+tracing-futures = "0.2"
 
 [dev-dependencies]
 serial_test = "*"

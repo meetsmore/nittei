@@ -13,21 +13,21 @@ workspace = true
 nittei_utils = { workspace = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-rrule = "0.13.0"
-chrono = { version = "0.4.19", features = ["serde"] }
-chrono-tz = { version = "0.9.0", features = ["serde"] }
+rrule = "0.14"
+chrono = { version = "0.4.39", features = ["serde"] }
+chrono-tz = { version = "0.10.1", features = ["serde"] }
 anyhow = "1.0"
-url = "2.3.0"
-uuid = { version = "1.1.2", features = ["serde", "v4"] }
-jsonwebtoken = "7"
-thiserror = "1.0"
-itertools = "0.11.0"
-rand = "0.8.4"
-tracing = "0.1.25"
-ts-rs = { version = "10.1.0", features = [
+url = "2.3"
+uuid = { version = "1.1", features = ["serde", "v4"] }
+jsonwebtoken = "9"
+thiserror = "2.0"
+itertools = "0.14"
+rand = "0.9"
+tracing = "0.1"
+ts-rs = { version = "11.0", features = [
   "uuid-impl",
   "chrono-impl",
   "serde-json-impl",
 ] }
 validator = { version = "0.20", features = ["derive"] }
-utoipa = { version = "5.3.1", features = ["uuid", "chrono"] }
+utoipa = { version = "5.3", features = ["uuid", "chrono"] }
