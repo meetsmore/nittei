@@ -14,7 +14,7 @@ use utoipa::ToSchema;
 /// Calendar event object
 #[derive(Debug, Deserialize, Serialize, Clone, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
-#[ts(export, optional_fields)]
+#[ts(export)]
 pub struct CalendarEventDTO {
     /// UUID of the event
     pub id: ID,
@@ -54,6 +54,7 @@ pub struct CalendarEventDTO {
     ///
     /// Note that nothing prevents multiple events from having the same external ID
     /// This can also be a way to link events together
+    #[ts(optional)]
     pub external_id: Option<String>,
 
     /// Start time of the event (UTC)
@@ -80,12 +81,13 @@ pub struct CalendarEventDTO {
     pub created: DateTime<Utc>,
 
     /// Recurrence rule
+    #[ts(optional)]
     pub recurrence: Option<RRuleOptions>,
 
     /// Optional recurring until date
     /// This is the date until which the event will recur
     /// This is calculated by adding the duration to the until date
-    #[ts(type = "Date")]
+    #[ts(type = "Date", optional)]
     pub recurring_until: Option<DateTime<Utc>>,
 
     /// List of exclusion dates for the recurrence rule
@@ -101,7 +103,7 @@ pub struct CalendarEventDTO {
     /// Optional original start time of the event
     /// This is the original start time of the event before it was moved (only for recurring events)
     /// Default is None
-    #[ts(type = "Date")]
+    #[ts(type = "Date", optional)]
     pub original_start_time: Option<DateTime<Utc>>,
 
     /// UUID of the calendar
@@ -114,6 +116,7 @@ pub struct CalendarEventDTO {
     pub reminders: Vec<CalendarEventReminder>,
 
     /// Metadata (e.g. {"key": "value"})
+    #[ts(optional)]
     pub metadata: Option<serde_json::Value>,
 }
 

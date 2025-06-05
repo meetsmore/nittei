@@ -5,29 +5,24 @@ use utoipa::ToSchema;
 
 #[derive(Deserialize, Serialize, TS, Debug, Clone, ToSchema)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-#[ts(
-    export,
-    rename = "DateTimeQueryRange",
-    rename_all = "camelCase",
-    optional_fields
-)]
+#[ts(export, rename = "DateTimeQueryRange", rename_all = "camelCase")]
 pub struct DateTimeQueryRange {
     /// "greater than or equal" query (UTC)
-    #[ts(type = "Date")]
+    #[ts(type = "Date", optional)]
     pub gte: Option<DateTime<Utc>>,
 
     /// "less than or equal" query (UTC)
-    #[ts(type = "Date")]
+    #[ts(type = "Date", optional)]
     pub lte: Option<DateTime<Utc>>,
 
     /// "greater than" query (UTC)
     /// This is exclusive of the value
-    #[ts(type = "Date")]
+    #[ts(type = "Date", optional)]
     pub gt: Option<DateTime<Utc>>,
 
     /// "less than" query (UTC)
     /// This is exclusive of the value
-    #[ts(type = "Date")]
+    #[ts(type = "Date", optional)]
     pub lt: Option<DateTime<Utc>>,
 }
 
