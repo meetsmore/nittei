@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use itertools::Itertools;
-use rand::{Rng, thread_rng};
+use rand::{Rng, rng};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
@@ -62,8 +62,8 @@ impl RoundRobinAvailabilityAssignment {
             Some(least_recently_booked_members[0].0.clone())
         } else {
             // Just pick random
-            let mut rng = thread_rng();
-            let rand_user_index = rng.gen_range(0..least_recently_booked_members.len());
+            let mut rng = rng();
+            let rand_user_index = rng.random_range(0..least_recently_booked_members.len());
             Some(least_recently_booked_members[rand_user_index].0.clone())
         }
     }
@@ -110,8 +110,8 @@ impl RoundRobinEqualDistributionAssignment {
             Some(users_with_least_upcoming_bookings[0].user_id.clone())
         } else {
             // Just pick random
-            let mut rng = thread_rng();
-            let rand_user_index = rng.gen_range(0..users_with_least_upcoming_bookings.len());
+            let mut rng = rng();
+            let rand_user_index = rng.random_range(0..users_with_least_upcoming_bookings.len());
             Some(
                 users_with_least_upcoming_bookings[rand_user_index]
                     .user_id
@@ -291,7 +291,7 @@ mod tests {
                 user_events
             })
             .collect::<Vec<_>>();
-        events.shuffle(&mut thread_rng());
+        events.shuffle(&mut rng());
 
         let query = RoundRobinEqualDistributionAssignment { events, user_ids };
         assert!(query.clone().assign().is_some());

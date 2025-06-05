@@ -59,30 +59,30 @@ pub mod create_event {
 
         /// Optional title of the event
         #[serde(default)]
-        #[ts(optional)]
         #[validate(length(min = 1))]
+        #[ts(optional)]
         pub title: Option<String>,
 
         /// Optional description of the event
         #[serde(default)]
-        #[ts(optional)]
         #[validate(length(min = 1))]
+        #[ts(optional)]
         pub description: Option<String>,
 
         /// Optional type of the event
         /// e.g. "meeting", "reminder", "birthday"
         /// Default is None
         #[serde(default)]
-        #[ts(optional)]
         #[validate(length(min = 1))]
+        #[ts(optional)]
         pub event_type: Option<String>,
 
         /// Optional parent event ID
         /// This is useful for external applications that need to link Nittei's events to a wider data model (e.g. a project, an order, etc.)
         /// Example: If the event is a meeting, the parent ID could be the project ID (ObjectId, UUID or any other string)
         #[serde(default)]
-        #[ts(optional)]
         #[validate(length(min = 1))]
+        #[ts(optional)]
         pub external_parent_id: Option<String>,
 
         /// Optional external event ID
@@ -92,20 +92,20 @@ pub mod create_event {
         /// Note that nothing prevents multiple events from having the same external ID
         /// This can also be a way to link events together
         #[serde(default)]
-        #[ts(optional)]
         #[validate(length(min = 1))]
+        #[ts(optional)]
         pub external_id: Option<String>,
 
         /// Optional location of the event
         #[serde(default)]
-        #[ts(optional)]
         #[validate(length(min = 1))]
+        #[ts(optional)]
         pub location: Option<String>,
 
         /// Optional status of the event
         /// Default is "Tentative"
         #[serde(default)]
-        #[ts(optional, as = "Option<_>")]
+        #[ts(as = "Option<_>", optional)]
         pub status: CalendarEventStatus,
 
         /// Optional flag to indicate if the event is an all day event
@@ -135,7 +135,8 @@ pub mod create_event {
 
         /// Optional list of exclusion dates for the recurrence rule
         #[serde(default)]
-        #[ts(optional, type = "Array<Date>")]
+        #[ts(type = "Array<Date>")]
+        #[ts(optional)]
         pub exdates: Option<Vec<DateTime<Utc>>>,
 
         /// Optional recurring event ID
@@ -149,12 +150,12 @@ pub mod create_event {
         /// This is the original start time of the event before it was moved (only for recurring events)
         /// Default is None
         #[serde(default)]
-        #[ts(optional, type = "Date")]
+        #[ts(type = "Date", optional)]
         pub original_start_time: Option<DateTime<Utc>>,
 
         /// Optional list of reminders
         #[serde(default)]
-        #[ts(optional, as = "Option<_>")]
+        #[ts(as = "Option<_>", optional)]
         pub reminders: Vec<CalendarEventReminder>,
 
         /// Optional service UUID
@@ -171,13 +172,13 @@ pub mod create_event {
         /// Optional created date
         /// Defaults to the current date and time
         #[serde(default)]
-        #[ts(optional, type = "Date")]
+        #[ts(type = "Date", optional)]
         pub created: Option<DateTime<Utc>>,
 
         /// Optional updated date
         /// Defaults to the current date and time
         #[serde(default)]
-        #[ts(optional, type = "Date")]
+        #[ts(type = "Date", optional)]
         pub updated: Option<DateTime<Utc>>,
     }
 
@@ -572,54 +573,54 @@ pub mod update_event {
     pub struct UpdateEventRequestBody {
         /// Optional start time of the event (UTC)
         #[serde(default)]
-        #[ts(optional, type = "Date")]
+        #[ts(type = "Date", optional)]
         pub start_time: Option<DateTime<Utc>>,
 
         /// Optional title of the event
         #[serde(default)]
-        #[ts(optional)]
         #[validate(length(min = 1))]
+        #[ts(optional)]
         pub title: Option<String>,
 
         /// Optional description of the event
         #[serde(default)]
-        #[ts(optional)]
         #[validate(length(min = 1))]
+        #[ts(optional)]
         pub description: Option<String>,
 
         /// Optional type of the event
         /// e.g. "meeting", "reminder", "birthday"
         /// Default is None
         #[serde(default)]
-        #[ts(optional)]
         #[validate(length(min = 1))]
+        #[ts(optional)]
         pub event_type: Option<String>,
 
         /// Optional parent event ID
         /// This is useful for external applications that need to link Nittei's events to a wider data model (e.g. a project, an order, etc.)
         #[serde(default)]
-        #[ts(optional)]
         #[validate(length(min = 1))]
+        #[ts(optional)]
         pub parent_id: Option<String>,
 
         /// Optional external event ID
         /// This is useful for external applications that need to link Nittei's events to their own data models
         /// Default is None
         #[serde(default)]
-        #[ts(optional)]
         #[validate(length(min = 1))]
+        #[ts(optional)]
         pub external_id: Option<String>,
 
         /// Optional location of the event
         #[serde(default)]
-        #[ts(optional)]
         #[validate(length(min = 1))]
+        #[ts(optional)]
         pub location: Option<String>,
 
         /// Optional status of the event
         /// Default is "Tentative"
         #[serde(default)]
-        #[ts(optional, as = "Option<_>")]
+        #[ts(as = "Option<_>", optional)]
         pub status: Option<CalendarEventStatus>,
 
         /// Optional flag to indicate if the event is an all day event
@@ -630,7 +631,8 @@ pub mod update_event {
 
         /// Optional duration of the event in milliseconds
         #[serde(default)]
-        #[ts(optional, type = "number")]
+        #[ts(type = "number")]
+        #[ts(optional)]
         pub duration: Option<i64>,
 
         /// Optional busy flag
@@ -650,7 +652,8 @@ pub mod update_event {
 
         /// Optional list of exclusion dates for the recurrence rule
         #[serde(default)]
-        #[ts(optional, type = "Array<Date>")]
+        #[ts(type = "Array<Date>")]
+        #[ts(optional)]
         pub exdates: Option<Vec<DateTime<Utc>>>,
 
         /// Optional recurring event ID
@@ -664,7 +667,7 @@ pub mod update_event {
         /// This is the original start time of the event before it was moved (only for recurring events)
         /// Default is None
         #[serde(default)]
-        #[ts(optional, type = "Date")]
+        #[ts(type = "Date", optional)]
         pub original_start_time: Option<DateTime<Utc>>,
 
         /// Optional list of reminders
@@ -679,12 +682,12 @@ pub mod update_event {
 
         /// Optional created date to use to replace the current one
         #[serde(default)]
-        #[ts(optional, type = "Date")]
+        #[ts(type = "Date", optional)]
         pub created: Option<DateTime<Utc>>,
 
         /// Optional updated date to use to replace the current one
         #[serde(default)]
-        #[ts(optional, type = "Date")]
+        #[ts(type = "Date", optional)]
         pub updated: Option<DateTime<Utc>>,
     }
 

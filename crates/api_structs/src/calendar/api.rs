@@ -425,8 +425,8 @@ pub mod update_calendar {
     pub struct UpdateCalendarSettings {
         /// Optional weekday for the calendar
         #[serde(default)]
-        #[ts(optional)]
         #[schema(value_type = Type::String)]
+        #[ts(optional)]
         pub week_start: Option<Weekday>,
 
         /// Optional timezone for the calendar (e.g. "America/New_York")

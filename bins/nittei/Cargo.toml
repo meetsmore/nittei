@@ -28,7 +28,7 @@ nittei_utils = { workspace = true }
 
 anyhow = "1.0"
 
-axum = "0.8.1"
+axum = "0.8"
 
 tokio = { version = "1", features = ["full"] }
 
@@ -57,8 +57,8 @@ reqwest = { version = "0.12", default-features = false, features = [
     "rustls-tls",
 ] }
 
-chrono = "0.4.19"
-chrono-tz = "0.9.0"
+chrono = "0.4.39"
+chrono-tz = "0.10.1"
 
 # Use the `jemallocator` crate to use jemalloc as the global allocator.
 tikv-jemallocator = "0.6"

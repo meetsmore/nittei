@@ -87,7 +87,7 @@ pub struct CalendarEventDTO {
     /// Optional recurring until date
     /// This is the date until which the event will recur
     /// This is calculated by adding the duration to the until date
-    #[ts(optional, type = "Date")]
+    #[ts(type = "Date", optional)]
     pub recurring_until: Option<DateTime<Utc>>,
 
     /// List of exclusion dates for the recurrence rule
