@@ -5,11 +5,43 @@ use tikv_jemallocator::Jemalloc;
 use tokio::signal;
 use tracing::info;
 
+/// Use jemalloc as the global allocator
+/// This is a performance optimization for the application
 #[global_allocator]
 static GLOBAL: Jemalloc = Jemalloc;
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
+/// Main wraps the `run` function with a tokio runtime (flavor can be decided via the `NITTEI__TOKIO_RUNTIME_FLAVOR` env var)
+/// See crates/utils/src/config.rs for more details
+fn main() {
+    let runtime_flavor = nittei_utils::config::APP_CONFIG
+        .tokio_runtime_flavor
+        .as_str();
+    match runtime_flavor {
+        "current_thread" => {
+            #[allow(clippy::unwrap_used)]
+            let _ = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .unwrap()
+                .block_on(run());
+        }
+        "multi_thread" => {
+            #[allow(clippy::unwrap_used)]
+            let _ = tokio::runtime::Builder::new_multi_thread()
+                .enable_all()
+                .build()
+                .unwrap()
+                .block_on(run());
+        }
+        _ => {
+            eprintln!("Invalid tokio runtime flavor: {runtime_flavor}");
+            std::process::exit(1);
+        }
+    }
+}
+
+/// The main function that will be run by the tokio runtime
+async fn run() -> anyhow::Result<()> {
     // Initialize the subscriber for logging & tracing
     init_subscriber()?;
 
