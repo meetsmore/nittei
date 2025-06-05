@@ -126,6 +126,10 @@ fn get_tracer_datadog(
     service_version: String,
     service_env: String,
 ) -> anyhow::Result<SdkTracerProvider> {
+    let mut config = trace::Config::default();
+    config.sampler = Box::new(get_sampler());
+    config.id_generator = Box::new(RandomIdGenerator::default());
+
     let http_client = reqwest::blocking::Client::new();
     DatadogPipelineBuilder::default()
         .with_http_client(http_client)
@@ -134,13 +138,7 @@ fn get_tracer_datadog(
         .with_env(service_env)
         .with_api_version(ApiVersion::Version05)
         .with_agent_endpoint(datadog_endpoint)
-        .with_trace_config(
-            // Datadog lib is not yet adapted for the new way
-            #[allow(deprecated)]
-            trace::Config::default()
-                .with_sampler(get_sampler())
-                .with_id_generator(RandomIdGenerator::default()),
-        )
+        .with_trace_config(config)
         .install_batch()
         .map_err(|e| e.into())
 }
