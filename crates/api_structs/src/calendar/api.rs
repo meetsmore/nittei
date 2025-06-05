@@ -430,9 +430,8 @@ pub mod update_calendar {
         pub week_start: Option<Weekday>,
 
         /// Optional timezone for the calendar (e.g. "America/New_York")
-        #[ts(type = "string")]
+        #[ts(type = "string", optional)]
         #[schema(value_type = Type::String)]
-        #[ts(optional)]
         pub timezone: Option<Tz>,
     }
 

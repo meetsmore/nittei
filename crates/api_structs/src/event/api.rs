@@ -105,8 +105,7 @@ pub mod create_event {
         /// Optional status of the event
         /// Default is "Tentative"
         #[serde(default)]
-        #[ts(as = "Option<_>")]
-        #[ts(optional)]
+        #[ts(as = "Option<_>", optional)]
         pub status: CalendarEventStatus,
 
         /// Optional flag to indicate if the event is an all day event
@@ -156,8 +155,7 @@ pub mod create_event {
 
         /// Optional list of reminders
         #[serde(default)]
-        #[ts(as = "Option<_>")]
-        #[ts(optional)]
+        #[ts(as = "Option<_>", optional)]
         pub reminders: Vec<CalendarEventReminder>,
 
         /// Optional service UUID
@@ -622,8 +620,7 @@ pub mod update_event {
         /// Optional status of the event
         /// Default is "Tentative"
         #[serde(default)]
-        #[ts(as = "Option<_>")]
-        #[ts(optional)]
+        #[ts(as = "Option<_>", optional)]
         pub status: Option<CalendarEventStatus>,
 
         /// Optional flag to indicate if the event is an all day event
