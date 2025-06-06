@@ -7,6 +7,12 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize)]
 #[allow(unused)]
 pub struct AppConfig {
+    /// The tokio runtime flavor
+    /// Default is "multi_thread"
+    /// Can be "current_thread" or "multi_thread"
+    /// Env var: NITTEI__TOKIO_RUNTIME_FLAVOR
+    pub tokio_runtime_flavor: String,
+
     //// The host to bind the HTTP server to
     //// Default is 127.0.0.1
     //// Env var: NITTEI__HTTP_HOST
@@ -188,6 +194,8 @@ fn parse_config() -> AppConfig {
                 .try_parsing(true)
                 .separator("__"),
         )
+        .set_default("tokio_runtime_flavor", "multi_thread")
+        .expect("Failed to set default tokio_runtime_flavor")
         .set_default("http_host", "127.0.0.1")
         .expect("Failed to set default host")
         .set_default("http_port", 5000)
