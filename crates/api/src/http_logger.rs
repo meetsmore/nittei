@@ -75,7 +75,7 @@ impl<B> MakeSpan<B> for NitteiTracingSpanBuilder {
             url.path = %path,
             url.query = %query,
             url.scheme = request.uri().scheme_str().unwrap_or("http"),
-            otel.name = %format!("{} {}", http_method, path),
+            otel.name = %format!("{} {}", http_method, matched_path),
             otel.kind = ?opentelemetry::trace::SpanKind::Server,
             otel.status_code = Empty, // to set on response
             resource.name = %matched_path,
