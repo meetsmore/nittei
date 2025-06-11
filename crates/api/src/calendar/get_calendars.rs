@@ -15,7 +15,7 @@ use nittei_infra::NitteiContext;
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{protect_admin_route, protect_route},
+        auth::protect_route,
         usecase::{UseCase, execute},
     },
 };
@@ -37,13 +37,10 @@ use crate::{
     )
 )]
 pub async fn get_calendars_admin_controller(
-    headers: HeaderMap,
     query: Query<QueryParams>,
     path: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<GetCalendarsByUserAPIResponse>, NitteiError> {
-    let _account = protect_admin_route(&headers, &ctx).await?;
-
     let usecase = GetCalendarsUseCase {
         user_id: path.user_id.clone(),
         key: query.key.clone(),

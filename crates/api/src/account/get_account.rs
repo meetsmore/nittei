@@ -1,8 +1,9 @@
-use axum::{Extension, Json, http::HeaderMap};
+use axum::{Extension, Json};
 use nittei_api_structs::get_account::APIResponse;
+use nittei_domain::Account;
 use nittei_infra::NitteiContext;
 
-use crate::{error::NitteiError, shared::auth::protect_admin_route};
+use crate::error::NitteiError;
 
 #[utoipa::path(
     get,
@@ -17,11 +18,9 @@ use crate::{error::NitteiError, shared::auth::protect_admin_route};
     )
 )]
 pub async fn get_account_controller(
-    headers: HeaderMap,
     Extension(ctx): Extension<NitteiContext>,
+    Extension(account_possibly_stale): Extension<Account>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account_possibly_stale = protect_admin_route(&headers, &ctx).await?;
-
     // Refetch the account, as the protect_admin_route uses a cached method
     // Meaning that the account could have been deleted in the meantime (or updated)
     let account = ctx

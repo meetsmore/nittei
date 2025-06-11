@@ -1,16 +1,21 @@
-use axum::{Extension, Json, http::HeaderMap};
+use axum::{Extension, Json};
 use axum_valid::Valid;
 use nittei_api_structs::{dtos::CalendarEventDTO, search_events::*};
-use nittei_domain::{CalendarEventSort, DateTimeQuery, ID, IDQuery, RecurrenceQuery, StringQuery};
+use nittei_domain::{
+    Account,
+    CalendarEventSort,
+    DateTimeQuery,
+    ID,
+    IDQuery,
+    RecurrenceQuery,
+    StringQuery,
+};
 use nittei_infra::{NitteiContext, SearchEventsForUserParams, SearchEventsParams};
 use nittei_utils::config::APP_CONFIG;
 
 use crate::{
     error::NitteiError,
-    shared::{
-        auth::protect_admin_route,
-        usecase::{UseCase, execute},
-    },
+    shared::usecase::{UseCase, execute},
 };
 
 #[utoipa::path(
@@ -29,12 +34,10 @@ use crate::{
     )
 )]
 pub async fn search_events_controller(
-    headers: HeaderMap,
+    Extension(account): Extension<Account>,
     Extension(ctx): Extension<NitteiContext>,
     body: Valid<Json<SearchEventsRequestBody>>,
 ) -> Result<Json<SearchEventsAPIResponse>, NitteiError> {
-    let account = protect_admin_route(&headers, &ctx).await?;
-
     let mut body = body.0;
     let usecase = SearchEventsUseCase {
         account_id: account.id,

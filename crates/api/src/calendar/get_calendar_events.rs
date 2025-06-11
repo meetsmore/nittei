@@ -11,6 +11,7 @@ use nittei_api_structs::get_calendar_events::{
     QueryParams,
 };
 use nittei_domain::{
+    Account,
     Calendar,
     EventWithInstances,
     ID,
@@ -25,7 +26,7 @@ use tracing::error;
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_calendar, protect_admin_route, protect_route},
+        auth::{account_can_modify_calendar, protect_route},
         usecase::{UseCase, execute},
     },
 };
@@ -48,12 +49,11 @@ use crate::{
     )
 )]
 pub async fn get_calendar_events_admin_controller(
-    headers: HeaderMap,
+    Extension(account): Extension<Account>,
     query_params: Query<QueryParams>,
     path: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<GetCalendarEventsAPIResponse>, NitteiError> {
-    let account = protect_admin_route(&headers, &ctx).await?;
     let cal = account_can_modify_calendar(&account, &path.calendar_id, &ctx).await?;
 
     let usecase = GetCalendarEventsUseCase {

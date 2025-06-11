@@ -6,24 +6,23 @@ use axum::{
 };
 use chrono_tz::Tz;
 use nittei_api_structs::create_schedule::*;
-use nittei_domain::{ID, Schedule, ScheduleRule};
+use nittei_domain::{Account, ID, Schedule, ScheduleRule};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{Permission, account_can_modify_user, protect_admin_route, protect_route},
+        auth::{Permission, account_can_modify_user, protect_route},
         usecase::{PermissionBoundary, UseCase, execute, execute_with_policy},
     },
 };
 
 pub async fn create_schedule_admin_controller(
-    headers: HeaderMap,
+    Extension(account): Extension<Account>,
     path_params: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
     body_params: Json<RequestBody>,
 ) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
-    let account = protect_admin_route(&headers, &ctx).await?;
     let user = account_can_modify_user(&account, &path_params.user_id, &ctx).await?;
 
     let mut body_params = body_params.0;

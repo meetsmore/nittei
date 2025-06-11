@@ -8,6 +8,7 @@ use axum_valid::Valid;
 use chrono::{DateTime, TimeDelta, Utc};
 use nittei_api_structs::create_event::*;
 use nittei_domain::{
+    Account,
     CalendarEvent,
     CalendarEventReminder,
     CalendarEventStatus,
@@ -23,7 +24,7 @@ use crate::{
     error::NitteiError,
     event::subscribers::CreateSyncedEventsOnEventCreated,
     shared::{
-        auth::{Permission, account_can_modify_user, protect_admin_route, protect_route},
+        auth::{Permission, account_can_modify_user, protect_route},
         usecase::{PermissionBoundary, Subscriber, UseCase, execute, execute_with_policy},
     },
 };
@@ -47,12 +48,11 @@ use crate::{
     )
 )]
 pub async fn create_event_admin_controller(
-    headers: HeaderMap,
+    Extension(account): Extension<Account>,
     path_params: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
     body: Valid<Json<CreateEventRequestBody>>,
 ) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
-    let account = protect_admin_route(&headers, &ctx).await?;
     let user = account_can_modify_user(&account, &path_params.user_id, &ctx).await?;
 
     let mut body = body.0;

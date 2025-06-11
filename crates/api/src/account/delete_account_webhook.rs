@@ -1,12 +1,10 @@
-use axum::{Extension, Json, http::HeaderMap};
+use axum::{Extension, Json};
 use nittei_api_structs::delete_account_webhook::APIResponse;
+use nittei_domain::Account;
 use nittei_infra::NitteiContext;
 
 use super::set_account_webhook::SetAccountWebhookUseCase;
-use crate::{
-    error::NitteiError,
-    shared::{auth::protect_admin_route, usecase::execute},
-};
+use crate::{error::NitteiError, shared::usecase::execute};
 
 #[utoipa::path(
     delete,
@@ -21,11 +19,9 @@ use crate::{
     )
 )]
 pub async fn delete_account_webhook_controller(
-    headers: HeaderMap,
+    Extension(account): Extension<Account>,
     Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_admin_route(&headers, &ctx).await?;
-
     let usecase = SetAccountWebhookUseCase {
         account,
         webhook_url: None,

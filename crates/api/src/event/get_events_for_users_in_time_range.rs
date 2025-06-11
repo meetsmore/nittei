@@ -1,10 +1,11 @@
 use std::collections::HashMap;
 
-use axum::{Extension, Json, http::HeaderMap};
+use axum::{Extension, Json};
 use axum_valid::Valid;
 use chrono::{DateTime, Utc};
 use nittei_api_structs::get_events_for_users_in_time_range::*;
 use nittei_domain::{
+    Account,
     EventWithInstances,
     ID,
     TimeSpan,
@@ -17,10 +18,7 @@ use tracing::error;
 
 use crate::{
     error::NitteiError,
-    shared::{
-        auth::protect_admin_route,
-        usecase::{UseCase, execute},
-    },
+    shared::usecase::{UseCase, execute},
 };
 
 #[utoipa::path(
@@ -39,12 +37,10 @@ use crate::{
 ///
 /// Optionally, it can generate the instances of the recurring events
 pub async fn get_events_for_users_in_time_range_controller(
-    headers: HeaderMap,
+    Extension(account): Extension<Account>,
     Extension(ctx): Extension<NitteiContext>,
     body: Valid<Json<GetEventsForUsersInTimeSpanBody>>,
 ) -> Result<Json<GetEventsForUsersInTimeSpanAPIResponse>, NitteiError> {
-    let account = protect_admin_route(&headers, &ctx).await?;
-
     let usecase = GetEventsForUsersInTimeRangeUseCase {
         account_id: account.id,
         user_ids: body.user_ids.clone(),

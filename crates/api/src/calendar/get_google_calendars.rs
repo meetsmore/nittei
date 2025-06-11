@@ -10,6 +10,7 @@ use nittei_api_structs::get_google_calendars::{
     QueryParams,
 };
 use nittei_domain::{
+    Account,
     ID,
     User,
     providers::google::{GoogleCalendarAccessRole, GoogleCalendarListEntry},
@@ -19,7 +20,7 @@ use nittei_infra::{NitteiContext, google_calendar::GoogleCalendarProvider};
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_user, protect_admin_route, protect_route},
+        auth::{account_can_modify_user, protect_route},
         usecase::{UseCase, execute},
     },
 };
@@ -41,12 +42,11 @@ use crate::{
     )
 )]
 pub async fn get_google_calendars_admin_controller(
-    headers: HeaderMap,
+    Extension(account): Extension<Account>,
     path: Path<PathParams>,
     query: Query<QueryParams>,
     Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<GetGoogleCalendarsAPIResponse>, NitteiError> {
-    let account = protect_admin_route(&headers, &ctx).await?;
     let user = account_can_modify_user(&account, &path.user_id, &ctx).await?;
 
     let usecase = GetGoogleCalendarsUseCase {

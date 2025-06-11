@@ -1,23 +1,18 @@
-use axum::{Extension, Json, extract::Path, http::HeaderMap};
+use axum::{Extension, Json, extract::Path};
 use nittei_api_structs::remove_user_from_service::*;
 use nittei_domain::{Account, ID};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
-    shared::{
-        auth::protect_admin_route,
-        usecase::{UseCase, execute},
-    },
+    shared::usecase::{UseCase, execute},
 };
 
 pub async fn remove_user_from_service_controller(
-    headers: HeaderMap,
+    Extension(account): Extension<Account>,
     mut path: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_admin_route(&headers, &ctx).await?;
-
     let usecase = RemoveUserFromServiceUseCase {
         account,
         service_id: std::mem::take(&mut path.service_id),

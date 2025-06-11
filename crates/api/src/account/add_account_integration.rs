@@ -1,4 +1,4 @@
-use axum::{Extension, Json, http::HeaderMap};
+use axum::{Extension, Json};
 use axum_valid::Valid;
 use nittei_api_structs::add_account_integration::{APIResponse, AddAccountIntegrationRequestBody};
 use nittei_domain::{Account, AccountIntegration, IntegrationProvider};
@@ -6,10 +6,7 @@ use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
-    shared::{
-        auth::protect_admin_route,
-        usecase::{UseCase, execute},
-    },
+    shared::usecase::{UseCase, execute},
 };
 
 #[utoipa::path(
@@ -28,12 +25,10 @@ use crate::{
     )
 )]
 pub async fn add_account_integration_controller(
-    headers: HeaderMap,
+    Extension(account): Extension<Account>,
     Extension(ctx): Extension<NitteiContext>,
     body: Valid<Json<AddAccountIntegrationRequestBody>>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_admin_route(&headers, &ctx).await?;
-
     let body = body.0;
     let usecase = AddAccountIntegrationUseCase {
         account,

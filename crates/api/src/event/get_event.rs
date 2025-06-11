@@ -1,12 +1,12 @@
 use axum::{Extension, Json, extract::Path, http::HeaderMap};
 use nittei_api_structs::get_event::*;
-use nittei_domain::{CalendarEvent, ID};
+use nittei_domain::{Account, CalendarEvent, ID};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_event, protect_admin_route, protect_route},
+        auth::{account_can_modify_event, protect_route},
         usecase::{UseCase, execute},
     },
 };
@@ -27,11 +27,10 @@ use crate::{
     )
 )]
 pub async fn get_event_admin_controller(
-    headers: HeaderMap,
+    Extension(account): Extension<Account>,
     path_params: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_admin_route(&headers, &ctx).await?;
     let e = account_can_modify_event(&account, &path_params.event_id, &ctx).await?;
 
     let usecase = GetEventUseCase {
