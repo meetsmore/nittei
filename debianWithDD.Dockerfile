@@ -43,29 +43,16 @@ RUN ARCH_IN_URL=$(case "${ARCH}" in \
   tar xvf ddprof-linux.tar.xz && \
   mv ddprof/bin/ddprof /ddprof
 
-FROM debian:stable-slim
+# Use the distroless base image for final image
+FROM gcr.io/distroless/cc-debian12
 
 # Enable backtraces
 ENV RUST_BACKTRACE=1
 
-RUN apt update \
-  && apt install -y openssl ca-certificates \
-  && apt clean \
-  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+USER nonroot:nonroot
 
-ARG UID=10001
-RUN adduser \
-  --disabled-password \
-  --gecos "" \
-  --home "/nonexistent" \
-  --shell "/sbin/nologin" \
-  --no-create-home \
-  --uid "${UID}" \
-  appuser
-USER appuser
-
-COPY --from=builder /nittei /nittei
-COPY --from=builder /nittei-migrate /nittei-migrate
-COPY --from=builder /ddprof /ddprof
+COPY --from=builder --chown=nonroot:nonroot /nittei /nittei
+COPY --from=builder --chown=nonroot:nonroot /nittei-migrate /nittei-migrate
+COPY --from=builder --chown=nonroot:nonroot /ddprof /ddprof
 
 CMD ["/ddprof", "--preset", "cpu_live_heap", "/nittei"]

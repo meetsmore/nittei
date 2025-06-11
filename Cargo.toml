@@ -24,3 +24,5 @@ expect_used = "deny"
 # Can improve slightly the performance at the cost of increased compile time
 # https://doc.rust-lang.org/cargo/reference/profiles.html#lto
 lto = "thin"
+# https://doc.rust-lang.org/cargo/reference/profiles.html#codegen-units
+codegen-units = 1
