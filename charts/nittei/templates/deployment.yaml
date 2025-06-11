@@ -92,9 +92,7 @@ spec:
           command: {{ .Values.migrationInitContainer.command }}
           {{- else }}
           command:
-            - /bin/sh
-            - -c
-            - "exec /nittei-migrate"
+            - "/nittei-migrate"
           {{- end }}
       {{- end }}
       containers:
