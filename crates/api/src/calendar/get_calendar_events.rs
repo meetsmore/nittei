@@ -2,7 +2,6 @@ use axum::{
     Extension,
     Json,
     extract::{Path, Query},
-    http::HeaderMap,
 };
 use chrono::{DateTime, Utc};
 use nittei_api_structs::get_calendar_events::{
@@ -11,10 +10,12 @@ use nittei_api_structs::get_calendar_events::{
     QueryParams,
 };
 use nittei_domain::{
+    Account,
     Calendar,
     EventWithInstances,
     ID,
     TimeSpan,
+    User,
     expand_event_and_remove_exceptions,
     generate_map_exceptions_original_start_times,
 };
@@ -25,7 +26,7 @@ use tracing::error;
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_calendar, protect_admin_route, protect_route},
+        auth::{Policy, account_can_modify_calendar},
         usecase::{UseCase, execute},
     },
 };
@@ -48,12 +49,11 @@ use crate::{
     )
 )]
 pub async fn get_calendar_events_admin_controller(
-    headers: HeaderMap,
+    Extension(account): Extension<Account>,
     query_params: Query<QueryParams>,
     path: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<GetCalendarEventsAPIResponse>, NitteiError> {
-    let account = protect_admin_route(&headers, &ctx).await?;
     let cal = account_can_modify_calendar(&account, &path.calendar_id, &ctx).await?;
 
     let usecase = GetCalendarEventsUseCase {
@@ -84,13 +84,11 @@ pub async fn get_calendar_events_admin_controller(
     )
 )]
 pub async fn get_calendar_events_controller(
-    headers: HeaderMap,
+    Extension((user, _policy)): Extension<(User, Policy)>,
     query_params: Query<QueryParams>,
     path: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<GetCalendarEventsAPIResponse>, NitteiError> {
-    let (user, _policy) = protect_route(&headers, &ctx).await?;
-
     let usecase = GetCalendarEventsUseCase {
         user_id: user.id,
         calendar_id: path.calendar_id.clone(),

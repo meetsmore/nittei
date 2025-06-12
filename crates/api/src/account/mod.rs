@@ -9,7 +9,10 @@ pub mod set_account_webhook;
 
 use account_search_events::account_search_events_controller;
 use add_account_integration::add_account_integration_controller;
-use axum::routing::{delete, get, post, put};
+use axum::{
+    middleware::from_fn,
+    routing::{delete, get, post, put},
+};
 use create_account::create_account_controller;
 use delete_account_webhook::delete_account_webhook_controller;
 use get_account::get_account_controller;
@@ -18,11 +21,15 @@ use set_account_pub_key::set_account_pub_key_controller;
 use set_account_webhook::set_account_webhook_controller;
 use utoipa_axum::router::OpenApiRouter;
 
+use crate::shared::auth::protect_admin_route;
+
 /// Configure the routes for the account module
 pub fn configure_routes() -> OpenApiRouter {
-    OpenApiRouter::new()
-        // Create a new account
-        .route("/account", post(create_account_controller))
+    // No admin auth here, it has its own auth middleware
+    let create_account_route_router =
+        OpenApiRouter::new().route("/account", post(create_account_controller));
+
+    let account_route_router = OpenApiRouter::new()
         // Get the account details
         .route("/account", get(get_account_controller))
         // Set the public key for the account
@@ -49,4 +56,7 @@ pub fn configure_routes() -> OpenApiRouter {
             "/account/events/search",
             post(account_search_events_controller),
         )
+        .route_layer(from_fn(protect_admin_route));
+
+    create_account_route_router.merge(account_route_router)
 }

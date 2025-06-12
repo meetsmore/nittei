@@ -1,24 +1,19 @@
-use axum::{Extension, Json, extract::Path, http::HeaderMap};
+use axum::{Extension, Json, extract::Path};
 use nittei_api_structs::update_service::*;
-use nittei_domain::{ID, Service, ServiceMultiPersonOptions};
+use nittei_domain::{Account, ID, Service, ServiceMultiPersonOptions};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
-    shared::{
-        auth::protect_admin_route,
-        usecase::{UseCase, execute},
-    },
+    shared::usecase::{UseCase, execute},
 };
 
 pub async fn update_service_controller(
-    headers: HeaderMap,
+    Extension(account): Extension<Account>,
     mut path: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
     body: Json<RequestBody>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_admin_route(&headers, &ctx).await?;
-
     let mut body = body.0;
     let usecase = UpdateServiceUseCase {
         account_id: account.id,

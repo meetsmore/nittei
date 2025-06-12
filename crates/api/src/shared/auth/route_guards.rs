@@ -1,4 +1,4 @@
-use axum::http::HeaderMap;
+use axum::{Extension, extract::Request, http::HeaderMap, middleware::Next, response::Response};
 use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
 use nittei_domain::{Account, Calendar, CalendarEvent, ID, Schedule, User};
 use nittei_infra::NitteiContext;
@@ -121,8 +121,30 @@ fn decode_token(account: &Account, token: &str) -> anyhow::Result<Claims> {
 /// and if the token is valid and signed by the `Account`'s public key
 #[instrument(name = "auth::protect_route", skip_all)]
 pub async fn protect_route(
-    headers: &HeaderMap,
+    Extension(ctx): Extension<NitteiContext>,
+    headers: HeaderMap,
+    request: Request,
+    next: Next,
+) -> Result<Response, NitteiError> {
+    let (user, policy) = protect_route_inner(&ctx, &headers).await?;
+
+    // Inject the user and the policy into the request extensions
+    let mut request = request;
+    request.extensions_mut().insert((user, policy));
+
+    // Run the next middleware or the final handler
+    Ok(next.run(request).await)
+}
+
+/// Inner function for protecting routes of authenticated users (not admin)
+///
+/// This function will check if the request has a valid `Authorization` header
+/// and if the token is valid and signed by the `Account`'s public key
+///
+/// It's separated from the outer function to make it easier to test and to re-use the logic
+async fn protect_route_inner(
     ctx: &NitteiContext,
+    headers: &HeaderMap,
 ) -> Result<(User, Policy), NitteiError> {
     let account = get_client_account(headers, ctx)
         .await
@@ -137,47 +159,58 @@ pub async fn protect_route(
         .await
         .map_err(|_| NitteiError::InternalError)?;
 
-    match res {
-        Some(user_and_policy) => Ok(user_and_policy),
-        None => Err(NitteiError::Unauthorized(
-            "Unable to find user from the given credentials".into(),
-        )),
-    }
+    let (user, policy) = res.ok_or_else(|| {
+        NitteiError::Unauthorized("Unable to find user from the given credentials".into())
+    })?;
+
+    Ok((user, policy))
 }
 
-/// Protects admin routes
+/// Middleware for protecting admin routes
 ///
 /// This function will check if the request has a valid `x-api-key` header
 /// and if the token is the one stored in DB for the `Account`
 #[instrument(name = "auth::protect_admin_route", skip_all)]
 pub async fn protect_admin_route(
+    Extension(ctx): Extension<NitteiContext>,
+    headers: HeaderMap,
+    request: Request,
+    next: Next,
+) -> Result<Response, NitteiError> {
+    let account = protect_admin_route_inner(&headers, &ctx).await?;
+
+    // Inject the account into the request extensions
+    let mut request = request;
+    request.extensions_mut().insert(account);
+
+    // Run the next middleware or the final handler
+    Ok(next.run(request).await)
+}
+
+/// Inner function for protecting admin routes
+///
+/// This function will check if the request has a valid `x-api-key` header
+/// and if the token is the one stored in DB for the `Account`
+///
+/// It's separated from the outer function to make it easier to test and to re-use the logic
+async fn protect_admin_route_inner(
     headers: &HeaderMap,
     ctx: &NitteiContext,
 ) -> Result<Account, NitteiError> {
-    let api_key = match headers.get("x-api-key") {
-        Some(api_key) => match api_key.to_str() {
-            Ok(api_key) => api_key,
-            Err(_) => {
-                return Err(NitteiError::Unauthorized(
-                    "Malformed api key provided".to_string(),
-                ));
-            }
-        },
-        None => {
-            return Err(NitteiError::Unauthorized(
-                "Unable to find api-key in x-api-key header".to_string(),
-            ));
-        }
-    };
+    let api_key = headers
+        .get("x-api-key")
+        .and_then(|v| v.to_str().ok())
+        .ok_or_else(|| NitteiError::Unauthorized("Missing x-api-key header".into()))?;
 
-    ctx.repos
+    let account = ctx
+        .repos
         .accounts
         .find_by_apikey(api_key)
         .await
         .map_err(|_| NitteiError::InternalError)?
-        .ok_or_else(|| {
-            NitteiError::Unauthorized("Invalid api-key provided in x-api-key header".to_string())
-        })
+        .ok_or_else(|| NitteiError::Unauthorized("Invalid api-key".into()))?;
+
+    Ok(account)
 }
 
 /// Only checks which account the request is connected to.
@@ -204,7 +237,7 @@ pub async fn protect_public_account_route(
                 })
         }
         // No nittei-account header, then check if this is an admin client
-        None => protect_admin_route(headers, ctx).await,
+        None => protect_admin_route_inner(headers, ctx).await,
     }
 }
 
@@ -335,7 +368,7 @@ mod test {
             .header("Authorization", format!("Bearer {}", token))
             .body(Body::empty())
             .unwrap();
-        let res = protect_route(req.headers(), &ctx).await;
+        let res = protect_route_inner(&ctx, req.headers()).await;
         assert!(res.is_ok());
     }
 
@@ -354,7 +387,7 @@ mod test {
             .header("Authorization", format!("Bearer {}", token))
             .body(Body::empty())
             .unwrap();
-        let res = protect_route(req.headers(), &ctx).await;
+        let res = protect_route_inner(&ctx, req.headers()).await;
         assert!(res.is_err());
     }
 
@@ -371,7 +404,7 @@ mod test {
             .header("Authorization", format!("Bearer {}", token))
             .body(Body::empty())
             .unwrap();
-        let res = protect_route(req.headers(), &ctx).await;
+        let res = protect_route_inner(&ctx, req.headers()).await;
         assert!(res.is_err());
     }
 
@@ -387,7 +420,7 @@ mod test {
             .header("Authorization", format!("Bearer {}", token))
             .body(Body::empty())
             .unwrap();
-        let res = protect_route(req.headers(), &ctx).await;
+        let res = protect_route_inner(&ctx, req.headers()).await;
         assert!(res.is_err());
     }
 
@@ -404,7 +437,7 @@ mod test {
             .header("Authorization", format!("Bearer {}", token))
             .body(Body::empty())
             .unwrap();
-        let res = protect_route(req.headers(), &ctx).await;
+        let res = protect_route_inner(&ctx, req.headers()).await;
         assert!(res.is_err());
     }
 
@@ -418,7 +451,7 @@ mod test {
             .header("Authorization", format!("Bearer {}", token))
             .body(Body::empty())
             .unwrap();
-        let res = protect_route(req.headers(), &ctx).await;
+        let res = protect_route_inner(&ctx, req.headers()).await;
         assert!(res.is_err());
     }
 
@@ -434,7 +467,7 @@ mod test {
             .header("Authorization", "Bea")
             .body(Body::empty())
             .unwrap();
-        let res = protect_route(req.headers(), &ctx).await;
+        let res = protect_route_inner(&ctx, req.headers()).await;
         assert!(res.is_err());
     }
 
@@ -444,7 +477,7 @@ mod test {
         let _account = setup_account(&ctx).await;
 
         let req = Request::builder().body(Body::empty()).unwrap();
-        let res = protect_route(req.headers(), &ctx).await;
+        let res = protect_route_inner(&ctx, req.headers()).await;
         assert!(res.is_err());
     }
 }

@@ -2,7 +2,6 @@ use axum::{
     Extension,
     Json,
     extract::{Path, Query},
-    http::HeaderMap,
 };
 use chrono::TimeDelta;
 use futures::future::join_all;
@@ -47,7 +46,6 @@ use crate::{
 };
 
 pub async fn get_service_bookingslots_controller(
-    _headers: HeaderMap,
     query_params: Query<QueryParams>,
     mut path_params: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
