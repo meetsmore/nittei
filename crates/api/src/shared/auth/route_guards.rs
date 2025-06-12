@@ -128,7 +128,7 @@ pub async fn protect_route(
 ) -> Result<Response, NitteiError> {
     let (user, policy) = protect_route_inner(&ctx, &headers).await?;
 
-    // Inject the account into the request extensions
+    // Inject the user and the policy into the request extensions
     let mut request = request;
     request.extensions_mut().insert((user, policy));
 
