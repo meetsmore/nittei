@@ -91,7 +91,8 @@ pub fn configure_routes() -> OpenApiRouter {
         .route(
             "/events/{event_id}/instances",
             get(get_event_instances_controller),
-        );
+        )
+        .route_layer(axum::middleware::from_fn(auth::protect_route));
 
     OpenApiRouter::new().merge(admin_router).merge(user_router)
 }

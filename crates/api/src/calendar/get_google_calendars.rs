@@ -2,7 +2,6 @@ use axum::{
     Extension,
     Json,
     extract::{Path, Query},
-    http::HeaderMap,
 };
 use nittei_api_structs::get_google_calendars::{
     GetGoogleCalendarsAPIResponse,
@@ -20,7 +19,7 @@ use nittei_infra::{NitteiContext, google_calendar::GoogleCalendarProvider};
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_user, protect_route},
+        auth::{Policy, account_can_modify_user},
         usecase::{UseCase, execute},
     },
 };
@@ -73,12 +72,10 @@ pub async fn get_google_calendars_admin_controller(
     )
 )]
 pub async fn get_google_calendars_controller(
-    headers: HeaderMap,
+    Extension((user, _policy)): Extension<(User, Policy)>,
     query: Query<QueryParams>,
     Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<GetGoogleCalendarsAPIResponse>, NitteiError> {
-    let (user, _policy) = protect_route(&headers, &ctx).await?;
-
     let usecase = GetGoogleCalendarsUseCase {
         user,
         min_access_role: query.0.min_access_role,

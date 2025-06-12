@@ -58,17 +58,23 @@ pub fn configure_routes() -> OpenApiRouter {
     let user_router = OpenApiRouter::new()
         // Get the current user
         .route("/me", get(get_me_controller))
-        // Get freebusy for multiple users
-        // This is a POST route !
-        .route("/user/freebusy", post(get_multiple_freebusy_controller))
-        // Get freebusy for a specific user
-        .route("/user/{user_id}/freebusy", get(get_freebusy_controller))
         // Oauth
         .route("/me/oauth", post(oauth_integration_controller))
         .route(
             "/me/oauth/{provider}",
             delete(remove_integration_controller),
-        );
+        )
+        .route_layer(axum::middleware::from_fn(auth::protect_route));
 
-    OpenApiRouter::new().merge(admin_router).merge(user_router)
+    let public_router = OpenApiRouter::new()
+        // Get freebusy for a specific user
+        .route("/user/{user_id}/freebusy", get(get_freebusy_controller))
+        // Get freebusy for multiple users
+        // This is a POST route !
+        .route("/user/freebusy", post(get_multiple_freebusy_controller));
+
+    OpenApiRouter::new()
+        .merge(admin_router)
+        .merge(user_router)
+        .merge(public_router)
 }

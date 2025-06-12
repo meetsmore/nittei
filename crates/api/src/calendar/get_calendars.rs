@@ -2,20 +2,19 @@ use axum::{
     Extension,
     Json,
     extract::{Path, Query},
-    http::HeaderMap,
 };
 use nittei_api_structs::get_calendars_by_user::{
     GetCalendarsByUserAPIResponse,
     PathParams,
     QueryParams,
 };
-use nittei_domain::{Calendar, ID};
+use nittei_domain::{Calendar, ID, User};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::protect_route,
+        auth::Policy,
         usecase::{UseCase, execute},
     },
 };
@@ -67,12 +66,10 @@ pub async fn get_calendars_admin_controller(
 )]
 /// Get calendars for a user
 pub async fn get_calendars_controller(
-    headers: HeaderMap,
+    Extension((user, _policy)): Extension<(User, Policy)>,
     query: Query<QueryParams>,
     Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<GetCalendarsByUserAPIResponse>, NitteiError> {
-    let (user, _policy) = protect_route(&headers, &ctx).await?;
-
     let usecase = GetCalendarsUseCase {
         user_id: user.id.clone(),
         key: query.key.clone(),

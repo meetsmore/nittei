@@ -1,4 +1,4 @@
-use axum::{Extension, Json, extract::Path, http::HeaderMap};
+use axum::{Extension, Json, extract::Path};
 use nittei_api_structs::delete_event::*;
 use nittei_domain::{Account, CalendarEvent, ID, IntegrationProvider, User};
 use nittei_infra::{
@@ -12,7 +12,7 @@ use tracing::error;
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{Permission, account_can_modify_event, account_can_modify_user, protect_route},
+        auth::{Permission, Policy, account_can_modify_event, account_can_modify_user},
         usecase::{PermissionBoundary, UseCase, execute, execute_with_policy},
     },
 };
@@ -64,12 +64,10 @@ pub async fn delete_event_admin_controller(
     )
 )]
 pub async fn delete_event_controller(
-    headers: HeaderMap,
+    Extension((user, policy)): Extension<(User, Policy)>,
     path_params: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let (user, policy) = protect_route(&headers, &ctx).await?;
-
     let usecase = DeleteEventUseCase {
         user,
         event_id: path_params.event_id.clone(),

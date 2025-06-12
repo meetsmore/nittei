@@ -1,4 +1,4 @@
-use axum::{Extension, Json, extract::Path, http::HeaderMap};
+use axum::{Extension, Json, extract::Path};
 use axum_valid::Valid;
 use chrono::{DateTime, TimeDelta, Utc};
 use event::subscribers::SyncRemindersOnEventUpdated;
@@ -19,7 +19,7 @@ use crate::{
     error::NitteiError,
     event::{self, subscribers::UpdateSyncedEventsOnEventUpdated},
     shared::{
-        auth::{Permission, account_can_modify_event, account_can_modify_user, protect_route},
+        auth::{Permission, Policy, account_can_modify_event, account_can_modify_user},
         usecase::{PermissionBoundary, Subscriber, UseCase, execute, execute_with_policy},
     },
 };
@@ -99,13 +99,11 @@ pub async fn update_event_admin_controller(
     )
 )]
 pub async fn update_event_controller(
-    headers: HeaderMap,
     path_params: Path<PathParams>,
+    Extension((user, policy)): Extension<(User, Policy)>,
     Extension(ctx): Extension<NitteiContext>,
     body: Valid<Json<UpdateEventRequestBody>>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let (user, policy) = protect_route(&headers, &ctx).await?;
-
     let mut body = body.0;
     let usecase = UpdateEventUseCase {
         user,

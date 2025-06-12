@@ -1,4 +1,4 @@
-use axum::{Extension, Json, extract::Path, http::HeaderMap};
+use axum::{Extension, Json, extract::Path};
 use nittei_api_structs::get_schedule::*;
 use nittei_domain::{Account, ID, Schedule};
 use nittei_infra::NitteiContext;
@@ -6,7 +6,7 @@ use nittei_infra::NitteiContext;
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_schedule, protect_route},
+        auth::account_can_modify_schedule,
         usecase::{UseCase, execute},
     },
 };
@@ -29,12 +29,9 @@ pub async fn get_schedule_admin_controller(
 }
 
 pub async fn get_schedule_controller(
-    headers: HeaderMap,
     req: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let (_user, _policy) = protect_route(&headers, &ctx).await?;
-
     let usecase = GetScheduleUseCase {
         schedule_id: req.schedule_id.clone(),
     };

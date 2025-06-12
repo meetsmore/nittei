@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 /// claims. Every `UseCase` contains a list of `Permission`s that is required
 /// for a `User` to execute it, if the `User`s `Policy` is not authorized
 /// some of these `Permission`s the request will be rejected.
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Policy {
     /// `Permission`s allowed by the `Policy`
     allow: Option<Vec<Permission>>,
@@ -53,7 +53,7 @@ impl Policy {
 }
 
 /// `Permission` are different kind of actions that can be performed.
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum Permission {
     #[serde(rename = "*")]
     All,

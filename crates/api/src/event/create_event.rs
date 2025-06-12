@@ -1,9 +1,4 @@
-use axum::{
-    Extension,
-    Json,
-    extract::Path,
-    http::{HeaderMap, StatusCode},
-};
+use axum::{Extension, Json, extract::Path, http::StatusCode};
 use axum_valid::Valid;
 use chrono::{DateTime, TimeDelta, Utc};
 use nittei_api_structs::create_event::*;
@@ -24,7 +19,7 @@ use crate::{
     error::NitteiError,
     event::subscribers::CreateSyncedEventsOnEventCreated,
     shared::{
-        auth::{Permission, account_can_modify_user, protect_route},
+        auth::{Permission, Policy, account_can_modify_user},
         usecase::{PermissionBoundary, Subscriber, UseCase, execute, execute_with_policy},
     },
 };
@@ -100,12 +95,10 @@ pub async fn create_event_admin_controller(
     )
 )]
 pub async fn create_event_controller(
-    headers: HeaderMap,
+    Extension((user, policy)): Extension<(User, Policy)>,
     Extension(ctx): Extension<NitteiContext>,
     body: Valid<Json<CreateEventRequestBody>>,
 ) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
-    let (user, policy) = protect_route(&headers, &ctx).await?;
-
     let mut body = body.0;
     let usecase = CreateEventUseCase {
         external_parent_id: body.external_parent_id.take(),

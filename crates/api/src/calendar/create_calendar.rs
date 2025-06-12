@@ -1,20 +1,15 @@
-use axum::{
-    Extension,
-    Json,
-    extract::Path,
-    http::{HeaderMap, StatusCode},
-};
+use axum::{Extension, Json, extract::Path, http::StatusCode};
 use axum_valid::Valid;
 use chrono::Weekday;
 use chrono_tz::Tz;
 use nittei_api_structs::create_calendar::{APIResponse, CreateCalendarRequestBody, PathParams};
-use nittei_domain::{Account, Calendar, CalendarSettings, ID};
+use nittei_domain::{Account, Calendar, CalendarSettings, ID, User};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{Permission, account_can_modify_user, protect_route},
+        auth::{Permission, Policy, account_can_modify_user},
         usecase::{PermissionBoundary, UseCase, execute, execute_with_policy},
     },
 };
@@ -71,12 +66,10 @@ pub async fn create_calendar_admin_controller(
     )
 )]
 pub async fn create_calendar_controller(
-    headers: HeaderMap,
+    Extension((user, policy)): Extension<(User, Policy)>,
     Extension(ctx): Extension<NitteiContext>,
     mut body: Valid<Json<CreateCalendarRequestBody>>,
 ) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
-    let (user, policy) = protect_route(&headers, &ctx).await?;
-
     let usecase = CreateCalendarUseCase {
         user_id: user.id,
         account_id: user.account_id,
