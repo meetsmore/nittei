@@ -45,8 +45,6 @@ pub fn configure_routes() -> OpenApiRouter {
         .route("/user/{user_id}", put(update_user_controller))
         // Delete a specific user by id
         .route("/user/{user_id}", delete(delete_user_controller))
-        // Get freebusy for a specific user
-        .route("/user/{user_id}/freebusy", get(get_freebusy_controller))
         .route(
             "/user/{user_id}/oauth",
             post(oauth_integration_admin_controller),
@@ -63,6 +61,8 @@ pub fn configure_routes() -> OpenApiRouter {
         // Get freebusy for multiple users
         // This is a POST route !
         .route("/user/freebusy", post(get_multiple_freebusy_controller))
+        // Get freebusy for a specific user
+        .route("/user/{user_id}/freebusy", get(get_freebusy_controller))
         // Oauth
         .route("/me/oauth", post(oauth_integration_controller))
         .route(
