@@ -136,6 +136,12 @@ pub async fn protect_route(
     Ok(next.run(request).await)
 }
 
+/// Inner function for protecting routes of authenticated users (not admin)
+///
+/// This function will check if the request has a valid `Authorization` header
+/// and if the token is valid and signed by the `Account`'s public key
+///
+/// It's separated from the outer function to make it easier to test and to re-use the logic
 async fn protect_route_inner(
     ctx: &NitteiContext,
     headers: &HeaderMap,
