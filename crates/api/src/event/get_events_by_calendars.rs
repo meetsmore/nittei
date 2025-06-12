@@ -2,11 +2,11 @@ use axum::{
     Extension,
     Json,
     extract::{Path, Query},
-    http::HeaderMap,
 };
 use chrono::{DateTime, Utc};
 use nittei_api_structs::get_events_by_calendars::*;
 use nittei_domain::{
+    Account,
     EventWithInstances,
     ID,
     TimeSpan,
@@ -19,10 +19,7 @@ use tracing::error;
 
 use crate::{
     error::NitteiError,
-    shared::{
-        auth::protect_admin_route,
-        usecase::{UseCase, execute},
-    },
+    shared::usecase::{UseCase, execute},
 };
 
 #[utoipa::path(
@@ -44,13 +41,11 @@ use crate::{
     )
 )]
 pub async fn get_events_by_calendars_controller(
-    headers: HeaderMap,
+    Extension(account): Extension<Account>,
     path_params: Path<PathParams>,
     query: Query<GetEventsByCalendarsQueryParams>,
     Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<GetEventsByCalendarsAPIResponse>, NitteiError> {
-    let account = protect_admin_route(&headers, &ctx).await?;
-
     let calendar_ids = match &query.calendar_ids {
         Some(ids) => ids.clone(),
         None => vec![],

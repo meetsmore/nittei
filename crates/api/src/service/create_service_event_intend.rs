@@ -1,4 +1,4 @@
-use axum::{Extension, Json, extract::Path, http::HeaderMap};
+use axum::{Extension, Json, extract::Path};
 use chrono::{DateTime, Duration, TimeDelta, Utc};
 use get_service_bookingslots::GetServiceBookingSlotsUseCase;
 use nittei_api_structs::create_service_event_intend::*;
@@ -19,20 +19,14 @@ use tracing::warn;
 use super::get_service_bookingslots;
 use crate::{
     error::NitteiError,
-    shared::{
-        auth::protect_admin_route,
-        usecase::{UseCase, execute},
-    },
+    shared::usecase::{UseCase, execute},
 };
 
 pub async fn create_service_event_intend_controller(
-    headers: HeaderMap,
     mut path: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
     body: Json<RequestBody>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    protect_admin_route(&headers, &ctx).await?;
-
     let mut body = body.0;
     let usecase = CreateServiceEventIntendUseCase {
         service_id: std::mem::take(&mut path.service_id),

@@ -4,6 +4,7 @@ use chrono::{DateTime, TimeDelta, Utc};
 use event::subscribers::SyncRemindersOnEventUpdated;
 use nittei_api_structs::update_event::*;
 use nittei_domain::{
+    Account,
     CalendarEvent,
     CalendarEventReminder,
     CalendarEventStatus,
@@ -18,13 +19,7 @@ use crate::{
     error::NitteiError,
     event::{self, subscribers::UpdateSyncedEventsOnEventUpdated},
     shared::{
-        auth::{
-            Permission,
-            account_can_modify_event,
-            account_can_modify_user,
-            protect_admin_route,
-            protect_route,
-        },
+        auth::{Permission, account_can_modify_event, account_can_modify_user, protect_route},
         usecase::{PermissionBoundary, Subscriber, UseCase, execute, execute_with_policy},
     },
 };
@@ -48,12 +43,11 @@ use crate::{
     )
 )]
 pub async fn update_event_admin_controller(
-    headers: HeaderMap,
+    Extension(account): Extension<Account>,
     path_params: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
     body: Valid<Json<UpdateEventRequestBody>>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_admin_route(&headers, &ctx).await?;
     let e = account_can_modify_event(&account, &path_params.event_id, &ctx).await?;
     let user = account_can_modify_user(&account, &e.user_id, &ctx).await?;
 

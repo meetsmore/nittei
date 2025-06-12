@@ -1,14 +1,11 @@
-use axum::{Extension, Json, extract::Path, http::HeaderMap};
+use axum::{Extension, Json, extract::Path};
 use nittei_api_structs::update_user::*;
-use nittei_domain::{ID, User};
+use nittei_domain::{Account, ID, User};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
-    shared::{
-        auth::protect_admin_route,
-        usecase::{UseCase, execute},
-    },
+    shared::usecase::{UseCase, execute},
 };
 
 #[utoipa::path(
@@ -30,13 +27,11 @@ use crate::{
     )
 )]
 pub async fn update_user_controller(
-    headers: HeaderMap,
+    Extension(account): Extension<Account>,
     mut path: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
     mut body: Json<UpdateUserRequestBody>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_admin_route(&headers, &ctx).await?;
-
     let usecase = UpdateUserUseCase {
         account_id: account.id,
         external_id: body.0.external_id.take(),

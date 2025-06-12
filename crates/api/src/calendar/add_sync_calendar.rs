@@ -1,4 +1,4 @@
-use axum::{Extension, Json, extract::Path, http::HeaderMap};
+use axum::{Extension, Json, extract::Path};
 use axum_valid::Valid;
 use nittei_api_structs::add_sync_calendar::{
     APIResponse,
@@ -6,6 +6,7 @@ use nittei_api_structs::add_sync_calendar::{
     AddSyncCalendarRequestBody,
 };
 use nittei_domain::{
+    Account,
     ID,
     IntegrationProvider,
     SyncedCalendar,
@@ -21,7 +22,7 @@ use nittei_infra::{
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{Permission, account_can_modify_user, protect_admin_route},
+        auth::{Permission, account_can_modify_user},
         usecase::{PermissionBoundary, UseCase, execute},
     },
 };
@@ -45,12 +46,11 @@ use crate::{
     )
 )]
 pub async fn add_sync_calendar_admin_controller(
-    headers: HeaderMap,
+    Extension(account): Extension<Account>,
     path_params: Path<AddSyncCalendarPathParams>,
     Extension(ctx): Extension<NitteiContext>,
     body: Valid<Json<AddSyncCalendarRequestBody>>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_admin_route(&headers, &ctx).await?;
     let user = account_can_modify_user(&account, &path_params.user_id, &ctx).await?;
 
     let body = body.0;

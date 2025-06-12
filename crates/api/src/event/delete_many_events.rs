@@ -1,18 +1,14 @@
-use axum::{
-    Extension,
-    Json,
-    http::{HeaderMap, StatusCode},
-};
+use axum::{Extension, Json, http::StatusCode};
 use axum_valid::Valid;
 use futures::future::{self, try_join};
 use nittei_api_structs::delete_many_events::DeleteManyEventsRequestBody;
-use nittei_domain::ID;
+use nittei_domain::{Account, ID};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{Permission, protect_admin_route},
+        auth::Permission,
         usecase::{PermissionBoundary, UseCase, execute},
     },
 };
@@ -33,12 +29,10 @@ use crate::{
     )
 )]
 pub async fn delete_many_events_admin_controller(
-    headers: HeaderMap,
+    Extension(account): Extension<Account>,
     Extension(ctx): Extension<NitteiContext>,
     body: Valid<Json<DeleteManyEventsRequestBody>>,
 ) -> Result<StatusCode, NitteiError> {
-    let account = protect_admin_route(&headers, &ctx).await?;
-
     let usecase = DeleteManyEventsUseCase {
         account_uid: account.id,
         event_ids: body.event_ids.clone(),
