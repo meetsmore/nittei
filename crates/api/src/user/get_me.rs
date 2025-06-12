@@ -1,8 +1,8 @@
-use axum::{Extension, Json, http::HeaderMap};
+use axum::{Extension, Json};
 use nittei_api_structs::get_me::*;
-use nittei_infra::NitteiContext;
+use nittei_domain::User;
 
-use crate::{error::NitteiError, shared::auth::protect_route};
+use crate::{error::NitteiError, shared::auth::Policy};
 
 #[utoipa::path(
     get,
@@ -14,10 +14,7 @@ use crate::{error::NitteiError, shared::auth::protect_route};
     )
 )]
 pub async fn get_me_controller(
-    headers: HeaderMap,
-    Extension(ctx): Extension<NitteiContext>,
+    Extension((user, _policy)): Extension<(User, Policy)>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let (user, _) = protect_route(&headers, &ctx).await?;
-
     Ok(Json(APIResponse::new(user)))
 }

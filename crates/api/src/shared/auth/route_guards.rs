@@ -121,8 +121,24 @@ fn decode_token(account: &Account, token: &str) -> anyhow::Result<Claims> {
 /// and if the token is valid and signed by the `Account`'s public key
 #[instrument(name = "auth::protect_route", skip_all)]
 pub async fn protect_route(
-    headers: &HeaderMap,
+    Extension(ctx): Extension<NitteiContext>,
+    headers: HeaderMap,
+    request: Request,
+    next: Next,
+) -> Result<Response, NitteiError> {
+    let (user, policy) = protect_route_inner(&ctx, &headers).await?;
+
+    // Inject the account into the request extensions
+    let mut request = request;
+    request.extensions_mut().insert((user, policy));
+
+    // Run the next middleware or the final handler
+    Ok(next.run(request).await)
+}
+
+async fn protect_route_inner(
     ctx: &NitteiContext,
+    headers: &HeaderMap,
 ) -> Result<(User, Policy), NitteiError> {
     let account = get_client_account(headers, ctx)
         .await
@@ -137,12 +153,11 @@ pub async fn protect_route(
         .await
         .map_err(|_| NitteiError::InternalError)?;
 
-    match res {
-        Some(user_and_policy) => Ok(user_and_policy),
-        None => Err(NitteiError::Unauthorized(
-            "Unable to find user from the given credentials".into(),
-        )),
-    }
+    let (user, policy) = res.ok_or_else(|| {
+        NitteiError::Unauthorized("Unable to find user from the given credentials".into())
+    })?;
+
+    Ok((user, policy))
 }
 
 /// Middleware to require admin authentication
@@ -344,7 +359,7 @@ mod test {
             .header("Authorization", format!("Bearer {}", token))
             .body(Body::empty())
             .unwrap();
-        let res = protect_route(req.headers(), &ctx).await;
+        let res = protect_route_inner(&ctx, req.headers()).await;
         assert!(res.is_ok());
     }
 
@@ -363,7 +378,7 @@ mod test {
             .header("Authorization", format!("Bearer {}", token))
             .body(Body::empty())
             .unwrap();
-        let res = protect_route(req.headers(), &ctx).await;
+        let res = protect_route_inner(&ctx, req.headers()).await;
         assert!(res.is_err());
     }
 
@@ -380,7 +395,7 @@ mod test {
             .header("Authorization", format!("Bearer {}", token))
             .body(Body::empty())
             .unwrap();
-        let res = protect_route(req.headers(), &ctx).await;
+        let res = protect_route_inner(&ctx, req.headers()).await;
         assert!(res.is_err());
     }
 
@@ -396,7 +411,7 @@ mod test {
             .header("Authorization", format!("Bearer {}", token))
             .body(Body::empty())
             .unwrap();
-        let res = protect_route(req.headers(), &ctx).await;
+        let res = protect_route_inner(&ctx, req.headers()).await;
         assert!(res.is_err());
     }
 
@@ -413,7 +428,7 @@ mod test {
             .header("Authorization", format!("Bearer {}", token))
             .body(Body::empty())
             .unwrap();
-        let res = protect_route(req.headers(), &ctx).await;
+        let res = protect_route_inner(&ctx, req.headers()).await;
         assert!(res.is_err());
     }
 
@@ -427,7 +442,7 @@ mod test {
             .header("Authorization", format!("Bearer {}", token))
             .body(Body::empty())
             .unwrap();
-        let res = protect_route(req.headers(), &ctx).await;
+        let res = protect_route_inner(&ctx, req.headers()).await;
         assert!(res.is_err());
     }
 
@@ -443,7 +458,7 @@ mod test {
             .header("Authorization", "Bea")
             .body(Body::empty())
             .unwrap();
-        let res = protect_route(req.headers(), &ctx).await;
+        let res = protect_route_inner(&ctx, req.headers()).await;
         assert!(res.is_err());
     }
 
@@ -453,7 +468,7 @@ mod test {
         let _account = setup_account(&ctx).await;
 
         let req = Request::builder().body(Body::empty()).unwrap();
-        let res = protect_route(req.headers(), &ctx).await;
+        let res = protect_route_inner(&ctx, req.headers()).await;
         assert!(res.is_err());
     }
 }

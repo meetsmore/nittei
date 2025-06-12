@@ -2,7 +2,6 @@ use axum::{
     Extension,
     Json,
     extract::{Path, Query},
-    http::HeaderMap,
 };
 use nittei_api_structs::get_outlook_calendars::{
     GetOutlookCalendarsAPIResponse,
@@ -20,7 +19,7 @@ use nittei_infra::{NitteiContext, outlook_calendar::OutlookCalendarProvider};
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_user, protect_route},
+        auth::{Policy, account_can_modify_user},
         usecase::{UseCase, execute},
     },
 };
@@ -73,12 +72,10 @@ pub async fn get_outlook_calendars_admin_controller(
     )
 )]
 pub async fn get_outlook_calendars_controller(
-    headers: HeaderMap,
+    Extension((user, _policy)): Extension<(User, Policy)>,
     query: Query<QueryParams>,
     Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<GetOutlookCalendarsAPIResponse>, NitteiError> {
-    let (user, _policy) = protect_route(&headers, &ctx).await?;
-
     let usecase = GetOutlookCalendarsUseCase {
         user,
         min_access_role: query.0.min_access_role,

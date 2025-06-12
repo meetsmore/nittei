@@ -111,7 +111,8 @@ pub fn configure_routes() -> OpenApiRouter {
         .route(
             "/calendar/provider/outlook",
             get(get_outlook_calendars_controller),
-        );
+        )
+        .route_layer(axum::middleware::from_fn(auth::protect_route));
 
     OpenApiRouter::new().merge(admin_router).merge(user_router)
 }
