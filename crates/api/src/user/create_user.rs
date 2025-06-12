@@ -1,19 +1,12 @@
-use axum::{
-    Extension,
-    Json,
-    http::{HeaderMap, StatusCode},
-};
+use axum::{Extension, Json, http::StatusCode};
 use futures::{FutureExt, try_join};
 use nittei_api_structs::create_user::*;
-use nittei_domain::{ID, User};
+use nittei_domain::{Account, ID, User};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
-    shared::{
-        auth::protect_admin_route,
-        usecase::{UseCase, execute},
-    },
+    shared::usecase::{UseCase, execute},
 };
 
 #[utoipa::path(
@@ -29,12 +22,10 @@ use crate::{
     )
 )]
 pub async fn create_user_controller(
-    headers: HeaderMap,
+    Extension(account): Extension<Account>,
     Extension(ctx): Extension<NitteiContext>,
     mut body: Json<CreateUserRequestBody>,
 ) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
-    let account = protect_admin_route(&headers, &ctx).await?;
-
     let usecase = CreateUserUseCase {
         account_id: account.id,
         metadata: body.0.metadata.take(),

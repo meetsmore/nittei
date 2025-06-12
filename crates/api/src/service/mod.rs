@@ -28,6 +28,8 @@ use update_service::update_service_controller;
 use update_service_user::update_service_user_controller;
 use utoipa_axum::router::OpenApiRouter;
 
+use crate::shared::auth;
+
 pub fn configure_routes() -> OpenApiRouter {
     OpenApiRouter::new()
         .route("/service", post(create_service_controller))
@@ -67,4 +69,5 @@ pub fn configure_routes() -> OpenApiRouter {
             "/service/{service_id}/booking-intend",
             delete(remove_service_event_intend_controller),
         )
+        .route_layer(axum::middleware::from_fn(auth::protect_admin_route))
 }

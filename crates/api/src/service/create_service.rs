@@ -1,27 +1,18 @@
-use axum::{
-    Extension,
-    Json,
-    http::{HeaderMap, StatusCode},
-};
+use axum::{Extension, Json, http::StatusCode};
 use nittei_api_structs::create_service::*;
 use nittei_domain::{Account, Service, ServiceMultiPersonOptions};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
-    shared::{
-        auth::protect_admin_route,
-        usecase::{UseCase, execute},
-    },
+    shared::usecase::{UseCase, execute},
 };
 
 pub async fn create_service_controller(
-    headers: HeaderMap,
+    Extension(account): Extension<Account>,
     Extension(ctx): Extension<NitteiContext>,
     body: Json<RequestBody>,
 ) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
-    let account = protect_admin_route(&headers, &ctx).await?;
-
     let mut body = body.0;
     let usecase = CreateServiceUseCase {
         account,

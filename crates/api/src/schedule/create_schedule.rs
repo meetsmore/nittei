@@ -1,29 +1,23 @@
-use axum::{
-    Extension,
-    Json,
-    extract::Path,
-    http::{HeaderMap, StatusCode},
-};
+use axum::{Extension, Json, extract::Path, http::StatusCode};
 use chrono_tz::Tz;
 use nittei_api_structs::create_schedule::*;
-use nittei_domain::{ID, Schedule, ScheduleRule};
+use nittei_domain::{Account, ID, Schedule, ScheduleRule, User};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{Permission, account_can_modify_user, protect_admin_route, protect_route},
+        auth::{Permission, Policy, account_can_modify_user},
         usecase::{PermissionBoundary, UseCase, execute, execute_with_policy},
     },
 };
 
 pub async fn create_schedule_admin_controller(
-    headers: HeaderMap,
+    Extension(account): Extension<Account>,
     path_params: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
     body_params: Json<RequestBody>,
 ) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
-    let account = protect_admin_route(&headers, &ctx).await?;
     let user = account_can_modify_user(&account, &path_params.user_id, &ctx).await?;
 
     let mut body_params = body_params.0;
@@ -42,12 +36,10 @@ pub async fn create_schedule_admin_controller(
 }
 
 pub async fn create_schedule_controller(
-    headers: HeaderMap,
+    Extension((user, policy)): Extension<(User, Policy)>,
     Extension(ctx): Extension<NitteiContext>,
     body_params: Json<RequestBody>,
 ) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
-    let (user, policy) = protect_route(&headers, &ctx).await?;
-
     let mut body_params = body_params.0;
     let usecase = CreateScheduleUseCase {
         user_id: user.id,

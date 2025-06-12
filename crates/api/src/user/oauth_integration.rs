@@ -1,14 +1,14 @@
-use axum::{Extension, Json, extract::Path, http::HeaderMap};
+use axum::{Extension, Json, extract::Path};
 use axum_valid::Valid;
 use chrono::Utc;
 use nittei_api_structs::oauth_integration::*;
-use nittei_domain::{ID, IntegrationProvider, User, UserIntegration};
+use nittei_domain::{Account, ID, IntegrationProvider, User, UserIntegration};
 use nittei_infra::{CodeTokenRequest, NitteiContext, ProviderOAuth};
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_user, protect_admin_route, protect_route},
+        auth::{Policy, account_can_modify_user},
         usecase::{UseCase, execute},
     },
 };
@@ -32,12 +32,11 @@ use crate::{
     )
 )]
 pub async fn oauth_integration_admin_controller(
-    headers: HeaderMap,
+    Extension(account): Extension<Account>,
     path: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
     body: Valid<Json<OAuthIntegrationRequestBody>>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_admin_route(&headers, &ctx).await?;
     let user = account_can_modify_user(&account, &path.user_id, &ctx).await?;
 
     let usecase = OAuthIntegrationUseCase {
@@ -65,12 +64,10 @@ pub async fn oauth_integration_admin_controller(
     )
 )]
 pub async fn oauth_integration_controller(
-    headers: HeaderMap,
+    Extension((user, _policy)): Extension<(User, Policy)>,
     Extension(ctx): Extension<NitteiContext>,
     body: Json<OAuthIntegrationRequestBody>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let (user, _) = protect_route(&headers, &ctx).await?;
-
     let usecase = OAuthIntegrationUseCase {
         user,
         code: body.0.code.clone(),

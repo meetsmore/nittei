@@ -1,4 +1,4 @@
-use axum::{Extension, Json, extract::Path, http::HeaderMap};
+use axum::{Extension, Json, extract::Path};
 use nittei_api_structs::add_busy_calendar::*;
 use nittei_domain::{
     Account,
@@ -17,20 +17,15 @@ use nittei_infra::{
 
 use crate::{
     error::NitteiError,
-    shared::{
-        auth::protect_admin_route,
-        usecase::{UseCase, execute},
-    },
+    shared::usecase::{UseCase, execute},
 };
 
 pub async fn add_busy_calendar_controller(
-    headers: HeaderMap,
+    Extension(account): Extension<Account>,
     mut path: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
     body: Json<RequestBody>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_admin_route(&headers, &ctx).await?;
-
     let body = body.0;
     let usecase = AddBusyCalendarUseCase {
         account,

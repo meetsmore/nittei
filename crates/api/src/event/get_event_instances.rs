@@ -2,14 +2,15 @@ use axum::{
     Extension,
     Json,
     extract::{Path, Query},
-    http::HeaderMap,
 };
 use nittei_api_structs::get_event_instances::*;
 use nittei_domain::{
+    Account,
     CalendarEvent,
     EventInstance,
     ID,
     TimeSpan,
+    User,
     expand_event_and_remove_exceptions,
     generate_map_exceptions_original_start_times,
 };
@@ -20,7 +21,7 @@ use tracing::error;
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_event, protect_admin_route, protect_route},
+        auth::{Policy, account_can_modify_event},
         usecase::{UseCase, execute},
     },
 };
@@ -41,12 +42,11 @@ use crate::{
     )
 )]
 pub async fn get_event_instances_admin_controller(
-    headers: HeaderMap,
+    Extension(account): Extension<Account>,
     path_params: Path<PathParams>,
     query_params: Query<QueryParams>,
     Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<GetEventInstancesAPIResponse>, NitteiError> {
-    let account = protect_admin_route(&headers, &ctx).await?;
     let e = account_can_modify_event(&account, &path_params.event_id, &ctx).await?;
 
     let usecase = GetEventInstancesUseCase {
@@ -79,13 +79,11 @@ pub async fn get_event_instances_admin_controller(
     )
 )]
 pub async fn get_event_instances_controller(
-    headers: HeaderMap,
+    Extension((user, _policy)): Extension<(User, Policy)>,
     path_params: Path<PathParams>,
     query_params: Query<QueryParams>,
     Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<GetEventInstancesAPIResponse>, NitteiError> {
-    let (user, _policy) = protect_route(&headers, &ctx).await?;
-
     let usecase = GetEventInstancesUseCase {
         user_id: user.id.clone(),
         event_id: path_params.event_id.clone(),

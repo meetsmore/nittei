@@ -1,17 +1,15 @@
-use axum::{Extension, Json, extract::Query, http::HeaderMap};
+use axum::{Extension, Json, extract::Query};
 use nittei_api_structs::get_services_by_meta::*;
-use nittei_domain::Metadata;
+use nittei_domain::{Account, Metadata};
 use nittei_infra::{MetadataFindQuery, NitteiContext};
 
-use crate::{error::NitteiError, shared::auth::protect_admin_route};
+use crate::error::NitteiError;
 
 pub async fn get_services_by_meta_controller(
-    headers: HeaderMap,
+    Extension(account): Extension<Account>,
     query_params: Query<QueryParams>,
     Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let account = protect_admin_route(&headers, &ctx).await?;
-
     let query = MetadataFindQuery {
         account_id: account.id,
         metadata: Metadata::new_kv(query_params.0.key, query_params.0.value),
