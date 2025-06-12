@@ -156,6 +156,26 @@ pub async fn protect_admin_route(
     request: Request,
     next: Next,
 ) -> Result<Response, NitteiError> {
+    let account = protect_admin_route_inner(&headers, &ctx).await?;
+
+    // Inject the account into the request extensions
+    let mut request = request;
+    request.extensions_mut().insert(account);
+
+    // Run the next middleware or the final handler
+    Ok(next.run(request).await)
+}
+
+/// Inner function for protecting admin routes
+///
+/// This function will check if the request has a valid `x-api-key` header
+/// and if the token is the one stored in DB for the `Account`
+///
+/// It's separated from the outer function to make it easier to test and to re-use the logic
+async fn protect_admin_route_inner(
+    headers: &HeaderMap,
+    ctx: &NitteiContext,
+) -> Result<Account, NitteiError> {
     let api_key = headers
         .get("x-api-key")
         .and_then(|v| v.to_str().ok())
@@ -169,12 +189,7 @@ pub async fn protect_admin_route(
         .map_err(|_| NitteiError::InternalError)?
         .ok_or_else(|| NitteiError::Unauthorized("Invalid api-key".into()))?;
 
-    // Inject the account into the request extensions
-    let mut request = request;
-    request.extensions_mut().insert(account);
-
-    // Run the next middleware or the final handler
-    Ok(next.run(request).await)
+    Ok(account)
 }
 
 /// Only checks which account the request is connected to.
@@ -201,22 +216,7 @@ pub async fn protect_public_account_route(
                 })
         }
         // No nittei-account header, then check if this is an admin client
-        None => {
-            let api_key = headers
-                .get("x-api-key")
-                .and_then(|v| v.to_str().ok())
-                .ok_or_else(|| NitteiError::Unauthorized("Missing x-api-key header".into()))?;
-
-            let account = ctx
-                .repos
-                .accounts
-                .find_by_apikey(api_key)
-                .await
-                .map_err(|_| NitteiError::InternalError)?
-                .ok_or_else(|| NitteiError::Unauthorized("Invalid api-key".into()))?;
-
-            Ok(account)
-        }
+        None => protect_admin_route_inner(headers, ctx).await,
     }
 }
 
