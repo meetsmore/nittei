@@ -145,7 +145,10 @@ pub async fn protect_route(
     }
 }
 
-/// Middleware to require admin authentication
+/// Middleware for protecting admin routes
+///
+/// This function will check if the request has a valid `x-api-key` header
+/// and if the token is the one stored in DB for the `Account`
 #[instrument(name = "auth::protect_admin_route", skip_all)]
 pub async fn protect_admin_route(
     Extension(ctx): Extension<NitteiContext>,
