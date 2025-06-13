@@ -1,4 +1,7 @@
-use std::convert::{TryFrom, TryInto};
+use std::{
+    collections::HashMap,
+    convert::{TryFrom, TryInto},
+};
 
 use chrono::{DateTime, Utc};
 use nittei_domain::{
@@ -227,6 +230,75 @@ impl IEventRepo for PostgresEventRepo {
             );
         })?;
 
+        Ok(())
+    }
+
+    /// Insert many calendar events in a single query
+    #[instrument(name = "calendar_event::insert_many", fields(events = ?events))]
+    async fn insert_many(&self, events: &[CalendarEvent]) -> anyhow::Result<()> {
+        let mut query_builder = QueryBuilder::new(
+            "INSERT INTO calendar_events (event_uid, account_uid, user_uid, calendar_uid, external_parent_id, external_id, title, description, event_type, location, status, all_day, start_time, duration, end_time, busy, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata) ",
+        );
+
+        // Collect the recurrence for each event beforehand
+        // This allows to return an error if one of the recurrence is invalid
+        let map_of_events_to_recurrence = events
+            .iter()
+            .map(|e| {
+                let recurrence = if e.recurrence.is_some() {
+                    Some(serde_json::to_value(&e.recurrence).map_err(|e| {
+                        anyhow::anyhow!("Unable to convert recurrence to JSON: {:?}", e)
+                    })?)
+                } else {
+                    None
+                };
+                Ok((e.id.clone(), recurrence))
+            })
+            .collect::<Result<HashMap<_, _>, anyhow::Error>>()?;
+
+        // Build the query
+        query_builder.push_values(events, |mut b, new_event| {
+            let status: String = new_event.status.clone().into();
+            let recurrence = map_of_events_to_recurrence
+                .get(&new_event.id)
+                .unwrap_or(&None);
+
+            b.push_bind(new_event.id.as_ref())
+                .push_bind(new_event.account_id.as_ref())
+                .push_bind(new_event.user_id.as_ref())
+                .push_bind(new_event.calendar_id.as_ref())
+                .push_bind(new_event.external_parent_id.clone())
+                .push_bind(new_event.external_id.clone())
+                .push_bind(new_event.title.clone())
+                .push_bind(new_event.description.clone())
+                .push_bind(new_event.event_type.clone())
+                .push_bind(new_event.location.clone())
+                .push_bind(status)
+                .push_bind(new_event.all_day)
+                .push_bind(new_event.start_time)
+                .push_bind(new_event.duration)
+                .push_bind(new_event.end_time)
+                .push_bind(new_event.busy)
+                .push_bind(new_event.created.timestamp_millis())
+                .push_bind(new_event.updated.timestamp_millis())
+                .push_bind(recurrence)
+                .push_bind(new_event.recurring_until)
+                .push_bind(&new_event.exdates)
+                .push_bind(new_event.recurring_event_id.as_ref().map(|id| id.as_ref()))
+                .push_bind(new_event.original_start_time)
+                .push_bind(Json(&new_event.reminders))
+                .push_bind(new_event.service_id.as_ref().map(|id| id.as_ref()))
+                .push_bind(Json(&new_event.metadata));
+        });
+
+        let query = query_builder.build();
+
+        query.execute(&self.pool).await.inspect_err(|err| {
+            error!(
+                "Unable to insert calendar_events: {:?}. DB returned error: {:?}",
+                events, err
+            );
+        })?;
         Ok(())
     }
 

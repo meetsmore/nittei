@@ -242,13 +242,11 @@ impl UseCase for CreateManyEventsUseCase {
         }
 
         // Create events
-        for event in &events {
-            ctx.repos
-                .events
-                .insert(event)
-                .await
-                .map_err(|_| UseCaseError::StorageError)?;
-        }
+        ctx.repos
+            .events
+            .insert_many(&events)
+            .await
+            .map_err(|_| UseCaseError::StorageError)?;
 
         Ok(events)
     }

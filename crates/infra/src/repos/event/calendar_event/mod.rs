@@ -59,6 +59,7 @@ pub struct SearchEventsParams {
 #[async_trait::async_trait]
 pub trait IEventRepo: Send + Sync {
     async fn insert(&self, e: &CalendarEvent) -> anyhow::Result<()>;
+    async fn insert_many(&self, events: &[CalendarEvent]) -> anyhow::Result<()>;
     async fn save(&self, e: &CalendarEvent) -> anyhow::Result<()>;
     async fn find(&self, event_id: &ID) -> anyhow::Result<Option<CalendarEvent>>;
     async fn find_by_id_and_recurring_event_id(
