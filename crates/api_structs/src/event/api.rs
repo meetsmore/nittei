@@ -185,6 +185,38 @@ pub mod create_event {
     pub type APIResponse = CalendarEventResponse;
 }
 
+pub mod create_many_events {
+    use super::*;
+    use crate::create_event::CreateEventRequestBody;
+
+    #[derive(Serialize, Deserialize)]
+    pub struct PathParams {
+        pub user_id: ID,
+    }
+
+    #[derive(Serialize, Deserialize, Validate, TS, ToSchema)]
+    #[serde(rename_all = "camelCase")]
+    #[ts(export)]
+    pub struct CreateManyEventsRequestBody {
+        pub events: Vec<CreateEventRequestBody>,
+    }
+
+    #[derive(Serialize, Deserialize, TS, ToSchema)]
+    #[serde(rename_all = "camelCase")]
+    #[ts(export)]
+    pub struct CreateManyEventsAPIResponse {
+        pub events: Vec<CalendarEventDTO>,
+    }
+
+    impl CreateManyEventsAPIResponse {
+        pub fn new(events: Vec<CalendarEvent>) -> Self {
+            Self {
+                events: events.into_iter().map(CalendarEventDTO::new).collect(),
+            }
+        }
+    }
+}
+
 pub mod delete_event {
     use super::*;
 

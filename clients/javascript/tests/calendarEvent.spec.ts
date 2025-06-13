@@ -198,6 +198,31 @@ describe('CalendarEvent API', () => {
       expect(res.event.eventType).toBe('job')
     })
 
+    it('should be able to create many events', async () => {
+      const res = await adminClient.events.createMany(userId, {
+        events: [
+          {
+            calendarId,
+            duration: 1000,
+            startTime: new Date(1000),
+            eventType: 'job',
+          },
+          {
+            calendarId: calendarTokyoId,
+            duration: 1000,
+            startTime: new Date(1000),
+            eventType: 'job',
+          },
+        ],
+      })
+      expect(res.events).toBeDefined()
+      expect(res.events.length).toBe(2)
+      expect(res.events[0].calendarId).toBe(calendarId)
+      expect(res.events[0].duration).toBe(1000)
+      expect(res.events[1].calendarId).toBe(calendarTokyoId)
+      expect(res.events[1].duration).toBe(1000)
+    })
+
     it('should be able to create a recurring block event', async () => {
       const res = await adminClient.events.create(userId, {
         calendarId,

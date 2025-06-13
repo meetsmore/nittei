@@ -10,7 +10,10 @@ use super::{
     sync_event_reminders::{EventOperation, SyncEventRemindersTrigger, SyncEventRemindersUseCase},
     update_event::UpdateEventUseCase,
 };
-use crate::shared::usecase::{Subscriber, execute};
+use crate::{
+    event::create_many_events::CreateManyEventsUseCase,
+    shared::usecase::{Subscriber, execute},
+};
 
 pub struct CreateRemindersOnEventCreated;
 
@@ -26,6 +29,19 @@ impl Subscriber<CreateEventUseCase> for CreateRemindersOnEventCreated {
     }
 }
 
+#[async_trait::async_trait]
+impl Subscriber<CreateManyEventsUseCase> for CreateRemindersOnEventCreated {
+    async fn notify(&self, events: &Vec<CalendarEvent>, ctx: &nittei_infra::NitteiContext) {
+        for event in events {
+            let sync_event_reminders = SyncEventRemindersUseCase {
+                request: SyncEventRemindersTrigger::EventModified(event, EventOperation::Created),
+            };
+
+            // Sideeffect, ignore result
+            let _ = execute(sync_event_reminders, ctx).await;
+        }
+    }
+}
 pub struct SyncRemindersOnEventUpdated;
 
 #[async_trait::async_trait]
@@ -155,6 +171,15 @@ impl Subscriber<CreateEventUseCase> for CreateSyncedEventsOnEventCreated {
     }
 }
 
+#[async_trait::async_trait]
+impl Subscriber<CreateManyEventsUseCase> for CreateSyncedEventsOnEventCreated {
+    async fn notify(&self, events: &Vec<CalendarEvent>, ctx: &nittei_infra::NitteiContext) {
+        for event in events {
+            // Re-use the same subscriber for single events and many events
+            <Self as Subscriber<CreateEventUseCase>>::notify(self, event, ctx).await;
+        }
+    }
+}
 pub struct UpdateSyncedEventsOnEventUpdated;
 
 #[async_trait::async_trait]
