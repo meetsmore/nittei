@@ -1,5 +1,7 @@
 import { NitteiBaseClient } from './baseClient'
 import type {
+  CreateManyEventsAPIResponse,
+  CreateManyEventsRequestBody,
   DeleteManyEventsRequestBody,
   GetEventsByExternalIdAPIResponse,
   GetEventsForUsersInTimeSpanAPIResponse,
@@ -62,6 +64,26 @@ export class NitteiEventClient extends NitteiBaseClient {
 
     return {
       event: convertEventDates(res.event),
+    }
+  }
+
+  /**
+   * Create many events for a user
+   * @param userId - id of the user
+   * @param data - data of the events
+   * @returns - the created events
+   */
+  public async createMany(
+    userId: ID,
+    data: CreateManyEventsRequestBody
+  ): Promise<CreateManyEventsAPIResponse> {
+    const res = await this.post<CreateManyEventsAPIResponse>(
+      `/user/${userId}/events/create_many`,
+      data
+    )
+
+    return {
+      events: res.events.map(convertEventDates),
     }
   }
 

@@ -352,7 +352,7 @@ mod test {
     async fn rejects_invalid_calendar_id() {
         let TestContext {
             ctx,
-            calendar,
+            calendar: _,
             user,
         } = setup().await;
 
@@ -370,7 +370,7 @@ mod test {
         assert!(res.is_err());
         assert_eq!(
             res.unwrap_err(),
-            UseCaseError::NotFound(calendar.id.clone())
+            UseCaseError::NotFound(usecase.events[0].calendar_id.clone())
         );
     }
 }
