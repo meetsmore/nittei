@@ -105,11 +105,11 @@ impl TryFrom<EventRaw> for CalendarEvent {
     type Error = anyhow::Error;
 
     fn try_from(e: EventRaw) -> anyhow::Result<Self> {
-        let recurrence: Option<RRuleOptions> = match e.recurrence {
+        let recurrence: Option<RRuleOptions> = match e.recurrence_jsonb {
             Some(json) => serde_json::from_value(json)?,
             None => None,
         };
-        let reminders: Vec<CalendarEventReminder> = match e.reminders {
+        let reminders: Vec<CalendarEventReminder> = match e.reminders_jsonb {
             Some(json) => serde_json::from_value(json)?,
             None => Vec::new(),
         };
@@ -180,18 +180,16 @@ impl IEventRepo for PostgresEventRepo {
                 busy,
                 created,
                 updated,
-                recurrence,
                 recurrence_jsonb,
                 recurring_until,
                 exdates,
                 recurring_event_uid,
                 original_start_time,
-                reminders,
                 reminders_jsonb,
                 service_uid,
                 metadata
             )
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
             "#,
             e.id.as_ref(),
             e.account_id.as_ref(),
@@ -211,13 +209,11 @@ impl IEventRepo for PostgresEventRepo {
             e.busy,
             e.created.timestamp_millis(),
             e.updated.timestamp_millis(),
-            Json(&e.recurrence) as _,
             &recurrence as _,
             e.recurring_until,
             &e.exdates,
             e.recurring_event_id.as_ref().map(|id| id.as_ref()),
             e.original_start_time,
-            Json(&e.reminders) as _,
             Json(&e.reminders) as _,
             e.service_id.as_ref().map(|id| id.as_ref()),
             Json(&e.metadata) as _,
@@ -259,16 +255,14 @@ impl IEventRepo for PostgresEventRepo {
                 busy = $13,
                 created = $14,
                 updated = $15,
-                recurrence = $16,
-                recurrence_jsonb = $17,
-                recurring_until = $18,
-                exdates = $19,
-                recurring_event_uid = $20,
-                original_start_time = $21,
-                reminders = $22,
-                reminders_jsonb = $23,
-                service_uid = $24,
-                metadata = $25
+                recurrence_jsonb = $16,
+                recurring_until = $17,
+                exdates = $18,
+                recurring_event_uid = $19,
+                original_start_time = $20,
+                reminders_jsonb = $21,
+                service_uid = $22,
+                metadata = $23
             WHERE event_uid = $1
             "#,
             e.id.as_ref(),
@@ -286,13 +280,11 @@ impl IEventRepo for PostgresEventRepo {
             e.busy,
             e.created.timestamp_millis(),
             e.updated.timestamp_millis(),
-            Json(&e.recurrence) as _,
             &recurrence as _,
             e.recurring_until,
             &e.exdates,
             e.recurring_event_id.as_ref().map(|id| id.as_ref()),
             e.original_start_time,
-            Json(&e.reminders) as _,
             Json(&e.reminders) as _,
             e.service_id.as_ref().map(|id| id.as_ref()),
             Json(&e.metadata) as _,
@@ -494,7 +486,7 @@ impl IEventRepo for PostgresEventRepo {
                     AND (
                         (e.start_time <= $2 AND e.end_time >= $3)
                         OR
-                        (e.start_time < $2 AND e.recurrence::text <> 'null' AND (e.recurring_until IS NULL OR e.recurring_until > $3))
+                        (e.start_time < $2 AND e.recurrence_jsonb IS NOT NULL AND (e.recurring_until IS NULL OR e.recurring_until > $3))
                     )
                     "#,
                 calendar_id.as_ref(),
@@ -554,7 +546,7 @@ impl IEventRepo for PostgresEventRepo {
                     AND (
                         (e.start_time <= $2 AND e.end_time >= $3)
                         OR 
-                        (e.start_time < $2 AND e.recurrence::text <> 'null' AND (e.recurring_until IS NULL OR e.recurring_until > $3))
+                        (e.start_time < $2 AND e.recurrence_jsonb IS NOT NULL AND (e.recurring_until IS NULL OR e.recurring_until > $3))
                     )
                     "#,
             &calendar_ids,
@@ -609,7 +601,7 @@ impl IEventRepo for PostgresEventRepo {
             AND (
                 (e.start_time < $2 AND e.end_time > $3)
                 OR
-                (e.start_time < $2 AND e.recurrence::text <> 'null' AND (e.recurring_until IS NULL OR e.recurring_until > $3))
+                (e.start_time < $2 AND e.recurrence_jsonb IS NOT NULL AND (e.recurring_until IS NULL OR e.recurring_until > $3))
             )
             AND busy = any($4)
             AND status = any($5)
@@ -667,7 +659,7 @@ impl IEventRepo for PostgresEventRepo {
                     AND (
                         (e.start_time < $2 AND e.end_time > $3)
                         OR
-                        (e.start_time < $2 AND e.recurrence::text <> 'null' AND (e.recurring_until IS NULL OR e.recurring_until > $3))
+                        (e.start_time < $2 AND e.recurrence_jsonb IS NOT NULL AND (e.recurring_until IS NULL OR e.recurring_until > $3))
                     )
                     AND busy = true
                     AND status = any($4)
@@ -774,16 +766,16 @@ impl IEventRepo for PostgresEventRepo {
             match recurrence {
                 RecurrenceQuery::ExistsAndRecurringAt(date) => {
                     query.push(
-                        " AND e.recurrence::text <> 'null' AND (e.recurring_until IS NULL OR e.recurring_until >= ",
+                        " AND e.recurrence_jsonb IS NOT NULL AND (e.recurring_until IS NULL OR e.recurring_until >= ",
                     );
                     query.push_bind(date);
                     query.push(")");
                 }
                 RecurrenceQuery::Exists(exists) => {
                     if exists {
-                        query.push(" AND e.recurrence::text <> 'null'");
+                        query.push(" AND e.recurrence_jsonb IS NOT NULL");
                     } else {
-                        query.push(" AND e.recurrence::text = 'null'");
+                        query.push(" AND e.recurrence_jsonb IS NULL");
                     }
                 }
             }
@@ -927,16 +919,16 @@ impl IEventRepo for PostgresEventRepo {
             match recurrence {
                 RecurrenceQuery::ExistsAndRecurringAt(date) => {
                     query.push(
-                        " AND e.recurrence::text <> 'null' AND (e.recurring_until IS NULL OR e.recurring_until >=",
+                        " AND e.recurrence_jsonb IS NOT NULL AND (e.recurring_until IS NULL OR e.recurring_until >=",
                     );
                     query.push_bind(date);
                     query.push(")");
                 }
                 RecurrenceQuery::Exists(exists) => {
                     if exists {
-                        query.push(" AND e.recurrence::text <> 'null'");
+                        query.push(" AND e.recurrence_jsonb IS NOT NULL");
                     } else {
-                        query.push(" AND e.recurrence::text = 'null'");
+                        query.push(" AND e.recurrence_jsonb IS NULL");
                     }
                 }
             }
