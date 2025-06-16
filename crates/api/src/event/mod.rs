@@ -1,3 +1,4 @@
+pub mod create_batch_events;
 pub mod create_event;
 pub mod delete_event;
 pub mod delete_many_events;
@@ -24,7 +25,7 @@ use search_events::search_events_controller;
 use update_event::{update_event_admin_controller, update_event_controller};
 use utoipa_axum::router::OpenApiRouter;
 
-use crate::shared::auth;
+use crate::{event::create_batch_events::create_batch_events_admin_controller, shared::auth};
 
 // Configure the routes for the event module
 pub fn configure_routes() -> OpenApiRouter {
@@ -33,6 +34,11 @@ pub fn configure_routes() -> OpenApiRouter {
         .route(
             "/user/{user_id}/events",
             post(create_event_admin_controller),
+        )
+        // Create a batch of events for a user (admin route)
+        .route(
+            "/user/{user_id}/events/batch",
+            post(create_batch_events_admin_controller),
         )
         // Search events
         // /!\ This is a POST route

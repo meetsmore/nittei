@@ -1,5 +1,7 @@
 import { NitteiBaseClient } from './baseClient'
 import type {
+  CreateBatchEventsAPIResponse,
+  CreateBatchEventsRequestBody,
   DeleteManyEventsRequestBody,
   GetEventsByExternalIdAPIResponse,
   GetEventsForUsersInTimeSpanAPIResponse,
@@ -62,6 +64,27 @@ export class NitteiEventClient extends NitteiBaseClient {
 
     return {
       event: convertEventDates(res.event),
+    }
+  }
+
+  /**
+   * Create a batch of events for a user
+   * Either all events are created or none are created
+   * @param userId - id of the user
+   * @param data - data of the events
+   * @returns - the created events
+   */
+  public async createMany(
+    userId: ID,
+    data: CreateBatchEventsRequestBody
+  ): Promise<CreateBatchEventsAPIResponse> {
+    const res = await this.post<CreateBatchEventsAPIResponse>(
+      `/user/${userId}/events/batch`,
+      data
+    )
+
+    return {
+      events: res.events.map(convertEventDates),
     }
   }
 
