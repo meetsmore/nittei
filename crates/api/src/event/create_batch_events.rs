@@ -1,7 +1,7 @@
 use axum::{Extension, Json, extract::Path, http::StatusCode};
 use axum_valid::Valid;
 use chrono::{DateTime, TimeDelta, Utc};
-use nittei_api_structs::create_many_events::*;
+use nittei_api_structs::create_batch_events::*;
 use nittei_domain::{
     Account,
     CalendarEvent,
@@ -27,8 +27,8 @@ use crate::{
 #[utoipa::path(
     post,
     tag = "Event",
-    path = "/api/v1/user/{user_id}/events/create_many",
-    summary = "Create many events (admin only)",
+    path = "/api/v1/user/{user_id}/events/batch",
+    summary = "Create a batch of events (admin only). Either all events are created or none are created.",
     params(
         ("user_id" = ID, Path, description = "The id of the user to create the events for"),
     ),
@@ -36,21 +36,21 @@ use crate::{
         ("api_key" = [])
     ),
     request_body(
-        content = CreateManyEventsRequestBody,
+        content = CreateBatchEventsRequestBody,
     ),
     responses(
-        (status = 200, body = CreateManyEventsAPIResponse)
+        (status = 200, body = CreateBatchEventsAPIResponse)
     )
 )]
-pub async fn create_many_events_admin_controller(
+pub async fn create_batch_events_admin_controller(
     Extension(account): Extension<Account>,
     path_params: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
-    Valid(Json(body)): Valid<Json<CreateManyEventsRequestBody>>,
-) -> Result<(StatusCode, Json<CreateManyEventsAPIResponse>), NitteiError> {
+    Valid(Json(body)): Valid<Json<CreateBatchEventsRequestBody>>,
+) -> Result<(StatusCode, Json<CreateBatchEventsAPIResponse>), NitteiError> {
     let user = account_can_modify_user(&account, &path_params.user_id, &ctx).await?;
 
-    let usecase = CreateManyEventsUseCase {
+    let usecase = CreateBatchEventsUseCase {
         events: body
             .events
             .into_iter()
@@ -86,14 +86,14 @@ pub async fn create_many_events_admin_controller(
         .map(|events| {
             (
                 StatusCode::CREATED,
-                Json(CreateManyEventsAPIResponse::new(events)),
+                Json(CreateBatchEventsAPIResponse::new(events)),
             )
         })
         .map_err(NitteiError::from)
 }
 
 #[derive(Debug, Default)]
-pub struct CreateManyEventsUseCase {
+pub struct CreateBatchEventsUseCase {
     pub events: Vec<CreateEventUseCase>,
 }
 
@@ -157,12 +157,12 @@ impl From<anyhow::Error> for UseCaseError {
 }
 
 #[async_trait::async_trait]
-impl UseCase for CreateManyEventsUseCase {
+impl UseCase for CreateBatchEventsUseCase {
     type Response = Vec<CalendarEvent>;
 
     type Error = UseCaseError;
 
-    const NAME: &'static str = "CreateManyEvents";
+    const NAME: &'static str = "CreateBatchEvents";
 
     async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         // Collect calendar ids from events, and avoid duplicates
@@ -263,7 +263,7 @@ impl UseCase for CreateManyEventsUseCase {
     }
 }
 
-impl PermissionBoundary for CreateManyEventsUseCase {
+impl PermissionBoundary for CreateBatchEventsUseCase {
     fn permissions(&self) -> Vec<Permission> {
         vec![Permission::CreateCalendarEvent]
     }
@@ -307,7 +307,7 @@ mod test {
             user,
         } = setup().await;
 
-        let mut usecase = CreateManyEventsUseCase {
+        let mut usecase = CreateBatchEventsUseCase {
             events: vec![CreateEventUseCase {
                 start_time: DateTime::from_timestamp_millis(500).unwrap(),
                 duration: 800,
@@ -330,7 +330,7 @@ mod test {
             user,
         } = setup().await;
 
-        let mut usecase = CreateManyEventsUseCase {
+        let mut usecase = CreateBatchEventsUseCase {
             events: vec![CreateEventUseCase {
                 start_time: DateTime::from_timestamp_millis(500).unwrap(),
                 duration: 800,
@@ -354,7 +354,7 @@ mod test {
             user,
         } = setup().await;
 
-        let mut usecase = CreateManyEventsUseCase {
+        let mut usecase = CreateBatchEventsUseCase {
             events: vec![CreateEventUseCase {
                 start_time: DateTime::from_timestamp_millis(500).unwrap(),
                 duration: 800,

@@ -11,7 +11,7 @@ use super::{
     update_event::UpdateEventUseCase,
 };
 use crate::{
-    event::create_many_events::CreateManyEventsUseCase,
+    event::create_batch_events::CreateBatchEventsUseCase,
     shared::usecase::{Subscriber, execute},
 };
 
@@ -30,7 +30,7 @@ impl Subscriber<CreateEventUseCase> for CreateRemindersOnEventCreated {
 }
 
 #[async_trait::async_trait]
-impl Subscriber<CreateManyEventsUseCase> for CreateRemindersOnEventCreated {
+impl Subscriber<CreateBatchEventsUseCase> for CreateRemindersOnEventCreated {
     async fn notify(&self, events: &Vec<CalendarEvent>, ctx: &nittei_infra::NitteiContext) {
         for event in events {
             let sync_event_reminders = SyncEventRemindersUseCase {
@@ -172,7 +172,7 @@ impl Subscriber<CreateEventUseCase> for CreateSyncedEventsOnEventCreated {
 }
 
 #[async_trait::async_trait]
-impl Subscriber<CreateManyEventsUseCase> for CreateSyncedEventsOnEventCreated {
+impl Subscriber<CreateBatchEventsUseCase> for CreateSyncedEventsOnEventCreated {
     async fn notify(&self, events: &Vec<CalendarEvent>, ctx: &nittei_infra::NitteiContext) {
         for event in events {
             // Re-use the same subscriber for single events and many events
