@@ -89,12 +89,14 @@ struct EventRaw {
     end_time: DateTime<Utc>,
     created: i64,
     updated: i64,
+    // Unused field - to be deleted during a maintenance window
     recurrence: Option<Value>,
     recurrence_jsonb: Option<Value>,
     recurring_until: Option<DateTime<Utc>>,
     exdates: Vec<DateTime<Utc>>,
     recurring_event_uid: Option<Uuid>,
     original_start_time: Option<DateTime<Utc>>,
+    // Unused field - to be deleted during a maintenance window
     reminders: Option<Value>,
     reminders_jsonb: Option<Value>,
     service_uid: Option<Uuid>,
