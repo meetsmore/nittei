@@ -17,7 +17,7 @@ validator = { version = "0.20", features = ["derive"] }
 chrono = { version = "0.4.39", features = ["serde"] }
 chrono-tz = { version = "0.10.1", features = ["serde"] }
 uuid = { version = "1.1", features = ["serde"] }
-ts-rs = { version = "10.1", features = [
+ts-rs = { version = "11.0.1", features = [
   "uuid-impl",
   "chrono-impl",
   "serde-json-impl",
