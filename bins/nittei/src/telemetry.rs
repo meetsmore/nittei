@@ -171,6 +171,7 @@ fn get_tracer_otlp(
                 .build(),
         )
         .with_batch_exporter(otlp_exporter)
+        .with_sampler(get_sampler())
         .build())
 }
 
