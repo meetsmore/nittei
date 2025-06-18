@@ -185,16 +185,18 @@ impl IEventRepo for PostgresEventRepo {
                 busy,
                 created,
                 updated,
+                recurrence,
                 recurrence_jsonb,
                 recurring_until,
                 exdates,
                 recurring_event_uid,
                 original_start_time,
+                reminders,
                 reminders_jsonb,
                 service_uid,
                 metadata
             )
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28)
             "#,
             e.id.as_ref(),
             e.account_id.as_ref(),
@@ -214,11 +216,13 @@ impl IEventRepo for PostgresEventRepo {
             e.busy,
             e.created.timestamp_millis(),
             e.updated.timestamp_millis(),
+            Json(&recurrence) as _,
             &recurrence as _,
             e.recurring_until,
             &e.exdates,
             e.recurring_event_id.as_ref().map(|id| id.as_ref()),
             e.original_start_time,
+            Json(&e.reminders) as _,
             Json(&e.reminders) as _,
             e.service_id.as_ref().map(|id| id.as_ref()),
             Json(&e.metadata) as _,
@@ -239,7 +243,7 @@ impl IEventRepo for PostgresEventRepo {
     #[instrument(name = "calendar_event::insert_many", fields(events = ?events))]
     async fn insert_many(&self, events: &[CalendarEvent]) -> anyhow::Result<()> {
         let mut query_builder = QueryBuilder::new(
-            "INSERT INTO calendar_events (event_uid, account_uid, user_uid, calendar_uid, external_parent_id, external_id, title, description, event_type, location, status, all_day, start_time, duration, end_time, busy, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata) ",
+            "INSERT INTO calendar_events (event_uid, account_uid, user_uid, calendar_uid, external_parent_id, external_id, title, description, event_type, location, status, all_day, start_time, duration, end_time, busy, created, updated, recurrence, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders, reminders_jsonb, service_uid, metadata) ",
         );
 
         // Collect the recurrence for each event beforehand
@@ -283,11 +287,13 @@ impl IEventRepo for PostgresEventRepo {
                 .push_bind(new_event.busy)
                 .push_bind(new_event.created.timestamp_millis())
                 .push_bind(new_event.updated.timestamp_millis())
+                .push_bind(Json(&new_event.recurrence))
                 .push_bind(recurrence)
                 .push_bind(new_event.recurring_until)
                 .push_bind(&new_event.exdates)
                 .push_bind(new_event.recurring_event_id.as_ref().map(|id| id.as_ref()))
                 .push_bind(new_event.original_start_time)
+                .push_bind(Json(&new_event.reminders))
                 .push_bind(Json(&new_event.reminders))
                 .push_bind(new_event.service_id.as_ref().map(|id| id.as_ref()))
                 .push_bind(Json(&new_event.metadata));
