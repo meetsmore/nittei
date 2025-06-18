@@ -131,7 +131,7 @@ impl<B> OnResponse<B> for NitteiTracingOnResponse {
         tracing::span::Span::current().record("level", tracing::field::display(level));
 
         let message = format!(
-            "{} {} {} {}ns",
+            "{} {} {} {}ms",
             method,
             uri_string,
             status_code,
