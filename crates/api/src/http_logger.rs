@@ -135,7 +135,7 @@ impl<B> OnResponse<B> for NitteiTracingOnResponse {
             method,
             uri_string,
             status_code,
-            latency.as_nanos()
+            latency.as_micros()
         );
 
         // Log with appropriate level
