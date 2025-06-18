@@ -18,6 +18,7 @@ use sqlx::{
     FromRow,
     PgPool,
     QueryBuilder,
+    Row,
     types::{Json, Uuid},
 };
 use tracing::{error, instrument};
@@ -72,7 +73,7 @@ impl TryFrom<MostRecentCreatedServiceEventsRaw> for MostRecentCreatedServiceEven
     }
 }
 
-#[derive(Debug, FromRow, Clone)]
+#[derive(Debug, Clone)]
 struct EventRaw {
     event_uid: Uuid,
     calendar_uid: Uuid,
@@ -92,18 +93,49 @@ struct EventRaw {
     end_time: DateTime<Utc>,
     created: i64,
     updated: i64,
-    // Unused field - to be deleted during a maintenance window
-    recurrence: Option<Value>,
     recurrence_jsonb: Option<Value>,
     recurring_until: Option<DateTime<Utc>>,
     exdates: Vec<DateTime<Utc>>,
     recurring_event_uid: Option<Uuid>,
     original_start_time: Option<DateTime<Utc>>,
-    // Unused field - to be deleted during a maintenance window
-    reminders: Option<Value>,
     reminders_jsonb: Option<Value>,
     service_uid: Option<Uuid>,
     metadata: Value,
+}
+
+impl<'a> FromRow<'a, sqlx::postgres::PgRow> for EventRaw {
+    /// Manual implementation of FromRow to avoid relying the columns order
+    /// from the database.
+    fn from_row(row: &sqlx::postgres::PgRow) -> Result<Self, sqlx::Error> {
+        Ok(Self {
+            event_uid: row.try_get("event_uid")?,
+            calendar_uid: row.try_get("calendar_uid")?,
+            user_uid: row.try_get("user_uid")?,
+            account_uid: row.try_get("account_uid")?,
+            external_parent_id: row.try_get("external_parent_id")?,
+            external_id: row.try_get("external_id")?,
+            title: row.try_get("title")?,
+            description: row.try_get("description")?,
+            event_type: row.try_get("event_type")?,
+            location: row.try_get("location")?,
+            all_day: row.try_get("all_day")?,
+            status: row.try_get("status")?,
+            start_time: row.try_get("start_time")?,
+            duration: row.try_get("duration")?,
+            busy: row.try_get("busy")?,
+            end_time: row.try_get("end_time")?,
+            created: row.try_get("created")?,
+            updated: row.try_get("updated")?,
+            recurrence_jsonb: row.try_get("recurrence_jsonb")?,
+            recurring_until: row.try_get("recurring_until")?,
+            exdates: row.try_get("exdates")?,
+            recurring_event_uid: row.try_get("recurring_event_uid")?,
+            original_start_time: row.try_get("original_start_time")?,
+            reminders_jsonb: row.try_get("reminders_jsonb")?,
+            service_uid: row.try_get("service_uid")?,
+            metadata: row.try_get("metadata")?,
+        })
+    }
 }
 
 impl TryFrom<EventRaw> for CalendarEvent {
@@ -185,18 +217,16 @@ impl IEventRepo for PostgresEventRepo {
                 busy,
                 created,
                 updated,
-                recurrence,
                 recurrence_jsonb,
                 recurring_until,
                 exdates,
                 recurring_event_uid,
                 original_start_time,
-                reminders,
                 reminders_jsonb,
                 service_uid,
                 metadata
             )
-            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28)
+            VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
             "#,
             e.id.as_ref(),
             e.account_id.as_ref(),
@@ -216,16 +246,12 @@ impl IEventRepo for PostgresEventRepo {
             e.busy,
             e.created.timestamp_millis(),
             e.updated.timestamp_millis(),
-            // (recurrence) Deprecated JSON field (not used anymore)
-            Json(&recurrence) as _,
             // (recurrence_jsonb) JSONB field
             &recurrence as _,
             e.recurring_until,
             &e.exdates,
             e.recurring_event_id.as_ref().map(|id| id.as_ref()),
             e.original_start_time,
-            // (reminders) Deprecated JSON field (not used anymore)
-            Json(&e.reminders) as _,
             // (reminders_jsonb) JSONB field
             Json(&e.reminders) as _,
             e.service_id.as_ref().map(|id| id.as_ref()),
@@ -247,7 +273,7 @@ impl IEventRepo for PostgresEventRepo {
     #[instrument(name = "calendar_event::insert_many", fields(events = ?events))]
     async fn insert_many(&self, events: &[CalendarEvent]) -> anyhow::Result<()> {
         let mut query_builder = QueryBuilder::new(
-            "INSERT INTO calendar_events (event_uid, account_uid, user_uid, calendar_uid, external_parent_id, external_id, title, description, event_type, location, status, all_day, start_time, duration, end_time, busy, created, updated, recurrence, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders, reminders_jsonb, service_uid, metadata) ",
+            "INSERT INTO calendar_events (event_uid, account_uid, user_uid, calendar_uid, external_parent_id, external_id, title, description, event_type, location, status, all_day, start_time, duration, end_time, busy, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata) ",
         );
 
         // Collect the recurrence for each event beforehand
@@ -291,16 +317,12 @@ impl IEventRepo for PostgresEventRepo {
                 .push_bind(new_event.busy)
                 .push_bind(new_event.created.timestamp_millis())
                 .push_bind(new_event.updated.timestamp_millis())
-                // (recurrence) Deprecated JSON field (not used anymore)
-                .push_bind(Json(&new_event.recurrence))
                 // (recurrence_jsonb) JSONB field
                 .push_bind(recurrence)
                 .push_bind(new_event.recurring_until)
                 .push_bind(&new_event.exdates)
                 .push_bind(new_event.recurring_event_id.as_ref().map(|id| id.as_ref()))
                 .push_bind(new_event.original_start_time)
-                // (reminders) Deprecated JSON field (not used anymore)
-                .push_bind(Json(&new_event.reminders))
                 // (reminders_jsonb) JSONB field
                 .push_bind(Json(&new_event.reminders))
                 .push_bind(new_event.service_id.as_ref().map(|id| id.as_ref()))
@@ -394,7 +416,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-            SELECT e.* FROM calendar_events AS e
+            SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e
             WHERE e.event_uid = $1
             "#,
             event_uid.as_ref(),
@@ -426,7 +448,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-            SELECT e.* FROM calendar_events AS e
+            SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e
             WHERE e.recurring_event_uid = ANY($1) AND e.original_start_time >= $2 AND e.original_start_time <= $3
             "#,
             &recurring_event_ids,
@@ -458,7 +480,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-            SELECT e.* FROM calendar_events AS e
+            SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e
             WHERE e.event_uid = $1 OR e.recurring_event_uid = $1
             "#,
             event_id.as_ref(),
@@ -486,7 +508,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-            SELECT e.* FROM calendar_events AS e
+            SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e
             WHERE e.account_uid = $1 AND e.external_id = $2
             "#,
             account_uid.as_ref(),
@@ -515,7 +537,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-            SELECT e.* FROM calendar_events AS e
+            SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e
             WHERE e.account_uid = $1 AND e.external_id = any($2)
             "#,
             account_uid.as_ref(),
@@ -540,7 +562,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-            SELECT e.* FROM calendar_events AS e
+            SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e
             WHERE e.event_uid = ANY($1)
             "#,
             &ids
@@ -569,7 +591,7 @@ impl IEventRepo for PostgresEventRepo {
             sqlx::query_as!(
                 EventRaw,
                 r#"
-                    SELECT e.* FROM calendar_events AS e
+                    SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e
                     WHERE e.calendar_uid = $1
                     AND (
                         (e.start_time <= $2 AND e.end_time >= $3)
@@ -596,7 +618,8 @@ impl IEventRepo for PostgresEventRepo {
             sqlx::query_as!(
                 EventRaw,
                 r#"
-                    SELECT e.* FROM calendar_events AS e
+                    SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata
+                    FROM calendar_events AS e
                     WHERE e.calendar_uid = $1
                     "#,
                 calendar_id.as_ref(),
@@ -629,7 +652,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-                    SELECT e.* FROM calendar_events AS e
+                    SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e
                     WHERE e.calendar_uid  = any($1)
                     AND (
                         (e.start_time <= $2 AND e.end_time >= $3)
@@ -684,7 +707,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-            SELECT e.* FROM calendar_events AS e
+            SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e
             WHERE e.user_uid = any($1)
             AND (
                 (e.start_time < $2 AND e.end_time > $3)
@@ -742,7 +765,7 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-                    SELECT e.* FROM calendar_events AS e
+                    SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e
                     WHERE e.calendar_uid  = any($1)
                     AND (
                         (e.start_time < $2 AND e.end_time > $3)
@@ -782,7 +805,8 @@ impl IEventRepo for PostgresEventRepo {
     ) -> anyhow::Result<Vec<CalendarEvent>> {
         let mut query = QueryBuilder::new(
             r#"
-            SELECT e.* FROM calendar_events AS e
+            SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata
+            FROM calendar_events AS e
             WHERE e.user_uid = "#,
         );
 
@@ -938,7 +962,8 @@ impl IEventRepo for PostgresEventRepo {
     ) -> anyhow::Result<Vec<CalendarEvent>> {
         let mut query = QueryBuilder::new(
             r#"
-            SELECT e.* FROM calendar_events AS e
+            SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata
+            FROM calendar_events AS e
             WHERE e.account_uid = "#,
         );
 
@@ -1128,7 +1153,8 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-            SELECT e.* FROM calendar_events AS e
+            SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata
+            FROM calendar_events AS e
             WHERE e.service_uid = $1 AND
             e.user_uid = ANY($2) AND
             e.start_time <= $3 AND e.end_time >= $4
@@ -1163,7 +1189,8 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-            SELECT e.* FROM calendar_events AS e
+            SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata
+            FROM calendar_events AS e
             WHERE e.user_uid = $1 AND
             e.busy = $2 AND
             e.service_uid IS NOT NULL AND
@@ -1195,7 +1222,7 @@ impl IEventRepo for PostgresEventRepo {
             r#"
             DELETE FROM calendar_events AS e
             WHERE e.event_uid = $1
-            RETURNING *
+            RETURNING event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata
             "#,
             event_uid.as_ref(),
         )
@@ -1263,7 +1290,8 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query_as!(
             EventRaw,
             r#"
-            SELECT e.* FROM calendar_events AS e
+            SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata
+            FROM calendar_events AS e
             WHERE e.account_uid = $1 AND e.metadata @> $2
             LIMIT $3
             OFFSET $4
