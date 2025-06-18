@@ -216,13 +216,17 @@ impl IEventRepo for PostgresEventRepo {
             e.busy,
             e.created.timestamp_millis(),
             e.updated.timestamp_millis(),
+            // (recurrence) Deprecated JSON field (not used anymore)
             Json(&recurrence) as _,
+            // (recurrence_jsonb) JSONB field
             &recurrence as _,
             e.recurring_until,
             &e.exdates,
             e.recurring_event_id.as_ref().map(|id| id.as_ref()),
             e.original_start_time,
+            // (reminders) Deprecated JSON field (not used anymore)
             Json(&e.reminders) as _,
+            // (reminders_jsonb) JSONB field
             Json(&e.reminders) as _,
             e.service_id.as_ref().map(|id| id.as_ref()),
             Json(&e.metadata) as _,
@@ -287,13 +291,17 @@ impl IEventRepo for PostgresEventRepo {
                 .push_bind(new_event.busy)
                 .push_bind(new_event.created.timestamp_millis())
                 .push_bind(new_event.updated.timestamp_millis())
+                // (recurrence) Deprecated JSON field (not used anymore)
                 .push_bind(Json(&new_event.recurrence))
+                // (recurrence_jsonb) JSONB field
                 .push_bind(recurrence)
                 .push_bind(new_event.recurring_until)
                 .push_bind(&new_event.exdates)
                 .push_bind(new_event.recurring_event_id.as_ref().map(|id| id.as_ref()))
                 .push_bind(new_event.original_start_time)
+                // (reminders) Deprecated JSON field (not used anymore)
                 .push_bind(Json(&new_event.reminders))
+                // (reminders_jsonb) JSONB field
                 .push_bind(Json(&new_event.reminders))
                 .push_bind(new_event.service_id.as_ref().map(|id| id.as_ref()))
                 .push_bind(Json(&new_event.metadata));
