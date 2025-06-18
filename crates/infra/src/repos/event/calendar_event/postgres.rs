@@ -18,6 +18,7 @@ use sqlx::{
     FromRow,
     PgPool,
     QueryBuilder,
+    Row,
     types::{Json, Uuid},
 };
 use tracing::{error, instrument};
@@ -72,7 +73,7 @@ impl TryFrom<MostRecentCreatedServiceEventsRaw> for MostRecentCreatedServiceEven
     }
 }
 
-#[derive(Debug, FromRow, Clone)]
+#[derive(Debug, Clone)]
 struct EventRaw {
     event_uid: Uuid,
     calendar_uid: Uuid,
@@ -104,6 +105,43 @@ struct EventRaw {
     reminders_jsonb: Option<Value>,
     service_uid: Option<Uuid>,
     metadata: Value,
+}
+
+impl<'a> FromRow<'a, sqlx::postgres::PgRow> for EventRaw {
+    /// Manual implementation of FromRow to avoid relying the columns order
+    /// from the database.
+    fn from_row(row: &sqlx::postgres::PgRow) -> Result<Self, sqlx::Error> {
+        Ok(Self {
+            event_uid: row.try_get("event_uid")?,
+            calendar_uid: row.try_get("calendar_uid")?,
+            user_uid: row.try_get("user_uid")?,
+            account_uid: row.try_get("account_uid")?,
+            external_parent_id: row.try_get("external_parent_id")?,
+            external_id: row.try_get("external_id")?,
+            title: row.try_get("title")?,
+            description: row.try_get("description")?,
+            event_type: row.try_get("event_type")?,
+            location: row.try_get("location")?,
+            all_day: row.try_get("all_day")?,
+            status: row.try_get("status")?,
+            start_time: row.try_get("start_time")?,
+            duration: row.try_get("duration")?,
+            busy: row.try_get("busy")?,
+            end_time: row.try_get("end_time")?,
+            created: row.try_get("created")?,
+            updated: row.try_get("updated")?,
+            recurrence: None,
+            recurrence_jsonb: row.try_get("recurrence_jsonb")?,
+            recurring_until: row.try_get("recurring_until")?,
+            exdates: row.try_get("exdates")?,
+            recurring_event_uid: row.try_get("recurring_event_uid")?,
+            original_start_time: row.try_get("original_start_time")?,
+            reminders: None,
+            reminders_jsonb: row.try_get("reminders_jsonb")?,
+            service_uid: row.try_get("service_uid")?,
+            metadata: row.try_get("metadata")?,
+        })
+    }
 }
 
 impl TryFrom<EventRaw> for CalendarEvent {
