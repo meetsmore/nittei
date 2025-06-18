@@ -163,6 +163,10 @@ impl UseCase for SearchEventsUseCase {
             // Note that limit is unsigned, so it can't be negative
             // Limit nb of events to be returned
             if limit == 0 || limit > APP_CONFIG.max_events_returned_by_search {
+                tracing::warn!(
+                    "[search_events] Limit is invalid: it should be positive and under {}",
+                    APP_CONFIG.max_events_returned_by_search
+                );
                 return Err(UseCaseError::BadRequest(format!(
                     "Limit is invalid: it should be positive and under {}",
                     APP_CONFIG.max_events_returned_by_search
@@ -172,6 +176,7 @@ impl UseCase for SearchEventsUseCase {
 
         if let Some(calendar_ids) = &self.calendar_ids {
             if calendar_ids.is_empty() {
+                tracing::warn!("[search_events] calendar_ids cannot be empty");
                 return Err(UseCaseError::BadRequest(
                     "calendar_ids cannot be empty".into(),
                 ));
@@ -182,7 +187,10 @@ impl UseCase for SearchEventsUseCase {
                 .calendars
                 .find_multiple(calendar_ids.iter().collect())
                 .await
-                .map_err(|_| UseCaseError::InternalError)?;
+                .map_err(|e| {
+                    tracing::error!("[search_events] Error finding calendars: {:?}", e);
+                    UseCaseError::InternalError
+                })?;
 
             // Check that all calendars exist and belong to the same account
             if calendars.is_empty()
@@ -234,7 +242,10 @@ impl UseCase for SearchEventsUseCase {
             Ok(events) => Ok(UseCaseResponse {
                 events: events.into_iter().map(CalendarEventDTO::new).collect(),
             }),
-            Err(_) => Err(UseCaseError::InternalError),
+            Err(e) => {
+                tracing::error!("[search_events] Error searching events: {:?}", e);
+                Err(UseCaseError::InternalError)
+            }
         }
     }
 }

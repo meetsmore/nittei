@@ -12,12 +12,15 @@ async fn status(Extension(ctx): Extension<NitteiContext>) -> (StatusCode, Json<A
                 message: "Ok!\r\n".into(),
             }),
         ),
-        Err(_) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(APIResponse {
-                message: "Internal Server Error".into(),
-            }),
-        ),
+        Err(e) => {
+            tracing::error!("[status] Error checking connection: {:?}", e);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(APIResponse {
+                    message: "Internal Server Error".into(),
+                }),
+            )
+        }
     }
 }
 

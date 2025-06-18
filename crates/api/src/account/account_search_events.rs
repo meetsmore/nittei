@@ -191,7 +191,10 @@ impl UseCase for AccountSearchEventsUseCase {
             Ok(events) => Ok(UseCaseResponse {
                 events: events.into_iter().map(CalendarEventDTO::new).collect(),
             }),
-            Err(_) => Err(UseCaseError::InternalError),
+            Err(err) => {
+                tracing::error!("Error searching events for account: {:?}", err);
+                Err(UseCaseError::InternalError)
+            }
         }
     }
 }

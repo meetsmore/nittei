@@ -105,12 +105,10 @@ impl UseCase for GetEventUseCase {
     const NAME: &'static str = "GetEvent";
 
     async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
-        let e = ctx
-            .repos
-            .events
-            .find(&self.event_id)
-            .await
-            .map_err(|_| UseCaseError::InternalError)?;
+        let e = ctx.repos.events.find(&self.event_id).await.map_err(|e| {
+            tracing::error!("[get_event] Error finding event: {:?}", e);
+            UseCaseError::InternalError
+        })?;
         match e {
             Some(event) if event.user_id == self.user_id => Ok(event),
             _ => Err(UseCaseError::NotFound(self.event_id.clone())),

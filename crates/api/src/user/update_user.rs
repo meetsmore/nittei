@@ -107,6 +107,9 @@ impl UseCase for UpdateUserUseCase {
             .save(&user)
             .await
             .map(|_| UseCaseRes { user })
-            .map_err(|_| UseCaseError::StorageError)
+            .map_err(|e| {
+                tracing::error!("[update_user] Error saving user: {:?}", e);
+                UseCaseError::StorageError
+            })
     }
 }

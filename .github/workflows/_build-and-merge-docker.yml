@@ -70,6 +70,8 @@ jobs:
           # Handle the correct arch
           build-args: |
             ARCH=${{ matrix.platform == 'linux/amd64' && 'x86_64' || 'aarch64' }}
+            GIT_REPO_URL=github.com/${{ github.repository }}
+            GIT_COMMIT_HASH=${{ github.sha }}
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest

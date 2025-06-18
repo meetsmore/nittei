@@ -78,6 +78,7 @@ impl UseCase for DeleteManyEventsUseCase {
     async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         // If both event_ids and external_ids are None, return an error
         if self.event_ids.is_none() && self.external_ids.is_none() {
+            tracing::warn!("[delete_many_events] No event ids or external ids provided");
             return Err(UseCaseError::BadRequest);
         }
 
@@ -98,7 +99,10 @@ impl UseCase for DeleteManyEventsUseCase {
         let (events_by_ids, events_by_external_ids) =
             try_join(events_by_ids, events_by_external_ids)
                 .await
-                .map_err(|_| UseCaseError::StorageError)?;
+                .map_err(|e| {
+                    tracing::error!("[delete_many_events] Error finding events: {:?}", e);
+                    UseCaseError::StorageError
+                })?;
 
         // Merge event ids and remove duplicates
         let event_ids_to_delete = events_by_ids
@@ -113,7 +117,10 @@ impl UseCase for DeleteManyEventsUseCase {
             .events
             .delete_many(event_ids_to_delete.as_slice())
             .await
-            .map_err(|_| UseCaseError::StorageError)?;
+            .map_err(|e| {
+                tracing::error!("[delete_many_events] Error deleting events: {:?}", e);
+                UseCaseError::StorageError
+            })?;
 
         Ok(())
     }

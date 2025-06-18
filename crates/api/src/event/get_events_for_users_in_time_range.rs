@@ -115,7 +115,10 @@ impl UseCase for GetEventsForUsersInTimeRangeUseCase {
                 .calendars
                 .find_for_users(&self.user_ids)
                 .await
-                .map_err(|_| UseCaseError::InternalError)?;
+                .map_err(|e| {
+                    error!("[get_events_for_users_in_time_range] Got an error while finding calendars {:?}", e);
+                    UseCaseError::InternalError
+                })?;
             calendars
                 .into_iter()
                 .map(|calendar| (calendar.id.clone(), calendar))
@@ -136,7 +139,10 @@ impl UseCase for GetEventsForUsersInTimeRangeUseCase {
             )
             .await
             .map_err(|err| {
-                error!("Got an error while finding events {:?}", err);
+                error!(
+                    "[get_events_for_users_in_time_range] Got an error while finding events {:?}",
+                    err
+                );
                 UseCaseError::InternalError
             })?
             .into_iter()
@@ -157,7 +163,10 @@ impl UseCase for GetEventsForUsersInTimeRangeUseCase {
             .find_by_recurring_event_ids_for_timespan(&recurring_events_uids, timespan.clone())
             .await
             .map_err(|err| {
-                error!("Got an error while finding events {:?}", err);
+                error!(
+                    "[get_events_for_users_in_time_range] Got an error while finding events {:?}",
+                    err
+                );
                 UseCaseError::InternalError
             })?;
 
@@ -201,7 +210,7 @@ impl UseCase for GetEventsForUsersInTimeRangeUseCase {
                     let instances =
                         expand_event_and_remove_exceptions(calendar, &event, exceptions, timespan)
                             .map_err(|e| {
-                                error!("Got an error while expanding an event {:?}", e);
+                                error!("[get_events_for_users_in_time_range] Got an error while expanding an event {:?}", e);
                                 UseCaseError::InternalError
                             })?;
 

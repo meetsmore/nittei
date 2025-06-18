@@ -121,7 +121,10 @@ impl UseCase for GetCalendarsUseCase {
                 .calendars
                 .find_by_user(&self.user_id)
                 .await
-                .map_err(|_| UseCaseError::InternalError),
+                .map_err(|e| {
+                    tracing::error!("[get_calendars] Error finding calendars: {:?}", e);
+                    UseCaseError::InternalError
+                }),
         }
     }
 }

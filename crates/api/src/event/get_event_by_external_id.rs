@@ -72,7 +72,10 @@ impl UseCase for GetEventByExternalIdUseCase {
             .events
             .get_by_external_id(&self.account_id, &self.external_id)
             .await
-            .map_err(|_| UseCaseError::InternalError)?;
+            .map_err(|e| {
+                tracing::error!("[get_event_by_external_id] Error getting events: {:?}", e);
+                UseCaseError::InternalError
+            })?;
 
         let events_as_dto: Vec<CalendarEventDTO> =
             events.into_iter().map(CalendarEventDTO::new).collect();

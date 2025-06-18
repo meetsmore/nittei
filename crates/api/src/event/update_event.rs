@@ -251,6 +251,7 @@ impl UseCase for UpdateEventUseCase {
         if let Some(reminders) = &reminders {
             for reminder in reminders {
                 if !reminder.is_valid() {
+                    tracing::warn!("[update_event] Invalid reminder");
                     return Err(UseCaseError::InvalidReminder);
                 }
             }
