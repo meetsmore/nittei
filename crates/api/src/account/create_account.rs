@@ -79,6 +79,12 @@ impl UseCase for CreateAccountUseCase {
         let account = Account::new();
         let res = ctx.repos.accounts.insert(&account).await;
 
-        res.map(|_| account).map_err(|_| UseCaseError::StorageError)
+        match res {
+            Ok(_) => Ok(account),
+            Err(e) => {
+                tracing::error!("[create_account] Error inserting account: {:?}", e);
+                Err(UseCaseError::StorageError)
+            }
+        }
     }
 }

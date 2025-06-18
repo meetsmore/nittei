@@ -242,11 +242,10 @@ impl UseCase for CreateBatchEventsUseCase {
         }
 
         // Create events
-        ctx.repos
-            .events
-            .insert_many(&events)
-            .await
-            .map_err(|_| UseCaseError::StorageError)?;
+        ctx.repos.events.insert_many(&events).await.map_err(|e| {
+            tracing::error!("[create_batch_events] Error inserting events: {:?}", e);
+            UseCaseError::StorageError
+        })?;
 
         Ok(events)
     }

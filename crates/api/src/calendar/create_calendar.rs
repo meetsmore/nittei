@@ -125,12 +125,10 @@ impl UseCase for CreateCalendarUseCase {
     const NAME: &'static str = "CreateCalendar";
 
     async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
-        let user = ctx
-            .repos
-            .users
-            .find(&self.user_id)
-            .await
-            .map_err(|_| UseCaseError::InternalError)?;
+        let user = ctx.repos.users.find(&self.user_id).await.map_err(|e| {
+            tracing::error!("[create_calendar] Error finding user: {:?}", e);
+            UseCaseError::InternalError
+        })?;
 
         let user = match user {
             Some(user) if user.account_id == self.account_id => user,
@@ -155,7 +153,10 @@ impl UseCase for CreateCalendarUseCase {
             .insert(&calendar)
             .await
             .map(|_| calendar)
-            .map_err(|_| UseCaseError::StorageError)
+            .map_err(|e| {
+                tracing::error!("[create_calendar] Error inserting calendar: {:?}", e);
+                UseCaseError::StorageError
+            })
     }
 }
 

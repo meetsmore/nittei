@@ -84,7 +84,10 @@ impl UseCase for DeleteUserUseCase {
                 }
             }
             Ok(_) => return Err(UseCaseError::UserNotFound(self.user_id.clone())),
-            Err(_) => return Err(UseCaseError::StorageError),
+            Err(e) => {
+                tracing::error!("[delete_user] Error finding user: {:?}", e);
+                return Err(UseCaseError::StorageError);
+            }
         };
 
         Ok(UseCaseRes { user })

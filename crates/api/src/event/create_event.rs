@@ -246,6 +246,7 @@ impl UseCase for CreateEventUseCase {
                 UseCaseError::InvalidRecurrenceRule
             })?;
             if !res {
+                tracing::error!("[create_event] Invalid recurrence rule");
                 return Err(UseCaseError::InvalidRecurrenceRule);
             }
         }
@@ -253,6 +254,7 @@ impl UseCase for CreateEventUseCase {
         // TODO: maybe have reminders length restriction
         for reminder in &self.reminders {
             if !reminder.is_valid() {
+                tracing::error!("[create_event] Invalid reminder");
                 return Err(UseCaseError::InvalidReminder);
             }
         }

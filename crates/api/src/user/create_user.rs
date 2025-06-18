@@ -101,7 +101,10 @@ impl UseCase for CreateUserUseCase {
         let res = ctx.repos.users.insert(&user).await;
         match res {
             Ok(_) => Ok(UseCaseRes { user }),
-            Err(_) => Err(UseCaseError::StorageError),
+            Err(e) => {
+                tracing::error!("[create_user] Error inserting user: {:?}", e);
+                Err(UseCaseError::StorageError)
+            }
         }
     }
 }

@@ -113,12 +113,10 @@ impl UseCase for DeleteEventUseCase {
 
     // TODO: use only one db call
     async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
-        let event = ctx
-            .repos
-            .events
-            .find(&self.event_id)
-            .await
-            .map_err(|_| UseCaseError::StorageError)?;
+        let event = ctx.repos.events.find(&self.event_id).await.map_err(|e| {
+            tracing::error!("[delete_event] Error finding event: {:?}", e);
+            UseCaseError::StorageError
+        })?;
         let e = match event {
             Some(e) if e.user_id == self.user.id => e,
             _ => return Err(UseCaseError::NotFound(self.event_id.clone())),
@@ -128,11 +126,10 @@ impl UseCase for DeleteEventUseCase {
             self.delete_synced_events(&e, ctx).await;
         }
 
-        ctx.repos
-            .events
-            .delete(&e.id)
-            .await
-            .map_err(|_| UseCaseError::StorageError)?;
+        ctx.repos.events.delete(&e.id).await.map_err(|e| {
+            tracing::error!("[delete_event] Error deleting event: {:?}", e);
+            UseCaseError::StorageError
+        })?;
 
         Ok(e)
     }
