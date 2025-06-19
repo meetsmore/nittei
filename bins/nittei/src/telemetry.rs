@@ -1,4 +1,8 @@
-use opentelemetry::{global, propagation::TextMapCompositePropagator, trace::TracerProvider};
+use opentelemetry::{
+    global,
+    propagation::TextMapCompositePropagator,
+    trace::{TraceContextExt, TracerProvider},
+};
 use opentelemetry_datadog::{ApiVersion, DatadogPipelineBuilder, DatadogPropagator};
 use opentelemetry_otlp::{WithExportConfig, WithHttpConfig};
 use opentelemetry_sdk::{
@@ -6,8 +10,14 @@ use opentelemetry_sdk::{
     propagation::TraceContextPropagator,
     trace::{self, RandomIdGenerator, Sampler, SdkTracerProvider},
 };
-use tracing::warn;
-use tracing_subscriber::{EnvFilter, Registry, layer::SubscriberExt};
+use tracing::{Event, Subscriber, warn};
+use tracing_subscriber::{
+    EnvFilter,
+    Registry,
+    fmt::{FmtContext, FormatEvent, format::Writer},
+    layer::SubscriberExt,
+    registry::LookupSpan,
+};
 
 /// Register a subscriber as global default to process span data.
 ///
@@ -18,7 +28,7 @@ pub fn init_subscriber() -> anyhow::Result<()> {
 
     // If the binary is compiled in debug mode (aka for development)
     // use the compact format for logs
-    if cfg!(debug_assertions) {
+    if !cfg!(debug_assertions) {
         tracing_subscriber::fmt()
             .compact()
             .with_env_filter(env_filter)
@@ -57,11 +67,7 @@ pub fn init_subscriber() -> anyhow::Result<()> {
         if let Some(telemetry_layer) = telemetry_layer {
             let subscriber = Registry::default()
                 .with(env_filter)
-                .with(
-                    tracing_subscriber::fmt::layer()
-                        .json()
-                        .with_current_span(false),
-                )
+                .with(tracing_subscriber::fmt::layer().event_format(DatadogFormatter))
                 .with(telemetry_layer);
 
             // Set the global subscriber
@@ -190,4 +196,46 @@ fn get_sampler() -> Sampler {
     // (1) parent => so if parent exists always sample
     // (2) if no parent, then the trace id ratio
     Sampler::ParentBased(Box::new(Sampler::TraceIdRatioBased(ratio_to_sample)))
+}
+
+/// Empty struct to implement the FormatEvent trait
+struct DatadogFormatter;
+
+/// Format the event to be compatible with Datadog
+/// This allows to correlate the logs with the traces
+impl<S, N> FormatEvent<S, N> for DatadogFormatter
+where
+    S: Subscriber + for<'a> LookupSpan<'a>,
+    N: for<'a> tracing_subscriber::fmt::FormatFields<'a> + 'static,
+{
+    fn format_event(
+        &self,
+        ctx: &FmtContext<'_, S, N>,
+        mut writer: Writer<'_>,
+        event: &Event<'_>,
+    ) -> std::fmt::Result {
+        if let Some(span) = ctx.lookup_current() {
+            let extensions = span.extensions();
+            let otel_ctx = extensions.get::<opentelemetry::Context>();
+            if let Some(ctx) = otel_ctx {
+                if let Some(span) = ctx
+                    .span()
+                    .span_context()
+                    .is_valid()
+                    .then(|| ctx.span().span_context().clone())
+                {
+                    write!(
+                        writer,
+                        "{{\"trace_id\":\"{}\",\"span_id\":\"{}\",",
+                        span.trace_id(),
+                        span.span_id()
+                    )?;
+                }
+            }
+        }
+
+        let json = tracing_subscriber::fmt::format::Format::default().json();
+
+        json.format_event(ctx, writer, event)
+    }
 }
