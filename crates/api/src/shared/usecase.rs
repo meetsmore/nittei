@@ -56,7 +56,6 @@ where
     }
 }
 
-#[tracing::instrument(name = "UseCase executed by User", skip(usecase, policy, ctx), fields(usecase = %U::NAME))]
 pub async fn execute_with_policy<U>(
     usecase: U,
     policy: &Policy,
@@ -81,7 +80,6 @@ where
         .map_err(UseCaseErrorContainer::UseCase)
 }
 
-#[tracing::instrument(name = "UseCase executed by Account", skip(usecase, ctx), fields(usecase = %U::NAME))]
 pub async fn execute<U>(usecase: U, ctx: &NitteiContext) -> Result<U::Response, U::Error>
 where
     U: UseCase + Send,

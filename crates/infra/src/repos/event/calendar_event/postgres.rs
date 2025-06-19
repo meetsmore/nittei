@@ -455,7 +455,7 @@ impl IEventRepo for PostgresEventRepo {
             timespan.start(),
             timespan.end(),
         )
-        .fetch_all(&self.pool)
+        .fetch_all(&self.pool.acquire().instrument(span))
         .await
         .inspect_err(|err| {
             error!(

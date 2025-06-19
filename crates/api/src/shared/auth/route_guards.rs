@@ -119,7 +119,6 @@ fn decode_token(account: &Account, token: &str) -> anyhow::Result<Claims> {
 ///
 /// This function will check if the request has a valid `Authorization` header
 /// and if the token is valid and signed by the `Account`'s public key
-#[instrument(name = "auth::protect_route", skip_all)]
 pub async fn protect_route(
     Extension(ctx): Extension<NitteiContext>,
     headers: HeaderMap,
@@ -170,7 +169,6 @@ async fn protect_route_inner(
 ///
 /// This function will check if the request has a valid `x-api-key` header
 /// and if the token is the one stored in DB for the `Account`
-#[instrument(name = "auth::protect_admin_route", skip_all)]
 pub async fn protect_admin_route(
     Extension(ctx): Extension<NitteiContext>,
     headers: HeaderMap,
