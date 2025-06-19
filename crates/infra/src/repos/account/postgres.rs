@@ -63,7 +63,7 @@ impl TryFrom<AccountRaw> for Account {
 
 #[async_trait::async_trait]
 impl IAccountRepo for PostgresAccountRepo {
-    #[instrument(name = "account::insert")]
+    #[instrument(name = "account::insert", skip_all)]
     async fn insert(&self, account: &Account) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -86,7 +86,7 @@ impl IAccountRepo for PostgresAccountRepo {
         Ok(())
     }
 
-    #[instrument(name = "account::save")]
+    #[instrument(name = "account::save", skip_all)]
     async fn save(&self, account: &Account) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -198,7 +198,7 @@ impl IAccountRepo for PostgresAccountRepo {
         Ok(possibly_deleted_account)
     }
 
-    #[instrument(name = "account::find_by_apikey")]
+    #[instrument(name = "account::find_by_apikey", skip_all)]
     async fn find_by_apikey(&self, api_key: &str) -> anyhow::Result<Option<Account>> {
         if let Some(account) = self.cache.get(api_key).await {
             return Ok(Some(account));
