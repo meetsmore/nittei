@@ -42,7 +42,19 @@ RUN ARCH_IN_URL=$(case "${ARCH}" in \
   mv ddprof/bin/ddprof /ddprof
 
 #Create a new stage with a minimal image
-FROM alpine:3.20.3
+FROM alpine:3.22.0
+
+# Set the git repository url and commit hash for DD
+ARG GIT_REPO_URL
+ARG GIT_COMMIT_HASH
+
+ENV DD_GIT_REPOSITORY_URL=${GIT_REPO_URL}
+ENV DD_GIT_COMMIT_SHA=${GIT_COMMIT_HASH}
+ENV DD_SOURCE_CODE_PATH_MAPPING="/app/nittei/bins:/bins,/app/nittei/crates:/crates"
+
+# Set the backtrace level by default to 1
+ARG RUST_BACKTRACE=1
+ENV RUST_BACKTRACE=${RUST_BACKTRACE}
 
 ARG APP_NAME=nittei
 ENV APP_NAME=${APP_NAME}

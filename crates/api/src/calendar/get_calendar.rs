@@ -109,7 +109,10 @@ impl UseCase for GetCalendarUseCase {
             .calendars
             .find(&self.calendar_id)
             .await
-            .map_err(|_| UseCaseError::InternalError)?;
+            .map_err(|e| {
+                tracing::error!("[get_calendar] Error finding calendar: {:?}", e);
+                UseCaseError::InternalError
+            })?;
         match cal {
             Some(cal) if cal.user_id == self.user_id => Ok(cal),
             _ => Err(UseCaseError::NotFound(self.calendar_id.clone())),

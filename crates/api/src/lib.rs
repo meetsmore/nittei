@@ -47,10 +47,9 @@ use utoipa::{
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_swagger_ui::SwaggerUi;
 
-use crate::http_logger::{
-    NitteiTracingOnFailure,
-    NitteiTracingOnResponse,
-    NitteiTracingSpanBuilder,
+use crate::{
+    http_logger::{NitteiTracingOnFailure, NitteiTracingOnResponse, NitteiTracingSpanBuilder},
+    shared::auth::NITTEI_X_API_KEY_HEADER,
 };
 
 /// Configure the Actix server API
@@ -125,13 +124,19 @@ impl Application {
     /// - CORS (permissive)
     /// - Compression
     /// - Tracing logger
+    /// - Sensitive headers
+    /// - Compression
+    /// - Catch panics
     async fn configure_server(
         context: NitteiContext,
         shared_state: Arc<Mutex<ServerSharedState>>,
     ) -> anyhow::Result<(Router, TcpListener)> {
         let api_router = configure_server_api();
 
-        let sensitive_headers = vec![header::AUTHORIZATION];
+        let sensitive_headers = vec![
+            header::AUTHORIZATION,
+            header::HeaderName::from_static(NITTEI_X_API_KEY_HEADER),
+        ];
 
         let (router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
             .nest("/api/v1", api_router)
