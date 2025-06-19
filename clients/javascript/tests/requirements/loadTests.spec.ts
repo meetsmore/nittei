@@ -55,7 +55,8 @@ async function create200Events(
   return events
 }
 
-describe('Load tests', () => {
+// We run it on demand, when we need to load test
+describe.skip('Load tests', () => {
   let client: INitteiClient | undefined
 
   beforeAll(async () => {
