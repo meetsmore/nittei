@@ -14,6 +14,7 @@ use tracing::{Event, Subscriber, warn};
 use tracing_subscriber::{
     EnvFilter,
     Registry,
+    field::VisitOutput,
     fmt::{FmtContext, FormatEvent, format::Writer},
     layer::SubscriberExt,
     registry::LookupSpan,
@@ -214,6 +215,10 @@ where
         mut writer: Writer<'_>,
         event: &Event<'_>,
     ) -> std::fmt::Result {
+        // Start the JSON object
+        write!(writer, "{{")?;
+
+        // Add trace and span IDs if available
         if let Some(span) = ctx.lookup_current() {
             let extensions = span.extensions();
             let otel_ctx = extensions.get::<opentelemetry::Context>();
@@ -226,7 +231,7 @@ where
                 {
                     write!(
                         writer,
-                        "{{\"trace_id\":\"{}\",\"span_id\":\"{}\",",
+                        "\"dd.trace_id\":\"{}\",\"dd.span_id\":\"{}\",",
                         span.trace_id(),
                         span.span_id()
                     )?;
@@ -234,8 +239,14 @@ where
             }
         }
 
-        let json = tracing_subscriber::fmt::format::Format::default().json();
+        // Format the event fields
+        let mut visitor = tracing_subscriber::fmt::format::JsonVisitor::new(&mut writer);
+        event.record(&mut visitor);
+        visitor.finish()?;
 
-        json.format_event(ctx, writer, event)
+        // Close the JSON object
+        write!(writer, "}}")?;
+
+        Ok(())
     }
 }
