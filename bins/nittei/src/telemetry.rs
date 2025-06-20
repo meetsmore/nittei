@@ -28,7 +28,7 @@ pub fn init_subscriber() -> anyhow::Result<()> {
 
     // If the binary is compiled in debug mode (aka for development)
     // use the compact format for logs
-    if !cfg!(debug_assertions) {
+    if cfg!(debug_assertions) {
         tracing_subscriber::fmt()
             .compact()
             .with_env_filter(env_filter)
