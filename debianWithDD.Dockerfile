@@ -16,15 +16,12 @@ RUN apt update \
   && apt clean \
   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN --mount=type=bind,source=bins,target=/app/nittei/bins \
-  --mount=type=bind,source=crates,target=/app/nittei/crates \
-  --mount=type=bind,source=clients,target=/app/nittei/clients \
-  --mount=type=bind,source=Cargo.toml,target=Cargo.toml \
-  --mount=type=bind,source=Cargo.lock,target=Cargo.lock \
-  --mount=type=cache,target=/app/nittei/target/ \
-  --mount=type=cache,target=/usr/local/cargo/git/db \
-  --mount=type=cache,target=/usr/local/cargo/registry/ \
-  cargo build --locked --release && \
+COPY ./Cargo.toml ./Cargo.lock .cargo ./
+COPY ./clients/rust ./clients/rust
+COPY ./crates ./crates
+COPY ./bins ./bins
+
+RUN cargo build --locked --release && \
   cp ./target/release/nittei /nittei && \
   cargo build --locked --release --bin nittei-migrate && \
   cp ./target/release/nittei-migrate /nittei-migrate
