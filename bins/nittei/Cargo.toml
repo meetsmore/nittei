@@ -60,9 +60,8 @@ reqwest = { version = "0.12", default-features = false, features = [
 chrono = "0.4.39"
 chrono-tz = "0.10.1"
 
-# Use the `jemallocator` crate to use jemalloc as the global allocator.
-tikv-jemallocator = "0.6"
-
+# Use the `mimalloc` crate to use mimalloc as the global allocator.
+mimalloc = "0.1.47"
 
 ##################
 # Dev dependencies
