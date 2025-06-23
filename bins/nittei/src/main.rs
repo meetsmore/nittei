@@ -1,14 +1,14 @@
-use mimalloc::MiMalloc;
 use nittei::telemetry::init_subscriber;
 use nittei_api::Application;
 use nittei_infra::setup_context;
+use tikv_jemallocator::Jemalloc;
 use tokio::signal;
 use tracing::info;
 
-/// Use mimalloc as the global allocator
+/// Use jemalloc as the global allocator
 /// This is a performance optimization for the application
 #[global_allocator]
-static GLOBAL: MiMalloc = MiMalloc;
+static GLOBAL: Jemalloc = Jemalloc;
 
 /// Main wraps the `run` function with a tokio runtime (flavor can be decided via the `NITTEI__TOKIO_RUNTIME_FLAVOR` env var)
 /// See crates/utils/src/config.rs for more details
