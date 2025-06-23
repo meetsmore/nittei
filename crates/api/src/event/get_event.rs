@@ -71,10 +71,14 @@ pub async fn get_event_controller(
         .map_err(NitteiError::from)
 }
 
+/// Use case for getting an event
 #[derive(Debug)]
 pub struct GetEventUseCase {
     pub event_id: ID,
     pub user_id: ID,
+
+    /// Event that has been potentially prefetched by the route guard
+    /// Only happens in the admin controller
     pub prefetched_calendar_event: Option<CalendarEvent>,
 }
 

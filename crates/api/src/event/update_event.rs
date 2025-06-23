@@ -139,6 +139,7 @@ pub async fn update_event_controller(
         .map_err(NitteiError::from)
 }
 
+/// Use case for updating an event
 #[derive(Debug, Default)]
 pub struct UpdateEventUseCase {
     pub user: User,
@@ -165,7 +166,8 @@ pub struct UpdateEventUseCase {
     pub created: Option<DateTime<Utc>>,
     pub updated: Option<DateTime<Utc>>,
 
-    // Prefetched event by the route guard, if any
+    /// Event that has been potentially prefetched by the route guard
+    /// Only happens in the admin controller
     pub prefetched_calendar_event: Option<CalendarEvent>,
 }
 

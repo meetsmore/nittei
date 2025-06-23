@@ -288,8 +288,8 @@ pub async fn account_can_modify_calendar(
     }
 }
 
-/// Used for account admin routes by checking that account
-/// is not modifying an event in another account
+/// Used for admin routes for calendar events
+/// It checks if the acc can access/modify the event
 ///
 /// Store the event in the request extensions
 #[instrument(name = "auth::account_can_modify_event", skip_all)]
