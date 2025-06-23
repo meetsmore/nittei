@@ -59,25 +59,13 @@ jobs:
             target/
           key: ${{ runner.os }}--${{ runner.arch }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Start server
+      - name: Build server and run migrations
         run: |
           # run the migrations first
           cargo install sqlx-cli --no-default-features --features postgres || true
           (cd crates/infra && sqlx migrate run)
 
           cargo build
-          ./target/debug/nittei &> output.log &
-          echo "Started server in background"
-
-          # Wait for backend server to be ready
-          RETRIES=10
-          PORT=${NITTEI__HTTP_PORT}
-          until
-            curl localhost:$PORT/api/v1/healthcheck >/dev/null 2>&1 ||
-              [ $((RETRIES--)) -eq 0 ]
-          do
-            sleep 1
-          done
 
       - name: Install JS modules
         run: |
@@ -113,8 +101,32 @@ jobs:
           cd clients/javascript
           pnpm run build
 
-      - name: Run tests
+      - name: Start server and run tests
         run: |
+          echo "Starting server"
+          ./target/debug/nittei &> output.log &
+          echo "Started server in background"
+
+          IS_READY=false
+
+          # Wait for backend server to be ready
+          RETRIES=20
+          PORT=${NITTEI__HTTP_PORT}
+          until [ "$IS_READY" = true ] || [ $((RETRIES--)) -eq 0 ]; do
+            if curl localhost:$PORT/api/v1/healthcheck >/dev/null 2>&1; then
+              IS_READY=true
+            fi
+          do
+            echo "Waiting for server to be ready"
+            sleep 1
+          done
+
+          if [ "$IS_READY" = false ]; then
+            echo "Server did not start in time"
+            exit 1
+          fi
+
+          # Run tests
           cd clients/javascript
           pnpm run test
 
