@@ -1,12 +1,12 @@
 use axum::{Extension, Json, extract::Path};
 use nittei_api_structs::get_event::*;
-use nittei_domain::{Account, CalendarEvent, ID, User};
+use nittei_domain::{CalendarEvent, ID, User};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{Policy, account_can_modify_event},
+        auth::Policy,
         usecase::{UseCase, execute},
     },
 };
@@ -27,15 +27,13 @@ use crate::{
     )
 )]
 pub async fn get_event_admin_controller(
-    Extension(account): Extension<Account>,
-    path_params: Path<PathParams>,
+    Extension(event): Extension<CalendarEvent>,
     Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let e = account_can_modify_event(&account, &path_params.event_id, &ctx).await?;
-
     let usecase = GetEventUseCase {
-        user_id: e.user_id,
-        event_id: e.id,
+        user_id: event.user_id.clone(),
+        event_id: event.id.clone(),
+        prefetched_calendar_event: Some(event),
     };
 
     execute(usecase, &ctx)
@@ -64,6 +62,7 @@ pub async fn get_event_controller(
     let usecase = GetEventUseCase {
         event_id: path_params.event_id.clone(),
         user_id: user.id.clone(),
+        prefetched_calendar_event: None,
     };
 
     execute(usecase, &ctx)
@@ -72,10 +71,15 @@ pub async fn get_event_controller(
         .map_err(NitteiError::from)
 }
 
+/// Use case for getting an event
 #[derive(Debug)]
 pub struct GetEventUseCase {
     pub event_id: ID,
     pub user_id: ID,
+
+    /// Event that has been potentially prefetched by the route guard
+    /// Only happens in the admin controller
+    pub prefetched_calendar_event: Option<CalendarEvent>,
 }
 
 #[derive(Debug)]
@@ -105,10 +109,13 @@ impl UseCase for GetEventUseCase {
     const NAME: &'static str = "GetEvent";
 
     async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
-        let e = ctx.repos.events.find(&self.event_id).await.map_err(|e| {
-            tracing::error!("[get_event] Error finding event: {:?}", e);
-            UseCaseError::InternalError
-        })?;
+        let e = match &self.prefetched_calendar_event {
+            Some(event) => Some(event.clone()),
+            None => ctx.repos.events.find(&self.event_id).await.map_err(|e| {
+                tracing::error!("[get_event] Error finding event: {:?}", e);
+                UseCaseError::InternalError
+            })?,
+        };
         match e {
             Some(event) if event.user_id == self.user_id => Ok(event),
             _ => Err(UseCaseError::NotFound(self.event_id.clone())),

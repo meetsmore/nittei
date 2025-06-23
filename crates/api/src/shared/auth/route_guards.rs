@@ -1,4 +1,10 @@
-use axum::{Extension, extract::Request, http::HeaderMap, middleware::Next, response::Response};
+use axum::{
+    Extension,
+    extract::{Path, Request},
+    http::HeaderMap,
+    middleware::Next,
+    response::Response,
+};
 use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
 use nittei_domain::{Account, Calendar, CalendarEvent, ID, Schedule, User};
 use nittei_infra::NitteiContext;
@@ -282,10 +288,30 @@ pub async fn account_can_modify_calendar(
     }
 }
 
-/// Used for account admin routes by checking that account
-/// is not modifying an event in another account
+/// Used for admin routes for calendar events
+/// It checks if the acc can access/modify the event
+///
+/// Store the event in the request extensions
 #[instrument(name = "auth::account_can_modify_event", skip_all)]
 pub async fn account_can_modify_event(
+    Extension(account): Extension<Account>,
+    Path(event_id): Path<ID>,
+    Extension(ctx): Extension<NitteiContext>,
+    request: Request,
+    next: Next,
+) -> Result<Response, NitteiError> {
+    let event = account_can_modify_event_inner(&account, &event_id, &ctx).await?;
+
+    // Inject the event into the request extensions
+    let mut request = request;
+    request.extensions_mut().insert(event);
+
+    // Run the next middleware or the final handler
+    Ok(next.run(request).await)
+}
+
+/// Inner function for checking that account is not modifying an event in another account
+pub async fn account_can_modify_event_inner(
     account: &Account,
     event_id: &ID,
     ctx: &NitteiContext,
