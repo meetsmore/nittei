@@ -61,10 +61,11 @@ jobs:
 
       - name: Build server and run migrations
         run: |
-          # run the migrations first
+          echo "Running migrations"
           cargo install sqlx-cli --no-default-features --features postgres || true
           (cd crates/infra && sqlx migrate run)
 
+          echo "Building server"
           cargo build
 
       - name: Install JS modules
@@ -115,8 +116,8 @@ jobs:
           until [ "$IS_READY" = true ] || [ $((RETRIES--)) -eq 0 ]; do
             if curl localhost:$PORT/api/v1/healthcheck >/dev/null 2>&1; then
               IS_READY=true
+              break
             fi
-          do
             echo "Waiting for server to be ready"
             sleep 1
           done
