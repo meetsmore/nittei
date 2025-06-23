@@ -254,6 +254,25 @@ pub async fn protect_public_account_route(
 
 /// Used for account admin routes by checking that account
 /// is not modifying a user in another account
+#[instrument(name = "auth::account_can_modify_user_middleware", skip_all)]
+pub async fn account_can_modify_user_middleware(
+    Extension(account): Extension<Account>,
+    Path(user_id): Path<ID>,
+    Extension(ctx): Extension<NitteiContext>,
+    request: Request,
+    next: Next,
+) -> Result<Response, NitteiError> {
+    let user = account_can_modify_user(&account, &user_id, &ctx).await?;
+
+    // Inject the user into the request extensions
+    let mut request = request;
+    request.extensions_mut().insert(user);
+
+    // Run the next middleware or the final handler
+    Ok(next.run(request).await)
+}
+
+/// Checks that account is not modifying a user in another account
 #[instrument(name = "auth::account_can_modify_user", skip_all)]
 pub async fn account_can_modify_user(
     account: &Account,
@@ -311,7 +330,7 @@ pub async fn account_can_modify_event(
 }
 
 /// Inner function for checking that account is not modifying an event in another account
-pub async fn account_can_modify_event_inner(
+async fn account_can_modify_event_inner(
     account: &Account,
     event_id: &ID,
     ctx: &NitteiContext,

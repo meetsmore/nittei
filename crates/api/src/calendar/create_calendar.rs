@@ -1,15 +1,15 @@
-use axum::{Extension, Json, extract::Path, http::StatusCode};
+use axum::{Extension, Json, http::StatusCode};
 use axum_valid::Valid;
 use chrono::Weekday;
 use chrono_tz::Tz;
-use nittei_api_structs::create_calendar::{APIResponse, CreateCalendarRequestBody, PathParams};
-use nittei_domain::{Account, Calendar, CalendarSettings, ID, User};
+use nittei_api_structs::create_calendar::{APIResponse, CreateCalendarRequestBody};
+use nittei_domain::{Calendar, CalendarSettings, ID, User};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{Permission, Policy, account_can_modify_user},
+        auth::{Permission, Policy},
         usecase::{PermissionBoundary, UseCase, execute, execute_with_policy},
     },
 };
@@ -30,16 +30,13 @@ use crate::{
     )
 )]
 pub async fn create_calendar_admin_controller(
-    Extension(account): Extension<Account>,
-    path_params: Path<PathParams>,
+    Extension(user): Extension<User>,
     Extension(ctx): Extension<NitteiContext>,
     mut body: Valid<Json<CreateCalendarRequestBody>>,
 ) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
-    let user = account_can_modify_user(&account, &path_params.user_id, &ctx).await?;
-
     let usecase = CreateCalendarUseCase {
         user_id: user.id,
-        account_id: account.id,
+        account_id: user.account_id,
         week_start: body.0.week_start,
         name: body.0.name.take(),
         key: body.0.key.take(),
@@ -86,6 +83,7 @@ pub async fn create_calendar_controller(
         .map_err(NitteiError::from)
 }
 
+/// Use case for creating a calendar
 #[derive(Debug)]
 struct CreateCalendarUseCase {
     pub user_id: ID,
@@ -97,21 +95,16 @@ struct CreateCalendarUseCase {
     pub metadata: Option<serde_json::Value>,
 }
 
+/// Errors for the create calendar use case
 #[derive(Debug)]
 enum UseCaseError {
     InternalError,
-    UserNotFound,
-    StorageError,
 }
 
 impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::InternalError => Self::InternalError,
-            UseCaseError::StorageError => Self::InternalError,
-            UseCaseError::UserNotFound => {
-                Self::NotFound("The requested user was not found.".to_string())
-            }
         }
     }
 }
@@ -125,23 +118,13 @@ impl UseCase for CreateCalendarUseCase {
     const NAME: &'static str = "CreateCalendar";
 
     async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
-        let user = ctx.repos.users.find(&self.user_id).await.map_err(|e| {
-            tracing::error!("[create_calendar] Error finding user: {:?}", e);
-            UseCaseError::InternalError
-        })?;
-
-        let user = match user {
-            Some(user) if user.account_id == self.account_id => user,
-            _ => return Err(UseCaseError::UserNotFound),
-        };
-
         let settings = CalendarSettings {
             week_start: self.week_start,
             timezone: self.timezone,
         };
         let mut calendar = Calendar::new(
             &self.user_id,
-            &user.account_id,
+            &self.account_id,
             self.name.clone(),
             self.key.clone(),
         );
@@ -155,7 +138,7 @@ impl UseCase for CreateCalendarUseCase {
             .map(|_| calendar)
             .map_err(|e| {
                 tracing::error!("[create_calendar] Error inserting calendar: {:?}", e);
-                UseCaseError::StorageError
+                UseCaseError::InternalError
             })
     }
 }

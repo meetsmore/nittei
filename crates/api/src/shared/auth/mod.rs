@@ -8,6 +8,7 @@ pub use route_guards::{
     account_can_modify_event,
     account_can_modify_schedule,
     account_can_modify_user,
+    account_can_modify_user_middleware,
     protect_admin_route,
     protect_public_account_route,
     protect_route,

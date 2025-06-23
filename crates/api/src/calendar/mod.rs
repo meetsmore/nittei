@@ -37,7 +37,9 @@ pub fn configure_routes() -> OpenApiRouter {
         // Create a calendar for a user (admin route)
         .route(
             "/user/{user_id}/calendar",
-            post(create_calendar_admin_controller),
+            post(create_calendar_admin_controller).layer(axum::middleware::from_fn(
+                auth::account_can_modify_user_middleware,
+            )),
         )
         // List calendars for a user (admin route)
         .route(
