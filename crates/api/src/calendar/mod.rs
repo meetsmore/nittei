@@ -84,7 +84,9 @@ pub fn configure_routes() -> OpenApiRouter {
             "/user/{user_id}/calendar/sync",
             delete(remove_sync_calendar_admin_controller),
         )
-        .route_layer(axum::middleware::from_fn(auth::protect_admin_route_middleware));
+        .route_layer(axum::middleware::from_fn(
+            auth::protect_admin_route_middleware,
+        ));
 
     let user_router = OpenApiRouter::new()
         // Create a calendar
