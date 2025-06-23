@@ -5,7 +5,7 @@ use nittei_infra::setup_context;
 use tokio::signal;
 use tracing::info;
 
-/// Use jemalloc as the global allocator
+/// Use mimalloc as the global allocator
 /// This is a performance optimization for the application
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;
