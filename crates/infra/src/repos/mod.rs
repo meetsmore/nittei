@@ -69,7 +69,7 @@ pub struct Repos {
 
 impl Repos {
     pub async fn create_postgres(connection_string: &str) -> anyhow::Result<Self> {
-        info!("DB CHECKING CONNECTION ...");
+        info!("[repos] Creating postgres connection");
         let pool = PgPoolOptions::new()
             .min_connections(nittei_utils::config::APP_CONFIG.pg.min_connections)
             .max_connections(nittei_utils::config::APP_CONFIG.pg.max_connections)
@@ -79,10 +79,10 @@ impl Repos {
                 "Failed to connect to PG url '{}'",
                 remove_password_from_url(connection_string)?
             ))?;
-        info!("DB CHECKING CONNECTION ... [done]");
+        info!("[repos] Postgres connection created");
 
         if !nittei_utils::config::APP_CONFIG.pg.skip_migrations {
-            info!("DB EXECUTING MIGRATION ...");
+            info!("[repos] Executing migrations");
 
             // Run the migrations
             let migration_result = sqlx::migrate!().run(&pool).await;
@@ -100,9 +100,9 @@ impl Repos {
                     return Err(e.into());
                 }
             }
-            info!("DB EXECUTING MIGRATION ... [done]");
+            info!("[repos] Migrations executed");
         } else {
-            info!("DB MIGRATION SKIPPED");
+            info!("[repos] Migrations skipped");
         }
 
         Ok(Self {
