@@ -4,11 +4,11 @@
 # docker buildx build -f debianWithDD.Dockerfile -t image:tag --build-arg='ARCH=x86_64' --platform linux/amd64 .
 # docker buildx build -f debianWithDD.Dockerfile -t image:tag --build-arg='ARCH=aarch64' --platform linux/arm64 .
 
-ARG ARCH=x86_64
-
 FROM rust:1.87.0-slim AS builder
 
 WORKDIR /app/nittei
+
+ARG ARCH=x86_64
 
 
 RUN apt update \
