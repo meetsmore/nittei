@@ -1,9 +1,12 @@
 use std::collections::HashMap;
 
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, http::HeaderMap};
 use chrono::{DateTime, Utc};
-use futures::{StreamExt, future::join_all, stream};
-use nittei_api_structs::multiple_freebusy::{APIResponse, RequestBody};
+use futures::{FutureExt, StreamExt, future::join_all, stream};
+use nittei_api_structs::multiple_freebusy::{
+    MultipleFreeBusyAPIResponse,
+    MultipleFreeBusyRequestBody,
+};
 use nittei_domain::{
     Calendar,
     CalendarEvent,
@@ -13,6 +16,7 @@ use nittei_domain::{
     expand_all_events_and_remove_exceptions,
 };
 use nittei_infra::NitteiContext;
+use nittei_utils::config::APP_CONFIG;
 use tracing::error;
 
 use crate::{
@@ -23,12 +27,27 @@ use crate::{
     },
 };
 
+#[utoipa::path(
+    post,
+    tag = "User",
+    path = "/api/v1/user/freebusy",
+    summary = "Get freebusy for multiple users",
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = MultipleFreeBusyRequestBody,
+    ),
+    responses(
+        (status = 200, body = MultipleFreeBusyAPIResponse)
+    )
+)]
 pub async fn get_multiple_freebusy_controller(
-    http_req: HttpRequest,
-    body: web::Json<RequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let _account = protect_public_account_route(&http_req, &ctx).await?;
+    headers: HeaderMap,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Json<MultipleFreeBusyRequestBody>,
+) -> Result<Json<MultipleFreeBusyAPIResponse>, NitteiError> {
+    let _account = protect_public_account_route(&headers, &ctx).await?;
 
     let usecase = GetMultipleFreeBusyUseCase {
         user_ids: body.user_ids.clone(),
@@ -38,7 +57,7 @@ pub async fn get_multiple_freebusy_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|usecase_res| HttpResponse::Ok().json(APIResponse(usecase_res.0)))
+        .map(|usecase_res| Json(MultipleFreeBusyAPIResponse(usecase_res.0)))
         .map_err(NitteiError::from)
 }
 
@@ -63,13 +82,13 @@ impl From<UseCaseError> for NitteiError {
         match e {
             UseCaseError::InternalError => Self::InternalError,
             UseCaseError::InvalidTimespan => {
-                Self::BadClientData("The provided start_ts and end_ts is invalid".into())
+                Self::BadClientData("The provided start_ts and end_ts are invalid".into())
             }
         }
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for GetMultipleFreeBusyUseCase {
     type Response = GetMultipleFreeBusyResponse;
 
@@ -79,7 +98,7 @@ impl UseCase for GetMultipleFreeBusyUseCase {
 
     async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         let timespan = TimeSpan::new(self.start_time, self.end_time);
-        if timespan.greater_than(ctx.config.event_instances_query_duration_limit) {
+        if timespan.greater_than(APP_CONFIG.event_instances_query_duration_limit) {
             return Err(UseCaseError::InvalidTimespan);
         }
 
@@ -94,7 +113,7 @@ impl UseCase for GetMultipleFreeBusyUseCase {
             .map_err(|_| UseCaseError::InternalError)?;
 
         let busy_event_instances = self
-            .get_event_instances_from_calendars(&timespan, ctx, calendars)
+            .get_event_instances_from_calendars(timespan, ctx, calendars)
             .await?;
 
         Ok(GetMultipleFreeBusyResponse(busy_event_instances))
@@ -128,7 +147,7 @@ impl GetMultipleFreeBusyUseCase {
 
     async fn get_event_instances_from_calendars(
         &self,
-        timespan: &TimeSpan,
+        timespan: TimeSpan,
         ctx: &NitteiContext,
         calendars: Vec<Calendar>,
     ) -> Result<HashMap<ID, Vec<EventInstance>>, UseCaseError> {
@@ -143,14 +162,20 @@ impl GetMultipleFreeBusyUseCase {
 
         // Fetch all events for all calendars
         // This is not executed yet (lazy)
-        let all_events_futures = calendars.iter().map(|calendar| async move {
-            let events = ctx
-                .repos
-                .events
-                .find_by_calendar(&calendar.id, Some(timespan))
-                .await
-                .unwrap_or_default(); // TODO: Handle error
-            Ok((calendar.user_id.clone(), events)) as Result<(ID, Vec<CalendarEvent>), UseCaseError>
+        let all_events_futures = calendars.clone().into_iter().map(|calendar| {
+            let timespan = timespan.clone();
+
+            async move {
+                let events = ctx
+                    .repos
+                    .events
+                    .find_by_calendar(&calendar.id, Some(timespan))
+                    .await
+                    .unwrap_or_default(); // TODO: Handle error
+                Ok((calendar.user_id.clone(), events))
+                    as Result<(ID, Vec<CalendarEvent>), UseCaseError>
+            }
+            .boxed()
         });
 
         // Fetch events in chunks of 5
@@ -163,10 +188,11 @@ impl GetMultipleFreeBusyUseCase {
             for event_result in events_res {
                 match event_result {
                     Ok((user_id, events)) => {
+                        let timespan = timespan.clone();
                         let expanded_events = expand_all_events_and_remove_exceptions(
                             &calendars_lookup,
                             &events,
-                            timespan,
+                            timespan.clone(),
                         )
                         .map_err(|e| {
                             error!("Got an error when expanding events {:?}", e);
@@ -195,8 +221,7 @@ mod test {
 
     use super::*;
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn multiple_freebusy_works() {
         let ctx = setup_context().await.unwrap();
         let account = Account::default();

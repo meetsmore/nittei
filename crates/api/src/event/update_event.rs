@@ -1,8 +1,10 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, extract::Path};
+use axum_valid::Valid;
 use chrono::{DateTime, TimeDelta, Utc};
 use event::subscribers::SyncRemindersOnEventUpdated;
 use nittei_api_structs::update_event::*;
 use nittei_domain::{
+    Account,
     CalendarEvent,
     CalendarEventReminder,
     CalendarEventStatus,
@@ -11,101 +13,126 @@ use nittei_domain::{
     User,
 };
 use nittei_infra::NitteiContext;
+use nittei_utils::config::APP_CONFIG;
 
 use crate::{
     error::NitteiError,
     event::{self, subscribers::UpdateSyncedEventsOnEventUpdated},
     shared::{
-        auth::{
-            Permission,
-            account_can_modify_event,
-            account_can_modify_user,
-            protect_admin_route,
-            protect_route,
-        },
+        auth::{Permission, Policy, account_can_modify_event, account_can_modify_user},
         usecase::{PermissionBoundary, Subscriber, UseCase, execute, execute_with_policy},
     },
 };
 
+#[utoipa::path(
+    put,
+    tag = "Event",
+    path = "/api/v1/user/events/{event_id}",
+    summary = "Update an event (admin only)",
+    params(
+        ("event_id" = ID, Path, description = "The id of the event to update"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = UpdateEventRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn update_event_admin_controller(
-    http_req: HttpRequest,
-    body: web::Json<RequestBody>,
-    path_params: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    Extension(account): Extension<Account>,
+    path_params: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Valid<Json<UpdateEventRequestBody>>,
+) -> Result<Json<APIResponse>, NitteiError> {
     let e = account_can_modify_event(&account, &path_params.event_id, &ctx).await?;
     let user = account_can_modify_user(&account, &e.user_id, &ctx).await?;
 
-    let body = body.0;
+    let mut body = body.0;
     let usecase = UpdateEventUseCase {
         user,
         event_id: e.id,
-        title: body.title,
-        description: body.description,
-        event_type: body.event_type,
-        external_parent_id: body.parent_id,
-        external_id: body.external_id,
-        location: body.location,
-        status: body.status,
+        title: body.title.take(),
+        description: body.description.take(),
+        event_type: body.event_type.take(),
+        external_parent_id: body.parent_id.take(),
+        external_id: body.external_id.take(),
+        location: body.location.take(),
+        status: body.status.take(),
         all_day: body.all_day,
         duration: body.duration,
         start_time: body.start_time,
-        reminders: body.reminders,
+        reminders: body.reminders.take(),
         busy: body.busy,
-        service_id: body.service_id,
-        recurrence: body.recurrence,
-        exdates: body.exdates,
-        recurring_event_id: body.recurring_event_id,
+        service_id: body.service_id.take(),
+        recurrence: body.recurrence.take(),
+        exdates: body.exdates.take(),
+        recurring_event_id: body.recurring_event_id.take(),
         original_start_time: body.original_start_time,
-        metadata: body.metadata,
+        metadata: body.metadata.take(),
         created: body.created,
         updated: body.updated,
     };
 
     execute(usecase, &ctx)
         .await
-        .map(|event| HttpResponse::Ok().json(APIResponse::new(event)))
+        .map(|event| Json(APIResponse::new(event)))
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    put,
+    tag = "Event",
+    path = "/api/v1/events/{event_id}",
+    summary = "Update an event (user only)",
+    params(
+        ("event_id" = ID, Path, description = "The id of the event to update"),
+    ),
+    request_body(
+        content = UpdateEventRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn update_event_controller(
-    http_req: HttpRequest,
-    body: web::Json<RequestBody>,
-    path_params: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let (user, policy) = protect_route(&http_req, &ctx).await?;
-
-    let body = body.0;
+    path_params: Path<PathParams>,
+    Extension((user, policy)): Extension<(User, Policy)>,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Valid<Json<UpdateEventRequestBody>>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let mut body = body.0;
     let usecase = UpdateEventUseCase {
         user,
         event_id: path_params.event_id.clone(),
-        title: body.title,
-        description: body.description,
-        event_type: body.event_type,
-        external_parent_id: body.parent_id,
-        external_id: body.external_id,
-        location: body.location,
-        status: body.status,
+        title: body.title.take(),
+        description: body.description.take(),
+        event_type: body.event_type.take(),
+        external_parent_id: body.parent_id.take(),
+        external_id: body.external_id.take(),
+        location: body.location.take(),
+        status: body.status.take(),
         all_day: body.all_day,
         duration: body.duration,
         start_time: body.start_time,
-        reminders: body.reminders,
+        reminders: body.reminders.take(),
         busy: body.busy,
-        service_id: body.service_id,
-        recurrence: body.recurrence,
-        exdates: body.exdates,
-        recurring_event_id: body.recurring_event_id,
+        service_id: body.service_id.take(),
+        recurrence: body.recurrence.take(),
+        exdates: body.exdates.take(),
+        recurring_event_id: body.recurring_event_id.take(),
         original_start_time: body.original_start_time,
-        metadata: body.metadata,
+        metadata: body.metadata.take(),
         created: body.created,
         updated: body.updated,
     };
 
     execute_with_policy(usecase, &policy, &ctx)
         .await
-        .map(|event| HttpResponse::Ok().json(APIResponse::new(event)))
+        .map(|event| Json(APIResponse::new(event)))
         .map_err(NitteiError::from)
 }
 
@@ -162,7 +189,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for UpdateEventUseCase {
     type Response = CalendarEvent;
 
@@ -224,6 +251,7 @@ impl UseCase for UpdateEventUseCase {
         if let Some(reminders) = &reminders {
             for reminder in reminders {
                 if !reminder.is_valid() {
+                    tracing::warn!("[update_event] Invalid reminder");
                     return Err(UseCaseError::InvalidReminder);
                 }
             }
@@ -343,10 +371,14 @@ impl UseCase for UpdateEventUseCase {
     }
 
     fn subscribers() -> Vec<Box<dyn Subscriber<Self>>> {
-        vec![
-            Box::new(SyncRemindersOnEventUpdated),
-            Box::new(UpdateSyncedEventsOnEventUpdated),
-        ]
+        if APP_CONFIG.disable_reminders {
+            vec![]
+        } else {
+            vec![
+                Box::new(SyncRemindersOnEventUpdated),
+                Box::new(UpdateSyncedEventsOnEventUpdated),
+            ]
+        }
     }
 }
 
@@ -362,8 +394,7 @@ mod test {
 
     use super::*;
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn update_nonexisting_event() {
         let mut usecase = UpdateEventUseCase {
             start_time: Some(DateTime::from_timestamp_millis(500).unwrap()),

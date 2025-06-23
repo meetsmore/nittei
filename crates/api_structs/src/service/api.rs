@@ -73,14 +73,14 @@ pub mod add_user_to_service {
         #[ts(optional)]
         pub availability: Option<TimePlan>,
         #[serde(default)]
-        #[ts(optional, type = "number")]
+        #[ts(type = "number", optional)]
         pub buffer_after: Option<i64>,
         #[serde(default)]
-        #[ts(optional, type = "number")]
+        #[ts(type = "number", optional)]
         pub buffer_before: Option<i64>,
-        #[ts(optional, type = "number")]
+        #[ts(type = "number", optional)]
         pub closest_booking_time: Option<i64>,
-        #[ts(optional, type = "number")]
+        #[ts(type = "number", optional)]
         pub furthest_booking_time: Option<i64>,
     }
 
@@ -264,7 +264,7 @@ pub mod get_service_bookingslots {
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "GetServiceBookingSlotsQueryParams")]
     pub struct QueryParams {
-        #[ts(optional, type = "string")]
+        #[ts(type = "string", optional)]
         pub timezone: Option<Tz>,
         #[ts(type = "number")]
         pub duration: i64,

@@ -1,49 +1,68 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json};
+use axum_valid::Valid;
 use nittei_api_structs::{dtos::CalendarEventDTO, search_events::*};
-use nittei_domain::{CalendarEventSort, DateTimeQuery, ID, IDQuery, StringQuery};
+use nittei_domain::{
+    Account,
+    CalendarEventSort,
+    DateTimeQuery,
+    ID,
+    IDQuery,
+    RecurrenceQuery,
+    StringQuery,
+};
 use nittei_infra::{NitteiContext, SearchEventsForUserParams, SearchEventsParams};
 use nittei_utils::config::APP_CONFIG;
 
 use crate::{
     error::NitteiError,
-    shared::{
-        auth::protect_admin_route,
-        usecase::{UseCase, execute},
-    },
+    shared::usecase::{UseCase, execute},
 };
 
+#[utoipa::path(
+    post,
+    tag = "Event",
+    path = "/api/v1/events/search",
+    summary = "Search events for a user (admin only)",
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = SearchEventsRequestBody,
+    ),
+    responses(
+        (status = 200, body = SearchEventsAPIResponse)
+    )
+)]
 pub async fn search_events_controller(
-    http_req: HttpRequest,
-    body: actix_web_validator::Json<RequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
-
-    let body = body.0;
+    Extension(account): Extension<Account>,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Valid<Json<SearchEventsRequestBody>>,
+) -> Result<Json<SearchEventsAPIResponse>, NitteiError> {
+    let mut body = body.0;
     let usecase = SearchEventsUseCase {
         account_id: account.id,
-        event_uid: body.filter.event_uid,
-        user_id: body.filter.user_id,
-        calendar_ids: body.filter.calendar_ids,
-        external_id: body.filter.external_id,
-        external_parent_id: body.filter.external_parent_id,
-        start_time: body.filter.start_time,
-        end_time: body.filter.end_time,
-        event_type: body.filter.event_type,
-        status: body.filter.status,
-        recurring_event_uid: body.filter.recurring_event_uid,
-        original_start_time: body.filter.original_start_time,
-        is_recurring: body.filter.is_recurring,
-        metadata: body.filter.metadata,
-        created_at: body.filter.created_at,
-        updated_at: body.filter.updated_at,
-        sort: body.sort,
-        limit: body.limit.or(Some(200)), // Default limit to 200
+        event_uid: body.filter.event_uid.take(),
+        user_id: body.filter.user_id.clone(),
+        calendar_ids: body.filter.calendar_ids.take(),
+        external_id: body.filter.external_id.take(),
+        external_parent_id: body.filter.external_parent_id.take(),
+        start_time: body.filter.start_time.take(),
+        end_time: body.filter.end_time.take(),
+        event_type: body.filter.event_type.take(),
+        status: body.filter.status.take(),
+        recurring_event_uid: body.filter.recurring_event_uid.take(),
+        original_start_time: body.filter.original_start_time.take(),
+        recurrence: body.filter.recurrence.take(),
+        metadata: body.filter.metadata.take(),
+        created_at: body.filter.created_at.take(),
+        updated_at: body.filter.updated_at.take(),
+        sort: body.sort.take(),
+        limit: body.limit.or(Some(1000)), // Default limit to 1000
     };
 
     execute(usecase, &ctx)
         .await
-        .map(|events| HttpResponse::Ok().json(APIResponse::new(events.events)))
+        .map(|events| Json(SearchEventsAPIResponse::new(events.events)))
         .map_err(NitteiError::from)
 }
 
@@ -86,8 +105,9 @@ pub struct SearchEventsUseCase {
     /// Optional query on original start time - "lower than or equal", or "great than or equal" (UTC)
     pub original_start_time: Option<DateTimeQuery>,
 
-    /// Optional filter on the recurrence (existence)
-    pub is_recurring: Option<bool>,
+    /// Optional filter on the recurrence
+    /// This allows to filter on the existence or not of a recurrence, or the existence of a recurrence at a specific date
+    pub recurrence: Option<RecurrenceQuery>,
 
     /// Optional list of metadata key-value pairs
     pub metadata: Option<serde_json::Value>,
@@ -130,7 +150,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for SearchEventsUseCase {
     type Response = UseCaseResponse;
 
@@ -143,6 +163,10 @@ impl UseCase for SearchEventsUseCase {
             // Note that limit is unsigned, so it can't be negative
             // Limit nb of events to be returned
             if limit == 0 || limit > APP_CONFIG.max_events_returned_by_search {
+                tracing::warn!(
+                    "[search_events] Limit is invalid: it should be positive and under {}",
+                    APP_CONFIG.max_events_returned_by_search
+                );
                 return Err(UseCaseError::BadRequest(format!(
                     "Limit is invalid: it should be positive and under {}",
                     APP_CONFIG.max_events_returned_by_search
@@ -152,6 +176,7 @@ impl UseCase for SearchEventsUseCase {
 
         if let Some(calendar_ids) = &self.calendar_ids {
             if calendar_ids.is_empty() {
+                tracing::warn!("[search_events] calendar_ids cannot be empty");
                 return Err(UseCaseError::BadRequest(
                     "calendar_ids cannot be empty".into(),
                 ));
@@ -162,7 +187,10 @@ impl UseCase for SearchEventsUseCase {
                 .calendars
                 .find_multiple(calendar_ids.iter().collect())
                 .await
-                .map_err(|_| UseCaseError::InternalError)?;
+                .map_err(|e| {
+                    tracing::error!("[search_events] Error finding calendars: {:?}", e);
+                    UseCaseError::InternalError
+                })?;
 
             // Check that all calendars exist and belong to the same account
             if calendars.is_empty()
@@ -200,7 +228,7 @@ impl UseCase for SearchEventsUseCase {
                     status: self.status.take(),
                     recurring_event_uid: self.recurring_event_uid.take(),
                     original_start_time: self.original_start_time.take(),
-                    is_recurring: self.is_recurring.take(),
+                    recurrence: self.recurrence.take(),
                     metadata: self.metadata.take(),
                     created_at: self.created_at.take(),
                     updated_at: self.updated_at.take(),
@@ -214,7 +242,10 @@ impl UseCase for SearchEventsUseCase {
             Ok(events) => Ok(UseCaseResponse {
                 events: events.into_iter().map(CalendarEventDTO::new).collect(),
             }),
-            Err(_) => Err(UseCaseError::InternalError),
+            Err(e) => {
+                tracing::error!("[search_events] Error searching events: {:?}", e);
+                Err(UseCaseError::InternalError)
+            }
         }
     }
 }

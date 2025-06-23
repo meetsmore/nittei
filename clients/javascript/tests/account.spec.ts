@@ -285,7 +285,9 @@ describe('Account API', () => {
           userId: {
             eq: userId,
           },
-          isRecurring: true,
+          recurrence: {
+            exists: true,
+          },
         },
       })
       expect(res.events.length).toBe(1)
@@ -302,7 +304,9 @@ describe('Account API', () => {
           userId: {
             eq: userId,
           },
-          isRecurring: false,
+          recurrence: {
+            exists: false,
+          },
         },
       })
       expect(res.events.length).toBe(4)
@@ -322,6 +326,25 @@ describe('Account API', () => {
           }),
         ])
       )
+    })
+
+    it('should be able to search by userId and recurrence and recurring at a specific date', async () => {
+      const res = await adminClient.account.searchEventsInAccount({
+        filter: {
+          userId: {
+            eq: userId,
+          },
+          recurrence: {
+            existsAndRecurringAt: new Date(10000),
+          },
+        },
+      })
+      expect(res.events.length).toBe(1)
+      expect(res.events).toEqual([
+        expect.objectContaining({
+          id: recurringEventId,
+        }),
+      ])
     })
 
     it('should be able to search by externalId', async () => {
@@ -385,6 +408,25 @@ describe('Account API', () => {
           }),
           expect.objectContaining({
             id: eventId2,
+          }),
+        ])
+      )
+    })
+
+    it('should be able to search on the recurring event ID directly', async () => {
+      const res = await adminClient.account.searchEventsInAccount({
+        filter: {
+          recurringEventUid: {
+            eq: recurringEventId,
+          },
+        },
+      })
+
+      expect(res.events.length).toBe(1)
+      expect(res.events).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: recurringExceptionEventId,
           }),
         ])
       )

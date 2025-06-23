@@ -1,4 +1,8 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{
+    Extension,
+    Json,
+    extract::{Path, Query},
+};
 use chrono::{DateTime, Utc};
 use nittei_api_structs::remove_service_event_intend::*;
 use nittei_domain::{Account, ID};
@@ -6,20 +10,15 @@ use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
-    shared::{
-        auth::protect_admin_route,
-        usecase::{UseCase, execute},
-    },
+    shared::usecase::{UseCase, execute},
 };
 
 pub async fn remove_service_event_intend_controller(
-    http_req: HttpRequest,
-    query_params: web::Query<QueryParams>,
-    mut path_params: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
-
+    Extension(account): Extension<Account>,
+    query_params: Query<QueryParams>,
+    mut path_params: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
     let query = query_params.0;
     let usecase = RemoveServiceEventIntendUseCase {
         account,
@@ -29,7 +28,7 @@ pub async fn remove_service_event_intend_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|_| HttpResponse::Ok().json(APIResponse::default()))
+        .map(|_| Json(APIResponse::default()))
         .map_err(NitteiError::from)
 }
 
@@ -60,7 +59,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for RemoveServiceEventIntendUseCase {
     type Response = UseCaseRes;
 

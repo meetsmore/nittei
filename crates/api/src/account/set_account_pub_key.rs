@@ -1,23 +1,34 @@
-use actix_web::{HttpRequest, HttpResponse, web};
-use nittei_api_structs::set_account_pub_key::{APIResponse, RequestBody};
+use axum::{Extension, Json};
+use axum_valid::Valid;
+use nittei_api_structs::set_account_pub_key::{APIResponse, SetAccountPubKeyRequestBody};
 use nittei_domain::{Account, PEMKey};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
-    shared::{
-        auth::protect_admin_route,
-        usecase::{UseCase, execute},
-    },
+    shared::usecase::{UseCase, execute},
 };
 
+#[utoipa::path(
+    put,
+    tag = "Account",
+    path = "/api/v1/account/pubkey",
+    summary = "Set the public key for an account",
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = SetAccountPubKeyRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn set_account_pub_key_controller(
-    http_req: HttpRequest,
-    ctx: web::Data<NitteiContext>,
-    body: actix_web_validator::Json<RequestBody>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
-
+    Extension(ctx): Extension<NitteiContext>,
+    Extension(account): Extension<Account>,
+    body: Valid<Json<SetAccountPubKeyRequestBody>>,
+) -> Result<Json<APIResponse>, NitteiError> {
     let usecase = SetAccountPubKeyUseCase {
         account,
         public_jwt_key: body.public_jwt_key.clone(),
@@ -25,7 +36,7 @@ pub async fn set_account_pub_key_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|account| HttpResponse::Ok().json(APIResponse::new(account)))
+        .map(|account| Json(APIResponse::new(account)))
         .map_err(NitteiError::from)
 }
 
@@ -52,7 +63,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for SetAccountPubKeyUseCase {
     type Response = Account;
 

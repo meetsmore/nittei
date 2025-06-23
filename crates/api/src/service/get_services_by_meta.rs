@@ -1,17 +1,15 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, extract::Query};
 use nittei_api_structs::get_services_by_meta::*;
-use nittei_domain::Metadata;
+use nittei_domain::{Account, Metadata};
 use nittei_infra::{MetadataFindQuery, NitteiContext};
 
-use crate::{error::NitteiError, shared::auth::protect_admin_route};
+use crate::error::NitteiError;
 
 pub async fn get_services_by_meta_controller(
-    http_req: HttpRequest,
-    query_params: web::Query<QueryParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
-
+    Extension(account): Extension<Account>,
+    query_params: Query<QueryParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
     let query = MetadataFindQuery {
         account_id: account.id,
         metadata: Metadata::new_kv(query_params.0.key, query_params.0.value),
@@ -24,5 +22,5 @@ pub async fn get_services_by_meta_controller(
         .find_by_metadata(query)
         .await
         .map_err(|_| NitteiError::InternalError)?;
-    Ok(HttpResponse::Ok().json(APIResponse::new(services)))
+    Ok(Json(APIResponse::new(services)))
 }

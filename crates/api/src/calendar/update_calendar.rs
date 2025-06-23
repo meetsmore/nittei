@@ -1,31 +1,43 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, extract::Path};
+use axum_valid::Valid;
 use chrono::Weekday;
 use chrono_tz::Tz;
-use nittei_api_structs::update_calendar::{APIResponse, PathParams, RequestBody};
-use nittei_domain::{Calendar, ID, User};
+use nittei_api_structs::update_calendar::{APIResponse, PathParams, UpdateCalendarRequestBody};
+use nittei_domain::{Account, Calendar, ID, User};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{
-            Permission,
-            account_can_modify_calendar,
-            account_can_modify_user,
-            protect_admin_route,
-            protect_route,
-        },
+        auth::{Permission, Policy, account_can_modify_calendar, account_can_modify_user},
         usecase::{PermissionBoundary, UseCase, execute, execute_with_policy},
     },
 };
 
+#[utoipa::path(
+    put,
+    tag = "Calendar",
+    path = "/api/v1/user/calendar/{calendar_id}",
+    summary = "Update a calendar (admin only)",
+    params(
+        ("calendar_id" = ID, Path, description = "The id of the calendar to update"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = UpdateCalendarRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn update_calendar_admin_controller(
-    http_req: HttpRequest,
-    ctx: web::Data<NitteiContext>,
-    path: web::Path<PathParams>,
-    body: actix_web_validator::Json<RequestBody>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    Extension(account): Extension<Account>,
+    Extension(ctx): Extension<NitteiContext>,
+    path: Path<PathParams>,
+    mut body: Valid<Json<UpdateCalendarRequestBody>>,
+) -> Result<Json<APIResponse>, NitteiError> {
     let cal = account_can_modify_calendar(&account, &path.calendar_id, &ctx).await?;
     let user = account_can_modify_user(&account, &cal.user_id, &ctx).await?;
 
@@ -35,35 +47,48 @@ pub async fn update_calendar_admin_controller(
         name: body.0.name.clone(),
         week_start: body.0.settings.week_start,
         timezone: body.0.settings.timezone,
-        metadata: body.0.metadata,
+        metadata: body.0.metadata.take(),
     };
 
     execute(usecase, &ctx)
         .await
-        .map(|calendar| HttpResponse::Ok().json(APIResponse::new(calendar)))
+        .map(|calendar| Json(APIResponse::new(calendar)))
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    put,
+    tag = "Calendar",
+    path = "/api/v1/calendar/{calendar_id}",
+    summary = "Update a calendar",
+    params(
+        ("calendar_id" = ID, Path, description = "The id of the calendar to update"),
+    ),
+    request_body(
+        content = UpdateCalendarRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn update_calendar_controller(
-    http_req: HttpRequest,
-    ctx: web::Data<NitteiContext>,
-    mut path: web::Path<PathParams>,
-    body: web::Json<RequestBody>,
-) -> Result<HttpResponse, NitteiError> {
-    let (user, policy) = protect_route(&http_req, &ctx).await?;
-
+    Extension((user, policy)): Extension<(User, Policy)>,
+    Extension(ctx): Extension<NitteiContext>,
+    mut path: Path<PathParams>,
+    mut body: Valid<Json<UpdateCalendarRequestBody>>,
+) -> Result<Json<APIResponse>, NitteiError> {
     let usecase = UpdateCalendarUseCase {
         user,
         calendar_id: std::mem::take(&mut path.calendar_id),
         name: body.0.name.clone(),
         week_start: body.0.settings.week_start,
         timezone: body.0.settings.timezone,
-        metadata: body.0.metadata,
+        metadata: body.0.metadata.take(),
     };
 
     execute_with_policy(usecase, &policy, &ctx)
         .await
-        .map(|calendar| HttpResponse::Ok().json(APIResponse::new(calendar)))
+        .map(|calendar| Json(APIResponse::new(calendar)))
         .map_err(NitteiError::from)
 }
 
@@ -92,7 +117,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for UpdateCalendarUseCase {
     type Response = Calendar;
 
@@ -150,8 +175,7 @@ mod test {
 
     use super::*;
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn it_update_settings_with_valid_wkst() {
         let ctx = setup_context().await.unwrap();
         let account = Account::default();

@@ -1,4 +1,4 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, extract::Path};
 use chrono::{DateTime, Duration, TimeDelta, Utc};
 use get_service_bookingslots::GetServiceBookingSlotsUseCase;
 use nittei_api_structs::create_service_event_intend::*;
@@ -19,24 +19,18 @@ use tracing::warn;
 use super::get_service_bookingslots;
 use crate::{
     error::NitteiError,
-    shared::{
-        auth::protect_admin_route,
-        usecase::{UseCase, execute},
-    },
+    shared::usecase::{UseCase, execute},
 };
 
 pub async fn create_service_event_intend_controller(
-    http_req: HttpRequest,
-    body: web::Json<RequestBody>,
-    mut path: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    protect_admin_route(&http_req, &ctx).await?;
-
-    let body = body.0;
+    mut path: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Json<RequestBody>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let mut body = body.0;
     let usecase = CreateServiceEventIntendUseCase {
         service_id: std::mem::take(&mut path.service_id),
-        host_user_ids: body.host_user_ids,
+        host_user_ids: body.host_user_ids.take(),
         duration: body.duration,
         timestamp: body.timestamp,
         interval: body.interval,
@@ -45,7 +39,7 @@ pub async fn create_service_event_intend_controller(
     execute(usecase, &ctx)
         .await
         .map(|res| {
-            HttpResponse::Ok().json(APIResponse::new(
+            Json(APIResponse::new(
                 res.selected_hosts,
                 res.create_event_for_hosts,
             ))
@@ -87,7 +81,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for CreateServiceEventIntendUseCase {
     type Response = UseCaseRes;
 

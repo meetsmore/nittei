@@ -127,8 +127,7 @@ async fn create_300_events_1_month(
     event_ids
 }
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn loadtests_single_user() {
     if std::env::var("INCLUDE_LOAD_TESTS").is_err() {
         #[allow(clippy::print_stdout)]
@@ -202,8 +201,7 @@ async fn loadtests_single_user() {
     admin_client.user.delete(user_id).await.unwrap();
 }
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn loadtests_multi_users() {
     if std::env::var("INCLUDE_LOAD_TESTS").is_err() {
         #[allow(clippy::print_stdout)]
@@ -342,7 +340,7 @@ async fn loadtests_multi_users() {
     }
 }
 
-#[actix_web::main]
+#[tokio::main]
 #[test_log::test]
 async fn loadtests_single_user_lots_of_data() {
     if std::env::var("INCLUDE_LOAD_TESTS").is_err() {

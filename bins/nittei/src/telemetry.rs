@@ -1,9 +1,10 @@
-use opentelemetry::global::{self, set_error_handler};
-use opentelemetry_datadog::{ApiVersion, new_pipeline};
-use opentelemetry_otlp::WithExportConfig;
+use opentelemetry::{global, propagation::TextMapCompositePropagator, trace::TracerProvider};
+use opentelemetry_datadog::{ApiVersion, DatadogPipelineBuilder, DatadogPropagator};
+use opentelemetry_otlp::{WithExportConfig, WithHttpConfig};
 use opentelemetry_sdk::{
+    Resource,
     propagation::TraceContextPropagator,
-    trace::{self, RandomIdGenerator, Sampler, Tracer},
+    trace::{self, RandomIdGenerator, Sampler, SdkTracerProvider},
 };
 use tracing::warn;
 use tracing_subscriber::{EnvFilter, Registry, layer::SubscriberExt};
@@ -36,14 +37,21 @@ pub fn init_subscriber() -> anyhow::Result<()> {
             .unwrap_or_else(|| "unknown env".to_string());
 
         // Set the global propagator to trace context propagator
-        global::set_text_map_propagator(TraceContextPropagator::new());
+        let composite = TextMapCompositePropagator::new(vec![
+            Box::new(TraceContextPropagator::new()),
+            Box::new(DatadogPropagator::new()),
+        ]);
+
+        global::set_text_map_propagator(composite);
 
         // Get the tracer - if no endpoint is provided, tracing will be disabled
-        let tracer = get_tracer(service_name, service_version, service_env)?;
+        let tracer_provider =
+            get_tracer_provider(service_name.clone(), service_version, service_env)?;
 
         // Create a telemetry layer if a tracer is available
-        let telemetry_layer =
-            tracer.map(|tracer| tracing_opentelemetry::layer().with_tracer(tracer));
+        let telemetry_layer = tracer_provider.map(|tracer_provider| {
+            tracing_opentelemetry::layer().with_tracer(tracer_provider.tracer(service_name))
+        });
 
         // Combine layers into a single subscriber
         if let Some(telemetry_layer) = telemetry_layer {
@@ -69,21 +77,16 @@ pub fn init_subscriber() -> anyhow::Result<()> {
             // Set the global subscriber
             tracing::subscriber::set_global_default(subscriber)?
         }
-
-        // Set a global error handler to log the tracing internal errors to the console
-        set_error_handler(|e| {
-            warn!("Error when exporting traces: {}", e);
-        })?;
     }
     Ok(())
 }
 
 /// Get the tracer
-fn get_tracer(
+fn get_tracer_provider(
     service_name: String,
     service_version: String,
     service_env: String,
-) -> anyhow::Result<Option<Tracer>> {
+) -> anyhow::Result<Option<SdkTracerProvider>> {
     let otlp_endpoint = nittei_utils::config::APP_CONFIG
         .observability
         .as_ref()
@@ -122,19 +125,21 @@ fn get_tracer_datadog(
     service_name: String,
     service_version: String,
     service_env: String,
-) -> anyhow::Result<Tracer> {
-    new_pipeline()
+) -> anyhow::Result<SdkTracerProvider> {
+    let mut config = trace::Config::default();
+    config.sampler = Box::new(get_sampler());
+    config.id_generator = Box::new(RandomIdGenerator::default());
+
+    let http_client = reqwest::blocking::Client::new();
+    DatadogPipelineBuilder::default()
+        .with_http_client(http_client)
         .with_service_name(service_name)
         .with_version(service_version)
         .with_env(service_env)
         .with_api_version(ApiVersion::Version05)
         .with_agent_endpoint(datadog_endpoint)
-        .with_trace_config(
-            trace::Config::default()
-                .with_sampler(get_sampler())
-                .with_id_generator(RandomIdGenerator::default()),
-        )
-        .install_batch(opentelemetry_sdk::runtime::Tokio)
+        .with_trace_config(config)
+        .install_batch()
         .map_err(|e| e.into())
 }
 
@@ -145,27 +150,29 @@ fn get_tracer_otlp(
     service_name: String,
     service_version: String,
     service_env: String,
-) -> anyhow::Result<Tracer> {
-    let otlp_exporter = opentelemetry_otlp::new_exporter()
-        .http()
+) -> anyhow::Result<SdkTracerProvider> {
+    let http_client = reqwest::blocking::Client::new();
+    let otlp_exporter = opentelemetry_otlp::SpanExporter::builder()
+        .with_http()
+        .with_http_client(http_client)
         .with_protocol(opentelemetry_otlp::Protocol::HttpJson)
-        .with_endpoint(otlp_endpoint);
+        .with_endpoint(otlp_endpoint)
+        .build()?;
 
     // Then pass it into pipeline builder
-    opentelemetry_otlp::new_pipeline()
-        .tracing()
-        .with_trace_config(
-            opentelemetry_sdk::trace::config()
-                .with_resource(opentelemetry_sdk::Resource::new(vec![
+    Ok(SdkTracerProvider::builder()
+        .with_resource(
+            Resource::builder()
+                .with_attributes(vec![
                     opentelemetry::KeyValue::new("service.name", service_name.clone()),
                     opentelemetry::KeyValue::new("service.version", service_version),
                     opentelemetry::KeyValue::new("deployment.environment", service_env),
-                ]))
-                .with_sampler(get_sampler()),
+                ])
+                .build(),
         )
-        .with_exporter(otlp_exporter)
-        .install_batch(opentelemetry_sdk::runtime::Tokio)
-        .map_err(|e| e.into())
+        .with_batch_exporter(otlp_exporter)
+        .with_sampler(get_sampler())
+        .build())
 }
 
 /// Get the sampler to be used

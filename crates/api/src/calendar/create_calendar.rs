@@ -1,63 +1,88 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, extract::Path, http::StatusCode};
+use axum_valid::Valid;
 use chrono::Weekday;
 use chrono_tz::Tz;
-use nittei_api_structs::create_calendar::{APIResponse, PathParams, RequestBody};
-use nittei_domain::{Calendar, CalendarSettings, ID};
+use nittei_api_structs::create_calendar::{APIResponse, CreateCalendarRequestBody, PathParams};
+use nittei_domain::{Account, Calendar, CalendarSettings, ID, User};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{Permission, account_can_modify_user, protect_admin_route, protect_route},
+        auth::{Permission, Policy, account_can_modify_user},
         usecase::{PermissionBoundary, UseCase, execute, execute_with_policy},
     },
 };
 
+#[utoipa::path(
+    post,
+    tag = "Calendar",
+    path = "/api/v1/user/{user_id}/calendar",
+    summary = "Create a calendar (admin only)",
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = CreateCalendarRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn create_calendar_admin_controller(
-    http_req: HttpRequest,
-    path_params: web::Path<PathParams>,
-    body: actix_web_validator::Json<RequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    Extension(account): Extension<Account>,
+    path_params: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+    mut body: Valid<Json<CreateCalendarRequestBody>>,
+) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
     let user = account_can_modify_user(&account, &path_params.user_id, &ctx).await?;
 
     let usecase = CreateCalendarUseCase {
         user_id: user.id,
         account_id: account.id,
         week_start: body.0.week_start,
-        name: body.0.name.clone(),
-        key: body.0.key.clone(),
+        name: body.0.name.take(),
+        key: body.0.key.take(),
         timezone: body.0.timezone,
-        metadata: body.0.metadata,
+        metadata: body.0.metadata.take(),
     };
 
     execute(usecase, &ctx)
         .await
-        .map(|calendar| HttpResponse::Created().json(APIResponse::new(calendar)))
+        .map(|calendar| (StatusCode::CREATED, Json(APIResponse::new(calendar))))
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    post,
+    tag = "Calendar",
+    path = "/api/v1/calendar",
+    summary = "Create a calendar",
+    request_body(
+        content = CreateCalendarRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn create_calendar_controller(
-    http_req: HttpRequest,
-    body: actix_web_validator::Json<RequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let (user, policy) = protect_route(&http_req, &ctx).await?;
-
+    Extension((user, policy)): Extension<(User, Policy)>,
+    Extension(ctx): Extension<NitteiContext>,
+    mut body: Valid<Json<CreateCalendarRequestBody>>,
+) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
     let usecase = CreateCalendarUseCase {
         user_id: user.id,
         account_id: user.account_id,
         week_start: body.0.week_start,
-        name: body.0.name.clone(),
-        key: body.0.key.clone(),
+        name: body.0.name.take(),
+        key: body.0.key.take(),
         timezone: body.0.timezone,
-        metadata: body.0.metadata,
+        metadata: body.0.metadata.take(),
     };
 
     execute_with_policy(usecase, &policy, &ctx)
         .await
-        .map(|calendar| HttpResponse::Created().json(APIResponse::new(calendar)))
+        .map(|calendar| (StatusCode::CREATED, Json(APIResponse::new(calendar))))
         .map_err(NitteiError::from)
 }
 
@@ -91,7 +116,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for CreateCalendarUseCase {
     type Response = Calendar;
 
@@ -100,12 +125,10 @@ impl UseCase for CreateCalendarUseCase {
     const NAME: &'static str = "CreateCalendar";
 
     async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
-        let user = ctx
-            .repos
-            .users
-            .find(&self.user_id)
-            .await
-            .map_err(|_| UseCaseError::InternalError)?;
+        let user = ctx.repos.users.find(&self.user_id).await.map_err(|e| {
+            tracing::error!("[create_calendar] Error finding user: {:?}", e);
+            UseCaseError::InternalError
+        })?;
 
         let user = match user {
             Some(user) if user.account_id == self.account_id => user,
@@ -130,7 +153,10 @@ impl UseCase for CreateCalendarUseCase {
             .insert(&calendar)
             .await
             .map(|_| calendar)
-            .map_err(|_| UseCaseError::StorageError)
+            .map_err(|e| {
+                tracing::error!("[create_calendar] Error inserting calendar: {:?}", e);
+                UseCaseError::StorageError
+            })
     }
 }
 

@@ -1,12 +1,13 @@
 use nittei_domain::{ID, User};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
+use utoipa::ToSchema;
 use validator::Validate;
 
 use crate::dtos::UserDTO;
 
 /// User response object
-#[derive(Deserialize, Serialize, TS)]
+#[derive(Deserialize, Serialize, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct UserResponse {
@@ -43,10 +44,10 @@ pub mod create_user {
     use super::*;
 
     /// Request body for creating a user
-    #[derive(Debug, Deserialize, Serialize, TS)]
+    #[derive(Debug, Deserialize, Serialize, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "CreateUserRequestBody")]
-    pub struct RequestBody {
+    #[ts(export)]
+    pub struct CreateUserRequestBody {
         /// Optional metadata (e.g. {"key": "value"})
         #[serde(default)]
         #[ts(optional)]
@@ -74,10 +75,10 @@ pub mod oauth_integration {
     use super::*;
 
     /// Request body for creating an OAuth integration
-    #[derive(Debug, Deserialize, Serialize, Validate, TS)]
+    #[derive(Debug, Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "OAuthIntegrationRequestBody")]
-    pub struct RequestBody {
+    #[ts(export)]
+    pub struct OAuthIntegrationRequestBody {
         /// OAuth code
         #[validate(length(min = 1))]
         pub code: String,
@@ -114,8 +115,8 @@ pub mod oauth_outlook {
 
     #[derive(Debug, Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "OAuthOutlookRequestBody")]
-    pub struct RequestBody {
+    #[ts(export)]
+    pub struct OAuthOutlookRequestBody {
         pub code: String,
     }
 
@@ -131,10 +132,10 @@ pub mod update_user {
     use super::*;
 
     /// Request body for updating a user
-    #[derive(Debug, Deserialize, Serialize, TS)]
+    #[derive(Debug, Deserialize, Serialize, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "UpdateUserRequestBody")]
-    pub struct RequestBody {
+    #[ts(export)]
+    pub struct UpdateUserRequestBody {
         /// Optional external ID (e.g. the ID of the user in an external system)
         #[serde(default)]
         #[ts(optional)]
@@ -190,15 +191,15 @@ pub mod get_users_by_meta {
     }
 
     /// API response for getting users by metadata
-    #[derive(Deserialize, Serialize, TS)]
+    #[derive(Deserialize, Serialize, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "GetUsersByMetaAPIResponse")]
-    pub struct APIResponse {
+    #[ts(export)]
+    pub struct GetUsersByMetaAPIResponse {
         /// List of users matching the metadata query
         pub users: Vec<UserDTO>,
     }
 
-    impl APIResponse {
+    impl GetUsersByMetaAPIResponse {
         pub fn new(users: Vec<User>) -> Self {
             Self {
                 users: users.into_iter().map(UserDTO::new).collect(),

@@ -19,3 +19,13 @@ print_stdout = "deny"
 print_err = "deny"
 unwrap_used = "deny"
 expect_used = "deny"
+
+[profile.release]
+# Can improve slightly the performance at the cost of increased compile time
+# https://doc.rust-lang.org/cargo/reference/profiles.html#lto
+lto = "thin"
+# https://doc.rust-lang.org/cargo/reference/profiles.html#codegen-units
+codegen-units = 1
+# Add basic debug information, at the cost of binary size
+# See https://doc.rust-lang.org/cargo/reference/profiles.html#debug
+debug = 1

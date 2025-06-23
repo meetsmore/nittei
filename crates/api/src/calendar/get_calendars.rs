@@ -1,25 +1,45 @@
-use actix_web::{HttpRequest, HttpResponse, web};
-use nittei_api_structs::get_calendars_by_user::{APIResponse, PathParams, QueryParams};
-use nittei_domain::{Calendar, ID};
+use axum::{
+    Extension,
+    Json,
+    extract::{Path, Query},
+};
+use nittei_api_structs::get_calendars_by_user::{
+    GetCalendarsByUserAPIResponse,
+    PathParams,
+    QueryParams,
+};
+use nittei_domain::{Calendar, ID, User};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{protect_admin_route, protect_route},
+        auth::Policy,
         usecase::{UseCase, execute},
     },
 };
 
-/// Get calendars for a user (admin)
+#[utoipa::path(
+    get,
+    tag = "Calendar",
+    path = "/api/v1/calendar/{user_id}",
+    summary = "Get calendars for a user (admin only)",
+    params(
+        ("user_id" = ID, Path, description = "The id of the user to get calendars for"),
+        ("key" = Option<String>, Query, description = "Optional key of the calendar to get"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = GetCalendarsByUserAPIResponse)
+    )
+)]
 pub async fn get_calendars_admin_controller(
-    http_req: HttpRequest,
-    query: web::Query<QueryParams>,
-    path: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let _account = protect_admin_route(&http_req, &ctx).await?;
-
+    query: Query<QueryParams>,
+    path: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<GetCalendarsByUserAPIResponse>, NitteiError> {
     let usecase = GetCalendarsUseCase {
         user_id: path.user_id.clone(),
         key: query.key.clone(),
@@ -27,18 +47,29 @@ pub async fn get_calendars_admin_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|calendars| HttpResponse::Ok().json(APIResponse::new(calendars)))
+        .map(|calendars| Json(GetCalendarsByUserAPIResponse::new(calendars)))
         .map_err(NitteiError::from)
 }
 
-// Get calendars for a user
+#[utoipa::path(
+    get,
+    tag = "Calendar",
+    path = "/api/v1/calendar",
+    summary = "Get calendars for a user",
+    params(
+        ("user_id" = ID, Path, description = "The id of the user to get calendars for"),
+        ("key" = Option<String>, Query, description = "Optional key of the calendar to get"),
+    ),
+    responses(
+        (status = 200, body = GetCalendarsByUserAPIResponse)
+    )
+)]
+/// Get calendars for a user
 pub async fn get_calendars_controller(
-    http_req: HttpRequest,
-    query: web::Query<QueryParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let (user, _policy) = protect_route(&http_req, &ctx).await?;
-
+    Extension((user, _policy)): Extension<(User, Policy)>,
+    query: Query<QueryParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<GetCalendarsByUserAPIResponse>, NitteiError> {
     let usecase = GetCalendarsUseCase {
         user_id: user.id.clone(),
         key: query.key.clone(),
@@ -46,7 +77,7 @@ pub async fn get_calendars_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|calendars| HttpResponse::Ok().json(APIResponse::new(calendars)))
+        .map(|calendars| Json(GetCalendarsByUserAPIResponse::new(calendars)))
         .map_err(NitteiError::from)
 }
 
@@ -68,7 +99,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for GetCalendarsUseCase {
     type Response = Vec<Calendar>;
 
@@ -90,7 +121,10 @@ impl UseCase for GetCalendarsUseCase {
                 .calendars
                 .find_by_user(&self.user_id)
                 .await
-                .map_err(|_| UseCaseError::InternalError),
+                .map_err(|e| {
+                    tracing::error!("[get_calendars] Error finding calendars: {:?}", e);
+                    UseCaseError::InternalError
+                }),
         }
     }
 }

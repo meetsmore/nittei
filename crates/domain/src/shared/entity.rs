@@ -3,6 +3,7 @@ use std::{fmt::Display, hash::Hash, str::FromStr};
 use serde::{Deserialize, Serialize, de::Visitor};
 use thiserror::Error;
 use ts_rs::TS;
+use utoipa::ToSchema;
 use uuid::Uuid;
 
 pub trait Entity<T: PartialEq> {
@@ -13,9 +14,15 @@ pub trait Entity<T: PartialEq> {
 }
 
 /// ID - a unique identifier for an entity (UUID)
-#[derive(Debug, Clone, Eq, TS)]
+#[derive(Debug, Clone, Eq, TS, ToSchema)]
 #[ts(export)]
 pub struct ID(Uuid);
+
+impl ID {
+    pub fn new_v4() -> Self {
+        Self(Uuid::new_v4())
+    }
+}
 
 impl AsMut<Uuid> for ID {
     fn as_mut(&mut self) -> &mut Uuid {

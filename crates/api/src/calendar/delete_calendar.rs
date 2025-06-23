@@ -1,22 +1,36 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, extract::Path};
 use nittei_api_structs::delete_calendar::{APIResponse, PathParams};
-use nittei_domain::{Calendar, ID};
+use nittei_domain::{Account, Calendar, ID, User};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{Permission, account_can_modify_calendar, protect_admin_route, protect_route},
+        auth::{Permission, Policy, account_can_modify_calendar},
         usecase::{PermissionBoundary, UseCase, execute, execute_with_policy},
     },
 };
 
+#[utoipa::path(
+    delete,
+    tag = "Calendar",
+    path = "/api/v1/user/calendar/{calendar_id}",
+    summary = "Delete a calendar (admin only)",
+    params(
+        ("calendar_id" = ID, Path, description = "The id of the calendar to delete"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn delete_calendar_admin_controller(
-    http_req: HttpRequest,
-    path: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    Extension(account): Extension<Account>,
+    path: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
     let cal = account_can_modify_calendar(&account, &path.calendar_id, &ctx).await?;
 
     let usecase = DeleteCalendarUseCase {
@@ -26,17 +40,27 @@ pub async fn delete_calendar_admin_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|calendar| HttpResponse::Ok().json(APIResponse::new(calendar)))
+        .map(|calendar| Json(APIResponse::new(calendar)))
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    delete,
+    tag = "Calendar",
+    path = "/api/v1/calendar/{calendar_id}",
+    summary = "Delete a calendar",
+    params(
+        ("calendar_id" = ID, Path, description = "The id of the calendar to delete"),
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn delete_calendar_controller(
-    http_req: HttpRequest,
-    path: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let (user, policy) = protect_route(&http_req, &ctx).await?;
-
+    Extension((user, policy)): Extension<(User, Policy)>,
+    path: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
     let usecase = DeleteCalendarUseCase {
         user_id: user.id,
         calendar_id: path.calendar_id.clone(),
@@ -44,7 +68,7 @@ pub async fn delete_calendar_controller(
 
     execute_with_policy(usecase, &policy, &ctx)
         .await
-        .map(|calendar| HttpResponse::Ok().json(APIResponse::new(calendar)))
+        .map(|calendar| Json(APIResponse::new(calendar)))
         .map_err(NitteiError::from)
 }
 
@@ -74,7 +98,7 @@ pub struct DeleteCalendarUseCase {
     user_id: ID,
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for DeleteCalendarUseCase {
     type Response = Calendar;
 

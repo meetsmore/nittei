@@ -1,6 +1,6 @@
-use actix_web::{
-    HttpResponse,
+use axum::{
     http::{StatusCode, header},
+    response::IntoResponse,
 };
 use thiserror::Error;
 
@@ -23,9 +23,7 @@ pub enum NitteiError {
     NotFound(String),
 }
 
-/// Implement the ResponseError trait (from Actix) for the custom error types
-/// This allows to automatically convert the error types to HTTP responses
-impl actix_web::error::ResponseError for NitteiError {
+impl NitteiError {
     fn status_code(&self) -> StatusCode {
         match *self {
             Self::InternalError => StatusCode::INTERNAL_SERVER_ERROR,
@@ -37,9 +35,19 @@ impl actix_web::error::ResponseError for NitteiError {
         }
     }
 
-    fn error_response(&self) -> HttpResponse {
-        HttpResponse::build(self.status_code())
-            .insert_header((header::CONTENT_TYPE, "text/html; charset=utf-8"))
-            .body(self.to_string())
+    fn error_response(&self) -> impl IntoResponse {
+        (
+            self.status_code(),
+            [(header::CONTENT_TYPE, "text/html; charset=utf-8")],
+            self.to_string(),
+        )
+    }
+}
+
+/// Implement the ResponseError trait (from Actix) for the custom error types
+/// This allows to automatically convert the error types to HTTP responses
+impl IntoResponse for NitteiError {
+    fn into_response(self) -> axum::response::Response {
+        self.error_response().into_response()
     }
 }

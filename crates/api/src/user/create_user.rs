@@ -1,34 +1,46 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, http::StatusCode};
 use futures::{FutureExt, try_join};
 use nittei_api_structs::create_user::*;
-use nittei_domain::{ID, User};
+use nittei_domain::{Account, ID, User};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
-    shared::{
-        auth::protect_admin_route,
-        usecase::{UseCase, execute},
-    },
+    shared::usecase::{UseCase, execute},
 };
 
+#[utoipa::path(
+    post,
+    tag = "User",
+    path = "/api/v1/user",
+    summary = "Create a user (admin only)",
+    request_body(
+        content = CreateUserRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn create_user_controller(
-    http_req: HttpRequest,
-    body: web::Json<RequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
-
+    Extension(account): Extension<Account>,
+    Extension(ctx): Extension<NitteiContext>,
+    mut body: Json<CreateUserRequestBody>,
+) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
     let usecase = CreateUserUseCase {
         account_id: account.id,
-        metadata: body.0.metadata,
-        external_id: body.0.external_id,
-        user_id: body.0.user_id,
+        metadata: body.0.metadata.take(),
+        external_id: body.0.external_id.take(),
+        user_id: body.0.user_id.take(),
     };
 
     execute(usecase, &ctx)
         .await
-        .map(|usecase_res| HttpResponse::Created().json(APIResponse::new(usecase_res.user)))
+        .map(|usecase_res| {
+            (
+                StatusCode::CREATED,
+                Json(APIResponse::new(usecase_res.user)),
+            )
+        })
         .map_err(NitteiError::from)
 }
 
@@ -61,7 +73,7 @@ impl From<UseCaseError> for NitteiError {
         }
     }
 }
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for CreateUserUseCase {
     type Response = UseCaseRes;
     type Error = UseCaseError;
@@ -89,7 +101,10 @@ impl UseCase for CreateUserUseCase {
         let res = ctx.repos.users.insert(&user).await;
         match res {
             Ok(_) => Ok(UseCaseRes { user }),
-            Err(_) => Err(UseCaseError::StorageError),
+            Err(e) => {
+                tracing::error!("[create_user] Error inserting user: {:?}", e);
+                Err(UseCaseError::StorageError)
+            }
         }
     }
 }

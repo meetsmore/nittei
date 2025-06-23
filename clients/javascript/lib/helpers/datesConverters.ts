@@ -16,6 +16,9 @@ export function convertEventDates(event: CalendarEventDTO): CalendarEventDTO {
     endTime: new Date(event.endTime),
     created: new Date(event.created),
     updated: new Date(event.updated),
+    recurringUntil: event.recurringUntil
+      ? new Date(event.recurringUntil)
+      : undefined,
     exdates: event.exdates?.map(date => new Date(date)),
   }
 }

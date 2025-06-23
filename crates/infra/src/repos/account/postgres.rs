@@ -63,7 +63,7 @@ impl TryFrom<AccountRaw> for Account {
 
 #[async_trait::async_trait]
 impl IAccountRepo for PostgresAccountRepo {
-    #[instrument]
+    #[instrument(name = "account::insert", skip_all)]
     async fn insert(&self, account: &Account) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -86,7 +86,7 @@ impl IAccountRepo for PostgresAccountRepo {
         Ok(())
     }
 
-    #[instrument]
+    #[instrument(name = "account::save", skip_all)]
     async fn save(&self, account: &Account) -> anyhow::Result<()> {
         sqlx::query!(
             r#"
@@ -116,7 +116,7 @@ impl IAccountRepo for PostgresAccountRepo {
         Ok(())
     }
 
-    #[instrument]
+    #[instrument(name = "account::find")]
     async fn find(&self, account_id: &ID) -> anyhow::Result<Option<Account>> {
         sqlx::query_as!(
             AccountRaw,
@@ -138,7 +138,7 @@ impl IAccountRepo for PostgresAccountRepo {
         .transpose()
     }
 
-    #[instrument]
+    #[instrument(name = "account::find_many")]
     async fn find_many(&self, accounts_ids: &[ID]) -> anyhow::Result<Vec<Account>> {
         let ids = accounts_ids
             .iter()
@@ -168,7 +168,7 @@ impl IAccountRepo for PostgresAccountRepo {
             .collect::<Result<Vec<Account>, _>>() // Collect into Result<Vec<Account>, _>
     }
 
-    #[instrument]
+    #[instrument(name = "account::delete")]
     async fn delete(&self, account_id: &ID) -> anyhow::Result<Option<Account>> {
         let possibly_deleted_account: Option<Account> = sqlx::query_as!(
             AccountRaw,
@@ -198,7 +198,7 @@ impl IAccountRepo for PostgresAccountRepo {
         Ok(possibly_deleted_account)
     }
 
-    #[instrument]
+    #[instrument(name = "account::find_by_apikey", skip_all)]
     async fn find_by_apikey(&self, api_key: &str) -> anyhow::Result<Option<Account>> {
         if let Some(account) = self.cache.get(api_key).await {
             return Ok(Some(account));

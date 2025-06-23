@@ -1,6 +1,16 @@
-use actix_web::{HttpRequest, HttpResponse, web};
-use nittei_api_structs::get_google_calendars::{APIResponse, PathParams, QueryParams};
+use axum::{
+    Extension,
+    Json,
+    extract::{Path, Query},
+};
+use nittei_api_structs::get_google_calendars::{
+    GetGoogleCalendarsAPIResponse,
+    PathParams,
+    QueryParams,
+};
 use nittei_domain::{
+    Account,
+    ID,
     User,
     providers::google::{GoogleCalendarAccessRole, GoogleCalendarListEntry},
 };
@@ -9,18 +19,33 @@ use nittei_infra::{NitteiContext, google_calendar::GoogleCalendarProvider};
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_user, protect_admin_route, protect_route},
+        auth::{Policy, account_can_modify_user},
         usecase::{UseCase, execute},
     },
 };
 
+#[utoipa::path(
+    get,
+    tag = "Calendar",
+    path = "/api/v1/user/{user_id}/calendar/provider/google",
+    summary = "Get google calendars for a user (admin only)",
+    params(
+        ("user_id" = ID, Path, description = "The id of the user to get google calendars for"),
+        ("min_access_role" = GoogleCalendarAccessRole, Query, description = "The minimum access role to get google calendars for"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = GetGoogleCalendarsAPIResponse)
+    )
+)]
 pub async fn get_google_calendars_admin_controller(
-    http_req: HttpRequest,
-    path: web::Path<PathParams>,
-    query: web::Query<QueryParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    Extension(account): Extension<Account>,
+    path: Path<PathParams>,
+    query: Query<QueryParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<GetGoogleCalendarsAPIResponse>, NitteiError> {
     let user = account_can_modify_user(&account, &path.user_id, &ctx).await?;
 
     let usecase = GetGoogleCalendarsUseCase {
@@ -30,17 +55,27 @@ pub async fn get_google_calendars_admin_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|calendars| HttpResponse::Ok().json(APIResponse::new(calendars)))
+        .map(|calendars| Json(GetGoogleCalendarsAPIResponse::new(calendars)))
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    get,
+    tag = "Calendar",
+    path = "/api/v1/calendar/provider/google",
+    summary = "Get google calendars for a user",
+    params(
+        ("min_access_role" = GoogleCalendarAccessRole, Query, description = "The minimum access role to get google calendars for"),
+    ),
+    responses(
+        (status = 200, body = GetGoogleCalendarsAPIResponse)
+    )
+)]
 pub async fn get_google_calendars_controller(
-    http_req: HttpRequest,
-    query: web::Query<QueryParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let (user, _policy) = protect_route(&http_req, &ctx).await?;
-
+    Extension((user, _policy)): Extension<(User, Policy)>,
+    query: Query<QueryParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<GetGoogleCalendarsAPIResponse>, NitteiError> {
     let usecase = GetGoogleCalendarsUseCase {
         user,
         min_access_role: query.0.min_access_role,
@@ -48,7 +83,7 @@ pub async fn get_google_calendars_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|calendars| HttpResponse::Ok().json(APIResponse::new(calendars)))
+        .map(|calendars| Json(GetGoogleCalendarsAPIResponse::new(calendars)))
         .map_err(NitteiError::from)
 }
 
@@ -75,7 +110,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for GetGoogleCalendarsUseCase {
     type Response = Vec<GoogleCalendarListEntry>;
 

@@ -1,9 +1,10 @@
 use nittei_domain::{Account, AccountSettings, AccountWebhookSettings, ID, PEMKey};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
+use utoipa::ToSchema;
 
 /// Account - an account can have multiple users
-#[derive(Debug, Serialize, Deserialize, Clone, TS)]
+#[derive(Debug, Serialize, Deserialize, Clone, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct AccountDTO {
@@ -27,7 +28,7 @@ impl AccountDTO {
 }
 
 /// Account settings
-#[derive(Debug, Serialize, Deserialize, Clone, TS)]
+#[derive(Debug, Serialize, Deserialize, Clone, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct AccountSettingsDTO {
@@ -49,7 +50,7 @@ impl AccountSettingsDTO {
 }
 
 /// Account webhook settings
-#[derive(Debug, Serialize, Deserialize, Clone, TS)]
+#[derive(Debug, Serialize, Deserialize, Clone, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct AccountWebhookSettingsDTO {

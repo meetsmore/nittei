@@ -1,4 +1,8 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{
+    Extension,
+    Json,
+    extract::{Path, Query},
+};
 use chrono::TimeDelta;
 use futures::future::join_all;
 use nittei_api_structs::get_service_bookingslots::*;
@@ -32,6 +36,7 @@ use nittei_infra::{
     google_calendar::GoogleCalendarProvider,
     outlook_calendar::OutlookCalendarProvider,
 };
+use nittei_utils::config::APP_CONFIG;
 use tracing::{error, warn};
 
 use crate::{
@@ -41,11 +46,10 @@ use crate::{
 };
 
 pub async fn get_service_bookingslots_controller(
-    _http_req: HttpRequest,
-    query_params: web::Query<QueryParams>,
-    mut path_params: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
+    query_params: Query<QueryParams>,
+    mut path_params: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
     let query_params = query_params.0;
     let _service_id = path_params.service_id.clone();
 
@@ -62,7 +66,7 @@ pub async fn get_service_bookingslots_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|usecase_res| HttpResponse::Ok().json(APIResponse::new(usecase_res.booking_slots)))
+        .map(|usecase_res| Json(APIResponse::new(usecase_res.booking_slots)))
         .map_err(NitteiError::from)
 }
 
@@ -125,7 +129,7 @@ impl From<BookingQueryError> for UseCaseError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for GetServiceBookingSlotsUseCase {
     type Response = UseCaseRes;
 
@@ -163,7 +167,7 @@ impl UseCase for GetServiceBookingSlotsUseCase {
         let mut usecase_futures: Vec<_> = Vec::with_capacity(service.users.len());
 
         let timespan = TimeSpan::new(booking_timespan.start_time, booking_timespan.end_time);
-        if timespan.greater_than(ctx.config.booking_slots_query_duration_limit) {
+        if timespan.greater_than(APP_CONFIG.booking_slots_query_duration_limit) {
             return Err(UseCaseError::InvalidTimespan);
         }
 
@@ -229,7 +233,7 @@ impl GetServiceBookingSlotsUseCase {
         &self,
         user: &ServiceResource,
         user_calendars: &[Calendar],
-        timespan: &TimeSpan,
+        timespan: TimeSpan,
         ctx: &NitteiContext,
     ) -> anyhow::Result<CompatibleInstances> {
         let empty = CompatibleInstances::new(Vec::new());
@@ -244,7 +248,7 @@ impl GetServiceBookingSlotsUseCase {
                 let all_calendar_events = ctx
                     .repos
                     .events
-                    .find_by_calendar(id, Some(timespan))
+                    .find_by_calendar(id, Some(timespan.clone()))
                     .await
                     .unwrap_or_default();
 
@@ -252,6 +256,7 @@ impl GetServiceBookingSlotsUseCase {
                     .iter()
                     // Todo: handle error
                     .flat_map(|e| {
+                        let timespan = timespan.clone();
                         e.expand(Some(timespan), &calendar.settings)
                             .unwrap_or_default()
                     })
@@ -274,7 +279,7 @@ impl GetServiceBookingSlotsUseCase {
         &self,
         user: &ServiceResource,
         user_nittei_calendars: &[Calendar],
-        timespan: &TimeSpan,
+        timespan: TimeSpan,
         ctx: &NitteiContext,
     ) -> anyhow::Result<CompatibleInstances> {
         let busy_calendars = match ctx
@@ -340,7 +345,7 @@ impl GetServiceBookingSlotsUseCase {
             match ctx
                 .repos
                 .events
-                .find_by_calendar(&cal.id, Some(timespan))
+                .find_by_calendar(&cal.id, Some(timespan.clone()))
                 .await
             {
                 Ok(calendar_events) => {
@@ -348,6 +353,7 @@ impl GetServiceBookingSlotsUseCase {
                         .into_iter()
                         .filter(|e| e.busy)
                         .map(|e| -> anyhow::Result<Vec<EventInstance>> {
+                            let timespan = timespan.clone();
                             let mut instances = e.expand(Some(timespan), &cal.settings)?;
 
                             // Add buffer to instances if event is a service event
@@ -458,7 +464,7 @@ impl GetServiceBookingSlotsUseCase {
             }
         }
 
-        if timespan.greater_than(ctx.config.booking_slots_query_duration_limit) {
+        if timespan.greater_than(APP_CONFIG.booking_slots_query_duration_limit) {
             Err(())
         } else {
             Ok(timespan)
@@ -502,11 +508,11 @@ impl GetServiceBookingSlotsUseCase {
         //     .collect::<Vec<_>>();
 
         let mut free_events = self
-            .get_user_availability(service_resource, &user_calendars, &timespan, ctx)
+            .get_user_availability(service_resource, &user_calendars, timespan.clone(), ctx)
             .await?;
 
         let busy_events = self
-            .get_user_busy(service_resource, &user_calendars, &timespan, ctx)
+            .get_user_busy(service_resource, &user_calendars, timespan, ctx)
             .await?;
 
         free_events.remove_instances(&busy_events, 0);
@@ -639,8 +645,7 @@ mod test {
         ctx.repos.service_users.insert(&resource2).await.unwrap();
     }
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn get_service_bookingslots() {
         let TestContext {
             ctx,
@@ -663,8 +668,7 @@ mod test {
         assert!(res.unwrap().booking_slots.dates.is_empty());
     }
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn get_bookingslots_with_multiple_users_in_service() {
         let TestContext {
             ctx,

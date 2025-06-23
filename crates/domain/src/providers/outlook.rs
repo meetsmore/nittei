@@ -3,8 +3,9 @@ use chrono_tz::{Tz, UTC};
 use serde::{Deserialize, Serialize};
 use tracing::error;
 use ts_rs::TS;
+use utoipa::ToSchema;
 
-#[derive(Debug, Clone, Deserialize, Serialize, TS)]
+#[derive(Debug, Clone, Deserialize, Serialize, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub enum OutlookCalendarAccessRole {
@@ -12,8 +13,9 @@ pub enum OutlookCalendarAccessRole {
     Reader,
 }
 // https://docs.microsoft.com/en-us/graph/api/resources/datetimetimezone?view=graph-rest-1.0
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct OutlookCalendarEventTime {
     /// A single point of time in a combined date and time representation ({date}T{time}; for example, 2017-08-29T04:00:00.0000000).
     pub date_time: String,
@@ -42,7 +44,7 @@ impl OutlookCalendarEventTime {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, TS)]
+#[derive(Debug, Serialize, Deserialize, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub enum OutlookOnlineMeetingProvider {
@@ -56,7 +58,7 @@ pub enum OutlookOnlineMeetingProvider {
     Unknown,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub enum OutlookCalendarEventShowAs {
     Free,
@@ -67,7 +69,7 @@ pub enum OutlookCalendarEventShowAs {
     Unknown,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct OutlookCalendarEventOnlineMeeting {
     join_url: String,
@@ -75,7 +77,7 @@ pub struct OutlookCalendarEventOnlineMeeting {
     toll_number: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct OutlookCalendarEvent {
     pub id: String,
@@ -90,20 +92,23 @@ pub struct OutlookCalendarEvent {
     body: OutlookCalendarEventBody,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, TS, ToSchema)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub enum OutlookCalendarEventBodyContentType {
     #[serde(rename = "html")]
     HTML,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct OutlookCalendarEventBody {
     pub content_type: OutlookCalendarEventBodyContentType,
     pub content: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, TS)]
+#[derive(Debug, Serialize, Deserialize, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct OutlookCalendar {
@@ -122,7 +127,7 @@ pub struct OutlookCalendar {
     owner: OutlookCalendarOwner,
 }
 
-#[derive(Debug, Serialize, Deserialize, TS)]
+#[derive(Debug, Serialize, Deserialize, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 struct OutlookCalendarOwner {

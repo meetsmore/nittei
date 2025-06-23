@@ -1,22 +1,36 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, extract::Path};
 use nittei_api_structs::get_calendar::{APIResponse, PathParams};
-use nittei_domain::{Calendar, ID};
+use nittei_domain::{Account, Calendar, ID, User};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_calendar, protect_admin_route, protect_route},
+        auth::{Policy, account_can_modify_calendar},
         usecase::{UseCase, execute},
     },
 };
 
+#[utoipa::path(
+    get,
+    tag = "Calendar",
+    path = "/api/v1/user/calendar/{calendar_id}",
+    summary = "Get a calendar (admin only)",
+    security(
+        ("api_key" = [])
+    ),
+    params(
+        ("calendar_id" = ID, Path, description = "The id of the calendar to get"),
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn get_calendar_admin_controller(
-    http_req: HttpRequest,
-    path: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    Extension(account): Extension<Account>,
+    path: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
     let cal = account_can_modify_calendar(&account, &path.calendar_id, &ctx).await?;
 
     let usecase = GetCalendarUseCase {
@@ -26,17 +40,27 @@ pub async fn get_calendar_admin_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|calendar| HttpResponse::Ok().json(APIResponse::new(calendar)))
+        .map(|calendar| Json(APIResponse::new(calendar)))
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    get,
+    tag = "Calendar",
+    path = "/api/v1/calendar/{calendar_id}",
+    summary = "Get a calendar",
+    params(
+        ("calendar_id" = ID, Path, description = "The id of the calendar to get"),
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn get_calendar_controller(
-    http_req: HttpRequest,
-    path: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let (user, _policy) = protect_route(&http_req, &ctx).await?;
-
+    Extension((user, _policy)): Extension<(User, Policy)>,
+    path: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
     let usecase = GetCalendarUseCase {
         user_id: user.id.clone(),
         calendar_id: path.calendar_id.clone(),
@@ -44,7 +68,7 @@ pub async fn get_calendar_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|calendar| HttpResponse::Ok().json(APIResponse::new(calendar)))
+        .map(|calendar| Json(APIResponse::new(calendar)))
         .map_err(NitteiError::from)
 }
 
@@ -71,7 +95,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for GetCalendarUseCase {
     type Response = Calendar;
 
@@ -85,7 +109,10 @@ impl UseCase for GetCalendarUseCase {
             .calendars
             .find(&self.calendar_id)
             .await
-            .map_err(|_| UseCaseError::InternalError)?;
+            .map_err(|e| {
+                tracing::error!("[get_calendar] Error finding calendar: {:?}", e);
+                UseCaseError::InternalError
+            })?;
         match cal {
             Some(cal) if cal.user_id == self.user_id => Ok(cal),
             _ => Err(UseCaseError::NotFound(self.calendar_id.clone())),

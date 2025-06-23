@@ -1,79 +1,202 @@
-use actix_web::{
-    Error,
-    body::MessageBody,
-    dev::{ServiceRequest, ServiceResponse},
+use axum::{
+    body::Body,
+    extract::MatchedPath,
+    http::{Request, Response, Uri},
+    middleware::Next,
+    response::Response as AxumResponse,
 };
-use tracing::{Level, Span};
-use tracing_actix_web::{DefaultRootSpanBuilder, RootSpanBuilder};
+use opentelemetry::global::{self};
+use opentelemetry_http::HeaderExtractor;
+use tower_http::trace::{MakeSpan, OnFailure, OnResponse};
+use tracing::{Span, field::Empty};
+use tracing_opentelemetry::OpenTelemetrySpanExt;
 
-/// Custom root span builder (tracing) for Actix Web
-pub struct NitteiTracingRootSpanBuilder;
+/// Metadata for the request
+/// Used for logging and tracing
+#[derive(Clone)]
+struct RequestMetadata {
+    pub method: String,
+    pub uri: Uri,
+    pub matched_path: String,
+}
 
-impl RootSpanBuilder for NitteiTracingRootSpanBuilder {
-    /// Create a new root span for the incoming request
-    fn on_request_start(request: &ServiceRequest) -> Span {
-        // Ignore healthcheck endpoint
-        let level = if request.path() == "/api/v1/healthcheck" {
-            Level::DEBUG
-        } else {
-            Level::INFO
-        };
-        tracing_actix_web::root_span!(level = level, request)
-    }
+/// Middleware for storing metadata for logging and tracing
+pub async fn metadata_middleware(request: Request<Body>, next: Next) -> AxumResponse {
+    let uri = request.uri().clone();
+    let method = request.method().to_string();
 
-    /// End the root span for the incoming request
-    fn on_request_end<B: MessageBody>(span: Span, outcome: &Result<ServiceResponse<B>, Error>) {
-        // Log the outcome of the request
-        log_request(outcome);
+    let matched_path = request
+        .extensions()
+        .get::<MatchedPath>()
+        .map(|r| r.as_str().to_string())
+        .unwrap_or_default();
 
-        DefaultRootSpanBuilder::on_request_end(span, outcome);
+    let mut response = next.run(request).await;
+
+    response.extensions_mut().insert(RequestMetadata {
+        method,
+        uri,
+        matched_path,
+    });
+
+    response
+}
+
+/// Custom span builder for Axum requests
+#[derive(Clone)]
+pub struct NitteiTracingSpanBuilder {}
+
+impl<B> MakeSpan<B> for NitteiTracingSpanBuilder {
+    fn make_span(&mut self, request: &Request<B>) -> Span {
+        let http_method = request.method().to_string();
+        let path = request.uri().path();
+        let query = request.uri().query().unwrap_or_default();
+        let matched_path = request
+            .extensions()
+            .get::<MatchedPath>()
+            .map(|r| r.as_str().to_string())
+            .unwrap_or_default();
+
+        if path == "/api/v1/healthcheck" {
+            return Span::none();
+        }
+
+        // Extract trace context from request headers
+        let parent_cx = global::get_text_map_propagator(|propagator| {
+            propagator.extract(&HeaderExtractor(request.headers()))
+        });
+
+        // Create a tracing span that wraps the OpenTelemetry span
+        let span = tracing::info_span!(
+            "http.request",
+            http.request.method = %http_method,
+            http.route = Empty, // to set by router of "webframework" after
+            http.status_code = Empty, // to set on response (datadog attribute)
+            url.path = %path,
+            url.query = %query,
+            url.scheme = request.uri().scheme_str().unwrap_or("http"),
+            otel.name = %format!("{} {}", http_method, matched_path),
+            otel.kind = ?opentelemetry::trace::SpanKind::Server,
+            otel.status_code = Empty, // to set on response
+            resource.name = %matched_path,
+            request_id = Empty, // to set
+            exception.message = Empty, // to set on response
+            "span.type" = "web",
+            level = Empty, // will be set in on_response based on status code
+        );
+
+        // Set the parent span for the OpenTelemetry span
+        span.set_parent(parent_cx);
+
+        span
     }
 }
 
-/// Log the outcome of the request
-fn log_request(outcome: &Result<ServiceResponse<impl MessageBody>, Error>) {
-    // Log the outcome of the request
-    if let Ok(response) = outcome {
-        let status_code = response.status().as_u16();
-        let method = response.request().method().to_string();
-        let path = response.request().path().to_string();
+/// Custom response handler for Axum tracing
+#[derive(Clone)]
+pub struct NitteiTracingOnResponse {}
 
-        // Ignore healthcheck endpoint
-        if path == "/api/v1/healthcheck" {
+impl<B> OnResponse<B> for NitteiTracingOnResponse {
+    fn on_response(self, response: &Response<B>, latency: std::time::Duration, span: &Span) {
+        let status_code = response.status().as_u16();
+
+        let metadata = response.extensions().get::<RequestMetadata>();
+        let method = metadata.map(|m| m.method.clone()).unwrap_or_default();
+        let uri = metadata.map(|m| m.uri.clone()).unwrap_or_default();
+        let uri_string = uri.to_string();
+        let path = uri.path();
+        let matched_path = metadata.map(|m| m.matched_path.clone()).unwrap_or_default();
+
+        // Set OpenTelemetry status code and level based on status code
+        let (otel_status, level) = if status_code >= 500 {
+            ("error", tracing::Level::ERROR)
+        } else if status_code >= 400 {
+            ("warn", tracing::Level::WARN)
+        } else {
+            ("ok", tracing::Level::INFO)
+        };
+
+        // Exclude health check from logging
+        if path == "/api/v1/healthcheck" && status_code == 200 {
             return;
         }
 
-        // Log with custom fields in JSON format
-        let message = format!("{} {} => {}", method, path, status_code);
+        // Update span attributes
+        span.record("http.status_code", status_code);
+        span.record("http.route", matched_path.clone());
+        span.record("duration", latency.as_nanos() as f64 / 1_000_000.0); // Convert to milliseconds
+        span.record("resource.name", matched_path.clone());
+        span.record("otel.status_code", otel_status);
+        // Adjust span level dynamically
+        tracing::span::Span::current().record("level", tracing::field::display(level));
 
-        if status_code >= 500 {
-            tracing::error!(
-                method = method,
-                path = path,
-                status_code = status_code,
-                message,
-            );
-        } else if status_code >= 400 {
-            tracing::warn!(
-                method = method,
-                path = path,
-                status_code = status_code,
-                message,
-            );
-        } else {
-            tracing::info!(
-                method = method,
-                path = path,
-                status_code = status_code,
-                message,
-            );
-        };
-    } else if let Err(err) = outcome {
-        // Fallback in case we can't retrieve the request from the span
+        let message = format!(
+            "{} {} {} {}ms",
+            method,
+            uri_string,
+            status_code,
+            latency.as_millis()
+        );
+
+        // Log with appropriate level
+        match otel_status {
+            "error" => tracing::error!(
+                parent: span,
+                method = %method,
+                path = %path,
+                status_code = %status_code,
+                duration = %latency.as_nanos(),
+                route = %matched_path,
+                message
+            ),
+            "warn" => tracing::warn!(
+                parent: span,
+                method = %method,
+                path = %path,
+                status_code = %status_code,
+                duration = %latency.as_nanos(),
+                route = %matched_path,
+                message
+            ),
+            "info" => tracing::info!(
+                parent: span,
+                method = %method,
+                path = %path,
+                status_code = %status_code,
+                duration = %latency.as_nanos(),
+                route = %matched_path,
+                message
+            ),
+            _ => tracing::info!(
+                parent: span,
+                method = %method,
+                path = %path,
+                status_code = %status_code,
+                duration = %latency.as_nanos(),
+                route = %matched_path,
+                message
+            ),
+        }
+    }
+}
+
+/// Custom failure handler for Axum tracing
+#[derive(Clone)]
+pub struct NitteiTracingOnFailure {}
+
+impl<E: std::fmt::Debug> OnFailure<E> for NitteiTracingOnFailure {
+    fn on_failure(&mut self, error: E, latency: std::time::Duration, span: &Span) {
+        span.record("level", "error");
+        span.record("otel.status_code", "error");
+        span.record("duration", latency.as_nanos());
+        span.record("exception.type", std::any::type_name_of_val(&error));
+        span.record("exception.message", format!("{:?}", error));
+
         tracing::error!(
-            status_code = 500,
-            error = %err,
-            "HTTP request resulted in an error, but request details are missing"
+            parent: span,
+            error = ?error,
+            duration = %latency.as_nanos(),
+            "Request failed"
         );
     }
 }

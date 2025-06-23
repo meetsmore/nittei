@@ -1,61 +1,59 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, extract::Path};
 use chrono_tz::Tz;
 use nittei_api_structs::update_schedule::*;
-use nittei_domain::{ID, Schedule, ScheduleRule};
+use nittei_domain::{Account, ID, Schedule, ScheduleRule, User};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{Permission, account_can_modify_schedule, protect_admin_route, protect_route},
+        auth::{Permission, Policy, account_can_modify_schedule},
         usecase::{PermissionBoundary, UseCase, execute, execute_with_policy},
     },
 };
 
 pub async fn update_schedule_admin_controller(
-    http_req: HttpRequest,
-    path: web::Path<PathParams>,
-    body: web::Json<RequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    Extension(account): Extension<Account>,
+    path: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Json<RequestBody>,
+) -> Result<Json<APIResponse>, NitteiError> {
     let schedule = account_can_modify_schedule(&account, &path.schedule_id, &ctx).await?;
 
-    let body = body.0;
+    let mut body = body.0;
     let usecase = UpdateScheduleUseCase {
         user_id: schedule.user_id,
         schedule_id: schedule.id,
         timezone: body.timezone,
-        rules: body.rules,
-        metadata: body.metadata,
+        rules: body.rules.take(),
+        metadata: body.metadata.take(),
     };
 
     execute(usecase, &ctx)
         .await
-        .map(|res| HttpResponse::Ok().json(APIResponse::new(res.schedule)))
+        .map(|res| Json(APIResponse::new(res.schedule)))
         .map_err(NitteiError::from)
 }
 
 pub async fn update_schedule_controller(
-    http_req: HttpRequest,
-    ctx: web::Data<NitteiContext>,
-    mut path: web::Path<PathParams>,
-    body: web::Json<RequestBody>,
-) -> Result<HttpResponse, NitteiError> {
-    let (user, policy) = protect_route(&http_req, &ctx).await?;
-
-    let body = body.0;
+    Extension((user, policy)): Extension<(User, Policy)>,
+    Extension(ctx): Extension<NitteiContext>,
+    path: Path<PathParams>,
+    body: Json<RequestBody>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    let mut path = path.0;
+    let mut body = body.0;
     let usecase = UpdateScheduleUseCase {
         user_id: user.id,
         schedule_id: std::mem::take(&mut path.schedule_id),
         timezone: body.timezone,
-        rules: body.rules,
-        metadata: body.metadata,
+        rules: body.rules.take(),
+        metadata: body.metadata.take(),
     };
 
     execute_with_policy(usecase, &policy, &ctx)
         .await
-        .map(|res| HttpResponse::Ok().json(APIResponse::new(res.schedule)))
+        .map(|res| Json(APIResponse::new(res.schedule)))
         .map_err(NitteiError::from)
 }
 
@@ -91,7 +89,7 @@ struct UseCaseRes {
     pub schedule: Schedule,
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for UpdateScheduleUseCase {
     type Response = UseCaseRes;
 

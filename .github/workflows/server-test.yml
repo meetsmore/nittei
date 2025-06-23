@@ -1,7 +1,7 @@
 name: Server test
 
 env:
-  RUST_VERSION: 1.85.0
+  RUST_VERSION: 1.85.1
 
 on:
   pull_request:
@@ -19,7 +19,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:13
+        image: postgres:15.4-alpine
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: nittei
@@ -30,7 +30,7 @@ jobs:
       # Needed for sqlx
       DATABASE_URL: postgresql://postgres:postgres@localhost/nittei
       NITTEI__HTTP_PORT: 5000
-      NITTEI__DATABASE_URL: postgresql://postgres:postgres@localhost/nittei
+      NITTEI__PG__DATABASE_URL: postgresql://postgres:postgres@localhost/nittei
       RUST_BACKTRACE: 1
 
     steps:

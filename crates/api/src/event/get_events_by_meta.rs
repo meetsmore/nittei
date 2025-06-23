@@ -1,17 +1,33 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, extract::Query};
 use nittei_api_structs::get_events_by_meta::*;
-use nittei_domain::Metadata;
+use nittei_domain::{Account, Metadata};
 use nittei_infra::{MetadataFindQuery, NitteiContext};
 
-use crate::{error::NitteiError, shared::auth::protect_admin_route};
+use crate::error::NitteiError;
 
+#[utoipa::path(
+    get,
+    tag = "Event",
+    path = "/api/v1/events/meta",
+    summary = "Get events by metadata (admin only)",
+    params(
+        ("key" = String, Query, description = "The key of the metadata to search for"),
+        ("value" = String, Query, description = "The value of the metadata to search for"),
+        ("skip" = Option<usize>, Query, description = "The number of events to skip"),
+        ("limit" = Option<usize>, Query, description = "The number of events to return"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = GetEventsByMetaAPIResponse)
+    )
+)]
 pub async fn get_events_by_meta_controller(
-    http_req: HttpRequest,
-    query_params: web::Query<QueryParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
-
+    Extension(account): Extension<Account>,
+    query_params: Query<QueryParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<GetEventsByMetaAPIResponse>, NitteiError> {
     let query = MetadataFindQuery {
         account_id: account.id,
         metadata: Metadata::new_kv(query_params.0.key, query_params.0.value),
@@ -24,5 +40,5 @@ pub async fn get_events_by_meta_controller(
         .find_by_metadata(query)
         .await
         .map_err(|_| NitteiError::InternalError)?;
-    Ok(HttpResponse::Ok().json(APIResponse::new(events)))
+    Ok(Json(GetEventsByMetaAPIResponse::new(events)))
 }

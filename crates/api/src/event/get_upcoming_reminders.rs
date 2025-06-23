@@ -1,10 +1,10 @@
 use std::{collections::HashMap, time::Duration};
 
-use actix_web::rt::time::Instant;
 use chrono::TimeDelta;
 use nittei_api_structs::send_event_reminders::{AccountEventReminder, AccountReminders};
 use nittei_domain::{Account, CalendarEvent, Reminder};
 use nittei_infra::NitteiContext;
+use tokio::time::Instant;
 use tracing::error;
 
 use crate::{error::NitteiError, shared::usecase::UseCase};
@@ -98,7 +98,7 @@ async fn create_reminders_for_accounts(
         .collect())
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for GetUpcomingRemindersUseCase {
     type Response = (Vec<(Account, AccountReminders)>, Instant);
 
@@ -222,9 +222,8 @@ mod tests {
         (user, calendar)
     }
 
-    #[actix_web::main]
+    #[tokio::test]
     #[serial_test::serial]
-    #[test]
     async fn serial_get_upcoming_reminders() {
         let mut ctx = setup_context().await;
         ctx.sys = Arc::new(StaticTimeSys1 {});
@@ -305,9 +304,8 @@ mod tests {
         assert_eq!(res.len(), 0);
     }
 
-    #[actix_web::main]
+    #[tokio::test]
     #[serial_test::serial]
-    #[test]
     async fn serial_updating_event_also_updates_reminders() {
         let mut ctx = setup_context().await;
         ctx.sys = Arc::new(StaticTimeSys1 {});
@@ -377,9 +375,8 @@ mod tests {
         );
     }
 
-    #[actix_web::main]
+    #[tokio::test]
     #[serial_test::serial]
-    #[test]
     async fn serial_deleting_event_reminder_setting_also_deletes_reminders() {
         let mut ctx = setup_context().await;
         ctx.sys = Arc::new(StaticTimeSys1 {});
@@ -442,9 +439,8 @@ mod tests {
         assert!(acc_reminders.is_empty());
     }
 
-    #[actix_web::main]
+    #[tokio::test]
     #[serial_test::serial]
-    #[test]
     async fn serial_deleting_event_also_deletes_reminders() {
         let mut ctx = setup_context().await;
         ctx.sys = Arc::new(StaticTimeSys1 {});

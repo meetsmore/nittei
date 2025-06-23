@@ -13,25 +13,45 @@ nittei_domain = { workspace = true }
 nittei_infra = { workspace = true }
 nittei_utils = { workspace = true }
 
+axum = { version = "0.8", features = ["macros"] }
+axum-valid = { version = "0.23", features = ["into_json"] }
+tower-http = { version = "0.6", features = [
+  "cors",
+  "compression-full",
+  "decompression-full",
+  "trace",
+  "sensitive-headers",
+  "catch-panic",
+] }
+tower = "0.5"
+
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 futures = "0.3"
-actix-web = "4.8"
-actix-cors = "0.7"
-actix-web-validator = "6.0.0"
-validator = { version = "0.18", features = ["derive"] }
-awc = "3.5"
-async-trait = "0.1.83"
-rrule = "0.13.0"
-chrono = { version = "0.4.19", features = ["serde"] }
-chrono-tz = "0.9.0"
+validator = { version = "0.20", features = ["derive"] }
+reqwest = { version = "0.12", default-features = false, features = [
+  "http2",
+  "json",
+  "rustls-tls",
+] }
+utoipa = { version = "5.3", features = ["axum_extras", "uuid", "chrono"] }
+utoipa-axum = { version = "0.2" }
+utoipa-swagger-ui = { version = "9.0", features = ["axum", "vendored"] }
+
+async-trait = "0.1"
+rrule = "0.14"
+chrono = { version = "0.4.39", features = ["serde"] }
+chrono-tz = "0.10.1"
 anyhow = "1.0"
-jsonwebtoken = "7"
-thiserror = "1.0"
+jsonwebtoken = "9"
+thiserror = "2.0"
 tokio = { version = "1.0", features = ["full"] }
-tracing = "0.1.25"
-tracing-actix-web = { version = "0.7.11", features = ["opentelemetry_0_23"] }
-tracing-futures = "0.2.5"
+
+opentelemetry = "0.30.0"
+opentelemetry-http = "0.30.0"
+tracing-opentelemetry = "0.31.0"
+tracing = "0.1"
+tracing-futures = "0.2"
 
 [dev-dependencies]
 serial_test = "*"

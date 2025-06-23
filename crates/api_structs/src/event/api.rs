@@ -1,12 +1,13 @@
 use nittei_domain::{CalendarEvent, CalendarEventReminder, EventInstance, ID, RRuleOptions};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
+use utoipa::ToSchema;
 use validator::{Validate, ValidationError};
 
 use crate::dtos::CalendarEventDTO;
 
 /// Calendar event response object
-#[derive(Deserialize, Serialize, TS)]
+#[derive(Deserialize, Serialize, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct CalendarEventResponse {
@@ -35,7 +36,7 @@ pub mod create_event {
 
     /// Validate that recurring_event_id and original_start_time are both provided or both omitted
     fn validate_recurring_event_id_and_original_start_time(
-        body: &RequestBody,
+        body: &CreateEventRequestBody,
     ) -> Result<(), ValidationError> {
         if (body.recurring_event_id.is_some() && body.original_start_time.is_none())
             || (body.recurring_event_id.is_none() && body.original_start_time.is_some())
@@ -48,40 +49,40 @@ pub mod create_event {
     }
 
     /// Request body for creating an event
-    #[derive(Serialize, Deserialize, Validate, TS)]
+    #[derive(Serialize, Deserialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "CreateEventRequestBody")]
+    #[ts(export)]
     #[validate(schema(function = "validate_recurring_event_id_and_original_start_time"))]
-    pub struct RequestBody {
+    pub struct CreateEventRequestBody {
         /// UUID of the calendar where the event will be created
         pub calendar_id: ID,
 
         /// Optional title of the event
         #[serde(default)]
-        #[ts(optional)]
         #[validate(length(min = 1))]
+        #[ts(optional)]
         pub title: Option<String>,
 
         /// Optional description of the event
         #[serde(default)]
-        #[ts(optional)]
         #[validate(length(min = 1))]
+        #[ts(optional)]
         pub description: Option<String>,
 
         /// Optional type of the event
         /// e.g. "meeting", "reminder", "birthday"
         /// Default is None
         #[serde(default)]
-        #[ts(optional)]
         #[validate(length(min = 1))]
+        #[ts(optional)]
         pub event_type: Option<String>,
 
         /// Optional parent event ID
         /// This is useful for external applications that need to link Nittei's events to a wider data model (e.g. a project, an order, etc.)
         /// Example: If the event is a meeting, the parent ID could be the project ID (ObjectId, UUID or any other string)
         #[serde(default)]
-        #[ts(optional)]
         #[validate(length(min = 1))]
+        #[ts(optional)]
         pub external_parent_id: Option<String>,
 
         /// Optional external event ID
@@ -91,20 +92,20 @@ pub mod create_event {
         /// Note that nothing prevents multiple events from having the same external ID
         /// This can also be a way to link events together
         #[serde(default)]
-        #[ts(optional)]
         #[validate(length(min = 1))]
+        #[ts(optional)]
         pub external_id: Option<String>,
 
         /// Optional location of the event
         #[serde(default)]
-        #[ts(optional)]
         #[validate(length(min = 1))]
+        #[ts(optional)]
         pub location: Option<String>,
 
         /// Optional status of the event
         /// Default is "Tentative"
         #[serde(default)]
-        #[ts(optional, as = "Option<_>")]
+        #[ts(as = "Option<_>", optional)]
         pub status: CalendarEventStatus,
 
         /// Optional flag to indicate if the event is an all day event
@@ -134,7 +135,8 @@ pub mod create_event {
 
         /// Optional list of exclusion dates for the recurrence rule
         #[serde(default)]
-        #[ts(optional, type = "Array<Date>")]
+        #[ts(type = "Array<Date>")]
+        #[ts(optional)]
         pub exdates: Option<Vec<DateTime<Utc>>>,
 
         /// Optional recurring event ID
@@ -148,12 +150,12 @@ pub mod create_event {
         /// This is the original start time of the event before it was moved (only for recurring events)
         /// Default is None
         #[serde(default)]
-        #[ts(optional, type = "Date")]
+        #[ts(type = "Date", optional)]
         pub original_start_time: Option<DateTime<Utc>>,
 
         /// Optional list of reminders
         #[serde(default)]
-        #[ts(optional, as = "Option<_>")]
+        #[ts(as = "Option<_>", optional)]
         pub reminders: Vec<CalendarEventReminder>,
 
         /// Optional service UUID
@@ -170,17 +172,49 @@ pub mod create_event {
         /// Optional created date
         /// Defaults to the current date and time
         #[serde(default)]
-        #[ts(optional, type = "Date")]
+        #[ts(type = "Date", optional)]
         pub created: Option<DateTime<Utc>>,
 
         /// Optional updated date
         /// Defaults to the current date and time
         #[serde(default)]
-        #[ts(optional, type = "Date")]
+        #[ts(type = "Date", optional)]
         pub updated: Option<DateTime<Utc>>,
     }
 
     pub type APIResponse = CalendarEventResponse;
+}
+
+pub mod create_batch_events {
+    use super::*;
+    use crate::create_event::CreateEventRequestBody;
+
+    #[derive(Serialize, Deserialize)]
+    pub struct PathParams {
+        pub user_id: ID,
+    }
+
+    #[derive(Serialize, Deserialize, Validate, TS, ToSchema)]
+    #[serde(rename_all = "camelCase")]
+    #[ts(export)]
+    pub struct CreateBatchEventsRequestBody {
+        pub events: Vec<CreateEventRequestBody>,
+    }
+
+    #[derive(Serialize, Deserialize, TS, ToSchema)]
+    #[serde(rename_all = "camelCase")]
+    #[ts(export)]
+    pub struct CreateBatchEventsAPIResponse {
+        pub events: Vec<CalendarEventDTO>,
+    }
+
+    impl CreateBatchEventsAPIResponse {
+        pub fn new(events: Vec<CalendarEvent>) -> Self {
+            Self {
+                events: events.into_iter().map(CalendarEventDTO::new).collect(),
+            }
+        }
+    }
 }
 
 pub mod delete_event {
@@ -198,7 +232,7 @@ pub mod delete_many_events {
     use super::*;
 
     /// Request body for deleting many events (by event_ids and/or by external_ids)
-    #[derive(Serialize, Deserialize, Validate, TS)]
+    #[derive(Serialize, Deserialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
     #[ts(export, rename = "DeleteManyEventsRequestBody")]
     pub struct DeleteManyEventsRequestBody {
@@ -234,17 +268,17 @@ pub mod get_event_instances {
     }
 
     /// API response for getting event instances
-    #[derive(Deserialize, Serialize, TS)]
+    #[derive(Deserialize, Serialize, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "GetEventInstancesAPIResponse")]
-    pub struct APIResponse {
+    #[ts(export)]
+    pub struct GetEventInstancesAPIResponse {
         /// Calendar event
         pub event: CalendarEventDTO,
         /// List of event instances (occurrences)
         pub instances: Vec<EventInstance>,
     }
 
-    impl APIResponse {
+    impl GetEventInstancesAPIResponse {
         pub fn new(event: CalendarEvent, instances: Vec<EventInstance>) -> Self {
             Self {
                 event: CalendarEventDTO::new(event),
@@ -273,16 +307,16 @@ pub mod get_event_by_external_id {
         pub external_id: String,
     }
 
-    #[derive(Serialize, TS)]
+    #[derive(Serialize, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "GetEventsByExternalIdAPIResponse")]
-    pub struct APIResponse {
+    #[ts(export)]
+    pub struct GetEventsByExternalIdAPIResponse {
         /// Calendar events retrieved
         pub events: Vec<CalendarEventDTO>,
     }
 
     /// API response for getting events by calendars
-    impl APIResponse {
+    impl GetEventsByExternalIdAPIResponse {
         pub fn new(events: Vec<CalendarEventDTO>) -> Self {
             Self { events }
         }
@@ -309,8 +343,8 @@ pub mod get_events_by_calendars {
     /// Query parameters for getting events by calendars
     #[derive(Deserialize, Serialize, TS)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "GetEventsByCalendarsQueryParams")]
-    pub struct QueryParams {
+    #[ts(export)]
+    pub struct GetEventsByCalendarsQueryParams {
         /// Optional list of calendar UUIDs
         /// If not provided, all calendars will be used
         #[serde(default, deserialize_with = "deserialize_stringified_uuids_list")]
@@ -326,15 +360,73 @@ pub mod get_events_by_calendars {
     }
 
     /// API response for getting events by calendars
-    #[derive(Serialize, TS)]
+    #[derive(Serialize, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "GetEventsByCalendarsAPIResponse")]
-    pub struct APIResponse {
+    #[ts(export)]
+    pub struct GetEventsByCalendarsAPIResponse {
         /// List of calendar events retrieved
         pub events: Vec<EventWithInstancesDTO>,
     }
 
-    impl APIResponse {
+    impl GetEventsByCalendarsAPIResponse {
+        pub fn new(events: Vec<EventWithInstances>) -> Self {
+            Self {
+                events: events
+                    .into_iter()
+                    .map(|e| EventWithInstancesDTO::new(e.event, e.instances))
+                    .collect(),
+            }
+        }
+    }
+}
+
+pub mod get_events_for_users_in_time_range {
+    use chrono::{DateTime, Utc};
+    use nittei_domain::EventWithInstances;
+
+    use super::*;
+    use crate::dtos::EventWithInstancesDTO;
+
+    /// Body for getting events for users in a time range
+    #[derive(Deserialize, Serialize, Validate, TS, ToSchema)]
+    #[serde(rename_all = "camelCase")]
+    #[ts(export)]
+    pub struct GetEventsForUsersInTimeSpanBody {
+        /// List of user IDs
+        #[validate(length(min = 1))]
+        pub user_ids: Vec<ID>,
+
+        /// Start time of the interval for getting the events (UTC)
+        #[ts(type = "Date")]
+        pub start_time: DateTime<Utc>,
+
+        /// End time of the interval for getting the events (UTC)
+        #[ts(type = "Date")]
+        pub end_time: DateTime<Utc>,
+
+        /// Generate instances of recurring events, default is false
+        #[ts(optional)]
+        pub generate_instances_for_recurring: Option<bool>,
+
+        /// Include tentative events, default is false
+        #[ts(optional)]
+        pub include_tentative: Option<bool>,
+
+        /// Include non-busy events, default is false
+        #[ts(optional)]
+        pub include_non_busy: Option<bool>,
+    }
+
+    /// API response for getting events by calendars
+    #[derive(Serialize, TS, ToSchema)]
+    #[serde(rename_all = "camelCase")]
+    #[ts(export)]
+    pub struct GetEventsForUsersInTimeSpanAPIResponse {
+        /// List of calendar events retrieved
+        pub events: Vec<EventWithInstancesDTO>,
+    }
+
+    impl GetEventsForUsersInTimeSpanAPIResponse {
         pub fn new(events: Vec<EventWithInstances>) -> Self {
             Self {
                 events: events
@@ -347,17 +439,17 @@ pub mod get_events_by_calendars {
 }
 
 pub mod search_events {
-    use nittei_domain::{CalendarEventSort, DateTimeQuery, IDQuery, StringQuery};
+    use nittei_domain::{CalendarEventSort, DateTimeQuery, IDQuery, RecurrenceQuery, StringQuery};
 
     use super::*;
 
     /// Request body for searching events for one user
-    #[derive(Deserialize, Serialize, Validate, TS)]
+    #[derive(Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase", deny_unknown_fields)]
-    #[ts(export, rename = "SearchEventsRequestBody")]
-    pub struct RequestBody {
+    #[ts(export)]
+    pub struct SearchEventsRequestBody {
         /// Filter to use for searching events
-        pub filter: RequestBodyFilter,
+        pub filter: SearchEventsRequestBodyFilter,
 
         /// Optional sort to use when searching events
         #[ts(optional)]
@@ -371,14 +463,10 @@ pub mod search_events {
 
     /// Part of the Request body for searching events for a user
     /// This is the filter
-    #[derive(Deserialize, Serialize, Validate, TS)]
+    #[derive(Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase", deny_unknown_fields)]
-    #[ts(
-        export,
-        rename = "SearchEventsRequestBodyFilter",
-        rename_all = "camelCase"
-    )]
-    pub struct RequestBodyFilter {
+    #[ts(export, rename_all = "camelCase")]
+    pub struct SearchEventsRequestBodyFilter {
         /// User ID
         pub user_id: ID,
 
@@ -425,8 +513,9 @@ pub mod search_events {
         pub original_start_time: Option<DateTimeQuery>,
 
         /// Optional filter on the recurrence (existence)
+        /// This allows to filter on the existence or not of a recurrence, or the existence of a recurrence at a specific date
         #[ts(optional)]
-        pub is_recurring: Option<bool>,
+        pub recurrence: Option<RecurrenceQuery>,
 
         /// Optional list of metadata key-value pairs
         #[ts(optional)]
@@ -442,15 +531,15 @@ pub mod search_events {
     }
 
     /// API response for searching events for one user
-    #[derive(Serialize, TS)]
+    #[derive(Serialize, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "SearchEventsAPIResponse")]
-    pub struct APIResponse {
+    #[ts(export)]
+    pub struct SearchEventsAPIResponse {
         /// List of calendar events retrieved
         pub events: Vec<CalendarEventDTO>,
     }
 
-    impl APIResponse {
+    impl SearchEventsAPIResponse {
         pub fn new(events: Vec<CalendarEventDTO>) -> Self {
             Self { events }
         }
@@ -471,15 +560,15 @@ pub mod get_events_by_meta {
     }
 
     /// API response for getting events by metadata
-    #[derive(Deserialize, Serialize, TS)]
+    #[derive(Deserialize, Serialize, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "GetEventsByMetaAPIResponse")]
-    pub struct APIResponse {
+    #[ts(export)]
+    pub struct GetEventsByMetaAPIResponse {
         /// List of calendar events retrieved
         pub events: Vec<CalendarEventDTO>,
     }
 
-    impl APIResponse {
+    impl GetEventsByMetaAPIResponse {
         pub fn new(events: Vec<CalendarEvent>) -> Self {
             Self {
                 events: events.into_iter().map(CalendarEventDTO::new).collect(),
@@ -496,7 +585,7 @@ pub mod update_event {
 
     /// Validate that recurring_event_id and original_start_time are both provided or both omitted
     fn validate_recurring_event_id_and_original_start_time(
-        body: &RequestBody,
+        body: &UpdateEventRequestBody,
     ) -> Result<(), ValidationError> {
         if (body.recurring_event_id.is_some() && body.original_start_time.is_none())
             || (body.recurring_event_id.is_none() && body.original_start_time.is_some())
@@ -509,61 +598,61 @@ pub mod update_event {
     }
 
     /// Request body for updating an event
-    #[derive(Deserialize, Serialize, Validate, TS)]
+    #[derive(Deserialize, Serialize, Validate, TS, ToSchema)]
     #[serde(rename_all = "camelCase")]
-    #[ts(export, rename = "UpdateEventRequestBody")]
+    #[ts(export)]
     #[validate(schema(function = "validate_recurring_event_id_and_original_start_time"))]
-    pub struct RequestBody {
+    pub struct UpdateEventRequestBody {
         /// Optional start time of the event (UTC)
         #[serde(default)]
-        #[ts(optional, type = "Date")]
+        #[ts(type = "Date", optional)]
         pub start_time: Option<DateTime<Utc>>,
 
         /// Optional title of the event
         #[serde(default)]
-        #[ts(optional)]
         #[validate(length(min = 1))]
+        #[ts(optional)]
         pub title: Option<String>,
 
         /// Optional description of the event
         #[serde(default)]
-        #[ts(optional)]
         #[validate(length(min = 1))]
+        #[ts(optional)]
         pub description: Option<String>,
 
         /// Optional type of the event
         /// e.g. "meeting", "reminder", "birthday"
         /// Default is None
         #[serde(default)]
-        #[ts(optional)]
         #[validate(length(min = 1))]
+        #[ts(optional)]
         pub event_type: Option<String>,
 
         /// Optional parent event ID
         /// This is useful for external applications that need to link Nittei's events to a wider data model (e.g. a project, an order, etc.)
         #[serde(default)]
-        #[ts(optional)]
         #[validate(length(min = 1))]
+        #[ts(optional)]
         pub parent_id: Option<String>,
 
         /// Optional external event ID
         /// This is useful for external applications that need to link Nittei's events to their own data models
         /// Default is None
         #[serde(default)]
-        #[ts(optional)]
         #[validate(length(min = 1))]
+        #[ts(optional)]
         pub external_id: Option<String>,
 
         /// Optional location of the event
         #[serde(default)]
-        #[ts(optional)]
         #[validate(length(min = 1))]
+        #[ts(optional)]
         pub location: Option<String>,
 
         /// Optional status of the event
         /// Default is "Tentative"
         #[serde(default)]
-        #[ts(optional, as = "Option<_>")]
+        #[ts(as = "Option<_>", optional)]
         pub status: Option<CalendarEventStatus>,
 
         /// Optional flag to indicate if the event is an all day event
@@ -574,7 +663,8 @@ pub mod update_event {
 
         /// Optional duration of the event in milliseconds
         #[serde(default)]
-        #[ts(optional, type = "number")]
+        #[ts(type = "number")]
+        #[ts(optional)]
         pub duration: Option<i64>,
 
         /// Optional busy flag
@@ -594,7 +684,8 @@ pub mod update_event {
 
         /// Optional list of exclusion dates for the recurrence rule
         #[serde(default)]
-        #[ts(optional, type = "Array<Date>")]
+        #[ts(type = "Array<Date>")]
+        #[ts(optional)]
         pub exdates: Option<Vec<DateTime<Utc>>>,
 
         /// Optional recurring event ID
@@ -608,7 +699,7 @@ pub mod update_event {
         /// This is the original start time of the event before it was moved (only for recurring events)
         /// Default is None
         #[serde(default)]
-        #[ts(optional, type = "Date")]
+        #[ts(type = "Date", optional)]
         pub original_start_time: Option<DateTime<Utc>>,
 
         /// Optional list of reminders
@@ -623,12 +714,12 @@ pub mod update_event {
 
         /// Optional created date to use to replace the current one
         #[serde(default)]
-        #[ts(optional, type = "Date")]
+        #[ts(type = "Date", optional)]
         pub created: Option<DateTime<Utc>>,
 
         /// Optional updated date to use to replace the current one
         #[serde(default)]
-        #[ts(optional, type = "Date")]
+        #[ts(type = "Date", optional)]
         pub updated: Option<DateTime<Utc>>,
     }
 

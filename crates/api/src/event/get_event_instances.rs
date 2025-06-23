@@ -1,31 +1,52 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{
+    Extension,
+    Json,
+    extract::{Path, Query},
+};
 use nittei_api_structs::get_event_instances::*;
 use nittei_domain::{
+    Account,
     CalendarEvent,
     EventInstance,
     ID,
     TimeSpan,
+    User,
     expand_event_and_remove_exceptions,
     generate_map_exceptions_original_start_times,
 };
 use nittei_infra::NitteiContext;
+use nittei_utils::config::APP_CONFIG;
 use tracing::error;
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_event, protect_admin_route, protect_route},
+        auth::{Policy, account_can_modify_event},
         usecase::{UseCase, execute},
     },
 };
 
+#[utoipa::path(
+    get,
+    tag = "Event",
+    path = "/api/v1/user/events/{event_id}/instances",
+    summary = "Get event instances (admin only)",
+    params(
+        ("event_id" = ID, Path, description = "The id of the event to get instances for"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = GetEventInstancesAPIResponse)
+    )
+)]
 pub async fn get_event_instances_admin_controller(
-    http_req: HttpRequest,
-    path_params: web::Path<PathParams>,
-    query_params: web::Query<QueryParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    Extension(account): Extension<Account>,
+    path_params: Path<PathParams>,
+    query_params: Query<QueryParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<GetEventInstancesAPIResponse>, NitteiError> {
     let e = account_can_modify_event(&account, &path_params.event_id, &ctx).await?;
 
     let usecase = GetEventInstancesUseCase {
@@ -37,19 +58,32 @@ pub async fn get_event_instances_admin_controller(
     execute(usecase, &ctx)
         .await
         .map(|usecase_res| {
-            HttpResponse::Ok().json(APIResponse::new(usecase_res.event, usecase_res.instances))
+            Json(GetEventInstancesAPIResponse::new(
+                usecase_res.event,
+                usecase_res.instances,
+            ))
         })
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    get,
+    tag = "Event",
+    path = "/api/v1/events/{event_id}/instances",
+    summary = "Get event instances (user only)",
+    params(
+        ("event_id" = ID, Path, description = "The id of the event to get instances for"),
+    ),
+    responses(
+        (status = 200, body = GetEventInstancesAPIResponse)
+    )
+)]
 pub async fn get_event_instances_controller(
-    http_req: HttpRequest,
-    path_params: web::Path<PathParams>,
-    query_params: web::Query<QueryParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let (user, _policy) = protect_route(&http_req, &ctx).await?;
-
+    Extension((user, _policy)): Extension<(User, Policy)>,
+    path_params: Path<PathParams>,
+    query_params: Query<QueryParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<GetEventInstancesAPIResponse>, NitteiError> {
     let usecase = GetEventInstancesUseCase {
         user_id: user.id.clone(),
         event_id: path_params.event_id.clone(),
@@ -59,7 +93,10 @@ pub async fn get_event_instances_controller(
     execute(usecase, &ctx)
         .await
         .map(|usecase_res| {
-            HttpResponse::Ok().json(APIResponse::new(usecase_res.event, usecase_res.instances))
+            Json(GetEventInstancesAPIResponse::new(
+                usecase_res.event,
+                usecase_res.instances,
+            ))
         })
         .map_err(NitteiError::from)
 }
@@ -83,7 +120,7 @@ impl From<UseCaseError> for NitteiError {
         match e {
             UseCaseError::InternalError => Self::InternalError,
             UseCaseError::InvalidTimespan => {
-                Self::BadClientData("The provided start_ts and end_ts is invalid".into())
+                Self::BadClientData("The provided start_ts and end_ts are invalid".into())
             }
             UseCaseError::NotFound(entity, event_id) => Self::NotFound(format!(
                 "The {} with id: {}, was not found.",
@@ -99,7 +136,7 @@ pub struct UseCaseResponse {
     pub instances: Vec<EventInstance>,
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for GetEventInstancesUseCase {
     type Response = UseCaseResponse;
 
@@ -135,7 +172,7 @@ impl UseCase for GetEventInstancesUseCase {
 
         // Check if the timespan is valid
         let timespan = TimeSpan::new(self.timespan.start_time, self.timespan.end_time);
-        if timespan.greater_than(ctx.config.event_instances_query_duration_limit) {
+        if timespan.greater_than(APP_CONFIG.event_instances_query_duration_limit) {
             return Err(UseCaseError::InvalidTimespan);
         }
 
@@ -168,7 +205,7 @@ impl UseCase for GetEventInstancesUseCase {
 
         // Expand the event and remove the exceptions
         let instances =
-            expand_event_and_remove_exceptions(&calendar, main_event, exceptions, &timespan)
+            expand_event_and_remove_exceptions(&calendar, main_event, exceptions, timespan)
                 .map_err(|e| {
                     error!("Got an error while expanding an event {:?}", e);
                     UseCaseError::InternalError

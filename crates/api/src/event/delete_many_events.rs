@@ -1,24 +1,38 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, http::StatusCode};
+use axum_valid::Valid;
 use futures::future::{self, try_join};
 use nittei_api_structs::delete_many_events::DeleteManyEventsRequestBody;
-use nittei_domain::ID;
+use nittei_domain::{Account, ID};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{Permission, protect_admin_route},
+        auth::Permission,
         usecase::{PermissionBoundary, UseCase, execute},
     },
 };
 
+#[utoipa::path(
+    post,
+    tag = "Event",
+    path = "/api/v1/user/events/delete_many",
+    summary = "Delete many events (admin only)",
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = DeleteManyEventsRequestBody,
+    ),
+    responses(
+        (status = 200)
+    )
+)]
 pub async fn delete_many_events_admin_controller(
-    http_req: HttpRequest,
-    body: actix_web_validator::Json<DeleteManyEventsRequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
-
+    Extension(account): Extension<Account>,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Valid<Json<DeleteManyEventsRequestBody>>,
+) -> Result<StatusCode, NitteiError> {
     let usecase = DeleteManyEventsUseCase {
         account_uid: account.id,
         event_ids: body.event_ids.clone(),
@@ -27,7 +41,7 @@ pub async fn delete_many_events_admin_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|_| HttpResponse::Ok().finish())
+        .map(|_| StatusCode::OK)
         .map_err(NitteiError::from)
 }
 
@@ -53,7 +67,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for DeleteManyEventsUseCase {
     type Response = ();
 
@@ -64,6 +78,7 @@ impl UseCase for DeleteManyEventsUseCase {
     async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
         // If both event_ids and external_ids are None, return an error
         if self.event_ids.is_none() && self.external_ids.is_none() {
+            tracing::warn!("[delete_many_events] No event ids or external ids provided");
             return Err(UseCaseError::BadRequest);
         }
 
@@ -84,7 +99,10 @@ impl UseCase for DeleteManyEventsUseCase {
         let (events_by_ids, events_by_external_ids) =
             try_join(events_by_ids, events_by_external_ids)
                 .await
-                .map_err(|_| UseCaseError::StorageError)?;
+                .map_err(|e| {
+                    tracing::error!("[delete_many_events] Error finding events: {:?}", e);
+                    UseCaseError::StorageError
+                })?;
 
         // Merge event ids and remove duplicates
         let event_ids_to_delete = events_by_ids
@@ -99,7 +117,10 @@ impl UseCase for DeleteManyEventsUseCase {
             .events
             .delete_many(event_ids_to_delete.as_slice())
             .await
-            .map_err(|_| UseCaseError::StorageError)?;
+            .map_err(|e| {
+                tracing::error!("[delete_many_events] Error deleting events: {:?}", e);
+                UseCaseError::StorageError
+            })?;
 
         Ok(())
     }

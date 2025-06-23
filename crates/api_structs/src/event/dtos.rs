@@ -9,9 +9,10 @@ use nittei_domain::{
 };
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
+use utoipa::ToSchema;
 
 /// Calendar event object
-#[derive(Debug, Deserialize, Serialize, Clone, TS)]
+#[derive(Debug, Deserialize, Serialize, Clone, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct CalendarEventDTO {
@@ -85,7 +86,8 @@ pub struct CalendarEventDTO {
 
     /// Optional recurring until date
     /// This is the date until which the event will recur
-    #[ts(optional, type = "Date")]
+    /// This is calculated by adding the duration to the until date
+    #[ts(type = "Date", optional)]
     pub recurring_until: Option<DateTime<Utc>>,
 
     /// List of exclusion dates for the recurrence rule
@@ -150,7 +152,7 @@ impl CalendarEventDTO {
 }
 
 /// Calendar event with instances
-#[derive(Serialize, Deserialize, Debug, Clone, TS)]
+#[derive(Serialize, Deserialize, Debug, Clone, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct EventWithInstancesDTO {

@@ -23,6 +23,10 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
+migrationInitContainer:
+  enabled: false
+  command: []
+
 serviceAccount:
   # Specifies whether a service account should be created
   create: true
@@ -34,8 +38,10 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
-podAnnotations: {}
 podLabels: {}
+podAnnotations: {}
+
+deploymentLabels: {}
 
 podSecurityContext:
   {}
@@ -128,3 +134,12 @@ revisionHistoryLimit: 5
 
 # Specify the strategy to the Deployment
 strategy: {}
+
+# Pod Disruption Budget configuration
+podDisruptionBudget:
+  enabled: false
+  # IMPORTANT: Only one of minAvailable or maxUnavailable should be specified
+  # minAvailable: Ensures at least this many pods are available during voluntary disruptions
+  minAvailable: 1 # Can be an absolute number or a percentage like "50%"
+  # maxUnavailable: Ensures at most this many pods are unavailable during voluntary disruptions
+  # maxUnavailable: 1  # Can be an absolute number or a percentage like "50%"

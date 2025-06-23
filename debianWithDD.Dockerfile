@@ -4,7 +4,7 @@
 # docker buildx build -f debianWithDD.Dockerfile -t image:tag --build-arg='ARCH=x86_64' --platform linux/amd64 .
 # docker buildx build -f debianWithDD.Dockerfile -t image:tag --build-arg='ARCH=aarch64' --platform linux/arm64 .
 
-ARG RUST_VERSION=1.85.0
+ARG RUST_VERSION=1.85.1
 ARG APP_NAME=nittei
 ARG ARCH=x86_64
 
@@ -29,7 +29,9 @@ RUN --mount=type=bind,source=bins,target=/app/${APP_NAME}/bins \
   --mount=type=cache,target=/usr/local/cargo/git/db \
   --mount=type=cache,target=/usr/local/cargo/registry/ \
   cargo build --locked --release && \
-  cp ./target/release/$APP_NAME /bin/server
+  cp ./target/release/$APP_NAME /nittei && \
+  cargo build --locked --release --bin nittei-migrate && \
+  cp ./target/release/nittei-migrate /nittei-migrate
 
 # Install ddprof
 RUN ARCH_IN_URL=$(case "${ARCH}" in \
@@ -41,28 +43,25 @@ RUN ARCH_IN_URL=$(case "${ARCH}" in \
   tar xvf ddprof-linux.tar.xz && \
   mv ddprof/bin/ddprof /ddprof
 
-FROM debian:stable-slim
+# Use the distroless base image for final image
+FROM gcr.io/distroless/cc-debian12
 
-# Enable backtraces
-ENV RUST_BACKTRACE=1
+# Set the git repository url and commit hash for DD
+ARG GIT_REPO_URL
+ARG GIT_COMMIT_HASH
 
-RUN apt update \
-  && apt install -y openssl ca-certificates \
-  && apt clean \
-  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+ENV DD_GIT_REPOSITORY_URL=${GIT_REPO_URL}
+ENV DD_GIT_COMMIT_SHA=${GIT_COMMIT_HASH}
+ENV DD_SOURCE_CODE_PATH_MAPPING="/app/nittei/bins:/bins,/app/nittei/crates:/crates"
 
-ARG UID=10001
-RUN adduser \
-  --disabled-password \
-  --gecos "" \
-  --home "/nonexistent" \
-  --shell "/sbin/nologin" \
-  --no-create-home \
-  --uid "${UID}" \
-  appuser
-USER appuser
+# Set the backtrace level by default to 1
+ARG RUST_BACKTRACE=1
+ENV RUST_BACKTRACE=${RUST_BACKTRACE}
 
-COPY --from=builder /bin/server /bin/
-COPY --from=builder /ddprof /ddprof
+USER nonroot:nonroot
 
-CMD ["/ddprof", "--preset", "cpu_live_heap", "/bin/server"]
+COPY --from=builder --chown=nonroot:nonroot /nittei /nittei
+COPY --from=builder --chown=nonroot:nonroot /nittei-migrate /nittei-migrate
+COPY --from=builder --chown=nonroot:nonroot /ddprof /ddprof
+
+CMD ["/ddprof", "--preset", "cpu_live_heap", "/nittei"]

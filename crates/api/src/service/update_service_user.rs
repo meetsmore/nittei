@@ -1,4 +1,4 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, extract::Path};
 use nittei_api_structs::update_service_user::*;
 use nittei_domain::{Account, ID, ServiceResource, TimePlan};
 use nittei_infra::NitteiContext;
@@ -10,20 +10,15 @@ use super::add_user_to_service::{
 };
 use crate::{
     error::NitteiError,
-    shared::{
-        auth::protect_admin_route,
-        usecase::{UseCase, execute},
-    },
+    shared::usecase::{UseCase, execute},
 };
 
 pub async fn update_service_user_controller(
-    http_req: HttpRequest,
-    mut body: web::Json<RequestBody>,
-    mut path: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
-
+    Extension(account): Extension<Account>,
+    mut path: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+    mut body: Json<RequestBody>,
+) -> Result<Json<APIResponse>, NitteiError> {
     let usecase = UpdateServiceUserUseCase {
         account,
         service_id: std::mem::take(&mut path.service_id),
@@ -37,7 +32,7 @@ pub async fn update_service_user_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|usecase_res| HttpResponse::Ok().json(APIResponse::new(usecase_res.user)))
+        .map(|usecase_res| Json(APIResponse::new(usecase_res.user)))
         .map_err(NitteiError::from)
 }
 
@@ -79,7 +74,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for UpdateServiceUserUseCase {
     type Response = UseCaseRes;
 

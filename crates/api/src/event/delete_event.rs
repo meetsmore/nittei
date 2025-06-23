@@ -1,33 +1,42 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, extract::Path};
 use nittei_api_structs::delete_event::*;
-use nittei_domain::{CalendarEvent, ID, IntegrationProvider, User};
+use nittei_domain::{Account, CalendarEvent, ID, IntegrationProvider, User};
 use nittei_infra::{
     NitteiContext,
     google_calendar::GoogleCalendarProvider,
     outlook_calendar::OutlookCalendarProvider,
 };
+use nittei_utils::config::APP_CONFIG;
 use tracing::error;
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{
-            Permission,
-            account_can_modify_event,
-            account_can_modify_user,
-            protect_admin_route,
-            protect_route,
-        },
+        auth::{Permission, Policy, account_can_modify_event, account_can_modify_user},
         usecase::{PermissionBoundary, UseCase, execute, execute_with_policy},
     },
 };
 
+#[utoipa::path(
+    delete,
+    tag = "Event",
+    path = "/api/v1/user/events/{event_id}",
+    summary = "Delete an event (admin only)",
+    params(
+        ("event_id" = ID, Path, description = "The id of the event to delete"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn delete_event_admin_controller(
-    http_req: HttpRequest,
-    path_params: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    Extension(account): Extension<Account>,
+    path_params: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
     let e = account_can_modify_event(&account, &path_params.event_id, &ctx).await?;
     let user = account_can_modify_user(&account, &e.user_id, &ctx).await?;
 
@@ -38,17 +47,27 @@ pub async fn delete_event_admin_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|event| HttpResponse::Ok().json(APIResponse::new(event)))
+        .map(|event| Json(APIResponse::new(event)))
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    delete,
+    tag = "Event",
+    path = "/api/v1/events/{event_id}",
+    summary = "Delete an event (user only)",
+    params(
+        ("event_id" = ID, Path, description = "The id of the event to delete"),
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn delete_event_controller(
-    http_req: HttpRequest,
-    path_params: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let (user, policy) = protect_route(&http_req, &ctx).await?;
-
+    Extension((user, policy)): Extension<(User, Policy)>,
+    path_params: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
     let usecase = DeleteEventUseCase {
         user,
         event_id: path_params.event_id.clone(),
@@ -56,7 +75,7 @@ pub async fn delete_event_controller(
 
     execute_with_policy(usecase, &policy, &ctx)
         .await
-        .map(|event| HttpResponse::Ok().json(APIResponse::new(event)))
+        .map(|event| Json(APIResponse::new(event)))
         .map_err(NitteiError::from)
 }
 
@@ -84,7 +103,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for DeleteEventUseCase {
     type Response = CalendarEvent;
 
@@ -94,24 +113,23 @@ impl UseCase for DeleteEventUseCase {
 
     // TODO: use only one db call
     async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
-        let event = ctx
-            .repos
-            .events
-            .find(&self.event_id)
-            .await
-            .map_err(|_| UseCaseError::StorageError)?;
+        let event = ctx.repos.events.find(&self.event_id).await.map_err(|e| {
+            tracing::error!("[delete_event] Error finding event: {:?}", e);
+            UseCaseError::StorageError
+        })?;
         let e = match event {
             Some(e) if e.user_id == self.user.id => e,
             _ => return Err(UseCaseError::NotFound(self.event_id.clone())),
         };
 
-        self.delete_synced_events(&e, ctx).await;
+        if !APP_CONFIG.disable_reminders {
+            self.delete_synced_events(&e, ctx).await;
+        }
 
-        ctx.repos
-            .events
-            .delete(&e.id)
-            .await
-            .map_err(|_| UseCaseError::StorageError)?;
+        ctx.repos.events.delete(&e.id).await.map_err(|e| {
+            tracing::error!("[delete_event] Error deleting event: {:?}", e);
+            UseCaseError::StorageError
+        })?;
 
         Ok(e)
     }

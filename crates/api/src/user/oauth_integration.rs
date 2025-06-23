@@ -1,54 +1,82 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, extract::Path};
+use axum_valid::Valid;
 use chrono::Utc;
 use nittei_api_structs::oauth_integration::*;
-use nittei_domain::{IntegrationProvider, User, UserIntegration};
+use nittei_domain::{Account, ID, IntegrationProvider, User, UserIntegration};
 use nittei_infra::{CodeTokenRequest, NitteiContext, ProviderOAuth};
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_user, protect_admin_route, protect_route},
+        auth::{Policy, account_can_modify_user},
         usecase::{UseCase, execute},
     },
 };
 
+#[utoipa::path(
+    post,
+    tag = "User",
+    path = "/api/v1/user/{user_id}/oauth",
+    summary = "OAuth integration (admin only)",
+    params(
+        ("user_id" = ID, Path, description = "The id of the user to integrate with"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = OAuthIntegrationRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn oauth_integration_admin_controller(
-    http_req: HttpRequest,
-    path: web::Path<PathParams>,
-    body: actix_web_validator::Json<RequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    Extension(account): Extension<Account>,
+    path: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Valid<Json<OAuthIntegrationRequestBody>>,
+) -> Result<Json<APIResponse>, NitteiError> {
     let user = account_can_modify_user(&account, &path.user_id, &ctx).await?;
 
     let usecase = OAuthIntegrationUseCase {
         user,
-        code: body.0.code,
-        provider: body.0.provider,
+        code: body.0.code.clone(),
+        provider: body.0.provider.clone(),
     };
 
     execute(usecase, &ctx)
         .await
-        .map(|usecase_res| HttpResponse::Ok().json(APIResponse::new(usecase_res.user)))
+        .map(|usecase_res| Json(APIResponse::new(usecase_res.user)))
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    post,
+    tag = "User",
+    path = "/api/v1/me/oauth",
+    summary = "OAuth integration",
+    request_body(
+        content = OAuthIntegrationRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn oauth_integration_controller(
-    http_req: HttpRequest,
-    body: web::Json<RequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let (user, _) = protect_route(&http_req, &ctx).await?;
-
+    Extension((user, _policy)): Extension<(User, Policy)>,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Json<OAuthIntegrationRequestBody>,
+) -> Result<Json<APIResponse>, NitteiError> {
     let usecase = OAuthIntegrationUseCase {
         user,
-        code: body.0.code,
-        provider: body.0.provider,
+        code: body.0.code.clone(),
+        provider: body.0.provider.clone(),
     };
 
     execute(usecase, &ctx)
         .await
-        .map(|usecase_res| HttpResponse::Ok().json(APIResponse::new(usecase_res.user)))
+        .map(|usecase_res| Json(APIResponse::new(usecase_res.user)))
         .map_err(NitteiError::from)
 }
 
@@ -87,7 +115,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for OAuthIntegrationUseCase {
     type Response = UseCaseRes;
     type Error = UseCaseError;

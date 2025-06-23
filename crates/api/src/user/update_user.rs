@@ -1,34 +1,47 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, extract::Path};
 use nittei_api_structs::update_user::*;
-use nittei_domain::{ID, User};
+use nittei_domain::{Account, ID, User};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
-    shared::{
-        auth::protect_admin_route,
-        usecase::{UseCase, execute},
-    },
+    shared::usecase::{UseCase, execute},
 };
 
+#[utoipa::path(
+    put,
+    tag = "User",
+    path = "/api/v1/user/{user_id}",
+    summary = "Update a user (admin only)",
+    params(
+        ("user_id" = ID, Path, description = "The id of the user to update"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = UpdateUserRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn update_user_controller(
-    http_req: HttpRequest,
-    body: web::Json<RequestBody>,
-    mut path: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
-
+    Extension(account): Extension<Account>,
+    mut path: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+    mut body: Json<UpdateUserRequestBody>,
+) -> Result<Json<APIResponse>, NitteiError> {
     let usecase = UpdateUserUseCase {
         account_id: account.id,
-        external_id: body.0.external_id,
+        external_id: body.0.external_id.take(),
         user_id: std::mem::take(&mut path.user_id),
-        metadata: body.0.metadata,
+        metadata: body.0.metadata.take(),
     };
 
     execute(usecase, &ctx)
         .await
-        .map(|usecase_res| HttpResponse::Ok().json(APIResponse::new(usecase_res.user)))
+        .map(|usecase_res| Json(APIResponse::new(usecase_res.user)))
         .map_err(NitteiError::from)
 }
 
@@ -62,7 +75,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for UpdateUserUseCase {
     type Response = UseCaseRes;
     type Error = UseCaseError;
@@ -94,6 +107,9 @@ impl UseCase for UpdateUserUseCase {
             .save(&user)
             .await
             .map(|_| UseCaseRes { user })
-            .map_err(|_| UseCaseError::StorageError)
+            .map_err(|e| {
+                tracing::error!("[update_user] Error saving user: {:?}", e);
+                UseCaseError::StorageError
+            })
     }
 }

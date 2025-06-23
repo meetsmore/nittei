@@ -1,32 +1,59 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{
+    Extension,
+    Json,
+    extract::{Path, Query},
+};
 use chrono::{DateTime, Utc};
-use nittei_api_structs::get_calendar_events::{APIResponse, PathParams, QueryParams};
+use nittei_api_structs::get_calendar_events::{
+    GetCalendarEventsAPIResponse,
+    PathParams,
+    QueryParams,
+};
 use nittei_domain::{
+    Account,
     Calendar,
     EventWithInstances,
     ID,
     TimeSpan,
+    User,
     expand_event_and_remove_exceptions,
     generate_map_exceptions_original_start_times,
 };
 use nittei_infra::NitteiContext;
+use nittei_utils::config::APP_CONFIG;
 use tracing::error;
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_calendar, protect_admin_route, protect_route},
+        auth::{Policy, account_can_modify_calendar},
         usecase::{UseCase, execute},
     },
 };
 
+#[utoipa::path(
+    get,
+    tag = "Calendar",
+    path = "/api/v1/user/calendar/{calendar_id}/events",
+    summary = "Get events for a calendar (admin only)",
+    security(
+        ("api_key" = [])
+    ),
+    params(
+        ("calendar_id" = ID, Path, description = "The id of the calendar to get events for"),
+        ("start_time" = DateTime<Utc>, Query, description = "The start time of the events to get"),
+        ("end_time" = DateTime<Utc>, Query, description = "The end time of the events to get"),
+    ),
+    responses(
+        (status = 200, body = GetCalendarEventsAPIResponse)
+    )
+)]
 pub async fn get_calendar_events_admin_controller(
-    http_req: HttpRequest,
-    query_params: web::Query<QueryParams>,
-    path: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    Extension(account): Extension<Account>,
+    query_params: Query<QueryParams>,
+    path: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<GetCalendarEventsAPIResponse>, NitteiError> {
     let cal = account_can_modify_calendar(&account, &path.calendar_id, &ctx).await?;
 
     let usecase = GetCalendarEventsUseCase {
@@ -40,18 +67,28 @@ pub async fn get_calendar_events_admin_controller(
         .await
         .map_err(NitteiError::from)
         .map(|usecase_res| {
-            HttpResponse::Ok().json(APIResponse::new(usecase_res.calendar, usecase_res.events))
+            Json(GetCalendarEventsAPIResponse::new(
+                usecase_res.calendar,
+                usecase_res.events,
+            ))
         })
 }
 
+#[utoipa::path(
+    get,
+    tag = "Calendar",
+    path = "/api/v1/calendar/{calendar_id}/events",
+    summary = "Get events for a calendar",
+    responses(
+        (status = 200, body = GetCalendarEventsAPIResponse)
+    )
+)]
 pub async fn get_calendar_events_controller(
-    http_req: HttpRequest,
-    query_params: web::Query<QueryParams>,
-    path: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let (user, _policy) = protect_route(&http_req, &ctx).await?;
-
+    Extension((user, _policy)): Extension<(User, Policy)>,
+    query_params: Query<QueryParams>,
+    path: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<GetCalendarEventsAPIResponse>, NitteiError> {
     let usecase = GetCalendarEventsUseCase {
         user_id: user.id,
         calendar_id: path.calendar_id.clone(),
@@ -63,7 +100,10 @@ pub async fn get_calendar_events_controller(
         .await
         .map_err(NitteiError::from)
         .map(|usecase_res| {
-            HttpResponse::Ok().json(APIResponse::new(usecase_res.calendar, usecase_res.events))
+            Json(GetCalendarEventsAPIResponse::new(
+                usecase_res.calendar,
+                usecase_res.events,
+            ))
         })
 }
 #[derive(Debug)]
@@ -102,7 +142,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for GetCalendarEventsUseCase {
     type Response = UseCaseResponse;
 
@@ -119,7 +159,7 @@ impl UseCase for GetCalendarEventsUseCase {
             .map_err(|_| UseCaseError::IntervalServerError)?;
 
         let timespan = TimeSpan::new(self.start_time, self.end_time);
-        if timespan.greater_than(ctx.config.event_instances_query_duration_limit) {
+        if timespan.greater_than(APP_CONFIG.event_instances_query_duration_limit) {
             return Err(UseCaseError::InvalidTimespan);
         }
 
@@ -129,7 +169,7 @@ impl UseCase for GetCalendarEventsUseCase {
                 let calendar_events = ctx
                     .repos
                     .events
-                    .find_by_calendar(&calendar.id, Some(&timespan))
+                    .find_by_calendar(&calendar.id, Some(timespan.clone()))
                     .await
                     .map_err(|e| {
                         error!("{:?}", e);
@@ -151,9 +191,11 @@ impl UseCase for GetCalendarEventsUseCase {
                             .map(Vec::as_slice)
                             .unwrap_or(&[]);
 
+                        let timespan = timespan.clone();
                         // Expand the event and remove the exceptions
+                        let timespan = timespan.clone();
                         let instances = expand_event_and_remove_exceptions(
-                            &calendar, &event, exceptions, &timespan,
+                            &calendar, &event, exceptions, timespan,
                         )
                         .map_err(|e| {
                             error!("Got an error while expanding an event {:?}", e);

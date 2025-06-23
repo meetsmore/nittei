@@ -1,23 +1,33 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, extract::Path};
 use nittei_api_structs::remove_account_integration::{APIResponse, PathParams};
 use nittei_domain::{Account, IntegrationProvider};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
-    shared::{
-        auth::protect_admin_route,
-        usecase::{UseCase, execute},
-    },
+    shared::usecase::{UseCase, execute},
 };
 
+#[utoipa::path(
+    delete,
+    tag = "Account",
+    path = "/api/v1/account/integration/{provider}",
+    summary = "Remove an integration from an account",
+    params(
+        ("provider" = IntegrationProvider, Path, description = "The provider of the integration to remove"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn remove_account_integration_controller(
-    http_req: HttpRequest,
-    mut path: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
-
+    Extension(account): Extension<Account>,
+    mut path: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
     let usecase = RemoveAccountIntegrationUseCase {
         account,
         provider: std::mem::take(&mut path.provider),
@@ -26,7 +36,7 @@ pub async fn remove_account_integration_controller(
     execute(usecase, &ctx)
         .await
         .map(|_| {
-            HttpResponse::Ok().json(APIResponse::from(
+            Json(APIResponse::from(
                 "Provider integration removed from account",
             ))
         })
@@ -62,7 +72,7 @@ impl From<anyhow::Error> for UseCaseError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for RemoveAccountIntegrationUseCase {
     type Response = ();
 

@@ -198,6 +198,31 @@ describe('CalendarEvent API', () => {
       expect(res.event.eventType).toBe('job')
     })
 
+    it('should be able to create many events', async () => {
+      const res = await adminClient.events.createMany(userId, {
+        events: [
+          {
+            calendarId,
+            duration: 1000,
+            startTime: new Date(1000),
+            eventType: 'job',
+          },
+          {
+            calendarId: calendarTokyoId,
+            duration: 1000,
+            startTime: new Date(1000),
+            eventType: 'job',
+          },
+        ],
+      })
+      expect(res.events).toBeDefined()
+      expect(res.events.length).toBe(2)
+      expect(res.events[0].calendarId).toBe(calendarId)
+      expect(res.events[0].duration).toBe(1000)
+      expect(res.events[1].calendarId).toBe(calendarTokyoId)
+      expect(res.events[1].duration).toBe(1000)
+    })
+
     it('should be able to create a recurring block event', async () => {
       const res = await adminClient.events.create(userId, {
         calendarId,
@@ -241,7 +266,7 @@ describe('CalendarEvent API', () => {
 
       const resEventTokyo = await adminClient.events.create(userId, {
         calendarId: calendarTokyoId,
-        duration: 1800000,
+        duration: 1800000, // 30 minutes
         startTime: dayjs('2024-11-29T07:00:00.000Z').toDate(),
         eventType: 'gcal',
         recurrence: {
@@ -255,6 +280,9 @@ describe('CalendarEvent API', () => {
 
       expect(resEventTokyo.event).toBeDefined()
       expect(resEventTokyo.event.calendarId).toBe(calendarTokyoId)
+      expect(resEventTokyo.event.recurringUntil).toEqual(
+        dayjs('2024-12-12T15:29:59.000Z').toDate() // 30 minutes after until
+      )
       expect(resEventTokyo.event.recurrence).toEqual(
         expect.objectContaining({
           freq: 'weekly',
@@ -845,6 +873,72 @@ describe('CalendarEvent API', () => {
 
     afterAll(async () => {
       await adminClient.user.remove(userId)
+    })
+  })
+
+  describe('Get events of users during timespan', () => {
+    let adminClient: INitteiClient
+    let userId: string
+    let calendarId: string
+    let eventId1: string
+    let eventId2: string
+    beforeAll(async () => {
+      const data = await setupAccount()
+      adminClient = data.client
+
+      const userRes = await adminClient.user.create()
+      userId = userRes.user.id
+      const calendarRes = await adminClient.calendar.create(userId, {
+        timezone: 'UTC',
+        key: 'test',
+      })
+      calendarId = calendarRes.calendar.id
+
+      const eventRes1 = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        status: 'confirmed',
+        busy: true,
+        startTime: new Date('2025-04-10T00:00:00.000Z'),
+      })
+      eventId1 = eventRes1.event.id
+
+      const eventRes2 = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 50,
+        startTime: new Date('2025-04-11T00:00:00.000Z'),
+        status: 'confirmed',
+        busy: true,
+        recurrence: {
+          freq: 'daily',
+          interval: 1,
+        },
+      })
+      eventId2 = eventRes2.event.id
+    })
+
+    it('should be able to get events of users during timespan, with recurrence', async () => {
+      const res = await adminClient.events.getEventsOfUsersDuringTimespan({
+        userIds: [userId],
+        startTime: new Date('2025-04-09T00:00:00.000Z'),
+        endTime: new Date('2025-11-09T00:00:00.000Z'),
+      })
+
+      expect(res.events.length).toBe(2)
+      expect(res.events).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            event: expect.objectContaining({
+              id: eventId1,
+            }),
+          }),
+          expect.objectContaining({
+            event: expect.objectContaining({
+              id: eventId2,
+            }),
+          }),
+        ])
+      )
     })
   })
 })

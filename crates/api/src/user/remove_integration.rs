@@ -1,22 +1,37 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, extract::Path};
 use nittei_api_structs::remove_integration::*;
-use nittei_domain::{IntegrationProvider, User};
+use nittei_domain::{Account, ID, IntegrationProvider, User};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{account_can_modify_user, protect_admin_route, protect_route},
+        auth::{Policy, account_can_modify_user},
         usecase::{UseCase, execute},
     },
 };
 
+#[utoipa::path(
+    delete,
+    tag = "User",
+    path = "/api/v1/user/{user_id}/oauth/{provider}",
+    summary = "Remove an integration (admin only)",
+    params(
+        ("user_id" = ID, Path, description = "The id of the user to remove the integration from"),
+        ("provider" = IntegrationProvider, Path, description = "The provider of the integration to remove"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn remove_integration_admin_controller(
-    http_req: HttpRequest,
-    mut path: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    Extension(account): Extension<Account>,
+    mut path: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
     let user = account_can_modify_user(&account, &path.user_id, &ctx).await?;
 
     let usecase = OAuthIntegrationUseCase {
@@ -26,17 +41,27 @@ pub async fn remove_integration_admin_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|res| HttpResponse::Ok().json(APIResponse::new(res.user)))
+        .map(|res| Json(APIResponse::new(res.user)))
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    delete,
+    tag = "User",
+    path = "/api/v1/me/oauth/{provider}",
+    summary = "Remove an integration",
+    params(
+        ("provider" = IntegrationProvider, Path, description = "The provider of the integration to remove"),
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn remove_integration_controller(
-    http_req: HttpRequest,
-    mut path: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let (user, _) = protect_route(&http_req, &ctx).await?;
-
+    Extension((user, _policy)): Extension<(User, Policy)>,
+    mut path: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
     let usecase = OAuthIntegrationUseCase {
         user,
         provider: std::mem::take(&mut path.provider),
@@ -44,7 +69,7 @@ pub async fn remove_integration_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|res| HttpResponse::Ok().json(APIResponse::new(res.user)))
+        .map(|res| Json(APIResponse::new(res.user)))
         .map_err(NitteiError::from)
 }
 
@@ -76,7 +101,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for OAuthIntegrationUseCase {
     type Response = UseCaseRes;
     type Error = UseCaseError;

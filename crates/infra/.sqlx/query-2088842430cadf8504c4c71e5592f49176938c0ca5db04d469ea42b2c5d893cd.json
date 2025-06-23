@@ -1,0 +1,172 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e\n            WHERE e.event_uid = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "event_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "calendar_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "user_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "account_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "external_parent_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "external_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "event_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "location",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "all_day",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 11,
+        "name": "status",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 12,
+        "name": "start_time",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 13,
+        "name": "duration",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 14,
+        "name": "busy",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 15,
+        "name": "end_time",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 16,
+        "name": "created",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 17,
+        "name": "updated",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 18,
+        "name": "recurrence_jsonb",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 19,
+        "name": "recurring_until",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 20,
+        "name": "exdates",
+        "type_info": "TimestamptzArray"
+      },
+      {
+        "ordinal": 21,
+        "name": "recurring_event_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 22,
+        "name": "original_start_time",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 23,
+        "name": "reminders_jsonb",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 24,
+        "name": "service_uid",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 25,
+        "name": "metadata",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "2088842430cadf8504c4c71e5592f49176938c0ca5db04d469ea42b2c5d893cd"
+}

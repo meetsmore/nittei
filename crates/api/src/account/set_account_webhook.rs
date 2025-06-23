@@ -1,23 +1,34 @@
-use actix_web::{HttpRequest, HttpResponse, web};
-use nittei_api_structs::set_account_webhook::{APIResponse, RequestBody};
+use axum::{Extension, Json};
+use axum_valid::Valid;
+use nittei_api_structs::set_account_webhook::{APIResponse, SetAccountWebhookRequestBody};
 use nittei_domain::Account;
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
-    shared::{
-        auth::protect_admin_route,
-        usecase::{UseCase, execute},
-    },
+    shared::usecase::{UseCase, execute},
 };
 
+#[utoipa::path(
+    put,
+    tag = "Account",
+    path = "/api/v1/account/webhook",
+    summary = "Set the webhook for an account",
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = SetAccountWebhookRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn set_account_webhook_controller(
-    http_req: HttpRequest,
-    ctx: web::Data<NitteiContext>,
-    body: actix_web_validator::Json<RequestBody>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
-
+    Extension(account): Extension<Account>,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Valid<Json<SetAccountWebhookRequestBody>>,
+) -> Result<Json<APIResponse>, NitteiError> {
     let usecase = SetAccountWebhookUseCase {
         account,
         webhook_url: Some(body.webhook_url.clone()),
@@ -25,7 +36,7 @@ pub async fn set_account_webhook_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|account| HttpResponse::Ok().json(APIResponse::new(account)))
+        .map(|account| Json(APIResponse::new(account)))
         .map_err(NitteiError::from)
 }
 
@@ -52,7 +63,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for SetAccountWebhookUseCase {
     type Response = Account;
 
@@ -87,8 +98,7 @@ mod tests {
 
     use super::*;
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn it_rejects_invalid_webhook_url() {
         let ctx = setup_context().await.unwrap();
         let bad_uris = vec!["1", "", "test.zzcom", "test.com", "google.com"];
@@ -111,8 +121,7 @@ mod tests {
         }
     }
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn it_accepts_valid_webhook_url() {
         let ctx = setup_context().await.unwrap();
 

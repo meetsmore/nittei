@@ -54,6 +54,7 @@ pub use shared::{
     id_query::IDQuery,
     metadata::{Meta, Metadata},
     recurrence::{RRuleFrequency, RRuleOptions, WeekDayRecurrence},
+    recurrence_query::RecurrenceQuery,
     string_query::StringQuery,
 };
 pub use timespan::TimeSpan;

@@ -7,6 +7,7 @@ use nittei_domain::{
     DateTimeQuery,
     ID,
     IDQuery,
+    RecurrenceQuery,
     StringQuery,
     TimeSpan,
 };
@@ -49,7 +50,7 @@ pub struct SearchEventsParams {
     pub event_type: Option<StringQuery>,
     pub recurring_event_uid: Option<IDQuery>,
     pub original_start_time: Option<DateTimeQuery>,
-    pub is_recurring: Option<bool>,
+    pub recurrence: Option<RecurrenceQuery>,
     pub metadata: Option<serde_json::Value>,
     pub created_at: Option<DateTimeQuery>,
     pub updated_at: Option<DateTimeQuery>,
@@ -58,11 +59,17 @@ pub struct SearchEventsParams {
 #[async_trait::async_trait]
 pub trait IEventRepo: Send + Sync {
     async fn insert(&self, e: &CalendarEvent) -> anyhow::Result<()>;
+    async fn insert_many(&self, events: &[CalendarEvent]) -> anyhow::Result<()>;
     async fn save(&self, e: &CalendarEvent) -> anyhow::Result<()>;
     async fn find(&self, event_id: &ID) -> anyhow::Result<Option<CalendarEvent>>;
     async fn find_by_id_and_recurring_event_id(
         &self,
         event_id: &ID,
+    ) -> anyhow::Result<Vec<CalendarEvent>>;
+    async fn find_by_recurring_event_ids_for_timespan(
+        &self,
+        recurring_event_ids: &[ID],
+        timespan: TimeSpan,
     ) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn get_by_external_id(
         &self,
@@ -78,17 +85,24 @@ pub trait IEventRepo: Send + Sync {
     async fn find_by_calendar(
         &self,
         calendar_id: &ID,
-        timespan: Option<&TimeSpan>,
+        timespan: Option<TimeSpan>,
+    ) -> anyhow::Result<Vec<CalendarEvent>>;
+    async fn find_events_and_recurring_events_for_users_for_timespan(
+        &self,
+        user_ids: &[ID],
+        timespan: TimeSpan,
+        include_tentative: bool,
+        include_non_busy: bool,
     ) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn find_by_calendars(
         &self,
         calendar_ids: &[ID],
-        timespan: &TimeSpan,
+        timespan: TimeSpan,
     ) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn find_busy_events_and_recurring_events_for_calendars(
         &self,
         calendar_ids: &[ID],
-        timespan: &TimeSpan,
+        timespan: TimeSpan,
         include_tentative: bool,
     ) -> anyhow::Result<Vec<CalendarEvent>>;
     async fn search_events_for_user(
@@ -480,7 +494,7 @@ mod tests {
             .events
             .find_by_calendar(
                 &calendar.id,
-                Some(&TimeSpan::new(
+                Some(TimeSpan::new(
                     DateTime::from_timestamp_millis(start_ts).unwrap(),
                     DateTime::from_timestamp_millis(end_ts).unwrap(),
                 )),

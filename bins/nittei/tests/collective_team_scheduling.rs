@@ -93,8 +93,7 @@ async fn create_default_service_host(
     (host, busy_calendar)
 }
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn test_collective_team_scheduling() {
     let (app, sdk, address) = spawn_app().await;
     let res = sdk
@@ -231,8 +230,7 @@ async fn test_collective_team_scheduling() {
     }
 }
 
-#[actix_web::main]
-#[test]
+#[tokio::test]
 async fn test_collective_team_scheduling_is_collective() {
     let (app, sdk, address) = spawn_app().await;
     let res = sdk

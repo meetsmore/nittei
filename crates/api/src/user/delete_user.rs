@@ -1,30 +1,40 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, extract::Path};
 use nittei_api_structs::delete_user::*;
 use nittei_domain::{Account, ID, User};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
-    shared::{
-        auth::protect_admin_route,
-        usecase::{UseCase, execute},
-    },
+    shared::usecase::{UseCase, execute},
 };
 
+#[utoipa::path(
+    delete,
+    tag = "User",
+    path = "/api/v1/user/{user_id}",
+    summary = "Delete a user (admin only)",
+    params(
+        ("user_id" = ID, Path, description = "The id of the user to delete"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn delete_user_controller(
-    http_req: HttpRequest,
-    path_params: web::Path<PathParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
-
+    Extension(account): Extension<Account>,
+    path_params: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<APIResponse>, NitteiError> {
     let usecase = DeleteUserUseCase {
         account,
         user_id: path_params.user_id.clone(),
     };
     execute(usecase, &ctx)
         .await
-        .map(|usecase_res| HttpResponse::Ok().json(APIResponse::new(usecase_res.user)))
+        .map(|usecase_res| Json(APIResponse::new(usecase_res.user)))
         .map_err(NitteiError::from)
 }
 
@@ -56,7 +66,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for DeleteUserUseCase {
     type Response = UseCaseRes;
 
@@ -74,7 +84,10 @@ impl UseCase for DeleteUserUseCase {
                 }
             }
             Ok(_) => return Err(UseCaseError::UserNotFound(self.user_id.clone())),
-            Err(_) => return Err(UseCaseError::StorageError),
+            Err(e) => {
+                tracing::error!("[delete_user] Error finding user: {:?}", e);
+                return Err(UseCaseError::StorageError);
+            }
         };
 
         Ok(UseCaseRes { user })

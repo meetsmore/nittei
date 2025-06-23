@@ -1,7 +1,9 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json, extract::Path, http::StatusCode};
+use axum_valid::Valid;
 use chrono::{DateTime, TimeDelta, Utc};
 use nittei_api_structs::create_event::*;
 use nittei_domain::{
+    Account,
     CalendarEvent,
     CalendarEventReminder,
     CalendarEventStatus,
@@ -10,94 +12,122 @@ use nittei_domain::{
     User,
 };
 use nittei_infra::NitteiContext;
+use nittei_utils::config::APP_CONFIG;
 
 use super::subscribers::CreateRemindersOnEventCreated;
 use crate::{
     error::NitteiError,
     event::subscribers::CreateSyncedEventsOnEventCreated,
     shared::{
-        auth::{Permission, account_can_modify_user, protect_admin_route, protect_route},
+        auth::{Permission, Policy, account_can_modify_user},
         usecase::{PermissionBoundary, Subscriber, UseCase, execute, execute_with_policy},
     },
 };
 
+#[utoipa::path(
+    post,
+    tag = "Event",
+    path = "/api/v1/user/{user_id}/events",
+    summary = "Create an event (admin only)",
+    params(
+        ("user_id" = ID, Path, description = "The id of the user to create the event for"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = CreateEventRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn create_event_admin_controller(
-    http_req: HttpRequest,
-    path_params: web::Path<PathParams>,
-    body: actix_web_validator::Json<RequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
+    Extension(account): Extension<Account>,
+    path_params: Path<PathParams>,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Valid<Json<CreateEventRequestBody>>,
+) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
     let user = account_can_modify_user(&account, &path_params.user_id, &ctx).await?;
 
-    let body = body.0;
+    let mut body = body.0;
     let usecase = CreateEventUseCase {
-        external_parent_id: body.external_parent_id,
-        external_id: body.external_id,
-        title: body.title,
-        description: body.description,
-        event_type: body.event_type,
-        location: body.location,
-        status: body.status,
+        external_parent_id: body.external_parent_id.take(),
+        external_id: body.external_id.take(),
+        title: body.title.take(),
+        description: body.description.take(),
+        event_type: body.event_type.take(),
+        location: body.location.take(),
+        status: body.status.clone(),
         busy: body.busy.unwrap_or(false),
         all_day: body.all_day.unwrap_or(false),
         start_time: body.start_time,
         duration: body.duration,
         user,
-        calendar_id: body.calendar_id,
-        recurrence: body.recurrence,
-        exdates: body.exdates.unwrap_or_default(),
-        recurring_event_id: body.recurring_event_id,
+        calendar_id: body.calendar_id.clone(),
+        recurrence: body.recurrence.take(),
+        exdates: body.exdates.clone().unwrap_or_default(),
+        recurring_event_id: body.recurring_event_id.take(),
         original_start_time: body.original_start_time,
-        reminders: body.reminders,
-        service_id: body.service_id,
-        metadata: body.metadata,
+        reminders: body.reminders.clone(),
+        service_id: body.service_id.take(),
+        metadata: body.metadata.take(),
         created: body.created,
         updated: body.updated,
     };
 
     execute(usecase, &ctx)
         .await
-        .map(|event| HttpResponse::Created().json(APIResponse::new(event)))
+        .map(|event| (StatusCode::CREATED, Json(APIResponse::new(event))))
         .map_err(NitteiError::from)
 }
 
+#[utoipa::path(
+    post,
+    tag = "Event",
+    path = "/api/v1/events",
+    summary = "Create an event",
+    request_body(
+        content = CreateEventRequestBody,
+    ),
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn create_event_controller(
-    http_req: HttpRequest,
-    body: web::Json<RequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let (user, policy) = protect_route(&http_req, &ctx).await?;
-
-    let body = body.0;
+    Extension((user, policy)): Extension<(User, Policy)>,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Valid<Json<CreateEventRequestBody>>,
+) -> Result<(StatusCode, Json<APIResponse>), NitteiError> {
+    let mut body = body.0;
     let usecase = CreateEventUseCase {
-        external_parent_id: body.external_parent_id,
-        external_id: body.external_id,
-        title: body.title,
-        description: body.description,
-        event_type: body.event_type,
-        location: body.location,
-        status: body.status,
+        external_parent_id: body.external_parent_id.take(),
+        external_id: body.external_id.take(),
+        title: body.title.take(),
+        description: body.description.take(),
+        event_type: body.event_type.take(),
+        location: body.location.take(),
+        status: body.status.clone(),
         busy: body.busy.unwrap_or(false),
         all_day: body.all_day.unwrap_or(false),
         start_time: body.start_time,
         duration: body.duration,
-        calendar_id: body.calendar_id,
-        recurrence: body.recurrence,
-        exdates: body.exdates.unwrap_or_default(),
-        recurring_event_id: body.recurring_event_id,
+        calendar_id: body.calendar_id.clone(),
+        recurrence: body.recurrence.take(),
+        exdates: body.exdates.clone().unwrap_or_default(),
+        recurring_event_id: body.recurring_event_id.take(),
         original_start_time: body.original_start_time,
         user,
-        reminders: body.reminders,
-        service_id: body.service_id,
-        metadata: body.metadata,
+        reminders: body.reminders.clone(),
+        service_id: body.service_id.take(),
+        metadata: body.metadata.take(),
         created: body.created,
         updated: body.updated,
     };
 
     execute_with_policy(usecase, &policy, &ctx)
         .await
-        .map(|event| HttpResponse::Created().json(APIResponse::new(event)))
+        .map(|event| (StatusCode::CREATED, Json(APIResponse::new(event))))
         .map_err(NitteiError::from)
 }
 
@@ -160,7 +190,7 @@ impl From<anyhow::Error> for UseCaseError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for CreateEventUseCase {
     type Response = CalendarEvent;
 
@@ -216,6 +246,7 @@ impl UseCase for CreateEventUseCase {
                 UseCaseError::InvalidRecurrenceRule
             })?;
             if !res {
+                tracing::error!("[create_event] Invalid recurrence rule");
                 return Err(UseCaseError::InvalidRecurrenceRule);
             }
         }
@@ -223,6 +254,7 @@ impl UseCase for CreateEventUseCase {
         // TODO: maybe have reminders length restriction
         for reminder in &self.reminders {
             if !reminder.is_valid() {
+                tracing::error!("[create_event] Invalid reminder");
                 return Err(UseCaseError::InvalidReminder);
             }
         }
@@ -233,10 +265,14 @@ impl UseCase for CreateEventUseCase {
     }
 
     fn subscribers() -> Vec<Box<dyn Subscriber<Self>>> {
-        vec![
-            Box::new(CreateRemindersOnEventCreated),
-            Box::new(CreateSyncedEventsOnEventCreated),
-        ]
+        if APP_CONFIG.disable_reminders {
+            vec![]
+        } else {
+            vec![
+                Box::new(CreateRemindersOnEventCreated),
+                Box::new(CreateSyncedEventsOnEventCreated),
+            ]
+        }
     }
 }
 
@@ -276,8 +312,7 @@ mod test {
         }
     }
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn creates_event_without_recurrence() {
         let TestContext {
             ctx,
@@ -298,8 +333,7 @@ mod test {
         assert!(res.is_ok());
     }
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn creates_event_with_recurrence() {
         let TestContext {
             ctx,
@@ -321,8 +355,7 @@ mod test {
         assert!(res.is_ok());
     }
 
-    #[actix_web::main]
-    #[test]
+    #[tokio::test]
     async fn rejects_invalid_calendar_id() {
         let TestContext {
             ctx,

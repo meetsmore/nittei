@@ -1,35 +1,46 @@
-use actix_web::{HttpRequest, HttpResponse, web};
-use nittei_api_structs::add_account_integration::{APIResponse, RequestBody};
+use axum::{Extension, Json};
+use axum_valid::Valid;
+use nittei_api_structs::add_account_integration::{APIResponse, AddAccountIntegrationRequestBody};
 use nittei_domain::{Account, AccountIntegration, IntegrationProvider};
 use nittei_infra::NitteiContext;
 
 use crate::{
     error::NitteiError,
-    shared::{
-        auth::protect_admin_route,
-        usecase::{UseCase, execute},
-    },
+    shared::usecase::{UseCase, execute},
 };
 
+#[utoipa::path(
+    put,
+    tag = "Account",
+    path = "/api/v1/account/integration",
+    summary = "Add an integration to an account",
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = AddAccountIntegrationRequestBody,
+    ),
+    responses(
+        (status = 200, description = "The integration was added successfully", body = APIResponse)
+    )
+)]
 pub async fn add_account_integration_controller(
-    http_req: HttpRequest,
-    body: actix_web_validator::Json<RequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
-
+    Extension(account): Extension<Account>,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Valid<Json<AddAccountIntegrationRequestBody>>,
+) -> Result<Json<APIResponse>, NitteiError> {
     let body = body.0;
     let usecase = AddAccountIntegrationUseCase {
         account,
-        client_id: body.client_id,
-        client_secret: body.client_secret,
-        redirect_uri: body.redirect_uri,
-        provider: body.provider,
+        client_id: body.client_id.clone(),
+        client_secret: body.client_secret.clone(),
+        redirect_uri: body.redirect_uri.clone(),
+        provider: body.provider.clone(),
     };
 
     execute(usecase, &ctx)
         .await
-        .map(|_| HttpResponse::Ok().json(APIResponse::from("Integration enabled for account")))
+        .map(|_| Json(APIResponse::from("Integration enabled for account")))
         .map_err(NitteiError::from)
 }
 
@@ -77,7 +88,7 @@ impl From<anyhow::Error> for UseCaseError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for AddAccountIntegrationUseCase {
     type Response = ();
 

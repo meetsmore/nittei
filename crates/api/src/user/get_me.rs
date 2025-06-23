@@ -1,14 +1,20 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json};
 use nittei_api_structs::get_me::*;
-use nittei_infra::NitteiContext;
+use nittei_domain::User;
 
-use crate::{error::NitteiError, shared::auth::protect_route};
+use crate::{error::NitteiError, shared::auth::Policy};
 
+#[utoipa::path(
+    get,
+    tag = "User",
+    path = "/api/v1/me",
+    summary = "Get the current user",
+    responses(
+        (status = 200, body = APIResponse)
+    )
+)]
 pub async fn get_me_controller(
-    http_req: HttpRequest,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let (user, _) = protect_route(&http_req, &ctx).await?;
-
-    Ok(HttpResponse::Ok().json(APIResponse::new(user)))
+    Extension((user, _policy)): Extension<(User, Policy)>,
+) -> Result<Json<APIResponse>, NitteiError> {
+    Ok(Json(APIResponse::new(user)))
 }

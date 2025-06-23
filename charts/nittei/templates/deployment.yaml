@@ -32,6 +32,9 @@ metadata:
   name: {{ include "nittei.fullname" . }}
   labels:
     {{- include "nittei.labels" . | nindent 4 }}
+    {{- with .Values.deploymentLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
@@ -63,6 +66,35 @@ spec:
       serviceAccountName: {{ include "nittei.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{ if .Values.migrationInitContainer.enabled }}
+      initContainers:
+        - name: {{ .Chart.Name }}-migrate
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+            {{- range $key, $value := $envMap }}
+            - name: {{ $key }}
+              {{- if hasKey $value "value" }}
+              value: {{ $value.value | quote }}
+              {{- else if hasKey $value "valueFrom" }}
+              valueFrom: {{ toYaml $value.valueFrom | nindent 16 }}
+              {{- end }}
+            {{- end }}
+          {{ if .Values.migrationInitContainer.command }}
+          command: {{ .Values.migrationInitContainer.command }}
+          {{- else }}
+          command:
+            - "/nittei-migrate"
+          {{- end }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:

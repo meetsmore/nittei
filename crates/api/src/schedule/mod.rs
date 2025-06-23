@@ -4,49 +4,46 @@ mod get_schedule;
 mod get_schedules_by_meta;
 mod update_schedule;
 
-use actix_web::web;
+use axum::routing::{delete, get, post, put};
 use create_schedule::{create_schedule_admin_controller, create_schedule_controller};
 use delete_schedule::{delete_schedule_admin_controller, delete_schedule_controller};
 use get_schedule::{get_schedule_admin_controller, get_schedule_controller};
 use get_schedules_by_meta::get_schedules_by_meta_controller;
 use update_schedule::{update_schedule_admin_controller, update_schedule_controller};
+use utoipa_axum::router::OpenApiRouter;
 
-pub fn configure_routes(cfg: &mut web::ServiceConfig) {
-    cfg.route("/schedule", web::post().to(create_schedule_controller));
-    cfg.route(
-        "/user/{user_id}/schedule",
-        web::post().to(create_schedule_admin_controller),
-    );
+use crate::shared::auth;
 
-    cfg.route(
-        "/schedule/meta",
-        web::get().to(get_schedules_by_meta_controller),
-    );
+pub fn configure_routes() -> OpenApiRouter {
+    let admin_router = OpenApiRouter::new()
+        .route(
+            "/user/{user_id}/schedule",
+            post(create_schedule_admin_controller),
+        )
+        .route(
+            "/user/schedule/{schedule_id}",
+            get(get_schedule_admin_controller),
+        )
+        .route("/schedule/meta", get(get_schedules_by_meta_controller))
+        .route(
+            "/user/schedule/{schedule_id}",
+            delete(delete_schedule_admin_controller),
+        )
+        .route(
+            "/user/schedule/{schedule_id}",
+            put(update_schedule_admin_controller),
+        )
+        .route_layer(axum::middleware::from_fn(auth::protect_admin_route));
 
-    cfg.route(
-        "/schedule/{schedule_id}",
-        web::get().to(get_schedule_controller),
-    );
-    cfg.route(
-        "/user/schedule/{schedule_id}",
-        web::get().to(get_schedule_admin_controller),
-    );
+    let user_router = OpenApiRouter::new()
+        .route("/schedule", post(create_schedule_controller))
+        .route("/schedule/{schedule_id}", get(get_schedule_controller))
+        .route(
+            "/schedule/{schedule_id}",
+            delete(delete_schedule_controller),
+        )
+        .route("/schedule/{schedule_id}", put(update_schedule_controller))
+        .route_layer(axum::middleware::from_fn(auth::protect_route));
 
-    cfg.route(
-        "/schedule/{schedule_id}",
-        web::delete().to(delete_schedule_controller),
-    );
-    cfg.route(
-        "/user/schedule/{schedule_id}",
-        web::delete().to(delete_schedule_admin_controller),
-    );
-
-    cfg.route(
-        "/schedule/{schedule_id}",
-        web::put().to(update_schedule_controller),
-    );
-    cfg.route(
-        "/user/schedule/{schedule_id}",
-        web::put().to(update_schedule_admin_controller),
-    );
+    OpenApiRouter::new().merge(admin_router).merge(user_router)
 }

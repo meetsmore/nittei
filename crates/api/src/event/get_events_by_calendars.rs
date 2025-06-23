@@ -1,7 +1,12 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{
+    Extension,
+    Json,
+    extract::{Path, Query},
+};
 use chrono::{DateTime, Utc};
 use nittei_api_structs::get_events_by_calendars::*;
 use nittei_domain::{
+    Account,
     EventWithInstances,
     ID,
     TimeSpan,
@@ -9,24 +14,38 @@ use nittei_domain::{
     generate_map_exceptions_original_start_times,
 };
 use nittei_infra::NitteiContext;
+use nittei_utils::config::APP_CONFIG;
 use tracing::error;
 
 use crate::{
     error::NitteiError,
-    shared::{
-        auth::protect_admin_route,
-        usecase::{UseCase, execute},
-    },
+    shared::usecase::{UseCase, execute},
 };
 
+#[utoipa::path(
+    get,
+    tag = "Event",
+    path = "/api/v1/user/{user_id}/events",
+    summary = "Get events by calendars (admin only)",
+    params(
+        ("user_id" = ID, Path, description = "The id of the user to get events for"),
+        ("calendar_ids" = Vec<ID>, Query, description = "The ids of the calendars to get events for"),
+        ("start_time" = DateTime<Utc>, Query, description = "The start time of the events to get"),
+        ("end_time" = DateTime<Utc>, Query, description = "The end time of the events to get"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    responses(
+        (status = 200, body = GetEventsByCalendarsAPIResponse)
+    )
+)]
 pub async fn get_events_by_calendars_controller(
-    http_req: HttpRequest,
-    path_params: web::Path<PathParams>,
-    query: web::Query<QueryParams>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
-
+    Extension(account): Extension<Account>,
+    path_params: Path<PathParams>,
+    query: Query<GetEventsByCalendarsQueryParams>,
+    Extension(ctx): Extension<NitteiContext>,
+) -> Result<Json<GetEventsByCalendarsAPIResponse>, NitteiError> {
     let calendar_ids = match &query.calendar_ids {
         Some(ids) => ids.clone(),
         None => vec![],
@@ -42,7 +61,7 @@ pub async fn get_events_by_calendars_controller(
 
     execute(usecase, &ctx)
         .await
-        .map(|events| HttpResponse::Ok().json(APIResponse::new(events.events)))
+        .map(|events| Json(GetEventsByCalendarsAPIResponse::new(events.events)))
         .map_err(NitteiError::from)
 }
 
@@ -72,7 +91,7 @@ impl From<UseCaseError> for NitteiError {
         match e {
             UseCaseError::InternalError => Self::InternalError,
             UseCaseError::InvalidTimespan => {
-                Self::BadClientData("The provided start_ts and end_ts is invalid".into())
+                Self::BadClientData("The provided start_ts and end_ts are invalid".into())
             }
             UseCaseError::NotFound(entity, event_id) => Self::NotFound(format!(
                 "The {} with id: {}, was not found.",
@@ -82,7 +101,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for GetEventsByCalendarsUseCase {
     type Response = UseCaseResponse;
 
@@ -137,7 +156,7 @@ impl UseCase for GetEventsByCalendarsUseCase {
             .collect::<std::collections::HashMap<_, _>>();
 
         let timespan = TimeSpan::new(self.start_time, self.end_time);
-        if timespan.greater_than(ctx.config.event_instances_query_duration_limit) {
+        if timespan.greater_than(APP_CONFIG.event_instances_query_duration_limit) {
             return Err(UseCaseError::InvalidTimespan);
         }
 
@@ -145,7 +164,7 @@ impl UseCase for GetEventsByCalendarsUseCase {
         let res = ctx
             .repos
             .events
-            .find_by_calendars(&self.calendar_ids, &timespan)
+            .find_by_calendars(&self.calendar_ids, timespan.clone())
             .await;
 
         // If the events are found, expand them and remove the exceptions
@@ -174,8 +193,9 @@ impl UseCase for GetEventsByCalendarsUseCase {
                             .unwrap_or(&[]);
 
                         // Expand the event and remove the exceptions
+                        let timespan = timespan.clone();
                         let instances = expand_event_and_remove_exceptions(
-                            calendar, &event, exceptions, &timespan,
+                            calendar, &event, exceptions, timespan,
                         )
                         .map_err(|e| {
                             error!("Got an error while expanding an event {:?}", e);

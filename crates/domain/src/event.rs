@@ -4,6 +4,7 @@ use chrono::{TimeDelta, prelude::*};
 use rrule::RRuleSet;
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
+use utoipa::ToSchema;
 
 use crate::{
     IntegrationProvider,
@@ -20,7 +21,7 @@ use crate::{
 // Maximum number of instances to return
 const MAX_INSTANCES: u16 = 100;
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq, TS)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub enum CalendarEventStatus {
@@ -53,7 +54,7 @@ impl TryFrom<String> for CalendarEventStatus {
 }
 
 /// Enum used for know which sort to use when searching events
-#[derive(Default, Deserialize, Serialize, Debug, Clone, TS)]
+#[derive(Default, Deserialize, Serialize, Debug, Clone, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[ts(export, rename = "CalendarEventSort")]
 pub enum CalendarEventSort {
@@ -133,7 +134,7 @@ impl Meta<ID> for CalendarEvent {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone, TS)]
+#[derive(Deserialize, Serialize, Debug, Clone, TS, ToSchema)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct CalendarEventReminder {
@@ -157,7 +158,12 @@ impl CalendarEvent {
             return Ok(false);
         }
 
-        self.recurring_until = recurrence.until;
+        // Add duration to until if it is set
+        self.recurring_until = recurrence
+            .until
+            .map(|until| until + TimeDelta::milliseconds(self.duration));
+
+        // Set the recurrence
         self.recurrence = Some(recurrence);
         Ok(true)
     }
@@ -189,7 +195,7 @@ impl CalendarEvent {
 
     pub fn expand(
         &self,
-        timespan: Option<&TimeSpan>,
+        timespan: Option<TimeSpan>,
         calendar_settings: &CalendarSettings,
     ) -> anyhow::Result<Vec<EventInstance>> {
         match &self.recurrence {

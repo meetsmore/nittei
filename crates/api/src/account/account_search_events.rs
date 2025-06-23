@@ -1,48 +1,68 @@
-use actix_web::{HttpRequest, HttpResponse, web};
+use axum::{Extension, Json};
+use axum_valid::Valid;
 use nittei_api_structs::{account_search_events::*, dtos::CalendarEventDTO};
-use nittei_domain::{CalendarEventSort, DateTimeQuery, ID, IDQuery, StringQuery};
+use nittei_domain::{
+    Account,
+    CalendarEventSort,
+    DateTimeQuery,
+    ID,
+    IDQuery,
+    RecurrenceQuery,
+    StringQuery,
+};
 use nittei_infra::{NitteiContext, SearchEventsForAccountParams, SearchEventsParams};
 use nittei_utils::config::APP_CONFIG;
 
 use crate::{
     error::NitteiError,
-    shared::{
-        auth::protect_admin_route,
-        usecase::{UseCase, execute},
-    },
+    shared::usecase::{UseCase, execute},
 };
 
+#[utoipa::path(
+    get,
+    tag = "Account",
+    path = "/api/v1/account/search-events",
+    summary = "Search events inside an account",
+    security(
+        ("api_key" = [])
+    ),
+    request_body(
+        content = AccountSearchEventsRequestBody,
+    ),
+    responses(
+        (status = 200, description = "The found events", body = SearchEventsAPIResponse)
+    )
+)]
+/// Search events inside an account
 pub async fn account_search_events_controller(
-    http_req: HttpRequest,
-    body: actix_web_validator::Json<RequestBody>,
-    ctx: web::Data<NitteiContext>,
-) -> Result<HttpResponse, NitteiError> {
-    let account = protect_admin_route(&http_req, &ctx).await?;
-
-    let body = body.0;
+    Extension(account): Extension<Account>,
+    Extension(ctx): Extension<NitteiContext>,
+    body: Valid<Json<AccountSearchEventsRequestBody>>,
+) -> Result<Json<SearchEventsAPIResponse>, NitteiError> {
+    let mut body = body.0;
     let usecase = AccountSearchEventsUseCase {
         account_uid: account.id,
-        event_uid: body.filter.event_uid,
-        user_uid: body.filter.user_id,
-        external_id: body.filter.external_id,
-        external_parent_id: body.filter.external_parent_id,
-        start_time: body.filter.start_time,
-        end_time: body.filter.end_time,
-        status: body.filter.status,
-        event_type: body.filter.event_type,
-        recurring_event_uid: body.filter.recurring_event_uid,
-        original_start_time: body.filter.original_start_time,
-        is_recurring: body.filter.is_recurring,
-        metadata: body.filter.metadata,
-        created_at: body.filter.created_at,
-        updated_at: body.filter.updated_at,
-        sort: body.sort,
-        limit: body.limit.or(Some(200)), // Default limit to 200
+        event_uid: body.filter.event_uid.take(),
+        user_uid: body.filter.user_id.take(),
+        external_id: body.filter.external_id.take(),
+        external_parent_id: body.filter.external_parent_id.take(),
+        start_time: body.filter.start_time.take(),
+        end_time: body.filter.end_time.take(),
+        status: body.filter.status.take(),
+        event_type: body.filter.event_type.take(),
+        recurring_event_uid: body.filter.recurring_event_uid.take(),
+        original_start_time: body.filter.original_start_time.take(),
+        recurrence: body.filter.recurrence.take(),
+        metadata: body.filter.metadata.take(),
+        created_at: body.filter.created_at.take(),
+        updated_at: body.filter.updated_at.take(),
+        sort: body.sort.take(),
+        limit: body.limit.or(Some(1000)), // Default limit to 1000
     };
 
     execute(usecase, &ctx)
         .await
-        .map(|events| HttpResponse::Ok().json(APIResponse::new(events.events)))
+        .map(|events| Json(SearchEventsAPIResponse::new(events.events)))
         .map_err(NitteiError::from)
 }
 
@@ -81,8 +101,9 @@ pub struct AccountSearchEventsUseCase {
     /// Optional query on original start time - "lower than or equal", or "great than or equal" (UTC)
     pub original_start_time: Option<DateTimeQuery>,
 
-    /// Optional recurrence test
-    pub is_recurring: Option<bool>,
+    /// Optional recurrence query
+    /// This allows to filter on the existence or not of a recurrence, or the existence of a recurrence at a specific date
+    pub recurrence: Option<RecurrenceQuery>,
 
     /// Optional list of metadata key-value pairs
     pub metadata: Option<serde_json::Value>,
@@ -120,7 +141,7 @@ impl From<UseCaseError> for NitteiError {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait::async_trait]
 impl UseCase for AccountSearchEventsUseCase {
     type Response = UseCaseResponse;
 
@@ -156,7 +177,7 @@ impl UseCase for AccountSearchEventsUseCase {
                     event_type: self.event_type.take(),
                     recurring_event_uid: self.recurring_event_uid.take(),
                     original_start_time: self.original_start_time.take(),
-                    is_recurring: self.is_recurring.take(),
+                    recurrence: self.recurrence.take(),
                     metadata: self.metadata.take(),
                     created_at: self.created_at.take(),
                     updated_at: self.updated_at.take(),
@@ -170,7 +191,10 @@ impl UseCase for AccountSearchEventsUseCase {
             Ok(events) => Ok(UseCaseResponse {
                 events: events.into_iter().map(CalendarEventDTO::new).collect(),
             }),
-            Err(_) => Err(UseCaseError::InternalError),
+            Err(err) => {
+                tracing::error!("Error searching events for account: {:?}", err);
+                Err(UseCaseError::InternalError)
+            }
         }
     }
 }
