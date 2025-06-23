@@ -69,5 +69,5 @@ pub fn configure_routes() -> OpenApiRouter {
             "/service/{service_id}/booking-intend",
             delete(remove_service_event_intend_controller),
         )
-        .route_layer(axum::middleware::from_fn(auth::protect_admin_route))
+        .route_layer(axum::middleware::from_fn(auth::protect_admin_route_middleware))
 }

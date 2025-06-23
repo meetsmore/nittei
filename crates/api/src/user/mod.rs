@@ -53,7 +53,9 @@ pub fn configure_routes() -> OpenApiRouter {
             "/user/{user_id}/oauth/{provider}",
             delete(remove_integration_admin_controller),
         )
-        .route_layer(axum::middleware::from_fn(auth::protect_admin_route));
+        .route_layer(axum::middleware::from_fn(
+            auth::protect_admin_route_middleware,
+        ));
 
     let user_router = OpenApiRouter::new()
         // Get the current user
@@ -64,7 +66,7 @@ pub fn configure_routes() -> OpenApiRouter {
             "/me/oauth/{provider}",
             delete(remove_integration_controller),
         )
-        .route_layer(axum::middleware::from_fn(auth::protect_route));
+        .route_layer(axum::middleware::from_fn(auth::protect_route_middleware));
 
     let public_router = OpenApiRouter::new()
         // Get freebusy for a specific user

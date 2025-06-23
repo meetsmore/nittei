@@ -124,11 +124,11 @@ fn decode_token(account: &Account, token: &str) -> anyhow::Result<Claims> {
     Ok(claims)
 }
 
-/// Protects routes that can be accessed by authenticated `User`s
+/// Middleware that protects routes that can be accessed by authenticated `User`s
 ///
 /// This function will check if the request has a valid `Authorization` header
 /// and if the token is valid and signed by the `Account`'s public key
-pub async fn protect_route(
+pub async fn protect_route_middleware(
     Extension(ctx): Extension<NitteiContext>,
     headers: HeaderMap,
     request: Request,
@@ -178,7 +178,7 @@ async fn protect_route_inner(
 ///
 /// This function will check if the request has a valid `x-api-key` header
 /// and if the token is the one stored in DB for the `Account`
-pub async fn protect_admin_route(
+pub async fn protect_admin_route_middleware(
     Extension(ctx): Extension<NitteiContext>,
     headers: HeaderMap,
     request: Request,
@@ -312,7 +312,7 @@ pub async fn account_can_modify_calendar(
 ///
 /// Store the event in the request extensions
 #[instrument(name = "auth::account_can_modify_event", skip_all)]
-pub async fn account_can_modify_event(
+pub async fn account_can_modify_event_middleware(
     Extension(account): Extension<Account>,
     Path(event_id): Path<ID>,
     Extension(ctx): Extension<NitteiContext>,

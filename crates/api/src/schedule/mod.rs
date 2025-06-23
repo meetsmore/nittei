@@ -33,7 +33,9 @@ pub fn configure_routes() -> OpenApiRouter {
             "/user/schedule/{schedule_id}",
             put(update_schedule_admin_controller),
         )
-        .route_layer(axum::middleware::from_fn(auth::protect_admin_route));
+        .route_layer(axum::middleware::from_fn(
+            auth::protect_admin_route_middleware,
+        ));
 
     let user_router = OpenApiRouter::new()
         .route("/schedule", post(create_schedule_controller))
@@ -43,7 +45,7 @@ pub fn configure_routes() -> OpenApiRouter {
             delete(delete_schedule_controller),
         )
         .route("/schedule/{schedule_id}", put(update_schedule_controller))
-        .route_layer(axum::middleware::from_fn(auth::protect_route));
+        .route_layer(axum::middleware::from_fn(auth::protect_route_middleware));
 
     OpenApiRouter::new().merge(admin_router).merge(user_router)
 }
