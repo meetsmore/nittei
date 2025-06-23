@@ -63,33 +63,39 @@ pub fn configure_routes() -> OpenApiRouter {
         // Get a specific event by uid (admin route)
         .route(
             "/user/events/{event_id}",
-            get(get_event_admin_controller)
-                .layer(axum::middleware::from_fn(auth::account_can_modify_event)),
+            get(get_event_admin_controller).layer(axum::middleware::from_fn(
+                auth::account_can_modify_event_middleware,
+            )),
         )
         // Update an event by uid (admin route)
         .route(
             "/user/events/{event_id}",
-            put(update_event_admin_controller)
-                .layer(axum::middleware::from_fn(auth::account_can_modify_event)),
+            put(update_event_admin_controller).layer(axum::middleware::from_fn(
+                auth::account_can_modify_event_middleware,
+            )),
         )
         // Delete an event by uid (admin route)
         .route(
             "/user/events/{event_id}",
-            delete(delete_event_admin_controller)
-                .layer(axum::middleware::from_fn(auth::account_can_modify_event)),
+            delete(delete_event_admin_controller).layer(axum::middleware::from_fn(
+                auth::account_can_modify_event_middleware,
+            )),
         )
         // Get event instances (admin route)
         .route(
             "/user/events/{event_id}/instances",
-            get(get_event_instances_admin_controller)
-                .layer(axum::middleware::from_fn(auth::account_can_modify_event)),
+            get(get_event_instances_admin_controller).layer(axum::middleware::from_fn(
+                auth::account_can_modify_event_middleware,
+            )),
         )
         // Admin delete many events
         .route(
             "/user/events/delete_many",
             post(delete_many_events_admin_controller),
         )
-        .route_layer(axum::middleware::from_fn(auth::protect_admin_route));
+        .route_layer(axum::middleware::from_fn(
+            auth::protect_admin_route_middleware,
+        ));
 
     let user_router = OpenApiRouter::new()
         // Create an event
@@ -105,7 +111,7 @@ pub fn configure_routes() -> OpenApiRouter {
             "/events/{event_id}/instances",
             get(get_event_instances_controller),
         )
-        .route_layer(axum::middleware::from_fn(auth::protect_route));
+        .route_layer(axum::middleware::from_fn(auth::protect_route_middleware));
 
     OpenApiRouter::new().merge(admin_router).merge(user_router)
 }

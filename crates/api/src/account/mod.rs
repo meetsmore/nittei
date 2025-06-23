@@ -21,7 +21,7 @@ use set_account_pub_key::set_account_pub_key_controller;
 use set_account_webhook::set_account_webhook_controller;
 use utoipa_axum::router::OpenApiRouter;
 
-use crate::shared::auth::protect_admin_route;
+use crate::shared::auth::protect_admin_route_middleware;
 
 /// Configure the routes for the account module
 pub fn configure_routes() -> OpenApiRouter {
@@ -56,7 +56,7 @@ pub fn configure_routes() -> OpenApiRouter {
             "/account/events/search",
             post(account_search_events_controller),
         )
-        .route_layer(from_fn(protect_admin_route));
+        .route_layer(from_fn(protect_admin_route_middleware));
 
     create_account_route_router.merge(account_route_router)
 }
