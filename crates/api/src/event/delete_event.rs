@@ -12,7 +12,7 @@ use tracing::error;
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{Permission, Policy, account_can_modify_event, account_can_modify_user},
+        auth::{Permission, Policy, account_can_modify_user},
         usecase::{PermissionBoundary, UseCase, execute, execute_with_policy},
     },
 };
@@ -34,15 +34,15 @@ use crate::{
 )]
 pub async fn delete_event_admin_controller(
     Extension(account): Extension<Account>,
-    path_params: Path<PathParams>,
+    Extension(event): Extension<CalendarEvent>,
     Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let e = account_can_modify_event(&account, &path_params.event_id, &ctx).await?;
-    let user = account_can_modify_user(&account, &e.user_id, &ctx).await?;
+    let user = account_can_modify_user(&account, &event.user_id, &ctx).await?;
 
     let usecase = DeleteEventUseCase {
         user,
-        event_id: e.id,
+        event_id: event.id.clone(),
+        prefetched_calendar_event: Some(event),
     };
 
     execute(usecase, &ctx)
@@ -71,6 +71,7 @@ pub async fn delete_event_controller(
     let usecase = DeleteEventUseCase {
         user,
         event_id: path_params.event_id.clone(),
+        prefetched_calendar_event: None,
     };
 
     execute_with_policy(usecase, &policy, &ctx)
@@ -83,6 +84,7 @@ pub async fn delete_event_controller(
 pub struct DeleteEventUseCase {
     pub user: User,
     pub event_id: ID,
+    pub prefetched_calendar_event: Option<CalendarEvent>,
 }
 
 #[derive(Debug)]
@@ -113,10 +115,13 @@ impl UseCase for DeleteEventUseCase {
 
     // TODO: use only one db call
     async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
-        let event = ctx.repos.events.find(&self.event_id).await.map_err(|e| {
-            tracing::error!("[delete_event] Error finding event: {:?}", e);
-            UseCaseError::StorageError
-        })?;
+        let event = match &self.prefetched_calendar_event {
+            Some(event) => Some(event.clone()),
+            None => ctx.repos.events.find(&self.event_id).await.map_err(|e| {
+                tracing::error!("[delete_event] Error finding event: {:?}", e);
+                UseCaseError::StorageError
+            })?,
+        };
         let e = match event {
             Some(e) if e.user_id == self.user.id => e,
             _ => return Err(UseCaseError::NotFound(self.event_id.clone())),
