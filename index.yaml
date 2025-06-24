@@ -2,6 +2,16 @@ apiVersion: v1
 entries:
   nittei:
   - apiVersion: v2
+    appVersion: 0.26.2
+    created: "2025-06-24T00:45:40.791270215Z"
+    description: A Helm chart for running Nittei on Kubernetes
+    digest: 483bc8861de8d1a5a95c170fe369acfa563a572d64fababcae8b0beb8d6cc665
+    name: nittei
+    type: application
+    urls:
+    - https://github.com/meetsmore/nittei/releases/download/nittei-0.26.2/nittei-0.26.2.tgz
+    version: 0.26.2
+  - apiVersion: v2
     appVersion: 0.26.1
     created: "2025-06-23T08:13:45.47203364Z"
     description: A Helm chart for running Nittei on Kubernetes
@@ -1051,4 +1061,4 @@ entries:
     urls:
     - https://github.com/meetsmore/nittei/releases/download/nittei-0.0.1-beta13/nittei-0.0.1-beta13.tgz
     version: 0.0.1-beta13
-generated: "2025-06-23T08:13:45.472442638Z"
+generated: "2025-06-24T00:45:40.79182552Z"
