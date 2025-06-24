@@ -128,6 +128,8 @@ impl UseCase for GetEventsForUsersInTimeRangeUseCase {
         };
 
         // Execute in parallel
+        // Get the normal events
+        // And the recurring events that are active for the users during the timespan
         let (normal_events, recurring_events) = tokio::join!(
             ctx.repos.events.find_events_for_users_for_timespan(
                 &self.user_ids,
