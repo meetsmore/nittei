@@ -734,11 +734,12 @@ impl IEventRepo for PostgresEventRepo {
         .collect()
     }
 
-    /// Find events for users
-    /// Events need to be "busy" and with the status "confirmed"
+    /// Find events for users during timespan
+    /// By default, events need to be "busy" and with the status "confirmed"
+    /// This excludes events that have a recurrence_jsonb and an original_start_time (ex: recurring events and their exceptions)
     ///
-    /// It excludes events that have an original_start_time
-    /// This is used to find the normal events for a user
+    /// The parameter `include_tentative` is used to include events with the status "tentative" (default: false)
+    /// The parameter `include_non_busy` is used to include events that are not "busy" (default: false)
     #[instrument(name = "calendar_event::find_events_for_users_for_timespan", fields(user_ids = ?user_ids, timespan = ?timespan, include_tentative = %include_tentative, include_non_busy = %include_non_busy))]
     async fn find_events_for_users_for_timespan(
         &self,
