@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e\n            WHERE e.recurring_event_uid = ANY($1) AND e.original_start_time >= $2 AND e.original_start_time <= $3\n            ",
+  "query": "\n            SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e\n            WHERE e.event_uid = ANY($1::uuid[])\n            ",
   "describe": {
     "columns": [
       {
@@ -136,9 +136,7 @@
     ],
     "parameters": {
       "Left": [
-        "UuidArray",
-        "Timestamptz",
-        "Timestamptz"
+        "UuidArray"
       ]
     },
     "nullable": [
@@ -170,5 +168,5 @@
       false
     ]
   },
-  "hash": "744e2dbbbcda9d14734c2289a36febdc328476730c75cf679c36ce253c67bd58"
+  "hash": "829465985ac8cd0663f5f5fa791ac0231d793d784c3d65f26ac0fbfc7467455a"
 }
