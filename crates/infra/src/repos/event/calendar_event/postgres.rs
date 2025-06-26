@@ -711,7 +711,7 @@ impl IEventRepo for PostgresEventRepo {
             WHERE e.user_uid = any($1::uuid[])
                 AND e.start_time <= $2
                 AND e.recurrence_jsonb IS NOT NULL
-                AND (e.recurring_until IS NULL OR e.recurring_until > $3)
+                AND (e.recurring_until IS NULL OR e.recurring_until >= $3)
                 AND busy = any($4::boolean[])
                 AND status = any($5::text[])
             "#,
