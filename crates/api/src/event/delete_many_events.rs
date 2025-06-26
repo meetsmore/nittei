@@ -76,18 +76,28 @@ impl UseCase for DeleteManyEventsUseCase {
     const NAME: &'static str = "DeleteManyEvents";
 
     async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
-        // If both event_ids and external_ids are None, return an error
+        // If both event_ids and external_ids are None or if both are empty, return an error
         if self.event_ids.is_none() && self.external_ids.is_none() {
             tracing::warn!("[delete_many_events] No event ids or external ids provided");
             return Err(UseCaseError::BadRequest);
         }
 
+        // If both event_ids and external_ids exist, but are empty, return an error
+        if self.event_ids.as_ref().map(|v| v.len()).unwrap_or(1) == 0
+            && self.external_ids.as_ref().map(|v| v.len()).unwrap_or(1) == 0
+        {
+            tracing::warn!("[delete_many_events] No event ids or external ids provided");
+            return Err(UseCaseError::BadRequest);
+        }
+
+        // Find events by ids (it isn't awaited here, but instead in the try_join below)
         let events_by_ids = if let Some(ids) = &self.event_ids {
             ctx.repos.events.find_many(ids.as_slice())
         } else {
             Box::pin(future::ok(Vec::new())) // Creates an already-resolved future
         };
 
+        // Find events by external ids (it isn't awaited here, but instead in the try_join below)
         let events_by_external_ids = if let Some(ids) = &self.external_ids {
             ctx.repos
                 .events
@@ -96,6 +106,8 @@ impl UseCase for DeleteManyEventsUseCase {
             Box::pin(future::ok(Vec::new())) // Another already-resolved future
         };
 
+        // Join the two futures and wait for them to complete
+        // This will return an error if any of the futures fail
         let (events_by_ids, events_by_external_ids) =
             try_join(events_by_ids, events_by_external_ids)
                 .await
@@ -103,6 +115,22 @@ impl UseCase for DeleteManyEventsUseCase {
                     tracing::error!("[delete_many_events] Error finding events: {:?}", e);
                     UseCaseError::StorageError
                 })?;
+
+        // Check if any of the events are from another account
+        let event_from_other_account = events_by_ids
+            .iter()
+            .chain(events_by_external_ids.iter())
+            .find(|event| event.account_id != self.account_uid);
+
+        // If we found an event from another account, return an error
+        if let Some(bad_event) = event_from_other_account {
+            tracing::warn!(
+                "[delete_many_events] Account {} is not allowed to delete events from account {}",
+                self.account_uid,
+                bad_event.account_id
+            );
+            return Err(UseCaseError::BadRequest);
+        }
 
         // Merge event ids and remove duplicates
         let event_ids_to_delete = events_by_ids

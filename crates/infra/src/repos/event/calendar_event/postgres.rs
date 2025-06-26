@@ -449,9 +449,9 @@ impl IEventRepo for PostgresEventRepo {
             EventRaw,
             r#"
             SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e
-            WHERE e.recurring_event_uid = ANY($1) AND e.original_start_time >= $2 AND e.original_start_time <= $3
+            WHERE e.recurring_event_uid = ANY($1::uuid[]) AND e.original_start_time >= $2 AND e.original_start_time <= $3
             "#,
-            &recurring_event_ids,
+            &recurring_event_ids as &[Uuid],
             timespan.start(),
             timespan.end(),
         )
@@ -538,7 +538,7 @@ impl IEventRepo for PostgresEventRepo {
             EventRaw,
             r#"
             SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e
-            WHERE e.account_uid = $1 AND e.external_id = any($2)
+            WHERE e.account_uid = $1 AND e.external_id = any($2::text[])
             "#,
             account_uid.as_ref(),
             external_ids,
@@ -563,9 +563,9 @@ impl IEventRepo for PostgresEventRepo {
             EventRaw,
             r#"
             SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e
-            WHERE e.event_uid = ANY($1)
+            WHERE e.event_uid = ANY($1::uuid[])
             "#,
-            &ids
+            &ids as &[Uuid],
         )
         .fetch_all(&self.pool)
         .await
@@ -653,14 +653,14 @@ impl IEventRepo for PostgresEventRepo {
             EventRaw,
             r#"
                     SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e
-                    WHERE e.calendar_uid  = any($1)
+                    WHERE e.calendar_uid  = any($1::uuid[])
                     AND (
                         (e.start_time <= $2 AND e.end_time >= $3)
                         OR 
                         (e.start_time < $2 AND e.recurrence_jsonb IS NOT NULL AND (e.recurring_until IS NULL OR e.recurring_until > $3))
                     )
                     "#,
-            &calendar_ids,
+            &calendar_ids as &[Uuid],
             timespan.end(),
             timespan.start()
         )
@@ -677,13 +677,13 @@ impl IEventRepo for PostgresEventRepo {
         .collect()
     }
 
-    /// Find events and recurring events for users
-    /// Events need to be "busy" and with the status "confirmed"
+    /// Find recurring events for users that are active during the timespan
+    /// By default, events need to be "busy" and with the status "confirmed"
     ///
-    /// It excludes events that have an original_start_time
-    /// This is used to find the normal events and the recurring events for a user
-    #[instrument(name = "calendar_event::find_events_and_recurring_events_for_users_for_timespan", fields(user_ids = ?user_ids, timespan = ?timespan, include_tentative = %include_tentative, include_non_busy = %include_non_busy))]
-    async fn find_events_and_recurring_events_for_users_for_timespan(
+    /// The parameter `include_tentative` is used to include events with the status "tentative" (default: false)
+    /// The parameter `include_non_busy` is used to include events that are not "busy" (default: false)
+    #[instrument(name = "calendar_event::find_recurring_events_for_users_for_timespan", fields(user_ids = ?user_ids, timespan = ?timespan))]
+    async fn find_recurring_events_for_users_for_timespan(
         &self,
         user_ids: &[ID],
         timespan: TimeSpan,
@@ -708,27 +708,83 @@ impl IEventRepo for PostgresEventRepo {
             EventRaw,
             r#"
             SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e
-            WHERE e.user_uid = any($1)
-            AND (
-                (e.start_time < $2 AND e.end_time > $3)
-                OR
-                (e.start_time < $2 AND e.recurrence_jsonb IS NOT NULL AND (e.recurring_until IS NULL OR e.recurring_until > $3))
-            )
-            AND busy = any($4)
-            AND status = any($5)
-            AND e.original_start_time IS NULL
+            WHERE e.user_uid = any($1::uuid[])
+                AND e.start_time <= $2
+                AND e.recurrence_jsonb IS NOT NULL
+                AND (e.recurring_until IS NULL OR e.recurring_until >= $3)
+                AND busy = any($4::boolean[])
+                AND status = any($5::text[])
             "#,
-            &user_ids,
+            &user_ids as &[Uuid],
             timespan.end(),
             timespan.start(),
-            &expected_busy,
-            &expected_status,
+            &expected_busy as &[bool],
+            &expected_status as &[String],
         )
         .fetch_all(&self.pool)
         .await
         .inspect_err(|e| {
             error!(
-                "Find calendar events for user ids: {:?} failed. DB returned error: {:?}",
+                "Find recurring events for user ids: {:?} failed. DB returned error: {:?}",
+                user_ids, e
+            );
+        })?
+        .into_iter()
+        .map(|e| e.try_into())
+        .collect()
+    }
+
+    /// Find events for users during timespan
+    /// By default, events need to be "busy" and with the status "confirmed"
+    /// This excludes events that have a recurrence_jsonb and an original_start_time (ex: recurring events and their exceptions)
+    ///
+    /// The parameter `include_tentative` is used to include events with the status "tentative" (default: false)
+    /// The parameter `include_non_busy` is used to include events that are not "busy" (default: false)
+    #[instrument(name = "calendar_event::find_events_for_users_for_timespan", fields(user_ids = ?user_ids, timespan = ?timespan, include_tentative = %include_tentative, include_non_busy = %include_non_busy))]
+    async fn find_events_for_users_for_timespan(
+        &self,
+        user_ids: &[ID],
+        timespan: TimeSpan,
+        include_tentative: bool,
+        include_non_busy: bool,
+    ) -> anyhow::Result<Vec<CalendarEvent>> {
+        let user_ids = user_ids.iter().map(|id| *id.as_ref()).collect::<Vec<_>>();
+        let expected_busy: Vec<bool> = if include_non_busy {
+            vec![true, false]
+        } else {
+            vec![true]
+        };
+        let expected_status: Vec<String> = if include_tentative {
+            vec![
+                CalendarEventStatus::Tentative.into(),
+                CalendarEventStatus::Confirmed.into(),
+            ]
+        } else {
+            vec![CalendarEventStatus::Confirmed.into()]
+        };
+        sqlx::query_as!(
+            EventRaw,
+            r#"
+            SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e
+            WHERE e.user_uid = any($1::uuid[])
+                AND e.start_time <= $2
+                AND e.end_time >= $3
+                AND busy = any($4::boolean[])
+                AND status = any($5::text[])
+                AND e.recurrence_jsonb IS NULL
+                AND e.original_start_time IS NULL
+            "#,
+            &user_ids as &[Uuid],
+            timespan.end(),
+            timespan.start(),
+            &expected_busy as &[bool],
+            &expected_status as &[String],
+        )
+        .fetch_all(&self.pool)
+        .await
+        .inspect_err(|e| {
+            error!(
+                "Find events for user ids: {:?} failed. DB returned error: {:?}",
                 user_ids, e
             );
         })?
@@ -766,19 +822,19 @@ impl IEventRepo for PostgresEventRepo {
             EventRaw,
             r#"
                     SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e
-                    WHERE e.calendar_uid  = any($1)
+                    WHERE e.calendar_uid  = any($1::uuid[])
                     AND (
                         (e.start_time < $2 AND e.end_time > $3)
                         OR
                         (e.start_time < $2 AND e.recurrence_jsonb IS NOT NULL AND (e.recurring_until IS NULL OR e.recurring_until > $3))
                     )
                     AND busy = true
-                    AND status = any($4)
+                    AND status = any($4::text[])
                     "#,
-            &calendar_ids,
+            &calendar_ids as &[Uuid],
             timespan.end(),
             timespan.start(),
-            expected_status.as_slice()
+            &expected_status as &[String],
         )
         .fetch_all(&self.pool)
         .await
@@ -1121,10 +1177,10 @@ impl IEventRepo for PostgresEventRepo {
                 WHERE service_uid = $1
                 ORDER BY e.user_uid, created DESC
             ) AS events ON events.user_uid = users.user_uid
-            WHERE users.user_uid = ANY($2)
+            WHERE users.user_uid = ANY($2::uuid[])
             "#,
             service_id.as_ref(),
-            &user_ids
+            &user_ids as &[Uuid],
         )
         .fetch_all(&self.pool)
         .await
@@ -1156,7 +1212,7 @@ impl IEventRepo for PostgresEventRepo {
             SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata
             FROM calendar_events AS e
             WHERE e.service_uid = $1 AND
-            e.user_uid = ANY($2) AND
+            e.user_uid = ANY($2::uuid[]) AND
             e.start_time <= $3 AND e.end_time >= $4
             "#,
             service_id.as_ref(),
@@ -1245,9 +1301,9 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query!(
             r#"
             DELETE FROM calendar_events AS e
-            WHERE e.event_uid = ANY($1)
+            WHERE e.event_uid = ANY($1::uuid[])
             "#,
-            &ids
+            &ids as &[Uuid],
         )
         .execute(&self.pool)
         .await

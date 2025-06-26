@@ -21,18 +21,18 @@ impl Config {
                 if cfg!(debug_assertions) {
                     let code = "create_account_dev_secret".to_string();
                     info!(
-                        "Running in debug mode, using default UNSECURE secret code for creating accounts: {}",
+                        "[infra config] Running in debug mode, using default UNSECURE secret code for creating accounts: {}",
                         code
                     );
                     code
                 } else {
                     // Otherwise we generate a random secret code
                     info!(
-                        "Did not find CREATE_ACCOUNT_SECRET_CODE environment variable. Going to create one."
+                        "[infra config] Did not find CREATE_ACCOUNT_SECRET_CODE environment variable. Going to create one."
                     );
                     let code = create_random_secret(16);
                     info!(
-                        "Secret code for creating accounts was generated and set to: {}",
+                        "[infra config] Secret code for creating accounts was generated and set to: {}",
                         code
                     );
                     code
