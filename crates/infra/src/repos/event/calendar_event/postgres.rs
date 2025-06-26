@@ -709,9 +709,9 @@ impl IEventRepo for PostgresEventRepo {
             r#"
             SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e
             WHERE e.user_uid = any($1::uuid[])
-                AND e.start_time < $2
+                AND e.start_time <= $2
                 AND e.recurrence_jsonb IS NOT NULL
-                AND (e.recurring_until IS NULL OR e.recurring_until > $3)
+                AND (e.recurring_until IS NULL OR e.recurring_until >= $3)
                 AND busy = any($4::boolean[])
                 AND status = any($5::text[])
             "#,
@@ -767,8 +767,8 @@ impl IEventRepo for PostgresEventRepo {
             r#"
             SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e
             WHERE e.user_uid = any($1::uuid[])
-                AND e.start_time < $2
-                AND e.end_time > $3
+                AND e.start_time <= $2
+                AND e.end_time >= $3
                 AND busy = any($4::boolean[])
                 AND status = any($5::text[])
                 AND e.recurrence_jsonb IS NULL
