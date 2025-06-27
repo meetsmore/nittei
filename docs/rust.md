@@ -4,7 +4,7 @@ As Rust is a relatively new language compared to older languages such as C, Java
 
 First, what is Rust ?
 
-Rust is a modern systems programming language focused on **performance**, **safety**, and **concurrency**, without needing a garbage collector. It's often compared to C++, as it's wehre its advantages can shine the best (safety without sacrificing performance).
+Rust is a modern systems programming language focused on **performance**, **safety**, and **concurrency**, without needing a garbage collector. It's often compared to C++, as it's where its advantages can shine the best (safety without sacrificing performance).
 
 While its main domain is systems programming, it's also a very good language for writing backends. Of course, for most backends/APIs, having awesome performance isn't a hard requirement, and is often considered overkill compared to the complexity that is required to achieve it. But, one of the big advantages of Rust compared to other languages (C++, C, ...) is that it allows to achieve it while providing a lot of safety mechanisms. This includes the borrow checker, but it also includes the explicit handling of `undefined` values (via Option<>) and of errors (via Result<>).
 
