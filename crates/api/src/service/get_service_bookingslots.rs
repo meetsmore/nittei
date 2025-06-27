@@ -87,8 +87,7 @@ impl From<UseCaseError> for NitteiError {
             UseCaseError::InternalError => Self::InternalError,
             UseCaseError::InvalidDate(msg) => {
                 Self::BadClientData(format!(
-                    "Invalid datetime: {}. Should be YYYY-MM-DD, e.g. January 1. 2020 => 2020-1-1",
-                    msg
+                    "Invalid datetime: {msg}. Should be YYYY-MM-DD, e.g. January 1. 2020 => 2020-1-1"
                 ))
             }
             UseCaseError::InvalidInterval => {
@@ -634,7 +633,7 @@ mod test {
         let recurrence = RRuleOptions::default();
         match availability_event3.set_recurrence(recurrence) {
             Ok(_) => {}
-            Err(e) => panic!("Error setting recurrence: {:?}", e),
+            Err(e) => panic!("Error setting recurrence: {e:?}"),
         };
 
         ctx.repos.events.insert(&availability_event1).await.unwrap();

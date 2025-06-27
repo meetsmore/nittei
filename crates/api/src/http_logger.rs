@@ -190,7 +190,7 @@ impl<E: std::fmt::Debug> OnFailure<E> for NitteiTracingOnFailure {
         span.record("otel.status_code", "error");
         span.record("duration", latency.as_nanos());
         span.record("exception.type", std::any::type_name_of_val(&error));
-        span.record("exception.message", format!("{:?}", error));
+        span.record("exception.message", format!("{error:?}"));
 
         tracing::error!(
             parent: span,

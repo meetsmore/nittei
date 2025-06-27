@@ -56,7 +56,7 @@ impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::InvalidURI(err) => {
-                Self::BadClientData(format!("Invalid URI provided. Error message: {}", err))
+                Self::BadClientData(format!("Invalid URI provided. Error message: {err}"))
             }
             UseCaseError::StorageError => Self::InternalError,
         }

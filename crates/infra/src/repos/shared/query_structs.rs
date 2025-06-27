@@ -31,22 +31,22 @@ pub fn apply_id_query(
     if let Some(id_query) = id_query {
         match id_query {
             IDQuery::Eq(id) => {
-                query_builder.push(format!(" AND e.{} = ", field_name));
+                query_builder.push(format!(" AND e.{field_name} = "));
                 query_builder.push_bind::<Uuid>(id.clone().into());
             }
             IDQuery::Ne(id) => {
-                query_builder.push(format!(" AND e.{} != ", field_name));
+                query_builder.push(format!(" AND e.{field_name} != "));
                 query_builder.push_bind::<Uuid>(id.clone().into());
             }
             IDQuery::Exists(exists) => {
                 if *exists {
-                    query_builder.push(format!(" AND e.{} IS NOT NULL", field_name));
+                    query_builder.push(format!(" AND e.{field_name} IS NOT NULL"));
                 } else {
-                    query_builder.push(format!(" AND e.{} IS NULL", field_name));
+                    query_builder.push(format!(" AND e.{field_name} IS NULL"));
                 };
             }
             IDQuery::In(ids) => {
-                query_builder.push(format!(" AND e.{} IN (", field_name));
+                query_builder.push(format!(" AND e.{field_name} IN ("));
                 let mut separated = query_builder.separated(", ");
                 for id in ids.iter() {
                     separated.push_bind::<Uuid>(id.clone().into());
@@ -54,7 +54,7 @@ pub fn apply_id_query(
                 separated.push_unseparated(")");
             }
             IDQuery::Nin(ids) => {
-                query_builder.push(format!(" AND e.{} NOT IN (", field_name));
+                query_builder.push(format!(" AND e.{field_name} NOT IN ("));
                 let mut separated = query_builder.separated(", ");
                 for id in ids.iter() {
                     separated.push_bind::<Uuid>(id.clone().into());
@@ -62,19 +62,19 @@ pub fn apply_id_query(
                 separated.push_unseparated(")");
             }
             IDQuery::Gt(id) => {
-                query_builder.push(format!(" AND e.{} > ", field_name));
+                query_builder.push(format!(" AND e.{field_name} > "));
                 query_builder.push_bind::<Uuid>(id.clone().into());
             }
             IDQuery::Gte(id) => {
-                query_builder.push(format!(" AND e.{} >= ", field_name));
+                query_builder.push(format!(" AND e.{field_name} >= "));
                 query_builder.push_bind::<Uuid>(id.clone().into());
             }
             IDQuery::Lt(id) => {
-                query_builder.push(format!(" AND e.{} < ", field_name));
+                query_builder.push(format!(" AND e.{field_name} < "));
                 query_builder.push_bind::<Uuid>(id.clone().into());
             }
             IDQuery::Lte(id) => {
-                query_builder.push(format!(" AND e.{} <= ", field_name));
+                query_builder.push(format!(" AND e.{field_name} <= "));
                 query_builder.push_bind::<Uuid>(id.clone().into());
             }
         }
@@ -99,22 +99,22 @@ pub fn apply_string_query(
     if let Some(string_query) = string_query {
         match string_query {
             StringQuery::Eq(eq_query) => {
-                query_builder.push(format!(" AND e.{} = ", field_name));
+                query_builder.push(format!(" AND e.{field_name} = "));
                 query_builder.push_bind(eq_query.clone());
             }
             StringQuery::Ne(ne_query) => {
-                query_builder.push(format!(" AND e.{} != ", field_name));
+                query_builder.push(format!(" AND e.{field_name} != "));
                 query_builder.push_bind(ne_query.clone());
             }
             StringQuery::Exists(exists_query) => {
                 if *exists_query {
-                    query_builder.push(format!(" AND e.{} IS NOT NULL", field_name));
+                    query_builder.push(format!(" AND e.{field_name} IS NOT NULL"));
                 } else {
-                    query_builder.push(format!(" AND e.{} IS NULL", field_name));
+                    query_builder.push(format!(" AND e.{field_name} IS NULL"));
                 };
             }
             StringQuery::In(in_query) => {
-                query_builder.push(format!(" AND e.{} IN (", field_name));
+                query_builder.push(format!(" AND e.{field_name} IN ("));
                 let mut separated = query_builder.separated(", ");
                 for value in in_query.iter() {
                     separated.push_bind(value.clone());
@@ -144,7 +144,7 @@ pub fn apply_datetime_query(
     if let Some(datetime_query) = datetime_query {
         match datetime_query {
             DateTimeQuery::Eq(eq_query) => {
-                query_builder.push(format!(" AND e.{} = ", field_name));
+                query_builder.push(format!(" AND e.{field_name} = "));
                 if convert_to_millis {
                     query_builder.push_bind(eq_query.timestamp_millis());
                 } else {
@@ -153,14 +153,14 @@ pub fn apply_datetime_query(
             }
             DateTimeQuery::Range(range) => {
                 if let Some(gte_query) = range.gte {
-                    query_builder.push(format!(" AND e.{} >= ", field_name));
+                    query_builder.push(format!(" AND e.{field_name} >= "));
                     if convert_to_millis {
                         query_builder.push_bind(gte_query.timestamp_millis());
                     } else {
                         query_builder.push_bind(gte_query);
                     };
                 } else if let Some(gt_query) = range.gt {
-                    query_builder.push(format!(" AND e.{} > ", field_name));
+                    query_builder.push(format!(" AND e.{field_name} > "));
                     if convert_to_millis {
                         query_builder.push_bind(gt_query.timestamp_millis());
                     } else {
@@ -169,14 +169,14 @@ pub fn apply_datetime_query(
                 }
 
                 if let Some(lte_query) = range.lte {
-                    query_builder.push(format!(" AND e.{} <= ", field_name));
+                    query_builder.push(format!(" AND e.{field_name} <= "));
                     if convert_to_millis {
                         query_builder.push_bind(lte_query.timestamp_millis());
                     } else {
                         query_builder.push_bind(lte_query);
                     };
                 } else if let Some(lt_query) = range.lt {
-                    query_builder.push(format!(" AND e.{} < ", field_name));
+                    query_builder.push(format!(" AND e.{field_name} < "));
                     if convert_to_millis {
                         query_builder.push_bind(lt_query.timestamp_millis());
                     } else {

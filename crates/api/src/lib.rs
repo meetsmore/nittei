@@ -167,7 +167,7 @@ impl Application {
 
         let port = context.config.port;
         let address = nittei_utils::config::APP_CONFIG.http_host.clone();
-        let address_and_port = format!("{}:{}", address, port);
+        let address_and_port = format!("{address}:{port}");
 
         let listener = TcpListener::bind(address_and_port).await?;
         info!("[server] Will start server on: {}", listener.local_addr()?);
@@ -294,16 +294,14 @@ impl Application {
                     .map(|g| g.client_secret.clone())
                     .unwrap_or_else(|| {
                         panic!(
-                            "{} should be specified also when {} is specified.",
-                            account_google_client_secret_env, account_google_client_id_env
+                            "{account_google_client_secret_env} should be specified also when {account_google_client_id_env} is specified."
                         )
                     });
                 let google_redirect_uri = google_config
                     .map(|g| g.redirect_uri.clone())
                     .unwrap_or_else(|| {
                         panic!(
-                            "{} should be specified also when {} is specified.",
-                            account_google_redirect_uri_env, account_google_client_id_env
+                            "{account_google_redirect_uri_env} should be specified also when {account_google_client_id_env} is specified."
                         )
                     });
                 self.context
@@ -331,16 +329,14 @@ impl Application {
                     .map(|o| o.client_secret.clone())
                     .unwrap_or_else(|| {
                         panic!(
-                            "{} should be specified also when {} is specified.",
-                            account_outlook_client_secret_env, account_outlook_client_id_env
+                            "{account_outlook_client_secret_env} should be specified also when {account_outlook_client_id_env} is specified."
                         )
                     });
                 let outlook_redirect_uri = outlook_config
                     .map(|o| o.redirect_uri.clone())
                     .unwrap_or_else(|| {
                         panic!(
-                            "{} should be specified also when {} is specified.",
-                            account_outlook_redirect_uri_env, account_outlook_client_id_env
+                            "{account_outlook_redirect_uri_env} should be specified also when {account_outlook_client_id_env} is specified."
                         )
                     });
                 self.context

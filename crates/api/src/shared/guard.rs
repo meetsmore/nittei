@@ -9,6 +9,6 @@ impl Guard {
     /// Guard function to check if the provided ID is malformed
     pub fn against_malformed_id(val: String) -> Result<ID, NitteiError> {
         val.parse()
-            .map_err(|e| NitteiError::BadClientData(format!("{}", e)))
+            .map_err(|e| NitteiError::BadClientData(format!("{e}")))
     }
 }

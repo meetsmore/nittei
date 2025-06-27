@@ -117,7 +117,7 @@ impl<'de> Deserialize<'de> for ID {
             {
                 value
                     .parse::<ID>()
-                    .map_err(|_| E::custom(format!("Malformed id: {}", value)))
+                    .map_err(|_| E::custom(format!("Malformed id: {value}")))
             }
         }
 

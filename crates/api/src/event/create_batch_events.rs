@@ -135,8 +135,7 @@ impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::NotFound(calendar_id) => Self::NotFound(format!(
-                "The calendar with id: {}, was not found.",
-                calendar_id
+                "The calendar with id: {calendar_id}, was not found."
             )),
             UseCaseError::InvalidRecurrenceRule => {
                 Self::BadClientData("Invalid recurrence rule specified for the event".into())

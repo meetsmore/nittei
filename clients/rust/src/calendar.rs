@@ -97,17 +97,13 @@ impl CalendarClient {
 
     pub async fn delete(&self, calendar_id: ID) -> APIResponse<delete_calendar::APIResponse> {
         self.base
-            .delete(format!("user/calendar/{}", calendar_id), StatusCode::OK)
+            .delete(format!("user/calendar/{calendar_id}"), StatusCode::OK)
             .await
     }
 
     pub async fn get(&self, calendar_id: ID) -> APIResponse<get_calendar::APIResponse> {
         self.base
-            .get(
-                format!("user/calendar/{}", calendar_id),
-                None,
-                StatusCode::OK,
-            )
+            .get(format!("user/calendar/{calendar_id}"), None, StatusCode::OK)
             .await
     }
 
@@ -120,7 +116,7 @@ impl CalendarClient {
             Some(key) => {
                 self.base
                     .get(
-                        format!("user/{}/calendar", user_id),
+                        format!("user/{user_id}/calendar"),
                         Some(vec![("key".to_string(), key)]),
                         StatusCode::OK,
                     )
@@ -128,7 +124,7 @@ impl CalendarClient {
             }
             None => {
                 self.base
-                    .get(format!("user/{}/calendar", user_id), None, StatusCode::OK)
+                    .get(format!("user/{user_id}/calendar"), None, StatusCode::OK)
                     .await
             }
         }

@@ -134,8 +134,7 @@ impl From<UseCaseError> for NitteiError {
                 Self::BadClientData("The start and end timespan is invalid".into())
             }
             UseCaseError::NotFound(calendar_id) => Self::NotFound(format!(
-                "The calendar with id: {}, was not found.",
-                calendar_id
+                "The calendar with id: {calendar_id}, was not found."
             )),
             UseCaseError::IntervalServerError => Self::InternalError,
         }

@@ -71,7 +71,7 @@ impl UserClient {
 
     pub async fn get(&self, user_id: ID) -> APIResponse<get_user::APIResponse> {
         self.base
-            .get(format!("user/{}", user_id), None, StatusCode::OK)
+            .get(format!("user/{user_id}"), None, StatusCode::OK)
             .await
     }
 
@@ -81,7 +81,7 @@ impl UserClient {
     ) -> APIResponse<get_user::APIResponse> {
         self.base
             .get(
-                format!("user/external_id/{}", external_id),
+                format!("user/external_id/{external_id}"),
                 None,
                 StatusCode::OK,
             )
@@ -90,7 +90,7 @@ impl UserClient {
 
     pub async fn delete(&self, user_id: ID) -> APIResponse<delete_user::APIResponse> {
         self.base
-            .delete(format!("user/{}", user_id), StatusCode::OK)
+            .delete(format!("user/{user_id}"), StatusCode::OK)
             .await
     }
 
@@ -111,7 +111,7 @@ impl UserClient {
         let user_id = query.user_id.clone();
         self.base
             .get(
-                format!("user/{}/freebusy", user_id),
+                format!("user/{user_id}/freebusy"),
                 Some(query.into()),
                 StatusCode::OK,
             )
@@ -137,7 +137,7 @@ impl UserClient {
             provider: input.provider,
         };
         self.base
-            .post(body, format!("user/{}/oauth", user_id), StatusCode::OK)
+            .post(body, format!("user/{user_id}/oauth"), StatusCode::OK)
             .await
     }
 

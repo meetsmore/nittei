@@ -75,7 +75,7 @@ impl From<UseCaseError> for NitteiError {
         match e {
             UseCaseError::StorageError => Self::InternalError,
             UseCaseError::UserNotFound(user_id) => {
-                Self::NotFound(format!("The user with id: {}, was not found.", user_id))
+                Self::NotFound(format!("The user with id: {user_id}, was not found."))
             }
         }
     }

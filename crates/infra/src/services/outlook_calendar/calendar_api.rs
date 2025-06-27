@@ -123,7 +123,7 @@ impl OutlookCalendarRestApi {
     ) -> anyhow::Result<T> {
         match self
             .client
-            .put(format!("{}/{}", API_BASE_URL, path))
+            .put(format!("{API_BASE_URL}/{path}"))
             .header("authorization", format!("Bearer {}", self.access_token))
             .json(body)
             .send()
@@ -153,7 +153,7 @@ impl OutlookCalendarRestApi {
     ) -> anyhow::Result<T> {
         match self
             .client
-            .post(format!("{}/{}", API_BASE_URL, path))
+            .post(format!("{API_BASE_URL}/{path}"))
             .header("authorization", format!("Bearer {}", self.access_token))
             .json(body)
             .send()
@@ -179,7 +179,7 @@ impl OutlookCalendarRestApi {
     async fn delete<T: for<'de> Deserialize<'de>>(&self, path: String) -> anyhow::Result<T> {
         match self
             .client
-            .delete(format!("{}/{}", API_BASE_URL, path))
+            .delete(format!("{API_BASE_URL}/{path}"))
             .header("authorization", format!("Bearer {}", self.access_token))
             .send()
             .await
@@ -204,7 +204,7 @@ impl OutlookCalendarRestApi {
     async fn get<T: for<'de> Deserialize<'de>>(&self, path: String) -> anyhow::Result<T> {
         match self
             .client
-            .get(format!("{}/{}", API_BASE_URL, path))
+            .get(format!("{API_BASE_URL}/{path}"))
             .header("authorization", format!("Bearer {}", self.access_token))
             .send()
             .await
@@ -233,7 +233,7 @@ impl OutlookCalendarRestApi {
     }
 
     pub async fn remove(&self, calendar_id: String, event_id: String) -> Result<(), ()> {
-        self.delete(format!("me/calendars/{}/events/{}", calendar_id, event_id))
+        self.delete(format!("me/calendars/{calendar_id}/events/{event_id}"))
             .await
             .map_err(|e| {
                 error!("Failed to delete outlook calendar event with outlook calendar id: {} and outlook event id: {}. Error message: {:?}", calendar_id, event_id, e);
@@ -248,7 +248,7 @@ impl OutlookCalendarRestApi {
     ) -> Result<OutlookCalendarEvent, ()> {
         self.put(
             body,
-            format!("calendars/{}/events/{}", calendar_id, event_id),
+            format!("calendars/{calendar_id}/events/{event_id}"),
         )
         .await
             .map_err(|e| {
@@ -261,7 +261,7 @@ impl OutlookCalendarRestApi {
         calendar_id: String,
         body: &OutlookCalendarEventAttributes,
     ) -> Result<OutlookCalendarEvent, ()> {
-        self.post(body, format!("me/calendars/{}/events", calendar_id))
+        self.post(body, format!("me/calendars/{calendar_id}/events"))
             .await
             .map_err(|e| {
                 error!("Failed to insert outlook calendar event to outlook calendar id: {} with body: {:?}. Error message: {:?}", calendar_id, body, e);
