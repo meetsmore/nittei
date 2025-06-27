@@ -9,7 +9,7 @@ FROM messense/rust-musl-cross:${ARCH}-musl AS builder
 
 ARG ARCH=x86_64
 ARG APP_NAME=nittei
-ARG RUST_VERSION=1.87.0
+ARG RUST_VERSION=1.88.0
 
 # Install and set the specific Rust version
 RUN rustup install ${RUST_VERSION} && rustup default ${RUST_VERSION}
