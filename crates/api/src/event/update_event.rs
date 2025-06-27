@@ -182,9 +182,9 @@ pub enum UseCaseError {
 impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
-            UseCaseError::NotFound(entity, event_id) => Self::NotFound(format!(
-                "The {entity} with id: {event_id}, was not found."
-            )),
+            UseCaseError::NotFound(entity, event_id) => {
+                Self::NotFound(format!("The {entity} with id: {event_id}, was not found."))
+            }
             UseCaseError::InvalidRecurrenceRule => {
                 Self::BadClientData("Invalid recurrence rule specified for the event".into())
             }

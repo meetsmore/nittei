@@ -153,11 +153,7 @@ impl CalendarEventClient {
         };
 
         self.base
-            .post(
-                body,
-                format!("user/{user_id}/events"),
-                StatusCode::CREATED,
-            )
+            .post(body, format!("user/{user_id}/events"), StatusCode::CREATED)
             .await
     }
 

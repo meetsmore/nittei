@@ -103,11 +103,7 @@ impl CalendarClient {
 
     pub async fn get(&self, calendar_id: ID) -> APIResponse<get_calendar::APIResponse> {
         self.base
-            .get(
-                format!("user/calendar/{calendar_id}"),
-                None,
-                StatusCode::OK,
-            )
+            .get(format!("user/calendar/{calendar_id}"), None, StatusCode::OK)
             .await
     }
 

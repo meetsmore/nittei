@@ -260,11 +260,7 @@ impl ServiceClient {
         };
 
         self.base
-            .post(
-                body,
-                format!("service/{service_id}/users"),
-                StatusCode::OK,
-            )
+            .post(body, format!("service/{service_id}/users"), StatusCode::OK)
             .await
     }
 

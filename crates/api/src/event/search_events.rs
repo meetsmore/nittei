@@ -142,9 +142,9 @@ impl From<UseCaseError> for NitteiError {
         match e {
             UseCaseError::InternalError => Self::InternalError,
             UseCaseError::BadRequest(msg) => Self::BadClientData(msg),
-            UseCaseError::NotFound(entity, event_id) => Self::NotFound(format!(
-                "The {entity} with id: {event_id}, was not found."
-            )),
+            UseCaseError::NotFound(entity, event_id) => {
+                Self::NotFound(format!("The {entity} with id: {event_id}, was not found."))
+            }
         }
     }
 }
