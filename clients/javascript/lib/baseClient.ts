@@ -227,11 +227,21 @@ export const createAxiosInstanceBackend = async (
     if (args.baseUrl.startsWith('https')) {
       // This is a dynamic import to avoid loading the https module in the browser
       const https = await import('node:https')
-      config.httpsAgent = new https.Agent({ keepAlive: true })
+      config.httpsAgent = new https.Agent({
+        keepAlive: true,
+        maxSockets: 75,
+        maxFreeSockets: 10,
+        keepAliveMsecs: 60000,
+      })
     } else {
       // This is a dynamic import to avoid loading the http module in the browser
       const http = await import('node:http')
-      config.httpAgent = new http.Agent({ keepAlive: true })
+      config.httpAgent = new http.Agent({
+        keepAlive: true,
+        maxSockets: 75,
+        maxFreeSockets: 10,
+        keepAliveMsecs: 60000,
+      })
     }
   }
 
