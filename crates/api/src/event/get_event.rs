@@ -93,8 +93,7 @@ impl From<UseCaseError> for NitteiError {
         match e {
             UseCaseError::InternalError => Self::InternalError,
             UseCaseError::NotFound(event_id) => Self::NotFound(format!(
-                "The calendar event with id: {}, was not found.",
-                event_id
+                "The calendar event with id: {event_id}, was not found."
             )),
         }
     }

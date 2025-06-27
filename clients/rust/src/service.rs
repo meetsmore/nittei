@@ -91,7 +91,7 @@ impl ServiceClient {
 
     pub async fn get(&self, service_id: ID) -> APIResponse<get_service::APIResponse> {
         self.base
-            .get(format!("service/{}", service_id), None, StatusCode::OK)
+            .get(format!("service/{service_id}"), None, StatusCode::OK)
             .await
     }
 
@@ -163,7 +163,7 @@ impl ServiceClient {
 
     pub async fn delete(&self, service_id: ID) -> APIResponse<delete_service::APIResponse> {
         self.base
-            .delete(format!("service/{}", service_id), StatusCode::OK)
+            .delete(format!("service/{service_id}"), StatusCode::OK)
             .await
     }
 
@@ -239,7 +239,7 @@ impl ServiceClient {
         self.base
             .put(
                 body,
-                format!("service/{}/users/{}", service_id, user_id),
+                format!("service/{service_id}/users/{user_id}"),
                 StatusCode::OK,
             )
             .await
@@ -262,7 +262,7 @@ impl ServiceClient {
         self.base
             .post(
                 body,
-                format!("service/{}/users", service_id),
+                format!("service/{service_id}/users"),
                 StatusCode::OK,
             )
             .await

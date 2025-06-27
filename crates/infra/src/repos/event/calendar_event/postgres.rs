@@ -988,7 +988,7 @@ impl IEventRepo for PostgresEventRepo {
         // Limit if needed
         if let Some(limit) = params.limit {
             query.push(" LIMIT ");
-            query.push(format!("{}", limit));
+            query.push(format!("{limit}"));
         }
 
         let rows = query.build().fetch_all(&self.pool).await.inspect_err(|e| {
@@ -1142,7 +1142,7 @@ impl IEventRepo for PostgresEventRepo {
         // Limit if needed
         if let Some(limit) = params.limit {
             query.push(" LIMIT ");
-            query.push(format!("{}", limit));
+            query.push(format!("{limit}"));
         }
 
         let rows = query.build().fetch_all(&self.pool).await.inspect_err(|e| {

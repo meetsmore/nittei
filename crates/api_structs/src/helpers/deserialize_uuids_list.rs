@@ -67,11 +67,11 @@ mod tests {
     fn test_deserialize_stringified_uuids_list() {
         let valid_uuid1 = Uuid::new_v4().to_string();
         let valid_uuid2 = Uuid::new_v4().to_string();
-        let valid_uuids = format!("{},{}", valid_uuid1, valid_uuid2);
+        let valid_uuids = format!("{valid_uuid1},{valid_uuid2}");
 
         // Test case for a valid list of UUIDs
         let query: QueryParams =
-            serde_urlencoded::from_str(&format!("ids={}", valid_uuids)).unwrap();
+            serde_urlencoded::from_str(&format!("ids={valid_uuids}")).unwrap();
         assert_eq!(
             query.ids,
             Some(vec![

@@ -100,13 +100,13 @@ impl CalendarEventClient {
 
     pub async fn delete(&self, event_id: ID) -> APIResponse<delete_event::APIResponse> {
         self.base
-            .delete(format!("user/events/{}", event_id), StatusCode::OK)
+            .delete(format!("user/events/{event_id}"), StatusCode::OK)
             .await
     }
 
     pub async fn get(&self, event_id: ID) -> APIResponse<get_event::APIResponse> {
         self.base
-            .get(format!("user/events/{}", event_id), None, StatusCode::OK)
+            .get(format!("user/events/{event_id}"), None, StatusCode::OK)
             .await
     }
 
@@ -155,7 +155,7 @@ impl CalendarEventClient {
         self.base
             .post(
                 body,
-                format!("user/{}/events", user_id),
+                format!("user/{user_id}/events"),
                 StatusCode::CREATED,
             )
             .await
@@ -199,7 +199,7 @@ impl CalendarEventClient {
             updated: None,
         };
         self.base
-            .put(body, format!("user/events/{}", event_id), StatusCode::OK)
+            .put(body, format!("user/events/{event_id}"), StatusCode::OK)
             .await
     }
 }

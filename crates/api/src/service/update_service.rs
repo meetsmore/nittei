@@ -50,7 +50,7 @@ impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::ServiceNotFound(id) => {
-                Self::NotFound(format!("Service with id: {} was not found.", id))
+                Self::NotFound(format!("Service with id: {id} was not found."))
             }
             UseCaseError::StorageError => Self::InternalError,
         }

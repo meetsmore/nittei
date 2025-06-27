@@ -247,7 +247,7 @@ mod test {
         match e1.set_recurrence(e1rr) {
             Ok(_) => {}
             Err(e) => {
-                panic!("{:?}", e);
+                panic!("{e:?}");
             }
         };
 
@@ -268,7 +268,7 @@ mod test {
         match e2.set_recurrence(e2rr) {
             Ok(_) => {}
             Err(e) => {
-                panic!("{:?}", e);
+                panic!("{e:?}");
             }
         };
 
@@ -289,7 +289,7 @@ mod test {
         match e3.set_recurrence(e3rr) {
             Ok(_) => {}
             Err(e) => {
-                panic!("{:?}", e);
+                panic!("{e:?}");
             }
         };
 

@@ -33,7 +33,7 @@ impl ScheduleClient {
     pub async fn get(&self, schedule_id: ID) -> APIResponse<get_schedule::APIResponse> {
         self.base
             .get(
-                format!("user/schedule/{}", schedule_id),
+                format!("user/schedule/{schedule_id}"),
                 None,
                 StatusCode::OK,
             )
@@ -42,7 +42,7 @@ impl ScheduleClient {
 
     pub async fn delete(&self, schedule_id: ID) -> APIResponse<delete_schedule::APIResponse> {
         self.base
-            .delete(format!("user/schedule/{}", schedule_id), StatusCode::OK)
+            .delete(format!("user/schedule/{schedule_id}"), StatusCode::OK)
             .await
     }
 
