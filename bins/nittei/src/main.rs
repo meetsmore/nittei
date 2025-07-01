@@ -25,6 +25,12 @@ fn main() {
         },
     );
 
+    let _ = color_eyre::install().inspect_err(|e| {
+        tracing::error!("[color_eyre] Error: {e}");
+        // Exit the process with an error code
+        std::process::exit(1);
+    });
+
     let runtime_flavor = nittei_utils::config::APP_CONFIG
         .tokio_runtime_flavor
         .as_str();
