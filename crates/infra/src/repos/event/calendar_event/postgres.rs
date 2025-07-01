@@ -1278,20 +1278,18 @@ impl IEventRepo for PostgresEventRepo {
             r#"
             DELETE FROM calendar_events AS e
             WHERE e.event_uid = $1
-            RETURNING event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata
             "#,
             event_uid.as_ref(),
         )
-        .fetch_optional(&self.pool)
+        .execute(&self.pool)
         .await
         .inspect_err(|e| {
             error!(
                 "Delete calendar event with id: {:?} failed. DB returned error: {:?}",
                 event_uid, e
             );
-        })?
-        .ok_or_else(|| anyhow::Error::msg("Unable to delete calendar event"))
-        .map(|_| ())
+        })?;
+        Ok(())
     }
 
     /// Delete multiple calendar events by their uids
