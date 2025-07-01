@@ -1274,14 +1274,15 @@ impl IEventRepo for PostgresEventRepo {
     /// Delete a calendar event by its uid
     #[instrument(name = "calendar_event::delete", fields(event_uid = %event_uid))]
     async fn delete(&self, event_uid: &ID) -> anyhow::Result<()> {
-        sqlx::query!(
+        let event = sqlx::query!(
             r#"
             DELETE FROM calendar_events AS e
             WHERE e.event_uid = $1
+            RETURNING event_uid
             "#,
             event_uid.as_ref(),
         )
-        .execute(&self.pool)
+        .fetch_optional(&self.pool)
         .await
         .inspect_err(|e| {
             error!(
@@ -1289,6 +1290,13 @@ impl IEventRepo for PostgresEventRepo {
                 event_uid, e
             );
         })?;
+
+        if event.is_none() {
+            tracing::warn!(
+                "Tried to delete calendar event with id: {:?}, but it does not exist",
+                event_uid
+            );
+        }
         Ok(())
     }
 
