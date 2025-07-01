@@ -103,7 +103,7 @@ impl Account {
 
     pub fn generate_secret_api_key() -> String {
         let rand_secret = create_random_secret(API_KEY_LEN);
-        format!("sk_{}", rand_secret)
+        format!("sk_{rand_secret}")
     }
 
     pub fn set_public_jwt_key(&mut self, key: Option<PEMKey>) {

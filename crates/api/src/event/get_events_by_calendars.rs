@@ -93,10 +93,9 @@ impl From<UseCaseError> for NitteiError {
             UseCaseError::InvalidTimespan => {
                 Self::BadClientData("The provided start_ts and end_ts are invalid".into())
             }
-            UseCaseError::NotFound(entity, event_id) => Self::NotFound(format!(
-                "The {} with id: {}, was not found.",
-                entity, event_id
-            )),
+            UseCaseError::NotFound(entity, event_id) => {
+                Self::NotFound(format!("The {entity} with id: {event_id}, was not found."))
+            }
         }
     }
 }
