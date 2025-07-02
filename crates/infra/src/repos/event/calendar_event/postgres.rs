@@ -1297,11 +1297,11 @@ impl IEventRepo for PostgresEventRepo {
     /// Delete a calendar event by its uid
     #[instrument(name = "calendar_event::delete", fields(event_uid = %event_uid))]
     async fn delete(&self, event_uid: &ID) -> anyhow::Result<()> {
-        sqlx::query!(
+        let event = sqlx::query!(
             r#"
             DELETE FROM calendar_events AS e
             WHERE e.event_uid = $1
-            RETURNING event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata
+            RETURNING event_uid
             "#,
             event_uid.as_ref(),
         )
@@ -1313,9 +1313,15 @@ impl IEventRepo for PostgresEventRepo {
                 error = ?e,
                 "Failed to delete calendar event"
             );
-        })?
-        .ok_or_else(|| anyhow::Error::msg("Unable to delete calendar event"))
-        .map(|_| ())
+        })?;
+
+        if event.is_none() {
+            tracing::warn!(
+                "Tried to delete calendar event with id: {:?}, but it does not exist",
+                event_uid
+            );
+        }
+        Ok(())
     }
 
     /// Delete multiple calendar events by their uids
