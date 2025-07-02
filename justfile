@@ -1,5 +1,5 @@
 export DATABASE_URL := "postgresql://postgres:postgres@localhost:45432/nittei"
-export RUST_BACKTRACE := "short"
+export RUST_BACKTRACE := "1"
 
 # Install minimal tools
 install_tools: 

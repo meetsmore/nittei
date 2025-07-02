@@ -2,7 +2,7 @@ name: JavaScript client tests
 
 env:
   RUST_VERSION: 1.85.1
-  RUST_BACKTRACE: short
+  RUST_BACKTRACE: 1
 
 on:
   pull_request:
