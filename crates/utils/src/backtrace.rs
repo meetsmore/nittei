@@ -3,7 +3,13 @@ use std::backtrace::Backtrace;
 /// Macro for logging errors with filtered backtraces
 /// Example
 /// ```
+/// use nittei_utils::error_with_backtrace;
+///
+/// let err = std::io::Error::new(std::io::ErrorKind::Other, "Something went wrong");
 /// error_with_backtrace!(error = %err, "Something went wrong");
+///
+/// // Or with additional context:
+/// error_with_backtrace!(user_id = 123, operation = "file_read", "Failed to read file");
 /// ```
 #[macro_export]
 macro_rules! error_with_backtrace {

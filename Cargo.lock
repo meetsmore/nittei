@@ -1762,6 +1762,7 @@ dependencies = [
  "config",
  "rand 0.9.1",
  "serde",
+ "tracing",
 ]
 
 [[package]]
