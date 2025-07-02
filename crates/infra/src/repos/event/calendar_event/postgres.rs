@@ -189,10 +189,10 @@ impl TryFrom<EventRaw> for CalendarEvent {
 #[async_trait::async_trait]
 impl IEventRepo for PostgresEventRepo {
     #[instrument(name = "calendar_event::insert")]
-    async fn insert(&self, e: &CalendarEvent) -> anyhow::Result<()> {
-        let status: String = e.status.clone().into();
-        let recurrence = if e.recurrence.is_some() {
-            Some(serde_json::to_value(&e.recurrence)?)
+    async fn insert(&self, event: &CalendarEvent) -> anyhow::Result<()> {
+        let status: String = event.status.clone().into();
+        let recurrence = if event.recurrence.is_some() {
+            Some(serde_json::to_value(&event.recurrence)?)
         } else {
             None
         };
@@ -228,41 +228,42 @@ impl IEventRepo for PostgresEventRepo {
             )
             VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
             "#,
-            e.id.as_ref(),
-            e.account_id.as_ref(),
-            e.user_id.as_ref(),
-            e.calendar_id.as_ref(),
-            e.external_parent_id,
-            e.external_id,
-            e.title,
-            e.description,
-            e.event_type,
-            e.location,
+            event.id.as_ref(),
+            event.account_id.as_ref(),
+            event.user_id.as_ref(),
+            event.calendar_id.as_ref(),
+            event.external_parent_id,
+            event.external_id,
+            event.title,
+            event.description,
+            event.event_type,
+            event.location,
             status,
-            e.all_day,
-            e.start_time,
-            e.duration,
-            e.end_time,
-            e.busy,
-            e.created.timestamp_millis(),
-            e.updated.timestamp_millis(),
+            event.all_day,
+            event.start_time,
+            event.duration,
+            event.end_time,
+            event.busy,
+            event.created.timestamp_millis(),
+            event.updated.timestamp_millis(),
             // (recurrence_jsonb) JSONB field
             &recurrence as _,
-            e.recurring_until,
-            &e.exdates,
-            e.recurring_event_id.as_ref().map(|id| id.as_ref()),
-            e.original_start_time,
+            event.recurring_until,
+            &event.exdates,
+            event.recurring_event_id.as_ref().map(|id| id.as_ref()),
+            event.original_start_time,
             // (reminders_jsonb) JSONB field
-            Json(&e.reminders) as _,
-            e.service_id.as_ref().map(|id| id.as_ref()),
-            Json(&e.metadata) as _,
+            Json(&event.reminders) as _,
+            event.service_id.as_ref().map(|id| id.as_ref()),
+            Json(&event.metadata) as _,
         )
         .execute(&self.pool)
         .await
         .inspect_err(|err| {
             error!(
-                "Unable to insert calendar_event: {:?}. DB returned error: {:?}",
-                e, err
+                event = ?event,
+                error = ?err,
+                "Failed to insert calendar_event"
             );
         })?;
 
@@ -333,8 +334,8 @@ impl IEventRepo for PostgresEventRepo {
 
         query.execute(&self.pool).await.inspect_err(|err| {
             error!(
-                "Unable to insert calendar_events: {:?}. DB returned error: {:?}",
-                events, err
+                error = ?err,
+                "Failed to insert calendar_events"
             );
         })?;
         Ok(())
@@ -403,8 +404,9 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|err| {
             error!(
-                "Unable to save calendar_event: {:?}. DB returned error: {:?}",
-                e, err
+                event = ?e,
+                error = ?err,
+                "Failed to save calendar_event"
             );
         })?;
 
@@ -425,8 +427,9 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|err| {
             error!(
-                "Find calendar event with id: {:?} failed. DB returned error: {:?}",
-                event_uid, err
+                event_uid = %event_uid,
+                error = ?err,
+                "Failed to find calendar event with id"
             );
         })?
         .map(|e| e.try_into())
@@ -459,8 +462,9 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|err| {
             error!(
-                "Find calendar events with recurring_event_ids: {:?} failed. DB returned error: {:?}",
-                recurring_event_ids, err
+                recurring_event_ids = ?recurring_event_ids,
+                error = ?err,
+                "Failed to find calendar events with recurring_event_ids"
             );
         })?
         .into_iter()
@@ -489,8 +493,9 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|err| {
             error!(
-                "Find calendar event with id and recurring_event_id: {:?} failed. DB returned error: {:?}",
-                event_id, err
+                event_id = %event_id,
+                error = ?err,
+                "Failed to find calendar event with id and recurring_event_id"
             );
         })?
         .into_iter()
@@ -518,8 +523,10 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|err| {
             error!(
-                "Find calendar event with external_id: {:?} failed. DB returned error: {:?}",
-                external_id, err
+                account_uid = %account_uid,
+                external_id = %external_id,
+                error = ?err,
+                "Failed to find calendar event with external_id"
             );
         })?
         .into_iter()
@@ -547,8 +554,10 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|err| {
             error!(
-                "Find calendar events with external_ids: {:?} failed. DB returned error: {:?}",
-                external_ids, err
+                account_uid = %account_uid,
+                external_ids = ?external_ids,
+                error = ?err,
+                "Failed to find calendar events with external_ids"
             );
         })?
         .into_iter()
@@ -571,8 +580,9 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Find calendar events with ids: {:?} failed. DB returned error: {:?}",
-                event_ids, e
+                event_ids = ?event_ids,
+                error = ?e,
+                "Failed to find calendar events with ids"
             );
         })?
         .into_iter()
@@ -607,8 +617,9 @@ impl IEventRepo for PostgresEventRepo {
             .await
             .inspect_err(|e| {
                 error!(
-                    "Find calendar events for calendar id: {:?} failed. DB returned error: {:?}",
-                    calendar_id, e
+                    calendar_id = %calendar_id,
+                    error = ?e,
+                    "Failed to find calendar events for calendar id"
                 );
             })?
             .into_iter()
@@ -628,8 +639,9 @@ impl IEventRepo for PostgresEventRepo {
             .await
             .inspect_err(|e| {
                 error!(
-                    "Find calendar events for calendar id: {:?} failed. DB returned error: {:?}",
-                    calendar_id, e
+                    calendar_id = %calendar_id,
+                    error = ?e,
+                    "Failed to find calendar events for calendar id"
                 );
             })?
             .into_iter()
@@ -668,8 +680,9 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Find calendar events for calendar ids: {:?} failed. DB returned error: {:?}",
-                calendar_ids, e
+                calendar_ids = ?calendar_ids,
+                error = ?e,
+                "Failed to find calendar events for calendar ids"
             );
         })?
         .into_iter()
@@ -725,8 +738,9 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Find recurring events for user ids: {:?} failed. DB returned error: {:?}",
-                user_ids, e
+                user_ids = ?user_ids,
+                error = ?e,
+                "Failed to find recurring events for user ids"
             );
         })?
         .into_iter()
@@ -784,8 +798,9 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Find events for user ids: {:?} failed. DB returned error: {:?}",
-                user_ids, e
+                user_ids = ?user_ids,
+                error = ?e,
+                "Failed to find events for user ids"
             );
         })?
         .into_iter()
@@ -840,8 +855,9 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Find calendar events for calendar ids: {:?} failed. DB returned error: {:?}",
-                calendar_ids, e
+                calendar_ids = ?calendar_ids,
+                error = ?e,
+                "Failed to find calendar events for calendar ids"
             );
         })?
         .into_iter()
@@ -992,7 +1008,10 @@ impl IEventRepo for PostgresEventRepo {
         }
 
         let rows = query.build().fetch_all(&self.pool).await.inspect_err(|e| {
-            error!("Search events failed. DB returned error: {:?}", e);
+            error!(
+                error = ?e,
+                "Failed to search events"
+            );
         })?;
 
         let events_raw: Vec<EventRaw> = rows
@@ -1146,7 +1165,10 @@ impl IEventRepo for PostgresEventRepo {
         }
 
         let rows = query.build().fetch_all(&self.pool).await.inspect_err(|e| {
-            error!("Search events failed. DB returned error: {:?}", e);
+            error!(
+                error = ?e,
+                "Failed to search events"
+            );
         })?;
 
         let events_raw: Vec<EventRaw> = rows
@@ -1185,11 +1207,12 @@ impl IEventRepo for PostgresEventRepo {
         .fetch_all(&self.pool)
         .await
         .inspect_err(|e| {
-                error!(
-                    "Find most recently created service events for service id: {} failed. DB returned error: {:?}",
-                    service_id, e
-                );
-            })?;
+            error!(
+                service_id = %service_id,
+                error = ?e,
+                "Failed to find most recently created service events"
+            );
+        })?;
 
         most_recent_created_service_events
             .into_iter()
@@ -1224,12 +1247,12 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|e| {
                 error!(
-                    "Find calendar events for service id: {}, user_ids: {:?}, min_time: {}, max_time: {} failed. DB returned error: {:?}",
-                    service_id,
-                    user_ids,
-                    min_time,
-                    max_time,
-                     e
+                    service_id = %service_id,
+                    user_ids = ?user_ids,
+                    min_time = %min_time,
+                    max_time = %max_time,
+                    error = ?e,
+                    "Failed to find calendar events"
                 )})?
         .into_iter().map(|e| e.try_into()).collect()
     }
@@ -1261,12 +1284,12 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|e| {
                 error!(
-                    "Find service calendar events for user_id: {}, busy: {}, min_time: {}, max_time: {} failed. DB returned error: {:?}",
-                    user_id,
-                    busy,
-                    min_time,
-                    max_time,
-                     e
+                    user_id = %user_id,
+                    busy = %busy,
+                    min_time = %min_time,
+                    max_time = %max_time,
+                    error = ?e,
+                    "Failed to find service calendar events"
                 );
             })?.into_iter().map(|e| e.try_into()).collect()
     }
@@ -1286,8 +1309,9 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Delete calendar event with id: {:?} failed. DB returned error: {:?}",
-                event_uid, e
+                event_uid = %event_uid,
+                error = ?e,
+                "Failed to delete calendar event"
             );
         })?
         .ok_or_else(|| anyhow::Error::msg("Unable to delete calendar event"))
@@ -1309,8 +1333,9 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Delete calendar events with ids: {:?} failed. DB returned error: {:?}",
-                event_ids, e
+                event_ids = ?event_ids,
+                error = ?e,
+                "Failed to delete calendar events"
             );
         })?;
         Ok(())
@@ -1330,8 +1355,9 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Delete calendar event by service id: {:?} failed. DB returned error: {:?}",
-                service_id, e
+                service_id = %service_id,
+                error = ?e,
+                "Failed to delete calendar event by service id"
             );
         })?;
         Ok(())
@@ -1361,8 +1387,9 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Find calendar events by metadata: {:?} failed. DB returned error: {:?}",
-                query, e
+                query = ?query,
+                error = ?e,
+                "Failed to find calendar events by metadata"
             );
         })?
         .into_iter()

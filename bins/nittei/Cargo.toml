@@ -27,7 +27,6 @@ nittei_infra = { workspace = true }
 nittei_utils = { workspace = true }
 
 anyhow = "1.0"
-color-eyre = "0.6"
 
 axum = "0.8"
 

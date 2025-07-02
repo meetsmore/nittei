@@ -61,8 +61,9 @@ impl IUserRepo for PostgresUserRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Unable to insert user: {:?}. DB returned error: {:?}",
-                user, e
+                user = ?user,
+                error = ?e,
+                "Failed to insert user"
             );
         })?;
 
@@ -88,8 +89,9 @@ impl IUserRepo for PostgresUserRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Unable to save user: {:?}. DB returned error: {:?}",
-                user, e
+                user = ?user,
+                error = ?e,
+                "Failed to save user"
             );
         })?;
         Ok(())
@@ -110,8 +112,9 @@ impl IUserRepo for PostgresUserRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Delete user with id: {} failed. DB returned error: {:?}",
-                user_id, e
+                user_id = %user_id,
+                error = ?e,
+                "Failed to delete user"
             );
         })?;
 
@@ -132,8 +135,9 @@ impl IUserRepo for PostgresUserRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Find user with user_id: {} failed. DB returned error: {:?}",
-                user_id, e
+                user_id = %user_id,
+                error = ?e,
+                "Failed to find user"
             );
         })?;
 
@@ -156,8 +160,9 @@ impl IUserRepo for PostgresUserRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Find users with user_ids: {:?} failed. DB returned error: {:?}",
-                user_ids, e
+                user_ids = ?user_ids,
+                error = ?e,
+                "Failed to find users"
             );
         })?;
 
@@ -184,8 +189,9 @@ impl IUserRepo for PostgresUserRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Find user with user_id: {} failed. DB returned error: {:?}",
-                user_id, e
+                user_id = %user_id,
+                error = ?e,
+                "Failed to find user"
             );
         })?;
 
@@ -206,8 +212,9 @@ impl IUserRepo for PostgresUserRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Find user with external_id: {} failed. DB returned error: {:?}",
-                external_id, e
+                external_id = %external_id,
+                error = ?e,
+                "Failed to find user"
             );
         })?;
 
@@ -233,8 +240,9 @@ impl IUserRepo for PostgresUserRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Find users by metadata: {:?} failed. DB returned error: {:?}",
-                query, e
+                query = ?query,
+                error = ?e,
+                "Failed to find users"
             );
         })?;
 

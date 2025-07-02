@@ -33,7 +33,7 @@ ENV DD_GIT_COMMIT_SHA=${GIT_COMMIT_HASH}
 ENV DD_SOURCE_CODE_PATH_MAPPING="/app/nittei/bins:/bins,/app/nittei/crates:/crates"
 
 # Set the backtrace level by default to short
-ARG RUST_BACKTRACE=short
+ARG RUST_BACKTRACE=1
 ENV RUST_BACKTRACE=${RUST_BACKTRACE}
 
 USER nonroot:nonroot
