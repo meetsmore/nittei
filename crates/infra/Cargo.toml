@@ -10,21 +10,30 @@ workspace = true
 [dependencies]
 nittei_utils = { workspace = true }
 nittei_domain = { workspace = true }
+
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+
 async-trait = "0.1"
-chrono = { version = "0.4.39", features = ["serde"] }
-chrono-tz = { version = "0.10.1", features = ["serde"] }
+
 anyhow = "1.0"
+
 tokio = { version = "1", features = ["macros"] }
+futures = "0.3"
+
 tracing = "0.1"
+
 reqwest = { version = "0.12", default-features = false, features = [
   "http2",
   "json",
   "rustls-tls",
 ] }
+
+chrono = { version = "0.4.39", features = ["serde"] }
+chrono-tz = { version = "0.10.1", features = ["serde"] }
 uuid = { version = "1.1", features = ["serde"] }
-futures = "0.3"
+url = { version = "2.5" }
+
 sqlx = { version = "0.8", features = [
   "runtime-tokio",
   "tls-rustls-ring",
@@ -33,5 +42,4 @@ sqlx = { version = "0.8", features = [
   "json",
   "chrono",
 ] }
-url = { version = "2.5" }
 moka = { version = "0.12", features = ["future"] }

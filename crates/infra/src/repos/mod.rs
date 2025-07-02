@@ -13,7 +13,7 @@ mod status;
 pub(crate) mod user;
 mod user_integrations;
 
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use account::{IAccountRepo, PostgresAccountRepo};
 use account_integrations::{IAccountIntegrationRepo, PostgresAccountIntegrationRepo};
@@ -73,12 +73,14 @@ impl Repos {
         let pool = PgPoolOptions::new()
             .min_connections(nittei_utils::config::APP_CONFIG.pg.min_connections)
             .max_connections(nittei_utils::config::APP_CONFIG.pg.max_connections)
+            .acquire_timeout(Duration::from_secs(3)) // Max time to wait for a connection
             .connect(connection_string)
             .await
             .context(format!(
                 "Failed to connect to PG url '{}'",
                 remove_password_from_url(connection_string)?
             ))?;
+
         info!("[repos] Postgres connection created");
 
         if !nittei_utils::config::APP_CONFIG.pg.skip_migrations {
