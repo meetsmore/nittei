@@ -12,6 +12,7 @@ import {
   UnauthorizedError,
   UnprocessableEntityError,
 } from './helpers/errors'
+import axiosRetry, { isNetworkOrIdempotentRequestError } from 'axios-retry'
 
 /**
  * Configuration for the keep alive feature
@@ -36,6 +37,20 @@ export type KeepAliveConfig = {
 }
 
 /**
+ * Configuration for retry mechanism
+ */
+export type RetryConfig = {
+  /**
+   * Whether to enable retry mechanism (default: true)
+   */
+  enabled: boolean
+  /**
+   * Maximum number of retry attempts (default: 3)
+   */
+  maxRetries?: number
+}
+
+/**
  * Base configuration for the client
  */
 export type ClientConfig = {
@@ -53,6 +68,11 @@ export type ClientConfig = {
    * Timeout for requests in milliseconds (default: 1000)
    */
   timeout?: number
+
+  /**
+   * Retry configuration
+   */
+  retry?: RetryConfig
 }
 
 /**
@@ -64,6 +84,10 @@ export const DEFAULT_CONFIG: Required<ClientConfig> = {
     enabled: false,
   },
   timeout: 1000,
+  retry: {
+    enabled: true,
+    maxRetries: 3,
+  },
 }
 
 /**
@@ -72,9 +96,7 @@ export const DEFAULT_CONFIG: Required<ClientConfig> = {
  * It shouldn't be exposed to the end user
  */
 export abstract class NitteiBaseClient {
-  constructor(private readonly axiosClient: AxiosInstance) {
-    this.axiosClient = axiosClient
-  }
+  constructor(private readonly axiosClient: AxiosInstance) {}
 
   /**
    * Private generic function to call the API
@@ -136,7 +158,6 @@ export abstract class NitteiBaseClient {
       path,
       params,
     })
-
     return res.data
   }
 
@@ -261,6 +282,7 @@ export const createAxiosInstanceFrontend = (
   args: {
     baseUrl: string
     timeout: number
+    retry: RetryConfig
   },
   credentials: ICredentials
 ): AxiosInstance => {
@@ -284,7 +306,18 @@ export const createAxiosInstanceFrontend = (
     },
   }
 
-  return axios.create(config)
+  const axiosClient = axios.create(config)
+
+  if (args.retry.enabled) {
+    axiosRetry(axiosClient, {
+      retries: args.retry.maxRetries ?? 3,
+      retryDelay: axiosRetry.exponentialDelay,
+      retryCondition: isNetworkOrIdempotentRequestError, // Retry on network errors or idempotent requests (GET, PUT, DELETE)
+      shouldResetTimeout: true,
+    })
+  }
+
+  return axiosClient
 }
 
 /**
@@ -300,6 +333,7 @@ export const createAxiosInstanceBackend = async (
     baseUrl: string
     keepAlive: KeepAliveConfig
     timeout: number
+    retry: RetryConfig
   },
   credentials: ICredentials
 ): Promise<AxiosInstance> => {
@@ -353,5 +387,16 @@ export const createAxiosInstanceBackend = async (
     }
   }
 
-  return axios.create(config)
+  const axiosClient = axios.create(config)
+
+  if (args.retry.enabled) {
+    axiosRetry(axiosClient, {
+      retries: args.retry.maxRetries ?? 3,
+      retryDelay: axiosRetry.exponentialDelay,
+      retryCondition: isNetworkOrIdempotentRequestError, // Retry on network errors or idempotent requests (GET, PUT, DELETE)
+      shouldResetTimeout: true,
+    })
+  }
+
+  return axiosClient
 }

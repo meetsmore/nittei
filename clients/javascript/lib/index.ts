@@ -6,6 +6,7 @@ import {
   createAxiosInstanceFrontend,
   DEFAULT_CONFIG,
   type KeepAliveConfig,
+  type RetryConfig,
 } from './baseClient'
 import {
   NitteiCalendarClient,
@@ -60,7 +61,11 @@ export const NitteiUserClient = (
 
   // User clients should not keep the connection alive (usually on the frontend)
   const axiosClient = createAxiosInstanceFrontend(
-    { baseUrl: finalConfig.baseUrl, timeout: finalConfig.timeout },
+    {
+      baseUrl: finalConfig.baseUrl,
+      timeout: finalConfig.timeout,
+      retry: finalConfig.retry,
+    },
     creds
   )
 
@@ -94,6 +99,7 @@ export const NitteiClient = async (
       baseUrl: finalConfig.baseUrl,
       keepAlive: finalConfig.keepAlive,
       timeout: finalConfig.timeout,
+      retry: finalConfig.retry,
     },
     creds
   )
@@ -114,7 +120,7 @@ export const NitteiClient = async (
 }
 
 // Client types
-export type { ClientConfig, KeepAliveConfig }
+export type { ClientConfig, KeepAliveConfig, RetryConfig }
 
 // Errors
 export * from './helpers/errors'
