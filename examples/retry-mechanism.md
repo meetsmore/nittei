@@ -1,6 +1,6 @@
-# Retry Mechanism for GET Requests
+# Retry mechanism for idempotent requests
 
-The Nittei JavaScript client supports automatic retry for GET requests when encountering connection errors like timeouts or connection resets.
+The Nittei JavaScript client supports automatic retry for idempotent requests (GET, PUT and DELETE) when encountering connection errors like timeouts, connection resets or internal server errors.
 
 ## Configuration
 
@@ -12,8 +12,6 @@ import { NitteiUserClient, type RetryConfig } from "@meetsmore/nittei";
 const retryConfig: RetryConfig = {
   enabled: true,
   maxRetries: 3, // Maximum number of retry attempts (default: 3)
-  baseDelay: 300, // Base delay in milliseconds (default: 300)
-  maxDelay: 5000, // Maximum delay in milliseconds (default: 5000)
 };
 
 const client = NitteiUserClient({
@@ -38,11 +36,14 @@ The delay is capped at `maxDelay` to prevent excessive waiting times.
 The following errors will trigger a retry:
 
 - `ECONNRESET` - Connection reset
-- `ECONNABORTED` - Connection aborted
 - `ETIMEDOUT` - Request timeout
 - `ENOTFOUND` - DNS lookup failed
 - `ENETUNREACH` - Network unreachable
-- Any error message containing "timeout", "network", or "connection"
+- 5xx errors
+
+The client-side aborts won't be retried:
+
+- `ECONNABORTED` - Connection aborted
 
 ## Example Usage
 
@@ -53,7 +54,6 @@ const client = NitteiUserClient({
   retry: {
     enabled: true,
     maxRetries: 3,
-    baseDelay: 1000,
   },
 });
 
@@ -79,8 +79,6 @@ const client = await NitteiClient({
   retry: {
     enabled: true,
     maxRetries: 5,
-    baseDelay: 500,
-    maxDelay: 5000,
   },
 });
 
@@ -90,7 +88,8 @@ const account = await client.account.me();
 
 ## Notes
 
-- Only GET requests are retried (POST, PUT, DELETE requests are not retried)
-- HTTP status codes (4xx, 5xx) are not retried - only connection-level errors
+- Only GET, PUT and DELETE requests can be retried
+- 5xx errors are retried
+- HTTP status codes (4xx) are not retried
 - The retry mechanism is enabled by default (`enabled: true`)
 - Each client instance can have its own retry configuration

@@ -142,7 +142,7 @@ export abstract class NitteiBaseClient {
   }
 
   /**
-   * Make a GET request to the API with retry mechanism
+   * Make a GET request to the API
    * @private
    * @param path - path to the endpoint
    * @param params - query parameters
