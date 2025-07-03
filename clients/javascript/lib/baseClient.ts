@@ -14,6 +14,59 @@ import {
 } from './helpers/errors'
 
 /**
+ * Configuration for the keep alive feature
+ */
+export type KeepAliveConfig = {
+  /**
+   * Whether to keep the connection alive
+   */
+  enabled: boolean
+  /**
+   * Maximum number of sockets to keep alive
+   */
+  maxSockets?: number
+  /**
+   * Maximum number of free sockets to keep alive
+   */
+  maxFreeSockets?: number
+  /**
+   * Keep alive milliseconds (how long to keep the connection alive)
+   */
+  keepAliveMsecs?: number
+}
+
+/**
+ * Base configuration for the client
+ */
+export type ClientConfig = {
+  /**
+   * Base URL for the API
+   */
+  baseUrl?: string
+
+  /**
+   * Keep the connection alive
+   */
+  keepAlive?: KeepAliveConfig
+
+  /**
+   * Timeout for requests in milliseconds (default: 1000)
+   */
+  timeout?: number
+}
+
+/**
+ * Default configuration for the client
+ */
+export const DEFAULT_CONFIG: Required<ClientConfig> = {
+  baseUrl: `http://localhost:${process.env.NITTEI__HTTP_PORT ?? '5000'}/api/v1`,
+  keepAlive: {
+    enabled: false,
+  },
+  timeout: 1000,
+}
+
+/**
  * Base client for the API
  * This client is used to centralize configuration needed for calling the API
  * It shouldn't be exposed to the end user
@@ -245,7 +298,7 @@ export const createAxiosInstanceFrontend = (
 export const createAxiosInstanceBackend = async (
   args: {
     baseUrl: string
-    keepAlive: boolean
+    keepAlive: KeepAliveConfig
     timeout: number
   },
   credentials: ICredentials
@@ -272,15 +325,31 @@ export const createAxiosInstanceBackend = async (
 
   // If keepAlive is true, and if we are in NodeJS
   // create an agent to keep the connection alive
-  if (args.keepAlive && typeof module !== 'undefined' && module.exports) {
+  if (
+    args.keepAlive.enabled &&
+    typeof module !== 'undefined' &&
+    module.exports
+  ) {
     if (args.baseUrl.startsWith('https')) {
       // This is a dynamic import to avoid loading the https module in the browser
       const https = await import('node:https')
-      config.httpsAgent = new https.Agent({ keepAlive: true })
+      // Default values are what we evaluated to be good for our load
+      config.httpsAgent = new https.Agent({
+        keepAlive: true,
+        maxSockets: args.keepAlive.maxSockets ?? 75,
+        maxFreeSockets: args.keepAlive.maxFreeSockets ?? 10,
+        keepAliveMsecs: args.keepAlive.keepAliveMsecs ?? 60000,
+      })
     } else {
       // This is a dynamic import to avoid loading the http module in the browser
       const http = await import('node:http')
-      config.httpAgent = new http.Agent({ keepAlive: true })
+      // Default values are what we evaluated to be good for our load
+      config.httpAgent = new http.Agent({
+        keepAlive: true,
+        maxSockets: args.keepAlive.maxSockets ?? 75,
+        maxFreeSockets: args.keepAlive.maxFreeSockets ?? 10,
+        keepAliveMsecs: args.keepAlive.keepAliveMsecs ?? 60000,
+      })
     }
   }
 
