@@ -42,6 +42,7 @@
   "license": "MIT",
   "dependencies": {
     "axios": "0.28.0",
+    "axios-retry": "4.5.0",
     "dayjs": "1.11.13"
   },
   "devDependencies": {

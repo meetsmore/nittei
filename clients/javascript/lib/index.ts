@@ -61,16 +61,20 @@ export const NitteiUserClient = (
 
   // User clients should not keep the connection alive (usually on the frontend)
   const axiosClient = createAxiosInstanceFrontend(
-    { baseUrl: finalConfig.baseUrl, timeout: finalConfig.timeout },
+    {
+      baseUrl: finalConfig.baseUrl,
+      timeout: finalConfig.timeout,
+      retry: finalConfig.retry,
+    },
     creds
   )
 
   return Object.freeze({
-    calendar: new NitteiCalendarUserClient(axiosClient, finalConfig.retry),
-    events: new NitteiEventUserClient(axiosClient, finalConfig.retry),
-    service: new NitteiServiceUserClient(axiosClient, finalConfig.retry),
-    schedule: new NitteiScheduleUserClient(axiosClient, finalConfig.retry),
-    user: new NitteiUserUserClient(axiosClient, finalConfig.retry),
+    calendar: new NitteiCalendarUserClient(axiosClient),
+    events: new NitteiEventUserClient(axiosClient),
+    service: new NitteiServiceUserClient(axiosClient),
+    schedule: new NitteiScheduleUserClient(axiosClient),
+    user: new NitteiUserUserClient(axiosClient),
     // Axios client exposed so that the user can use it
     // - For adding interceptors
     // - For making custom requests
@@ -95,18 +99,19 @@ export const NitteiClient = async (
       baseUrl: finalConfig.baseUrl,
       keepAlive: finalConfig.keepAlive,
       timeout: finalConfig.timeout,
+      retry: finalConfig.retry,
     },
     creds
   )
 
   return Object.freeze({
-    account: new NitteiAccountClient(axiosClient, finalConfig.retry),
-    events: new NitteiEventClient(axiosClient, finalConfig.retry),
-    calendar: new NitteiCalendarClient(axiosClient, finalConfig.retry),
-    user: new _NitteiUserClient(axiosClient, finalConfig.retry),
-    service: new NitteiServiceClient(axiosClient, finalConfig.retry),
-    schedule: new NitteiScheduleClient(axiosClient, finalConfig.retry),
-    health: new NitteiHealthClient(axiosClient, finalConfig.retry),
+    account: new NitteiAccountClient(axiosClient),
+    events: new NitteiEventClient(axiosClient),
+    calendar: new NitteiCalendarClient(axiosClient),
+    user: new _NitteiUserClient(axiosClient),
+    service: new NitteiServiceClient(axiosClient),
+    schedule: new NitteiScheduleClient(axiosClient),
+    health: new NitteiHealthClient(axiosClient),
     // Axios client exposed so that the user can use it
     // - For adding interceptors
     // - For making custom requests
