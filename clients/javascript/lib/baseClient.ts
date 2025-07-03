@@ -42,7 +42,7 @@ export abstract class NitteiBaseClient {
     path: string
     data?: unknown
     params?: Record<string, unknown>
-  }) {
+  }): Promise<AxiosResponse<T>> {
     let res: AxiosResponse<T> | undefined = undefined
     try {
       res = await this.axiosClient({ method, url: path, data, params })
