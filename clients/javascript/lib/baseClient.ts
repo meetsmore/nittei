@@ -2,6 +2,7 @@ import axios, {
   type AxiosRequestConfig,
   type AxiosInstance,
   type AxiosResponse,
+  AxiosError,
 } from 'axios'
 import type { ICredentials } from './helpers/credentials'
 import {
@@ -76,6 +77,49 @@ export abstract class NitteiBaseClient {
   }
 
   /**
+   * Private generic function to call the API
+   * @private
+   * @param method - HTTP method to use
+   * @param path - path to the endpoint
+   * @param data - data to send to the server
+   * @param params - query parameters
+   * @returns Axios response
+   */
+  private async callApi<T>({
+    method,
+    path,
+    data,
+    params,
+  }: {
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE'
+    path: string
+    data?: unknown
+    params?: Record<string, unknown>
+  }): Promise<AxiosResponse<T>> {
+    let res: AxiosResponse<T> | undefined = undefined
+    try {
+      res = await this.axiosClient({ method, url: path, data, params })
+    } catch (error) {
+      // Technically this one shouldn't be triggered, because we are using validateStatus: () => true
+      // We handle the errors ourselves in the `handleStatusCode` call below
+      // This is just in case
+      if (error instanceof AxiosError) {
+        throw new Error(
+          `Request failed with status code ${error.status} (${error.response?.data})`
+        )
+      }
+      // This might happen if we don't have any status code
+      throw new Error(
+        `Unknown error (no status code) (${(error as Error)?.message ?? error})`
+      )
+    }
+
+    this.handleStatusCode(res)
+
+    return res
+  }
+
+  /**
    * Make a GET request to the API
    * @private
    * @param path - path to the endpoint
@@ -87,11 +131,11 @@ export abstract class NitteiBaseClient {
     path: string,
     params: Record<string, unknown> = {}
   ): Promise<T> {
-    const res = await this.axiosClient.get<T>(path, {
+    const res = await this.callApi<T>({
+      method: 'GET',
+      path,
       params,
     })
-
-    this.handleStatusCode(res)
 
     return res.data
   }
@@ -105,9 +149,11 @@ export abstract class NitteiBaseClient {
    * @returns response's data
    */
   protected async post<T>(path: string, data: unknown): Promise<T> {
-    const res = await this.axiosClient.post<T>(path, data)
-
-    this.handleStatusCode(res)
+    const res = await this.callApi<T>({
+      method: 'POST',
+      path,
+      data,
+    })
 
     return res.data
   }
@@ -121,9 +167,11 @@ export abstract class NitteiBaseClient {
    * @returns response's data
    */
   protected async put<T>(path: string, data: unknown): Promise<T> {
-    const res = await this.axiosClient.put<T>(path, data)
-
-    this.handleStatusCode(res)
+    const res = await this.callApi<T>({
+      method: 'PUT',
+      path,
+      data,
+    })
 
     return res.data
   }
@@ -137,9 +185,10 @@ export abstract class NitteiBaseClient {
    * @returns response's data
    */
   protected async delete<T>(path: string): Promise<T> {
-    const res = await this.axiosClient.delete<T>(path)
-
-    this.handleStatusCode(res)
+    const res = await this.callApi<T>({
+      method: 'DELETE',
+      path,
+    })
 
     return res.data
   }
@@ -153,13 +202,11 @@ export abstract class NitteiBaseClient {
    * @returns response's data
    */
   protected async deleteWithBody<T>(path: string, data: unknown): Promise<T> {
-    const res: AxiosResponse<T> = await this.axiosClient({
+    const res = await this.callApi<T>({
       method: 'DELETE',
       data,
-      url: path,
+      path,
     })
-
-    this.handleStatusCode(res)
 
     return res.data
   }
@@ -172,7 +219,7 @@ export abstract class NitteiBaseClient {
   private handleStatusCode(res: AxiosResponse): void {
     if (res.status >= 500) {
       throw new Error(
-        `Internal server error, please try again later (${res.status})`
+        `Internal server error, please try again later (${res.status}) (${res.data})`
       )
     }
 
@@ -193,7 +240,9 @@ export abstract class NitteiBaseClient {
         throw new UnprocessableEntityError(res.data)
       }
 
-      throw new Error(`Request failed with status code ${res.status}`)
+      throw new Error(
+        `Request failed with status code ${res.status} (${res.data})`
+      )
     }
   }
 }
