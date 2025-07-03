@@ -1,8 +1,11 @@
 import type { AxiosInstance } from 'axios'
 import { NitteiAccountClient } from './accountClient'
 import {
+  type ClientConfig,
   createAxiosInstanceBackend,
   createAxiosInstanceFrontend,
+  DEFAULT_CONFIG,
+  type KeepAliveConfig,
 } from './baseClient'
 import {
   NitteiCalendarClient,
@@ -41,32 +44,6 @@ export interface INitteiClient {
   user: _NitteiUserClient
 
   readonly axiosClient: AxiosInstance
-}
-
-/**
- * Base configuration for the client
- */
-type ClientConfig = {
-  /**
-   * Base URL for the API
-   */
-  baseUrl?: string
-
-  /**
-   * Keep the connection alive
-   */
-  keepAlive?: boolean
-
-  /**
-   * Timeout for requests in milliseconds (default: 1000)
-   */
-  timeout?: number
-}
-
-const DEFAULT_CONFIG: Required<ClientConfig> = {
-  baseUrl: `http://localhost:${process.env.NITTEI__HTTP_PORT ?? '5000'}/api/v1`,
-  keepAlive: false,
-  timeout: 1000,
 }
 
 /**
@@ -135,6 +112,9 @@ export const NitteiClient = async (
     axiosClient,
   })
 }
+
+// Client types
+export type { ClientConfig, KeepAliveConfig }
 
 // Errors
 export * from './helpers/errors'
