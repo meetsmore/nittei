@@ -40,7 +40,7 @@ export type KeepAliveConfig = {
  */
 export type RetryConfig = {
   /**
-   * Whether to enable retry for GET requests
+   * Whether to enable retry for GET requests (default: true)
    */
   enabled: boolean
   /**
@@ -48,12 +48,12 @@ export type RetryConfig = {
    */
   maxRetries?: number
   /**
-   * Base delay between retries in milliseconds (default: 1000)
+   * Base delay between retries in milliseconds (default: 300)
    * Will be multiplied by 2^attempt for exponential backoff
    */
   baseDelay?: number
   /**
-   * Maximum delay between retries in milliseconds (default: 10000)
+   * Maximum delay between retries in milliseconds (default: 3000)
    */
   maxDelay?: number
 }
@@ -93,7 +93,7 @@ export const DEFAULT_CONFIG: Required<ClientConfig> = {
   },
   timeout: 1000,
   retry: {
-    enabled: false,
+    enabled: true,
     maxRetries: 3,
     baseDelay: 300,
     maxDelay: 3000,
@@ -113,7 +113,7 @@ export abstract class NitteiBaseClient {
     retryConfig?: RetryConfig
   ) {
     this.retryConfig = {
-      enabled: retryConfig?.enabled ?? false,
+      enabled: retryConfig?.enabled ?? true,
       maxRetries: retryConfig?.maxRetries ?? 3,
       baseDelay: retryConfig?.baseDelay ?? 300,
       maxDelay: retryConfig?.maxDelay ?? 3000,

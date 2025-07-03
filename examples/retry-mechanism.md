@@ -7,7 +7,7 @@ The Nittei JavaScript client supports automatic retry for GET requests when enco
 You can configure the retry mechanism when creating a client:
 
 ```typescript
-import { NitteiUserClient, type RetryConfig } from "@nittei/client";
+import { NitteiUserClient, type RetryConfig } from "@meetsmore/nittei";
 
 const retryConfig: RetryConfig = {
   enabled: true,
@@ -72,7 +72,7 @@ try {
 The retry mechanism also works with the admin client:
 
 ```typescript
-import { NitteiClient } from "@nittei/client";
+import { NitteiClient } from "@meetsmore/nittei";
 
 const client = await NitteiClient({
   apiKey: "your-api-key",
@@ -92,5 +92,5 @@ const account = await client.account.me();
 
 - Only GET requests are retried (POST, PUT, DELETE requests are not retried)
 - HTTP status codes (4xx, 5xx) are not retried - only connection-level errors
-- The retry mechanism is disabled by default (`enabled: false`)
+- The retry mechanism is enabled by default (`enabled: true`)
 - Each client instance can have its own retry configuration
