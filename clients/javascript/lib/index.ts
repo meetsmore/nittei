@@ -6,6 +6,7 @@ import {
   createAxiosInstanceFrontend,
   DEFAULT_CONFIG,
   type KeepAliveConfig,
+  type RetryConfig,
 } from './baseClient'
 import {
   NitteiCalendarClient,
@@ -65,11 +66,11 @@ export const NitteiUserClient = (
   )
 
   return Object.freeze({
-    calendar: new NitteiCalendarUserClient(axiosClient),
-    events: new NitteiEventUserClient(axiosClient),
-    service: new NitteiServiceUserClient(axiosClient),
-    schedule: new NitteiScheduleUserClient(axiosClient),
-    user: new NitteiUserUserClient(axiosClient),
+    calendar: new NitteiCalendarUserClient(axiosClient, finalConfig.retry),
+    events: new NitteiEventUserClient(axiosClient, finalConfig.retry),
+    service: new NitteiServiceUserClient(axiosClient, finalConfig.retry),
+    schedule: new NitteiScheduleUserClient(axiosClient, finalConfig.retry),
+    user: new NitteiUserUserClient(axiosClient, finalConfig.retry),
     // Axios client exposed so that the user can use it
     // - For adding interceptors
     // - For making custom requests
@@ -99,13 +100,13 @@ export const NitteiClient = async (
   )
 
   return Object.freeze({
-    account: new NitteiAccountClient(axiosClient),
-    events: new NitteiEventClient(axiosClient),
-    calendar: new NitteiCalendarClient(axiosClient),
-    user: new _NitteiUserClient(axiosClient),
-    service: new NitteiServiceClient(axiosClient),
-    schedule: new NitteiScheduleClient(axiosClient),
-    health: new NitteiHealthClient(axiosClient),
+    account: new NitteiAccountClient(axiosClient, finalConfig.retry),
+    events: new NitteiEventClient(axiosClient, finalConfig.retry),
+    calendar: new NitteiCalendarClient(axiosClient, finalConfig.retry),
+    user: new _NitteiUserClient(axiosClient, finalConfig.retry),
+    service: new NitteiServiceClient(axiosClient, finalConfig.retry),
+    schedule: new NitteiScheduleClient(axiosClient, finalConfig.retry),
+    health: new NitteiHealthClient(axiosClient, finalConfig.retry),
     // Axios client exposed so that the user can use it
     // - For adding interceptors
     // - For making custom requests
@@ -114,7 +115,7 @@ export const NitteiClient = async (
 }
 
 // Client types
-export type { ClientConfig, KeepAliveConfig }
+export type { ClientConfig, KeepAliveConfig, RetryConfig }
 
 // Errors
 export * from './helpers/errors'

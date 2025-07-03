@@ -36,6 +36,29 @@ export type KeepAliveConfig = {
 }
 
 /**
+ * Configuration for retry mechanism
+ */
+export type RetryConfig = {
+  /**
+   * Whether to enable retry for GET requests
+   */
+  enabled: boolean
+  /**
+   * Maximum number of retry attempts (default: 3)
+   */
+  maxRetries?: number
+  /**
+   * Base delay between retries in milliseconds (default: 1000)
+   * Will be multiplied by 2^attempt for exponential backoff
+   */
+  baseDelay?: number
+  /**
+   * Maximum delay between retries in milliseconds (default: 10000)
+   */
+  maxDelay?: number
+}
+
+/**
  * Base configuration for the client
  */
 export type ClientConfig = {
@@ -53,6 +76,11 @@ export type ClientConfig = {
    * Timeout for requests in milliseconds (default: 1000)
    */
   timeout?: number
+
+  /**
+   * Retry configuration for GET requests
+   */
+  retry?: RetryConfig
 }
 
 /**
@@ -64,6 +92,12 @@ export const DEFAULT_CONFIG: Required<ClientConfig> = {
     enabled: false,
   },
   timeout: 1000,
+  retry: {
+    enabled: false,
+    maxRetries: 3,
+    baseDelay: 300,
+    maxDelay: 3000,
+  },
 }
 
 /**
@@ -72,8 +106,18 @@ export const DEFAULT_CONFIG: Required<ClientConfig> = {
  * It shouldn't be exposed to the end user
  */
 export abstract class NitteiBaseClient {
-  constructor(private readonly axiosClient: AxiosInstance) {
-    this.axiosClient = axiosClient
+  private readonly retryConfig: Required<RetryConfig>
+
+  constructor(
+    private readonly axiosClient: AxiosInstance,
+    retryConfig?: RetryConfig
+  ) {
+    this.retryConfig = {
+      enabled: retryConfig?.enabled ?? false,
+      maxRetries: retryConfig?.maxRetries ?? 3,
+      baseDelay: retryConfig?.baseDelay ?? 300,
+      maxDelay: retryConfig?.maxDelay ?? 3000,
+    }
   }
 
   /**
@@ -120,7 +164,132 @@ export abstract class NitteiBaseClient {
   }
 
   /**
-   * Make a GET request to the API
+   * Private generic function to call the API
+   * @private
+   * @param method - HTTP method to use
+   * @param path - path to the endpoint
+   * @param data - data to send to the server
+   * @param params - query parameters
+   * @returns Axios response
+   */
+  private async callApiWithRetry<T>({
+    method,
+    path,
+    data,
+    params,
+  }: {
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE'
+    path: string
+    data?: unknown
+    params?: Record<string, unknown>
+  }): Promise<AxiosResponse<T>> {
+    // Only retry GET requests
+    const shouldRetry = method === 'GET' && this.retryConfig.enabled
+
+    // If we don't need to retry, we can just make the request
+    if (!shouldRetry) {
+      return await this.callApi<T>({ method, path, data, params })
+    }
+
+    // Retry mechanism
+    let res: AxiosResponse<T> | undefined = undefined
+    let lastError: unknown
+
+    for (let attempt = 0; attempt <= this.retryConfig.maxRetries; attempt++) {
+      try {
+        res = await this.axiosClient({
+          method,
+          url: path,
+          data,
+          params,
+        })
+        break
+      } catch (error) {
+        lastError = error
+
+        // If this is the last attempt or the error is not retryable, throw
+        if (
+          attempt === this.retryConfig.maxRetries ||
+          !this.isRetryableError(error)
+        ) {
+          throw error
+        }
+
+        // Wait before retrying (exponential backoff)
+        const delay = this.calculateDelay(attempt)
+        await this.sleep(delay)
+      }
+    }
+
+    if (lastError) {
+      throw new Error(
+        `Unknown error (no status code) (${(lastError as Error)?.message ?? lastError})`
+      )
+    }
+
+    if (!res) {
+      // This should never be reached, as we should have a response if lastError is not defined, but TS requires it
+      throw new Error('No response from the server')
+    }
+
+    this.handleStatusCode(res)
+    return res
+  }
+
+  /**
+   * Check if an error is retryable (connection errors, timeouts, etc.)
+   * @private
+   * @param error - the error to check
+   * @returns true if the error is retryable
+   */
+  private isRetryableError(error: unknown): boolean {
+    if (error instanceof AxiosError) {
+      // Retry on network errors, timeouts, and connection resets
+      return (
+        error.code === 'ECONNRESET' ||
+        error.code === 'ECONNABORTED' ||
+        error.code === 'ETIMEDOUT' ||
+        error.code === 'ENOTFOUND' ||
+        error.code === 'ENETUNREACH' ||
+        error.message.includes('timeout') ||
+        error.message.includes('network') ||
+        error.message.includes('connection')
+      )
+    }
+
+    // For non-Axios errors, check if it's a connection-related error
+    const errorMessage = (error as Error)?.message ?? String(error)
+    return (
+      errorMessage.includes('timeout') ||
+      errorMessage.includes('network') ||
+      errorMessage.includes('connection') ||
+      errorMessage.includes('ECONNRESET') ||
+      errorMessage.includes('ECONNABORTED')
+    )
+  }
+
+  /**
+   * Sleep for a given number of milliseconds
+   * @private
+   * @param ms - milliseconds to sleep
+   */
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms))
+  }
+
+  /**
+   * Calculate delay for exponential backoff
+   * @private
+   * @param attempt - current attempt number (0-based)
+   * @returns delay in milliseconds
+   */
+  private calculateDelay(attempt: number): number {
+    const delay = this.retryConfig.baseDelay * 2 ** attempt
+    return Math.min(delay, this.retryConfig.maxDelay)
+  }
+
+  /**
+   * Make a GET request to the API with retry mechanism
    * @private
    * @param path - path to the endpoint
    * @param params - query parameters
@@ -131,12 +300,11 @@ export abstract class NitteiBaseClient {
     path: string,
     params: Record<string, unknown> = {}
   ): Promise<T> {
-    const res = await this.callApi<T>({
+    const res = await this.callApiWithRetry<T>({
       method: 'GET',
       path,
       params,
     })
-
     return res.data
   }
 
