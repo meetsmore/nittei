@@ -47,11 +47,15 @@ export abstract class NitteiBaseClient {
     try {
       res = await this.axiosClient({ method, url: path, data, params })
     } catch (error) {
+      // Technically this one shouldn't be triggered, because we are using validateStatus: () => true
+      // We handle the errors ourselves in the `handleStatusCode` call below
+      // This is just in case
       if (error instanceof AxiosError) {
         throw new Error(
           `Request failed with status code ${error.status} (${error.response?.data})`
         )
       }
+      // This might happen if we don't have any status code
       throw new Error(
         `Unknown error (no status code) (${(error as Error)?.message ?? error})`
       )
