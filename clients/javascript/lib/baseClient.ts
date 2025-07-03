@@ -41,7 +41,7 @@ export type KeepAliveConfig = {
  */
 export type RetryConfig = {
   /**
-   * Whether to enable retry for GET requests (default: true)
+   * Whether to enable retry mechanism (default: true)
    */
   enabled: boolean
   /**
@@ -70,7 +70,7 @@ export type ClientConfig = {
   timeout?: number
 
   /**
-   * Retry configuration for GET requests
+   * Retry configuration
    */
   retry?: RetryConfig
 }
