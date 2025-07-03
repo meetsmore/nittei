@@ -44,8 +44,9 @@ async fn create_event_reminders(
 
     let rrule_set = event.get_rrule_set(&calendar.settings).map_err(|e| {
         error!(
-            "Unable to parse rrule set for event: {}. Err: {:?}",
-            event.id, e
+            event_id = %event.id,
+            error = %e,
+            "Unable to parse rrule set for event"
         );
         UseCaseError::StorageError
     })?;
@@ -94,8 +95,8 @@ async fn create_event_reminders(
                     .is_err()
                 {
                     error!(
-                        "Unable to store event reminders expansion job for event: {}",
-                        event.id
+                        event_id = %event.id,
+                        "Unable to store event reminders expansion job for event"
                     );
                 }
             }
@@ -172,8 +173,9 @@ impl UseCase for SyncEventRemindersUseCase<'_> {
                         .await
                         .map_err(|e| {
                             error!(
-                                "Unable to init event {:?} reminder version. Err: {:?}",
-                                calendar_event, e
+                                event_id = %calendar_event.id,
+                                error = %e,
+                                "Unable to init event reminder version"
                             );
                             UseCaseError::StorageError
                         })?,
@@ -185,8 +187,9 @@ impl UseCase for SyncEventRemindersUseCase<'_> {
                         .await
                         .map_err(|e| {
                             error!(
-                                "Unable to increment event {:?} reminder version. Err: {:?}",
-                                calendar_event, e
+                                event_id = %calendar_event.id,
+                                error = %e,
+                                "Unable to increment event reminder version"
                             );
                             UseCaseError::StorageError
                         })?,
@@ -205,8 +208,9 @@ impl UseCase for SyncEventRemindersUseCase<'_> {
                     .await
                     .map_err(|e| {
                         error!(
-                            "Unable to create event reminders for event {:?}. Err: {:?}",
-                            calendar_event, e
+                            event_id = %calendar_event.id,
+                            error = ?e,
+                            "Unable to create event reminders for event",
                         );
                         e
                     })
@@ -245,30 +249,43 @@ impl UseCase for SyncEventRemindersUseCase<'_> {
 
 async fn generate_event_reminders_job(event: CalendarEvent, ctx: &NitteiContext) {
     let calendar = match ctx.repos.calendars.find(&event.calendar_id).await {
-        Ok(Some(cal)) => cal,
-        Ok(None) => return,
+        Ok(Some(calendar)) => calendar,
+        Ok(None) => {
+            error!(
+                event_id = %event.id,
+                calendar_id = %event.calendar_id,
+                "Unable to find calendar for event reminders job",
+            );
+            return;
+        }
         Err(e) => {
             error!(
-                "Unable to find calendar {} for event {}. Err: {:?}",
-                event.calendar_id, event.id, e
+                event_id = %event.id,
+                calendar_id = %event.calendar_id,
+                error = %e,
+                "Unable to find calendar for event reminders job",
             );
             return;
         }
     };
+
     let version = match ctx.repos.reminders.inc_version(&event.id).await {
-        Ok(v) => v,
+        Ok(version) => version,
         Err(e) => {
             error!(
-                "Unable to increment event {:?} reminder version. Err: {:?}",
-                event.id, e
+                event_id = %event.id,
+                error = %e,
+                "Unable to increment event reminder version for job",
             );
             return;
         }
     };
-    if let Err(err) = create_event_reminders(&event, &calendar, version, ctx).await {
+
+    if let Err(e) = create_event_reminders(&event, &calendar, version, ctx).await {
         error!(
-            "Unable to create event reminders for event {}, Error: {:?}",
-            event.id, err
+            event_id = %event.id,
+            error = ?e,
+            "Unable to create event reminders for job",
         );
     }
 }

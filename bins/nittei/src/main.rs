@@ -14,6 +14,9 @@ static GLOBAL: Jemalloc = Jemalloc;
 /// Main wraps the `run` function with a tokio runtime (flavor can be decided via the `NITTEI__TOKIO_RUNTIME_FLAVOR` env var)
 /// See crates/utils/src/config.rs for more details
 fn main() {
+    // Install the custom panic hook
+    nittei::backtrace::install_custom_panic_hook();
+
     // Initialize the subscriber for logging & tracing
     let _ = init_subscriber().inspect_err(
         // Allow eprintln! to be used here as logging/tracing has failed to initialize
@@ -57,7 +60,10 @@ fn main() {
             let _ = runtime.build().unwrap().block_on(run());
         }
         _ => {
-            tracing::error!("[start_runtime] Invalid tokio runtime flavor: {runtime_flavor}");
+            tracing::error!(
+                runtime_flavor = %runtime_flavor,
+                "[start_runtime] Invalid tokio runtime flavor"
+            );
             std::process::exit(1);
         }
     }
