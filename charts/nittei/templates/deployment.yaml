@@ -47,6 +47,8 @@ spec:
   selector:
     matchLabels:
       {{- include "nittei.selectorLabels" . | nindent 6 }}
+  topologySpreadConstraints:
+    {{- toYaml .Values.topologySpreadConstraints | nindent 4 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}

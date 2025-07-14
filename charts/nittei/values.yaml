@@ -143,3 +143,6 @@ podDisruptionBudget:
   minAvailable: 1 # Can be an absolute number or a percentage like "50%"
   # maxUnavailable: Ensures at most this many pods are unavailable during voluntary disruptions
   # maxUnavailable: 1  # Can be an absolute number or a percentage like "50%"
+
+# Topology Spread Constraints configuration
+topologySpreadConstraints: []
