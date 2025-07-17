@@ -14,7 +14,7 @@ nittei_infra = { workspace = true }
 nittei_utils = { workspace = true }
 
 axum = { version = "0.8", features = ["macros"] }
-axum-valid = { version = "0.23", features = ["into_json"] }
+axum-valid = { version = "0.24", features = ["into_json"] }
 tower-http = { version = "0.6", features = [
   "cors",
   "compression-full",
