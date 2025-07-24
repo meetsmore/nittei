@@ -47,7 +47,7 @@ export class UserCreds implements ICredentials {
   }
 
   createAuthHeaders() {
-    const creds: Record<string, string> = {
+    const creds: Headers = {
       'nittei-account': this.nitteiAccount,
     }
     if (this.token) {
@@ -57,6 +57,8 @@ export class UserCreds implements ICredentials {
     return Object.freeze(creds)
   }
 }
+
+type Headers = Record<string, string>
 
 /**
  * Credentials for the API for admins (usually backend)
@@ -69,7 +71,7 @@ export class AccountCreds implements ICredentials {
   }
 
   createAuthHeaders() {
-    return Object.freeze({
+    return Object.freeze<Headers>({
       'x-api-key': this.apiKey,
     })
   }
@@ -81,10 +83,10 @@ export interface ICredentials {
 
 export class EmptyCreds implements ICredentials {
   createAuthHeaders() {
-    return Object.freeze({})
+    return Object.freeze<Headers>({})
   }
 }
 
 export interface ICredentials {
-  createAuthHeaders(): AxiosRequestHeaders
+  createAuthHeaders(): Headers
 }
