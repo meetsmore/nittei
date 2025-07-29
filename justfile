@@ -71,3 +71,44 @@ check-unused: _setup_db
 check-update: _setup_db
 	cargo outdated -wR
 	cargo update --dry-run
+
+# .NET API commands
+# Build the .NET solution
+build-dotnet:
+	dotnet build Nittei.sln
+
+# Run the .NET API directly
+run-dotnet-api:
+	dotnet run --project dotnet/src/Api/Nittei.Api.csproj
+
+# Run the .NET API with hot-reload (watch mode)
+dev-dotnet-api:
+	dotnet watch --project dotnet/src/Api/Nittei.Api.csproj
+
+# Run the .NET API from the API project directory
+run-dotnet-api-direct:
+	cd dotnet/src/Api && dotnet run
+
+# Run the .NET API with hot-reload from the API project directory
+dev-dotnet-api-direct:
+	cd dotnet/src/Api && dotnet watch run
+
+# Restore .NET packages
+restore-dotnet:
+	dotnet restore Nittei.sln
+
+# Clean .NET build outputs
+clean-dotnet:
+	dotnet clean Nittei.sln
+
+# Test .NET projects
+test-dotnet:
+	dotnet test Nittei.sln
+
+# Format .NET code
+format-dotnet:
+	dotnet format dotnet/src/
+
+# Lint .NET code
+lint-dotnet:
+	dotnet build Nittei.sln --verbosity normal

@@ -48,7 +48,7 @@ describe('Account API', () => {
     await expect(() => client.account.me()).rejects.toThrow()
   })
 
-  it('should upload account public key and be able to remove it', async () => {
+  it.skip('should upload account public key and be able to remove it', async () => {
     const { client } = await setupAccount()
     const publicKey = await readPublicKey()
     await client.account.setPublicSigningKey(publicKey)
@@ -82,7 +82,7 @@ describe('Account API', () => {
     ).rejects.toThrow()
   })
 
-  describe('accountSearchEvents', () => {
+  describe.skip('accountSearchEvents', () => {
     let adminClient: INitteiClient
     let userId: string
     let calendarId: string

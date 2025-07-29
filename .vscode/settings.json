@@ -12,5 +12,6 @@
     "editor.defaultFormatter": "biomejs.biome",
     "editor.formatOnSave": true
   },
-  "rust-analyzer.rustfmt.extraArgs": ["+nightly"]
+  "rust-analyzer.rustfmt.extraArgs": ["+nightly"],
+  "dotnet.defaultSolution": "Nittei.sln"
 }
