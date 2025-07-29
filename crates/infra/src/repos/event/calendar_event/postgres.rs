@@ -452,7 +452,12 @@ impl IEventRepo for PostgresEventRepo {
             EventRaw,
             r#"
             SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e
-            WHERE e.recurring_event_uid = ANY($1::uuid[]) AND e.original_start_time >= $2 AND e.original_start_time <= $3
+            WHERE e.recurring_event_uid = ANY($1::uuid[]) AND
+                (
+                    (e.original_start_time >= $2 AND e.original_start_time <= $3)
+                    OR
+                    (e.start_time >= $2 AND e.start_time <= $3)
+                )
             "#,
             &recurring_event_ids as &[Uuid],
             timespan.start(),
