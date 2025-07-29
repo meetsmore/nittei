@@ -91,14 +91,18 @@ impl UseCase for DeleteManyEventsUseCase {
         }
 
         // Find events by ids (it isn't awaited here, but instead in the try_join below)
-        let events_by_ids = if let Some(ids) = &self.event_ids {
+        let events_by_ids = if let Some(ids) = &self.event_ids
+            && !ids.is_empty()
+        {
             ctx.repos.events.find_many(ids.as_slice())
         } else {
             Box::pin(future::ok(Vec::new())) // Creates an already-resolved future
         };
 
         // Find events by external ids (it isn't awaited here, but instead in the try_join below)
-        let events_by_external_ids = if let Some(ids) = &self.external_ids {
+        let events_by_external_ids = if let Some(ids) = &self.external_ids
+            && !ids.is_empty()
+        {
             ctx.repos
                 .events
                 .find_many_by_external_ids(&self.account_uid, ids.as_slice())
