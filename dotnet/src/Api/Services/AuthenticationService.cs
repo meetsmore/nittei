@@ -182,14 +182,14 @@ public class AuthenticationService : IAuthenticationService
       var handler = new JwtSecurityTokenHandler();
       var jsonToken = handler.ReadJwtToken(token);
 
-      var userIdClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == "nittei_user_id");
+      var userIdClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == "nitteiUserId");
       if (userIdClaim == null || !Id.TryParse(userIdClaim.Value, out var userId))
       {
         _logger.LogWarning("Invalid user ID in JWT token");
         return null;
       }
 
-      var policyClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == "scheduler_policy");
+      var policyClaim = jsonToken.Claims.FirstOrDefault(c => c.Type == "schedulerPolicy");
       var policy = policyClaim != null ? ParsePolicy(policyClaim.Value) : Policy.Default;
 
       return new JwtClaims

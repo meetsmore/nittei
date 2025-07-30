@@ -7,6 +7,7 @@ using Nittei.Infrastructure;
 using Nittei.Infrastructure.Data;
 using Nittei.Infrastructure.Repositories;
 using Nittei.Utils.Configuration;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,16 @@ builder.Services.AddScoped<IOAuthService, OAuthService>();
 
 // Add controllers
 builder.Services.AddControllers();
+
+// Add authentication and authorization
+builder.Services.AddAuthentication("ApiKey")
+    .AddScheme<ApiKeyAuthenticationSchemeOptions, ApiKeyAuthenticationHandler>("ApiKey", options => { });
+
+builder.Services.AddAuthorization(options =>
+{
+  options.AddPolicy("Admin", policy =>
+      policy.RequireAuthenticatedUser());
+});
 
 // Add OpenAPI/Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -72,6 +83,8 @@ if (app.Environment.IsDevelopment())
   {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Nittei API v1");
     c.RoutePrefix = "swagger-ui";
+    c.DocumentTitle = "Nittei API Documentation";
+    c.DisplayOperationId();
   });
 }
 
@@ -79,6 +92,13 @@ if (app.Environment.IsDevelopment())
 app.UseCors();
 app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseDatabasePerformanceMonitoring();
+
+// Add comprehensive authentication middleware
+app.UseAuthenticationMiddleware();
+
+// Add authentication and authorization middleware
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Map controllers
 app.MapControllers();
@@ -95,13 +115,29 @@ var logger = app.Services.GetRequiredService<ILogger<Program>>();
 
 lifetime.ApplicationStopping.Register(() =>
 {
-  logger.LogInformation("Application is stopping. Waiting 10 seconds for load balancer to remove container...");
-  Thread.Sleep(System.TimeSpan.FromSeconds(10));
-  logger.LogInformation("Graceful shutdown delay completed.");
+  if (!IsDevelopmentEnvironment())
+  {
+    logger.LogInformation("Application is stopping. Waiting 10 seconds for load balancer to remove container...");
+    Thread.Sleep(System.TimeSpan.FromSeconds(10));
+    logger.LogInformation("Graceful shutdown delay completed.");
+  }
+  else
+  {
+    logger.LogInformation("Application is stopping. Skipping graceful shutdown delay in development environment.");
+  }
 });
 
 // Run the application
 await app.RunAsync();
+
+/// <summary>
+/// Check if we're in development environment, defaulting to true if ASPNETCORE_ENVIRONMENT is not set
+/// </summary>
+static bool IsDevelopmentEnvironment()
+{
+  var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+  return string.IsNullOrEmpty(env) || env.Equals("Development", StringComparison.OrdinalIgnoreCase);
+}
 
 /// <summary>
 /// Initialize the default account if it doesn't exist

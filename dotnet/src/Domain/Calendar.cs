@@ -14,8 +14,6 @@ public class Calendar : IEntity<Id>, IMeta
   public Id AccountId { get; set; }
   public string? Name { get; set; }
   public string? Key { get; set; }
-  public string? ExternalId { get; set; }
-  public IntegrationProvider? Provider { get; set; }
   public CalendarSettings Settings { get; set; }
   public Metadata Metadata { get; set; }
 

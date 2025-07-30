@@ -87,6 +87,10 @@ public class NitteiDbContext : DbContext
                     v => JsonSerializer.SerializeToDocument(v, (JsonSerializerOptions?)null),
                     v => v.Deserialize<Metadata>((JsonSerializerOptions?)null) ?? new Metadata());
 
+            // Ignore properties that don't exist in the database schema
+            entity.Ignore(e => e.Name);
+            entity.Ignore(e => e.Email);
+
             // Relationships
             entity.HasOne<Account>()
                 .WithMany()
@@ -142,6 +146,8 @@ public class NitteiDbContext : DbContext
             entity.Property(e => e.AccountId).HasColumnName("account_uid").HasConversion(
                 id => (Guid)id,
                 guid => (Id)guid);
+            entity.Property(e => e.Key).HasColumnName("key");
+            entity.Property(e => e.Name).HasColumnName("name");
 
             // Configure JSON properties
             entity.Property(e => e.Settings)
@@ -190,18 +196,25 @@ public class NitteiDbContext : DbContext
             entity.Property(e => e.AccountId).HasColumnName("account_uid").HasConversion(
                 id => (Guid)id,
                 guid => (Id)guid);
-            entity.Property(e => e.ExternalParentId).HasColumnName("parent_id");
+            entity.Property(e => e.ExternalParentId).HasColumnName("external_parent_id");
             entity.Property(e => e.Title).HasColumnName("title");
             entity.Property(e => e.Description).HasColumnName("description");
             entity.Property(e => e.Location).HasColumnName("location");
+            entity.Property(e => e.EventType).HasColumnName("event_type");
             entity.Property(e => e.AllDay).HasColumnName("all_day").IsRequired();
             entity.Property(e => e.Status).HasColumnName("status").HasConversion<string>();
             entity.Property(e => e.StartTime).HasColumnName("start_time").IsRequired();
             entity.Property(e => e.Duration).HasColumnName("duration").IsRequired();
             entity.Property(e => e.EndTime).HasColumnName("end_time").IsRequired();
             entity.Property(e => e.Busy).HasColumnName("busy").IsRequired();
-            entity.Property(e => e.Created).HasColumnName("created").IsRequired();
-            entity.Property(e => e.Updated).HasColumnName("updated").IsRequired();
+            entity.Property(e => e.Created).HasColumnName("created").IsRequired()
+                .HasConversion(
+                    v => ((DateTimeOffset)v).ToUnixTimeMilliseconds(),
+                    v => DateTimeOffset.FromUnixTimeMilliseconds(v).DateTime);
+            entity.Property(e => e.Updated).HasColumnName("updated").IsRequired()
+                .HasConversion(
+                    v => ((DateTimeOffset)v).ToUnixTimeMilliseconds(),
+                    v => DateTimeOffset.FromUnixTimeMilliseconds(v).DateTime);
             entity.Property(e => e.ExternalId).HasColumnName("external_id");
             entity.Property(e => e.RecurringEventId).HasColumnName("recurring_event_uid").HasConversion(
                 id => id.HasValue ? (Guid?)id.Value : null,
@@ -214,7 +227,7 @@ public class NitteiDbContext : DbContext
 
             // Configure JSON properties
             entity.Property(e => e.Recurrence)
-                .HasColumnName("recurrence")
+                .HasColumnName("recurrence_jsonb")
                 .HasColumnType("jsonb")
                 .HasConversion(
                     v => v == null ? null : JsonSerializer.SerializeToDocument(v, (JsonSerializerOptions?)null),
@@ -222,10 +235,10 @@ public class NitteiDbContext : DbContext
 
             entity.Property(e => e.ExDates)
                 .HasColumnName("exdates")
-                .HasColumnType("jsonb")
+                .HasColumnType("timestamp with time zone[]")
                 .HasConversion(
-                    v => JsonSerializer.SerializeToDocument(v, (JsonSerializerOptions?)null),
-                    v => v.Deserialize<List<DateTime>>((JsonSerializerOptions?)null) ?? new List<DateTime>());
+                    v => v.Select(dt => (DateTimeOffset)dt).ToArray(),
+                    v => v.Select(dto => dto.DateTime).ToList());
 
             entity.Property(e => e.Metadata)
                 .HasColumnName("metadata")
@@ -235,7 +248,7 @@ public class NitteiDbContext : DbContext
                     v => v.Deserialize<Metadata>((JsonSerializerOptions?)null) ?? new Metadata());
 
             entity.Property(e => e.Reminders)
-                .HasColumnName("reminders")
+                .HasColumnName("reminders_jsonb")
                 .HasColumnType("jsonb")
                 .HasConversion(
                     v => JsonSerializer.SerializeToDocument(v, (JsonSerializerOptions?)null),
