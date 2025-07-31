@@ -147,7 +147,9 @@ impl Application {
                     .layer(SetSensitiveHeadersLayer::new(sensitive_headers))
                     .layer(CorsLayer::permissive())
                     .layer(RequestDecompressionLayer::new())
-                    .layer(CompressionLayer::new())
+                    // Disabling Brotli as it seems to be causing slowdowns for big responses and is more CPU heavy than gzip
+                    // For backend to backend communication, we can use gzip instead
+                    .layer(CompressionLayer::new().br(false))
                     // Catch panics and convert them into responses.
                     .layer(CatchPanicLayer::new())
                     .layer(
