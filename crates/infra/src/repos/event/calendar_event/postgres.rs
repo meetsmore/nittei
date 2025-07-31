@@ -3,6 +3,7 @@ use std::{
     convert::{TryFrom, TryInto},
 };
 
+use anyhow::Context;
 use chrono::{DateTime, Utc};
 use nittei_domain::{
     CalendarEvent,
@@ -62,9 +63,9 @@ impl TryFrom<MostRecentCreatedServiceEventsRaw> for MostRecentCreatedServiceEven
             created: e
                 .created
                 .map(|c| {
-                    DateTime::from_timestamp_millis(c).ok_or(anyhow::anyhow!(
-                        "Unable to convert created timestamp to DateTime"
-                    ))
+                    DateTime::from_timestamp_millis(c).ok_or_else(|| {
+                        anyhow::anyhow!("Unable to convert created timestamp to DateTime")
+                    })
                 })
                 // If the created timestamp is None, return None
                 // If we got an error in the internal Result, return it
@@ -143,11 +144,15 @@ impl TryFrom<EventRaw> for CalendarEvent {
 
     fn try_from(e: EventRaw) -> anyhow::Result<Self> {
         let recurrence: Option<RRuleOptions> = match e.recurrence_jsonb {
-            Some(json) => serde_json::from_value(json)?,
+            Some(json) => {
+                serde_json::from_value(json).context("Unable to convert recurrence to JSON")?
+            }
             None => None,
         };
         let reminders: Vec<CalendarEventReminder> = match e.reminders_jsonb {
-            Some(json) => serde_json::from_value(json)?,
+            Some(json) => {
+                serde_json::from_value(json).context("Unable to convert reminders to JSON")?
+            }
             None => Vec::new(),
         };
 
@@ -168,12 +173,12 @@ impl TryFrom<EventRaw> for CalendarEvent {
             duration: e.duration,
             busy: e.busy,
             end_time: e.end_time,
-            created: DateTime::from_timestamp_millis(e.created).ok_or(anyhow::anyhow!(
-                "Unable to convert created timestamp to DateTime"
-            ))?,
-            updated: DateTime::from_timestamp_millis(e.updated).ok_or(anyhow::anyhow!(
-                "Unable to convert updated timestamp to DateTime"
-            ))?,
+            created: DateTime::from_timestamp_millis(e.created).ok_or_else(|| {
+                anyhow::anyhow!("Unable to convert created timestamp to DateTime")
+            })?,
+            updated: DateTime::from_timestamp_millis(e.updated).ok_or_else(|| {
+                anyhow::anyhow!("Unable to convert updated timestamp to DateTime")
+            })?,
             recurrence,
             recurring_until: e.recurring_until,
             exdates: e.exdates,
@@ -181,7 +186,8 @@ impl TryFrom<EventRaw> for CalendarEvent {
             original_start_time: e.original_start_time,
             reminders,
             service_id: e.service_uid.map(|id| id.into()),
-            metadata: serde_json::from_value(e.metadata)?,
+            metadata: serde_json::from_value(e.metadata)
+                .context("Unable to convert metadata to JSON")?,
         })
     }
 }
