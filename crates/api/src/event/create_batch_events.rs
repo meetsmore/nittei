@@ -185,7 +185,7 @@ impl UseCase for CreateBatchEventsUseCase {
             let calendar = calendars
                 .iter()
                 .find(|c| c.id == event.calendar_id)
-                .ok_or(UseCaseError::NotFound(event.calendar_id.clone()))?;
+                .ok_or_else(|| UseCaseError::NotFound(event.calendar_id.clone()))?;
             if calendar.user_id != event.user.id {
                 return Err(UseCaseError::NotFound(event.calendar_id.clone()));
             }
