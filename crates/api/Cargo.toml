@@ -52,6 +52,7 @@ opentelemetry-http = "0.30.0"
 tracing-opentelemetry = "0.31.0"
 tracing = "0.1"
 tracing-futures = "0.2"
+prometheus = "0.14"
 
 [dev-dependencies]
 serial_test = "*"
