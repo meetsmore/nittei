@@ -43,3 +43,6 @@ sqlx = { version = "0.8", features = [
   "chrono",
 ] }
 moka = { version = "0.12", features = ["future"] }
+
+prometheus = "0.14"
+lazy_static = "1.4"
