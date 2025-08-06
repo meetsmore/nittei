@@ -122,6 +122,12 @@ pub struct ObservabilityConfig {
     /// The Datadog tracing endpoint
     /// Env var: NITTEI__OBSERVABILITY__DATADOG_TRACING_ENDPOINT
     pub datadog_tracing_endpoint: Option<String>,
+
+    /// This is a flag to enabling observability on status endpoints
+    /// Ex: health check and metrics endpoints
+    /// Default is false
+    /// Env var: NITTEI__OBSERVABILITY__OBSERVE_STATUS_ENDPOINTS
+    pub observe_status_endpoints: bool,
 }
 
 /// Account configuration
@@ -242,6 +248,8 @@ fn parse_config() -> AppConfig {
             "postgresql://postgres:postgres@localhost:45432/nittei",
         )
         .expect("Failed to set default pg.database_url")
+        .set_default("observability.observe_status_endpoints", false)
+        .expect("Failed to set default observability.observe_status_endpoints")
         .build()
         .expect("Failed to build the configuration object");
 
