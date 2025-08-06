@@ -24,9 +24,10 @@ lazy_static! {
 }
 
 pub fn register_metrics() -> anyhow::Result<()> {
-    INFRA_REGISTRY.register(Box::new(DB_CONNECTION_POOL_TOTAL.clone()))?;
-    INFRA_REGISTRY.register(Box::new(DB_CONNECTION_POOL_IDLE.clone()))?;
-    INFRA_REGISTRY.register(Box::new(DB_CONNECTION_POOL_BUSY.clone()))?;
+    // Try to register each metric, but ignore duplicate registration errors
+    let _ = INFRA_REGISTRY.register(Box::new(DB_CONNECTION_POOL_TOTAL.clone()));
+    let _ = INFRA_REGISTRY.register(Box::new(DB_CONNECTION_POOL_IDLE.clone()));
+    let _ = INFRA_REGISTRY.register(Box::new(DB_CONNECTION_POOL_BUSY.clone()));
 
     Ok(())
 }

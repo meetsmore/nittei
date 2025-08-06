@@ -146,6 +146,7 @@ impl Repos {
         // Start background task to update metrics
         let monitored_pool_clone = monitored_pool.clone();
         tokio::spawn(async move {
+            // Update metrics every 5 seconds
             let mut interval = tokio::time::interval(Duration::from_secs(5));
             loop {
                 interval.tick().await;
