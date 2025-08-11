@@ -12,6 +12,8 @@ use tower_http::trace::{MakeSpan, OnFailure, OnResponse};
 use tracing::{Span, field::Empty};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
+use crate::telemetry::correlation_layer::CorrelationId;
+
 const PATHS_TO_EXCLUDE_FROM_LOGGING_AND_TRACING: [&str; 2] =
     ["/api/v1/healthcheck", "/api/v1/metrics"];
 
@@ -61,6 +63,12 @@ impl<B> MakeSpan<B> for NitteiTracingSpanBuilder {
             .map(|r| r.as_str().to_string())
             .unwrap_or_default();
 
+        let correlation_id = request
+            .extensions()
+            .get::<CorrelationId>()
+            .map(|r| r.0.clone())
+            .unwrap_or_default();
+
         // By default, exclude health check and metrics from tracing
         if PATHS_TO_EXCLUDE_FROM_LOGGING_AND_TRACING.contains(&path)
             && !APP_CONFIG
@@ -94,6 +102,7 @@ impl<B> MakeSpan<B> for NitteiTracingSpanBuilder {
             exception.message = Empty, // to set on response
             "span.type" = "web",
             level = Empty, // will be set in on_response based on status code
+            correlation_id = %correlation_id,
         );
 
         // Set the parent span for the OpenTelemetry span

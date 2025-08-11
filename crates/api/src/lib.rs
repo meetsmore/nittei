@@ -2,19 +2,18 @@ mod account;
 mod calendar;
 mod error;
 mod event;
-mod http_logger;
 mod job_schedulers;
 mod schedule;
 mod service;
 mod shared;
 mod status;
+pub mod telemetry;
 mod user;
 
 use std::sync::Arc;
 
 use axum::{Extension, Router, http::header};
 use futures::lock::Mutex;
-use http_logger::metadata_middleware;
 use job_schedulers::{start_reminder_generation_job, start_send_reminders_job};
 use nittei_domain::{
     Account,
@@ -25,6 +24,7 @@ use nittei_domain::{
     PEMKey,
 };
 use nittei_infra::NitteiContext;
+use telemetry::http_logger::metadata_middleware;
 use tokio::{
     net::TcpListener,
     sync::oneshot::{self, Sender},
@@ -48,8 +48,11 @@ use utoipa_axum::router::OpenApiRouter;
 use utoipa_swagger_ui::SwaggerUi;
 
 use crate::{
-    http_logger::{NitteiTracingOnFailure, NitteiTracingOnResponse, NitteiTracingSpanBuilder},
     shared::auth::NITTEI_X_API_KEY_HEADER,
+    telemetry::{
+        correlation_layer::CorrelationIdLayer,
+        http_logger::{NitteiTracingOnFailure, NitteiTracingOnResponse, NitteiTracingSpanBuilder},
+    },
 };
 
 /// Configure the Actix server API
@@ -158,6 +161,7 @@ impl Application {
                             .on_failure(NitteiTracingOnFailure {}),
                     ),
             )
+            .layer(CorrelationIdLayer)
             .layer(Extension(context.clone()))
             .layer(Extension(shared_state.clone()))
             .split_for_parts();
