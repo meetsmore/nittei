@@ -7,13 +7,15 @@ use tracing_subscriber::{
     registry::LookupSpan,
 };
 
-pub struct DatadogJsonFmt;
+/// Formatter for logs as JSON with correlation id & Datadog trace & span ids
+pub struct LogsJsonFmt;
 
-impl<S, N> FormatEvent<S, N> for DatadogJsonFmt
+impl<S, N> FormatEvent<S, N> for LogsJsonFmt
 where
     S: Subscriber + for<'a> LookupSpan<'a>,
     N: for<'writer> FormatFields<'writer> + 'static,
 {
+    /// Format the event as JSON with correlation id & Datadog trace & span ids
     fn format_event(
         &self,
         ctx: &tracing_subscriber::fmt::FmtContext<'_, S, N>,
@@ -28,6 +30,7 @@ where
         // Custom visitor to collect fields
         struct FieldVisitor<'a>(&'a mut serde_json::Map<String, serde_json::Value>);
 
+        // Collect the event fields into a JSON map
         impl<'a> tracing::field::Visit for FieldVisitor<'a> {
             fn record_debug(&mut self, field: &tracing::field::Field, value: &dyn std::fmt::Debug) {
                 self.0.insert(
@@ -63,6 +66,7 @@ where
             }
         }
 
+        // Collect the event fields into a JSON map
         let mut visitor = FieldVisitor(&mut fields_map);
         event.record(&mut visitor);
         let fields_value = serde_json::Value::Object(fields_map);
@@ -134,7 +138,7 @@ where
             );
         }
 
-        // datadog correlation fields
+        // datadog trace & span ids
         if let (Some(t), Some(s)) = (dd_trace_id, dd_span_id) {
             obj.insert(
                 "dd.trace_id".into(),
