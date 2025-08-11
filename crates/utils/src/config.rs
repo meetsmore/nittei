@@ -256,7 +256,7 @@ fn parse_config() -> AppConfig {
     #[allow(clippy::expect_used)]
     let config = config
         .try_deserialize()
-        .expect("Failed to deserialize the configuration object");
+        .expect("Failed to deserialize the configuration objectt");
 
     config
 }
