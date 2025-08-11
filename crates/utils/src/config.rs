@@ -13,6 +13,17 @@ pub struct AppConfig {
     /// Env var: NITTEI__TOKIO_RUNTIME_FLAVOR
     pub tokio_runtime_flavor: String,
 
+    /// The tokio runtime number of workers
+    /// This is only used if the runtime flavor is "multi_thread"
+    /// Default is None, which means the number of workers will be the number of cores (Tokio default)
+    /// Env var: NITTEI__TOKIO_RUNTIME_NUMBER_OF_WORKERS
+    pub tokio_runtime_number_of_workers: Option<usize>,
+
+    /// This is a flag to print the runtime info
+    /// Default is false
+    /// Env var: NITTEI__PRINT_RUNTIME_INFO
+    pub print_runtime_info: bool,
+
     //// The host to bind the HTTP server to
     //// Default is 127.0.0.1
     //// Env var: NITTEI__HTTP_HOST
@@ -111,6 +122,12 @@ pub struct ObservabilityConfig {
     /// The Datadog tracing endpoint
     /// Env var: NITTEI__OBSERVABILITY__DATADOG_TRACING_ENDPOINT
     pub datadog_tracing_endpoint: Option<String>,
+
+    /// This is a flag to enabling observability on status endpoints
+    /// Ex: health check and metrics endpoints
+    /// Default is false
+    /// Env var: NITTEI__OBSERVABILITY__OBSERVE_STATUS_ENDPOINTS
+    pub observe_status_endpoints: bool,
 }
 
 /// Account configuration
@@ -194,6 +211,8 @@ fn parse_config() -> AppConfig {
                 .try_parsing(true)
                 .separator("__"),
         )
+        .set_default("print_runtime_info", false)
+        .expect("Failed to set default print_runtime_info")
         .set_default("tokio_runtime_flavor", "multi_thread")
         .expect("Failed to set default tokio_runtime_flavor")
         .set_default("http_host", "127.0.0.1")
@@ -229,6 +248,8 @@ fn parse_config() -> AppConfig {
             "postgresql://postgres:postgres@localhost:45432/nittei",
         )
         .expect("Failed to set default pg.database_url")
+        .set_default("observability.observe_status_endpoints", false)
+        .expect("Failed to set default observability.observe_status_endpoints")
         .build()
         .expect("Failed to build the configuration object");
 

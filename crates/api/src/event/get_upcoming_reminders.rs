@@ -485,6 +485,7 @@ mod tests {
         let update_event_usecase = DeleteEventUseCase {
             user,
             event_id: calendar_event.id,
+            prefetched_calendar_event: None,
         };
         execute(update_event_usecase, &ctx).await.unwrap();
         let new_reminders = ctx

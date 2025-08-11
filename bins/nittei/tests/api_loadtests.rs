@@ -154,7 +154,7 @@ async fn loadtests_single_user() {
     #[allow(clippy::print_stdout)]
     {
         // Scope is needed to avoid clippy warning
-        println!("[single] Time to create 300 events: {:?}", duration);
+        println!("[single] Time to create 300 events: {duration:?}");
     }
     assert!(duration.as_millis() < 2000);
 
@@ -193,7 +193,7 @@ async fn loadtests_single_user() {
     #[allow(clippy::print_stdout)]
     {
         // Scope is needed to avoid clippy warning
-        println!("[single] Time to fetch 300 events: {:?}", duration);
+        println!("[single] Time to fetch 300 events: {duration:?}");
     }
     assert!(duration.as_millis() < 1000);
 
@@ -239,7 +239,7 @@ async fn loadtests_multi_users() {
     #[allow(clippy::print_stdout)]
     {
         // Scope is needed to avoid clippy warning
-        println!("[multiple] Time to create 3000 events: {:?}", duration);
+        println!("[multiple] Time to create 3000 events: {duration:?}");
     }
     assert!(duration.as_millis() < 20000);
 
@@ -280,7 +280,7 @@ async fn loadtests_multi_users() {
     #[allow(clippy::print_stdout)]
     {
         // Scope is needed to avoid clippy warning
-        println!("[multiple] Time to fetch 300 events: {:?}", duration);
+        println!("[multiple] Time to fetch 300 events: {duration:?}");
     }
     assert!(duration.as_millis() < 1000);
 
@@ -304,7 +304,7 @@ async fn loadtests_multi_users() {
     #[allow(clippy::print_stdout)]
     {
         // Scope is needed to avoid clippy warning
-        println!("[multiple] Time to freebusy 300 events: {:?}", duration);
+        println!("[multiple] Time to freebusy 300 events: {duration:?}");
     }
     assert!(duration.as_millis() < 500);
     // Expect the freebusy to have 30 busy periods (1 per day, from 9 AM to 6 PM)
@@ -329,7 +329,7 @@ async fn loadtests_multi_users() {
     #[allow(clippy::print_stdout)]
     {
         // Scope is needed to avoid clippy warning
-        println!("[multiple] Time to freebusy 3000 events: {:?}", duration);
+        println!("[multiple] Time to freebusy 3000 events: {duration:?}");
     }
     assert!(duration.as_millis() < 1000);
     assert_eq!(free_busy.0.keys().len(), user_ids.len());
@@ -375,7 +375,7 @@ async fn loadtests_single_user_lots_of_data() {
     #[allow(clippy::print_stdout)]
     {
         // Scope is needed to avoid clippy warning
-        println!("[single_big] Time to create 10800 events: {:?}", duration);
+        println!("[single_big] Time to create 10800 events: {duration:?}");
     }
 
     // Measure the time it takes to fetch one event
@@ -417,7 +417,7 @@ async fn loadtests_single_user_lots_of_data() {
     #[allow(clippy::print_stdout)]
     {
         // Scope is needed to avoid clippy warning
-        println!("[single_big] Time to fetch 900 events: {:?}", duration);
+        println!("[single_big] Time to fetch 900 events: {duration:?}");
     }
     assert!(duration.as_millis() < 2000);
 

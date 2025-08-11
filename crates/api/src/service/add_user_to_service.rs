@@ -148,11 +148,10 @@ impl UpdateServiceResourceError {
             Self::InvalidBuffer => {
                 NitteiError::BadClientData("The provided buffer was invalid, it should be between 0 and 12 hours specified in minutes.".into())
             }
-            Self::CalendarNotOwnedByUser(calendar_id) => NitteiError::NotFound(format!("The calendar: {}, was not found among the calendars for the specified user", calendar_id)),
+            Self::CalendarNotOwnedByUser(calendar_id) => NitteiError::NotFound(format!("The calendar: {calendar_id}, was not found among the calendars for the specified user")),
             Self::ScheduleNotOwnedByUser(schedule_id) => {
                 NitteiError::NotFound(format!(
-                    "The schedule with id: {}, was not found among the schedules for the specified user",
-                    schedule_id
+                    "The schedule with id: {schedule_id}, was not found among the schedules for the specified user"
                 ))
             }
             Self::InvalidBookingTimespan(e) => {

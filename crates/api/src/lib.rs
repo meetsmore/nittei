@@ -167,10 +167,10 @@ impl Application {
 
         let port = context.config.port;
         let address = nittei_utils::config::APP_CONFIG.http_host.clone();
-        let address_and_port = format!("{}:{}", address, port);
+        let address_and_port = format!("{address}:{port}");
 
         let listener = TcpListener::bind(address_and_port).await?;
-        info!("Starting server on: {}", listener.local_addr()?);
+        info!("[server] Will start server on: {}", listener.local_addr()?);
 
         Ok((router, listener))
     }
@@ -190,6 +190,7 @@ impl Application {
         let (shutdown_tx, shutdown_rx) = oneshot::channel::<()>();
         self.shared_state.lock().await.shutdown_tx = Some(shutdown_tx);
 
+        info!("[server] Server started");
         axum::serve(self.listener, self.server)
             .with_graceful_shutdown(async {
                 shutdown_rx.await.unwrap_or_else(|e| {
@@ -219,7 +220,7 @@ impl Application {
 
         let secret_api_key = match &secret_api_key_option {
             Some(key) => {
-                info!("Using provided secret api key");
+                info!("[init_default_account] Using provided secret api key");
                 key.to_owned()
             }
             None => Account::generate_secret_api_key(),
@@ -234,9 +235,13 @@ impl Application {
             .is_none()
         {
             if secret_api_key_option.is_none() {
-                info!("Creating default account with self-generated secret api key");
+                info!(
+                    "[init_default_account] Creating default account with self-generated secret api key"
+                );
             } else {
-                warn!("Account not found based on given secret api key - creating default account");
+                warn!(
+                    "[init_default_account] Account not found based on given secret api key - creating default account"
+                );
             }
 
             let mut account = Account::default();
@@ -248,7 +253,7 @@ impl Application {
                 .parse::<ID>()
                 .unwrap_or_default();
 
-            info!("Using account id: {}", account_id);
+            info!("[init_default_account] Using account id: {}", account_id);
             account.id = account_id;
             account.secret_api_key = secret_api_key.clone();
             account.settings.webhook = nittei_utils::config::APP_CONFIG
@@ -268,7 +273,10 @@ impl Application {
                 verification_key = verification_key.replace("\\n", "\n");
                 match PEMKey::new(verification_key) {
                     Ok(k) => account.set_public_jwt_key(Some(k)),
-                    Err(e) => warn!("Invalid ACCOUNT_PUB_KEY provided: {:?}", e),
+                    Err(e) => warn!(
+                        "[init_default_account] Invalid ACCOUNT_PUB_KEY provided: {:?}",
+                        e
+                    ),
                 };
             }
 
@@ -286,16 +294,14 @@ impl Application {
                     .map(|g| g.client_secret.clone())
                     .unwrap_or_else(|| {
                         panic!(
-                            "{} should be specified also when {} is specified.",
-                            account_google_client_secret_env, account_google_client_id_env
+                            "{account_google_client_secret_env} should be specified also when {account_google_client_id_env} is specified."
                         )
                     });
                 let google_redirect_uri = google_config
                     .map(|g| g.redirect_uri.clone())
                     .unwrap_or_else(|| {
                         panic!(
-                            "{} should be specified also when {} is specified.",
-                            account_google_redirect_uri_env, account_google_client_id_env
+                            "{account_google_redirect_uri_env} should be specified also when {account_google_client_id_env} is specified."
                         )
                     });
                 self.context
@@ -323,16 +329,14 @@ impl Application {
                     .map(|o| o.client_secret.clone())
                     .unwrap_or_else(|| {
                         panic!(
-                            "{} should be specified also when {} is specified.",
-                            account_outlook_client_secret_env, account_outlook_client_id_env
+                            "{account_outlook_client_secret_env} should be specified also when {account_outlook_client_id_env} is specified."
                         )
                     });
                 let outlook_redirect_uri = outlook_config
                     .map(|o| o.redirect_uri.clone())
                     .unwrap_or_else(|| {
                         panic!(
-                            "{} should be specified also when {} is specified.",
-                            account_outlook_redirect_uri_env, account_outlook_client_id_env
+                            "{account_outlook_redirect_uri_env} should be specified also when {account_outlook_client_id_env} is specified."
                         )
                     });
                 self.context
@@ -355,9 +359,12 @@ impl Application {
                     .find_by_apikey(&secret_api_key)
                     .await?
                 {
-                    info!("Account created: {:?}", account.id);
+                    info!("[init_default_account] Account created: {:?}", account.id);
                 } else {
-                    error!("Account not created {:?}", account.id);
+                    error!(
+                        "[init_default_account] Account not created {:?}",
+                        account.id
+                    );
                 }
             }
         };

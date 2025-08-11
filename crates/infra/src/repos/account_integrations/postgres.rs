@@ -56,8 +56,9 @@ impl IAccountIntegrationRepo for PostgresAccountIntegrationRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Unable to insert account integration: {:?}. DB returned error: {:?}",
-                integration, e
+                account_id = %integration.account_id,
+                error = ?e,
+                "Failed to insert account integration"
             );
         })?;
         Ok(())
@@ -77,8 +78,9 @@ impl IAccountIntegrationRepo for PostgresAccountIntegrationRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Unable to query account integrations for account: {:?}. DB returned error: {:?}",
-                account_id, e
+                account_id = %account_id,
+                error = ?e,
+                "Failed to query account integrations for account"
             );
         })?;
         Ok(integrations.into_iter().map(|i| i.into()).collect())
@@ -103,8 +105,10 @@ impl IAccountIntegrationRepo for PostgresAccountIntegrationRepo {
             Ok(_) => Err(anyhow::Error::msg("Unable to delete account integration")),
             Err(e) => {
                 error!(
-                    "Unable to delete account integration for account: {:?} and provider: {:?}. DB returned error: {:?}",
-                    account_id, provider, e
+                    account_id = %account_id,
+                    provider = %provider,
+                    error = ?e,
+                    "Failed to delete account integration"
                 );
 
                 Err(anyhow::Error::msg("Unable to delete account integration"))

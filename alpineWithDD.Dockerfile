@@ -9,7 +9,7 @@ FROM messense/rust-musl-cross:${ARCH}-musl AS builder
 
 ARG ARCH=x86_64
 ARG APP_NAME=nittei
-ARG RUST_VERSION=1.85.1
+ARG RUST_VERSION=1.89.0
 
 # Install and set the specific Rust version
 RUN rustup install ${RUST_VERSION} && rustup default ${RUST_VERSION}
@@ -20,8 +20,11 @@ RUN rustup target add ${ARCH}-unknown-linux-musl
 # Verify the Rust and target setup
 RUN rustc --version && rustup show
 
-# Copy source code from previous stage
-COPY . .
+# Copy source code
+COPY ./Cargo.toml ./Cargo.lock ./
+COPY ./crates ./crates
+COPY ./bins ./bins
+COPY ./clients/rust ./clients/rust
 
 # Build application
 RUN cargo build --release --target ${ARCH}-unknown-linux-musl && \

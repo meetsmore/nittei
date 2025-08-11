@@ -1,4 +1,5 @@
 mod config;
+pub mod metrics;
 mod repos;
 mod services;
 mod system;

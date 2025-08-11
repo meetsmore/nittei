@@ -5,7 +5,6 @@ use axum::{
 };
 use nittei_api_structs::get_event_instances::*;
 use nittei_domain::{
-    Account,
     CalendarEvent,
     EventInstance,
     ID,
@@ -21,7 +20,7 @@ use tracing::error;
 use crate::{
     error::NitteiError,
     shared::{
-        auth::{Policy, account_can_modify_event},
+        auth::Policy,
         usecase::{UseCase, execute},
     },
 };
@@ -42,16 +41,16 @@ use crate::{
     )
 )]
 pub async fn get_event_instances_admin_controller(
-    Extension(account): Extension<Account>,
-    path_params: Path<PathParams>,
+    Extension(event): Extension<CalendarEvent>,
     query_params: Query<QueryParams>,
     Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<GetEventInstancesAPIResponse>, NitteiError> {
-    let e = account_can_modify_event(&account, &path_params.event_id, &ctx).await?;
+    // Not using the prefetched event by the route guard here
+    // As we need to fetch more data
 
     let usecase = GetEventInstancesUseCase {
-        user_id: e.user_id,
-        event_id: e.id,
+        user_id: event.user_id.clone(),
+        event_id: event.id.clone(),
         timespan: query_params.0,
     };
 
@@ -122,10 +121,9 @@ impl From<UseCaseError> for NitteiError {
             UseCaseError::InvalidTimespan => {
                 Self::BadClientData("The provided start_ts and end_ts are invalid".into())
             }
-            UseCaseError::NotFound(entity, event_id) => Self::NotFound(format!(
-                "The {} with id: {}, was not found.",
-                entity, event_id
-            )),
+            UseCaseError::NotFound(entity, event_id) => {
+                Self::NotFound(format!("The {entity} with id: {event_id}, was not found."))
+            }
         }
     }
 }
@@ -157,10 +155,8 @@ impl UseCase for GetEventInstancesUseCase {
         let main_event = event_and_exceptions.iter().find(|e| e.id == self.event_id);
 
         // If the main event is not found, return an error
-        let main_event = main_event.ok_or(UseCaseError::NotFound(
-            "CalendarEvent".into(),
-            self.event_id.clone(),
-        ))?;
+        let main_event = main_event
+            .ok_or_else(|| UseCaseError::NotFound("CalendarEvent".into(), self.event_id.clone()))?;
 
         // If the user_id of the main event is different from the user_id of the user, return an error
         if self.user_id != main_event.user_id {

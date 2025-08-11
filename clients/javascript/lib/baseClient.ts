@@ -2,6 +2,7 @@ import axios, {
   type AxiosRequestConfig,
   type AxiosInstance,
   type AxiosResponse,
+  AxiosError,
 } from 'axios'
 import type { ICredentials } from './helpers/credentials'
 import {
@@ -11,6 +12,83 @@ import {
   UnauthorizedError,
   UnprocessableEntityError,
 } from './helpers/errors'
+import axiosRetry, { isNetworkOrIdempotentRequestError } from 'axios-retry'
+
+/**
+ * Configuration for the keep alive feature
+ */
+export type KeepAliveConfig = {
+  /**
+   * Whether to keep the connection alive
+   */
+  enabled: boolean
+  /**
+   * Maximum number of sockets to keep alive
+   */
+  maxSockets?: number
+  /**
+   * Maximum number of free sockets to keep alive
+   */
+  maxFreeSockets?: number
+  /**
+   * Keep alive milliseconds (how long to keep the connection alive)
+   */
+  keepAliveMsecs?: number
+}
+
+/**
+ * Configuration for retry mechanism
+ */
+export type RetryConfig = {
+  /**
+   * Whether to enable retry mechanism (default: true)
+   */
+  enabled: boolean
+  /**
+   * Maximum number of retry attempts (default: 3)
+   */
+  maxRetries?: number
+}
+
+/**
+ * Base configuration for the client
+ */
+export type ClientConfig = {
+  /**
+   * Base URL for the API
+   */
+  baseUrl?: string
+
+  /**
+   * Keep the connection alive
+   */
+  keepAlive?: KeepAliveConfig
+
+  /**
+   * Timeout for requests in milliseconds (default: 1000)
+   */
+  timeout?: number
+
+  /**
+   * Retry configuration
+   */
+  retry?: RetryConfig
+}
+
+/**
+ * Default configuration for the client
+ */
+export const DEFAULT_CONFIG: Required<ClientConfig> = {
+  baseUrl: `http://localhost:${process.env.NITTEI__HTTP_PORT ?? '5000'}/api/v1`,
+  keepAlive: {
+    enabled: false,
+  },
+  timeout: 1000,
+  retry: {
+    enabled: true,
+    maxRetries: 3,
+  },
+}
 
 /**
  * Base client for the API
@@ -18,8 +96,53 @@ import {
  * It shouldn't be exposed to the end user
  */
 export abstract class NitteiBaseClient {
-  constructor(private readonly axiosClient: AxiosInstance) {
-    this.axiosClient = axiosClient
+  constructor(private readonly axiosClient: AxiosInstance) {}
+
+  /**
+   * Private generic function to call the API
+   * @private
+   * @param method - HTTP method to use
+   * @param path - path to the endpoint
+   * @param data - data to send to the server
+   * @param params - query parameters
+   * @returns Axios response
+   */
+  private async callApi<T>({
+    method,
+    path,
+    data,
+    params,
+  }: {
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE'
+    path: string
+    data?: unknown
+    params?: Record<string, unknown>
+  }): Promise<AxiosResponse<T>> {
+    let res: AxiosResponse<T> | undefined = undefined
+    try {
+      res = await this.axiosClient({ method, url: path, data, params })
+    } catch (error) {
+      // Technically this one shouldn't be triggered, because we are using validateStatus: () => true
+      // We handle the errors ourselves in the `handleStatusCode` call below
+      // This is just in case
+      if (error instanceof AxiosError) {
+        throw new Error(
+          `Request failed with ${error?.status ? `status code ${error.status}` : 'no status code'} (${error?.response?.data ?? error.cause?.message ?? error.toJSON()})`
+        )
+      }
+      // This might happen if we don't have any status code
+      throw new Error(
+        `Unknown error (no status code) (${(error as Error)?.message ?? error})`
+      )
+    }
+
+    if (!res) {
+      throw new Error('No response from the server')
+    }
+
+    this.handleStatusCode(res)
+
+    return res
   }
 
   /**
@@ -34,12 +157,11 @@ export abstract class NitteiBaseClient {
     path: string,
     params: Record<string, unknown> = {}
   ): Promise<T> {
-    const res = await this.axiosClient.get<T>(path, {
+    const res = await this.callApi<T>({
+      method: 'GET',
+      path,
       params,
     })
-
-    this.handleStatusCode(res)
-
     return res.data
   }
 
@@ -52,9 +174,11 @@ export abstract class NitteiBaseClient {
    * @returns response's data
    */
   protected async post<T>(path: string, data: unknown): Promise<T> {
-    const res = await this.axiosClient.post<T>(path, data)
-
-    this.handleStatusCode(res)
+    const res = await this.callApi<T>({
+      method: 'POST',
+      path,
+      data,
+    })
 
     return res.data
   }
@@ -68,9 +192,11 @@ export abstract class NitteiBaseClient {
    * @returns response's data
    */
   protected async put<T>(path: string, data: unknown): Promise<T> {
-    const res = await this.axiosClient.put<T>(path, data)
-
-    this.handleStatusCode(res)
+    const res = await this.callApi<T>({
+      method: 'PUT',
+      path,
+      data,
+    })
 
     return res.data
   }
@@ -84,9 +210,10 @@ export abstract class NitteiBaseClient {
    * @returns response's data
    */
   protected async delete<T>(path: string): Promise<T> {
-    const res = await this.axiosClient.delete<T>(path)
-
-    this.handleStatusCode(res)
+    const res = await this.callApi<T>({
+      method: 'DELETE',
+      path,
+    })
 
     return res.data
   }
@@ -100,13 +227,11 @@ export abstract class NitteiBaseClient {
    * @returns response's data
    */
   protected async deleteWithBody<T>(path: string, data: unknown): Promise<T> {
-    const res: AxiosResponse<T> = await this.axiosClient({
+    const res = await this.callApi<T>({
       method: 'DELETE',
       data,
-      url: path,
+      path,
     })
-
-    this.handleStatusCode(res)
 
     return res.data
   }
@@ -119,7 +244,7 @@ export abstract class NitteiBaseClient {
   private handleStatusCode(res: AxiosResponse): void {
     if (res.status >= 500) {
       throw new Error(
-        `Internal server error, please try again later (${res.status})`
+        `Internal server error, please try again later (${res.status}) (${res.data})`
       )
     }
 
@@ -140,7 +265,9 @@ export abstract class NitteiBaseClient {
         throw new UnprocessableEntityError(res.data)
       }
 
-      throw new Error(`Request failed with status code ${res.status}`)
+      throw new Error(
+        `Request failed with status code ${res.status} (${res.data})`
+      )
     }
   }
 }
@@ -159,6 +286,7 @@ export const createAxiosInstanceFrontend = (
   args: {
     baseUrl: string
     timeout: number
+    retry: RetryConfig
   },
   credentials: ICredentials
 ): AxiosInstance => {
@@ -182,7 +310,18 @@ export const createAxiosInstanceFrontend = (
     },
   }
 
-  return axios.create(config)
+  const axiosClient = axios.create(config)
+
+  if (args.retry.enabled) {
+    axiosRetry(axiosClient, {
+      retries: args.retry.maxRetries ?? 3,
+      retryDelay: axiosRetry.exponentialDelay,
+      retryCondition: isNetworkOrIdempotentRequestError, // Retry on network errors or idempotent requests (GET, PUT, DELETE)
+      shouldResetTimeout: true,
+    })
+  }
+
+  return axiosClient
 }
 
 /**
@@ -196,8 +335,9 @@ export const createAxiosInstanceFrontend = (
 export const createAxiosInstanceBackend = async (
   args: {
     baseUrl: string
-    keepAlive: boolean
+    keepAlive: KeepAliveConfig
     timeout: number
+    retry: RetryConfig
   },
   credentials: ICredentials
 ): Promise<AxiosInstance> => {
@@ -223,17 +363,44 @@ export const createAxiosInstanceBackend = async (
 
   // If keepAlive is true, and if we are in NodeJS
   // create an agent to keep the connection alive
-  if (args.keepAlive && typeof module !== 'undefined' && module.exports) {
+  if (
+    args.keepAlive.enabled &&
+    typeof module !== 'undefined' &&
+    module.exports
+  ) {
     if (args.baseUrl.startsWith('https')) {
       // This is a dynamic import to avoid loading the https module in the browser
       const https = await import('node:https')
-      config.httpsAgent = new https.Agent({ keepAlive: true })
+      // Default values are what we evaluated to be good for our load
+      config.httpsAgent = new https.Agent({
+        keepAlive: true,
+        maxSockets: args.keepAlive.maxSockets ?? 75,
+        maxFreeSockets: args.keepAlive.maxFreeSockets ?? 10,
+        keepAliveMsecs: args.keepAlive.keepAliveMsecs ?? 60000,
+      })
     } else {
       // This is a dynamic import to avoid loading the http module in the browser
       const http = await import('node:http')
-      config.httpAgent = new http.Agent({ keepAlive: true })
+      // Default values are what we evaluated to be good for our load
+      config.httpAgent = new http.Agent({
+        keepAlive: true,
+        maxSockets: args.keepAlive.maxSockets ?? 75,
+        maxFreeSockets: args.keepAlive.maxFreeSockets ?? 10,
+        keepAliveMsecs: args.keepAlive.keepAliveMsecs ?? 60000,
+      })
     }
   }
 
-  return axios.create(config)
+  const axiosClient = axios.create(config)
+
+  if (args.retry.enabled) {
+    axiosRetry(axiosClient, {
+      retries: args.retry.maxRetries ?? 3,
+      retryDelay: axiosRetry.exponentialDelay,
+      retryCondition: isNetworkOrIdempotentRequestError, // Retry on network errors or idempotent requests (GET, PUT, DELETE)
+      shouldResetTimeout: true,
+    })
+  }
+
+  return axiosClient
 }

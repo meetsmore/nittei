@@ -1,8 +1,12 @@
 import type { AxiosInstance } from 'axios'
 import { NitteiAccountClient } from './accountClient'
 import {
+  type ClientConfig,
   createAxiosInstanceBackend,
   createAxiosInstanceFrontend,
+  DEFAULT_CONFIG,
+  type KeepAliveConfig,
+  type RetryConfig,
 } from './baseClient'
 import {
   NitteiCalendarClient,
@@ -44,32 +48,6 @@ export interface INitteiClient {
 }
 
 /**
- * Base configuration for the client
- */
-type ClientConfig = {
-  /**
-   * Base URL for the API
-   */
-  baseUrl?: string
-
-  /**
-   * Keep the connection alive
-   */
-  keepAlive?: boolean
-
-  /**
-   * Timeout for requests in milliseconds (default: 1000)
-   */
-  timeout?: number
-}
-
-const DEFAULT_CONFIG: Required<ClientConfig> = {
-  baseUrl: `http://localhost:${process.env.NITTEI__HTTP_PORT ?? '5000'}/api/v1`,
-  keepAlive: false,
-  timeout: 1000,
-}
-
-/**
  * Create a client for the nittei API (user client, not admin)
  * @param config configuration and credentials to be used
  * @returns user client
@@ -83,7 +61,11 @@ export const NitteiUserClient = (
 
   // User clients should not keep the connection alive (usually on the frontend)
   const axiosClient = createAxiosInstanceFrontend(
-    { baseUrl: finalConfig.baseUrl, timeout: finalConfig.timeout },
+    {
+      baseUrl: finalConfig.baseUrl,
+      timeout: finalConfig.timeout,
+      retry: finalConfig.retry,
+    },
     creds
   )
 
@@ -117,6 +99,7 @@ export const NitteiClient = async (
       baseUrl: finalConfig.baseUrl,
       keepAlive: finalConfig.keepAlive,
       timeout: finalConfig.timeout,
+      retry: finalConfig.retry,
     },
     creds
   )
@@ -135,6 +118,9 @@ export const NitteiClient = async (
     axiosClient,
   })
 }
+
+// Client types
+export type { ClientConfig, KeepAliveConfig, RetryConfig }
 
 // Errors
 export * from './helpers/errors'

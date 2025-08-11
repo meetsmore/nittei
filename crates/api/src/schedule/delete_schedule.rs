@@ -56,8 +56,7 @@ impl From<UseCaseError> for NitteiError {
         match e {
             UseCaseError::StorageError => Self::InternalError,
             UseCaseError::NotFound(schedule_id) => Self::NotFound(format!(
-                "The schedule with id: {}, was not found.",
-                schedule_id
+                "The schedule with id: {schedule_id}, was not found."
             )),
         }
     }

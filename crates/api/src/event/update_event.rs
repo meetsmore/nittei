@@ -19,7 +19,7 @@ use crate::{
     error::NitteiError,
     event::{self, subscribers::UpdateSyncedEventsOnEventUpdated},
     shared::{
-        auth::{Permission, Policy, account_can_modify_event, account_can_modify_user},
+        auth::{Permission, Policy, account_can_modify_user},
         usecase::{PermissionBoundary, Subscriber, UseCase, execute, execute_with_policy},
     },
 };
@@ -44,17 +44,16 @@ use crate::{
 )]
 pub async fn update_event_admin_controller(
     Extension(account): Extension<Account>,
-    path_params: Path<PathParams>,
+    Extension(event): Extension<CalendarEvent>,
     Extension(ctx): Extension<NitteiContext>,
     body: Valid<Json<UpdateEventRequestBody>>,
 ) -> Result<Json<APIResponse>, NitteiError> {
-    let e = account_can_modify_event(&account, &path_params.event_id, &ctx).await?;
-    let user = account_can_modify_user(&account, &e.user_id, &ctx).await?;
+    let user = account_can_modify_user(&account, &event.user_id, &ctx).await?;
 
     let mut body = body.0;
     let usecase = UpdateEventUseCase {
         user,
-        event_id: e.id,
+        event_id: event.id.clone(),
         title: body.title.take(),
         description: body.description.take(),
         event_type: body.event_type.take(),
@@ -75,6 +74,9 @@ pub async fn update_event_admin_controller(
         metadata: body.metadata.take(),
         created: body.created,
         updated: body.updated,
+
+        // Prefetched event by the route guard
+        prefetched_calendar_event: Some(event),
     };
 
     execute(usecase, &ctx)
@@ -128,6 +130,7 @@ pub async fn update_event_controller(
         metadata: body.metadata.take(),
         created: body.created,
         updated: body.updated,
+        prefetched_calendar_event: None,
     };
 
     execute_with_policy(usecase, &policy, &ctx)
@@ -136,6 +139,7 @@ pub async fn update_event_controller(
         .map_err(NitteiError::from)
 }
 
+/// Use case for updating an event
 #[derive(Debug, Default)]
 pub struct UpdateEventUseCase {
     pub user: User,
@@ -161,6 +165,10 @@ pub struct UpdateEventUseCase {
     pub metadata: Option<serde_json::Value>,
     pub created: Option<DateTime<Utc>>,
     pub updated: Option<DateTime<Utc>>,
+
+    /// Event that has been potentially prefetched by the route guard
+    /// Only happens in the admin controller
+    pub prefetched_calendar_event: Option<CalendarEvent>,
 }
 
 #[derive(Debug)]
@@ -174,10 +182,9 @@ pub enum UseCaseError {
 impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
-            UseCaseError::NotFound(entity, event_id) => Self::NotFound(format!(
-                "The {} with id: {}, was not found.",
-                entity, event_id
-            )),
+            UseCaseError::NotFound(entity, event_id) => {
+                Self::NotFound(format!("The {entity} with id: {event_id}, was not found."))
+            }
             UseCaseError::InvalidRecurrenceRule => {
                 Self::BadClientData("Invalid recurrence rule specified for the event".into())
             }
@@ -221,19 +228,30 @@ impl UseCase for UpdateEventUseCase {
             metadata,
             created,
             updated,
+            prefetched_calendar_event,
         } = self;
 
-        let mut e = match ctx.repos.events.find(event_id).await {
-            Ok(Some(event)) if event.user_id == user.id => event,
-            Ok(_) => {
+        let e = match &prefetched_calendar_event {
+            Some(event) => Some(event.clone()),
+            None => ctx.repos.events.find(event_id).await.map_err(|e| {
+                tracing::error!("[update_event] Error finding event: {:?}", e);
+                UseCaseError::StorageError
+            })?,
+        };
+
+        let mut e = match e {
+            Some(event) if event.user_id == user.id => event,
+            Some(_) => {
                 return Err(UseCaseError::NotFound(
                     "Calendar Event".into(),
                     event_id.clone(),
                 ));
             }
-            Err(e) => {
-                tracing::error!("Failed to get one event {:?}", e);
-                return Err(UseCaseError::StorageError);
+            None => {
+                return Err(UseCaseError::NotFound(
+                    "Calendar Event".into(),
+                    event_id.clone(),
+                ));
             }
         };
 

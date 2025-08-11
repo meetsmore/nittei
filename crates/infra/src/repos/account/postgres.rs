@@ -79,8 +79,9 @@ impl IAccountRepo for PostgresAccountRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Unable to insert account: {:?}. DB returned error: {:?}",
-                account, e
+                account_id = %account.id,
+                error = ?e,
+                "Failed to insert account"
             );
         })?;
         Ok(())
@@ -105,8 +106,9 @@ impl IAccountRepo for PostgresAccountRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Unable to save account: {:?}. DB returned error: {:?}",
-                account, e
+                account_id = %account.id,
+                error = ?e,
+                "Failed to save account"
             );
         })?;
 
@@ -130,8 +132,9 @@ impl IAccountRepo for PostgresAccountRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Find account with id: {:?} failed. DB returned error: {:?}",
-                account_id, e
+                account_id = %account_id,
+                error = ?e,
+                "Failed to find account with id"
             );
         })?
         .map(|res| res.try_into())
@@ -156,8 +159,9 @@ impl IAccountRepo for PostgresAccountRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Find accounts with ids: {:?} failed. DB returned error: {:?}",
-                accounts_ids, e
+                account_ids = ?accounts_ids,
+                error = ?e,
+                "Failed to find accounts with ids"
             );
         })?;
 
@@ -183,8 +187,9 @@ impl IAccountRepo for PostgresAccountRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Delete account with id: {:?} failed. DB returned error: {:?}",
-                account_id, e
+                account_id = %account_id,
+                error = ?e,
+                "Delete account with id"
             );
         })?
         .map(|res| res.try_into())
@@ -216,8 +221,9 @@ impl IAccountRepo for PostgresAccountRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Find account with api_key: {:?} failed. DB returned error: {:?}",
-                api_key, e
+                api_key = %api_key,
+                error = ?e,
+                "Failed to find account with api_key"
             );
         })?
         .map(|res| res.try_into())
