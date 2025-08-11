@@ -80,11 +80,11 @@ impl CompatibleInstances {
 
     pub fn push_back(&mut self, instance: EventInstance) -> bool {
         if !self.events.is_empty() {
-            if let Some(last_instance) = self.events.back() {
+            if let Some(last_instance) = self.events.back()
+                && last_instance.end_time > instance.start_time
+            {
                 // There is overlap, so cannot be added
-                if last_instance.end_time > instance.start_time {
-                    return false;
-                }
+                return false;
             }
         }
         self.events.push_back(instance);

@@ -9,6 +9,10 @@ use opentelemetry_sdk::{
 use tracing::warn;
 use tracing_subscriber::{EnvFilter, Registry, layer::SubscriberExt};
 
+pub mod datadog_json_format;
+
+use datadog_json_format::DatadogJsonFmt;
+
 /// Register a subscriber as global default to process span data.
 ///
 /// It should only be called once!
@@ -60,7 +64,11 @@ pub fn init_subscriber() -> anyhow::Result<()> {
                 .with(
                     tracing_subscriber::fmt::layer()
                         .json()
-                        .with_current_span(false),
+                        .with_target(false)
+                        .with_file(false)
+                        .with_line_number(false)
+                        .with_current_span(false)
+                        .event_format(DatadogJsonFmt),
                 )
                 .with(telemetry_layer);
 
