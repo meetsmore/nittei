@@ -207,7 +207,7 @@ mod tests {
         let get_event_res = ctx
             .repos
             .events
-            .find_many(&[event.id.clone()])
+            .find_many(std::slice::from_ref(&event.id))
             .await
             .expect("To find many events");
         assert!(get_event_res[0].eq(&event));
@@ -835,7 +835,7 @@ mod tests {
             .events
             .find_by_service(
                 &service.id,
-                &[user1.id.clone()],
+                std::slice::from_ref(&user1.id),
                 DateTime::from_timestamp_millis(start_ts).unwrap(),
                 DateTime::from_timestamp_millis(end_ts).unwrap(),
             )
