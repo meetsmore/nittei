@@ -63,11 +63,7 @@ impl<B> MakeSpan<B> for NitteiTracingSpanBuilder {
 
         // By default, exclude health check and metrics from tracing
         if PATHS_TO_EXCLUDE_FROM_LOGGING_AND_TRACING.contains(&path)
-            && !APP_CONFIG
-                .observability
-                .as_ref()
-                .map(|o| o.observe_status_endpoints)
-                .unwrap_or_default()
+            && !APP_CONFIG.observability.observe_status_endpoints
         {
             return Span::none();
         }
@@ -131,11 +127,7 @@ impl<B> OnResponse<B> for NitteiTracingOnResponse {
         // Only exclude if status code is 200
         if PATHS_TO_EXCLUDE_FROM_LOGGING_AND_TRACING.contains(&path)
             && status_code == 200
-            && !APP_CONFIG
-                .observability
-                .as_ref()
-                .map(|o| o.observe_status_endpoints)
-                .unwrap_or_default()
+            && !APP_CONFIG.observability.observe_status_endpoints
         {
             return;
         }
