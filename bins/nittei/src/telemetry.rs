@@ -179,6 +179,14 @@ fn get_sampler() -> Sampler {
         .observability
         .tracing_sample_rate;
 
+    // If tracing is disabled, return an always off sampler
+    if nittei_utils::config::APP_CONFIG
+        .observability
+        .disable_tracing
+    {
+        return Sampler::AlwaysOff;
+    }
+
     // Create sampler based on
     // (1) parent => so if parent exists always sample
     // (2) if no parent, then the trace id ratio

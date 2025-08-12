@@ -110,6 +110,11 @@ pub struct ObservabilityConfig {
     /// Env var: NITTEI__OBSERVABILITY__SERVICE_ENV
     pub service_env: String,
 
+    /// This is a flag to disable tracing
+    /// Default is false
+    /// Env var: NITTEI__OBSERVABILITY__DISABLE_TRACING
+    pub disable_tracing: bool,
+
     /// The tracing sample rate
     /// Default is 0.1
     /// Env var: NITTEI__OBSERVABILITY__TRACING_SAMPLE_RATE
@@ -259,6 +264,8 @@ fn parse_config() -> AppConfig {
         .expect("Failed to set default observability.observe_status_endpoints")
         .set_default("observability.tracing_sample_rate", 0.1)
         .expect("Failed to set default observability.tracing_sample_rate")
+        .set_default("observability.disable_tracing", false)
+        .expect("Failed to set default observability.disable_tracing")
         .build()
         .expect("Failed to build the configuration object");
 
