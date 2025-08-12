@@ -2,6 +2,7 @@ extern crate rand;
 
 use rand::Rng;
 
+pub mod backtrace;
 pub mod config;
 
 const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\

@@ -89,7 +89,7 @@ jobs:
           retention-days: 1
 
   merge-docker:
-    runs-on: buildjet-2vcpu-ubuntu-2204
+    runs-on: ubuntu-latest
     needs:
       - build-docker
     steps:

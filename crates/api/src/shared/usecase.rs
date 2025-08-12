@@ -68,8 +68,7 @@ where
     let required_permissions = usecase.permissions();
     if !policy.authorize(&required_permissions) {
         let err = format!(
-            "Client is not permitted to perform some or all of these actions: {:?}",
-            required_permissions
+            "Client is not permitted to perform some or all of these actions: {required_permissions:?}"
         );
         warn!("{}", err);
         return Err(UseCaseErrorContainer::Unauthorized(err));

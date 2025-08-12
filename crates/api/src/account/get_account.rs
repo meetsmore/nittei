@@ -29,7 +29,7 @@ pub async fn get_account_controller(
         .find(&account_possibly_stale.id)
         .await
         .map_err(|_| NitteiError::InternalError)?
-        .ok_or(NitteiError::NotFound("Account not found".to_string()))?;
+        .ok_or_else(|| NitteiError::NotFound("Account not found".to_string()))?;
 
     Ok(Json(APIResponse::new(account)))
 }

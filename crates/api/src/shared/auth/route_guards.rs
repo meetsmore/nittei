@@ -95,8 +95,7 @@ pub async fn get_client_account(
 pub fn get_nittei_account_header(headers: &HeaderMap) -> Option<Result<ID, NitteiError>> {
     if let Some(account_id) = headers.get("nittei-account") {
         let err = NitteiError::UnidentifiableClient(format!(
-            "Malformed nittei account header provided: {:?}",
-            account_id
+            "Malformed nittei account header provided: {account_id:?}"
         ));
 
         // Validate that is is string
@@ -208,7 +207,7 @@ async fn protect_admin_route_inner(
         .get(NITTEI_X_API_KEY_HEADER)
         .and_then(|v| v.to_str().ok())
         .ok_or_else(|| {
-            NitteiError::Unauthorized(format!("Missing {} header", NITTEI_X_API_KEY_HEADER))
+            NitteiError::Unauthorized(format!("Missing {NITTEI_X_API_KEY_HEADER} header"))
         })?;
 
     let account = ctx
@@ -218,7 +217,7 @@ async fn protect_admin_route_inner(
         .await
         .map_err(|_| NitteiError::InternalError)?
         .ok_or_else(|| {
-            NitteiError::Unauthorized(format!("Invalid {} header", NITTEI_X_API_KEY_HEADER))
+            NitteiError::Unauthorized(format!("Invalid {NITTEI_X_API_KEY_HEADER} header"))
         })?;
 
     Ok(account)
@@ -282,8 +281,7 @@ pub async fn account_can_modify_user(
     match ctx.repos.users.find(user_id).await {
         Ok(Some(user)) if user.account_id == account.id => Ok(user),
         Ok(_) => Err(NitteiError::NotFound(format!(
-            "User with id: {} was not found",
-            user_id
+            "User with id: {user_id} was not found"
         ))),
         Err(_) => Err(NitteiError::InternalError),
     }
@@ -300,8 +298,7 @@ pub async fn account_can_modify_calendar(
     match ctx.repos.calendars.find(calendar_id).await {
         Ok(Some(cal)) if cal.account_id == account.id => Ok(cal),
         Ok(_) => Err(NitteiError::NotFound(format!(
-            "Calendar with id: {} was not found",
-            calendar_id
+            "Calendar with id: {calendar_id} was not found"
         ))),
         Err(_) => Err(NitteiError::InternalError),
     }
@@ -338,8 +335,7 @@ async fn account_can_modify_event_inner(
     match ctx.repos.events.find(event_id).await {
         Ok(Some(event)) if event.account_id == account.id => Ok(event),
         Ok(_) => Err(NitteiError::NotFound(format!(
-            "Calendar event with id: {} was not found",
-            event_id
+            "Calendar event with id: {event_id} was not found"
         ))),
         Err(_) => Err(NitteiError::InternalError),
     }
@@ -356,8 +352,7 @@ pub async fn account_can_modify_schedule(
     match ctx.repos.schedules.find(schedule_id).await {
         Ok(Some(schedule)) if schedule.account_id == account.id => Ok(schedule),
         Ok(_) => Err(NitteiError::NotFound(format!(
-            "Schedule with id: {} was not found",
-            schedule_id
+            "Schedule with id: {schedule_id} was not found"
         ))),
         Err(_) => Err(NitteiError::InternalError),
     }
@@ -415,7 +410,7 @@ mod test {
 
         let req = Request::builder()
             .header("nittei-account", account.id.to_string())
-            .header("Authorization", format!("Bearer {}", token))
+            .header("Authorization", format!("Bearer {token}"))
             .body(Body::empty())
             .unwrap();
         let res = protect_route_inner(&ctx, req.headers()).await;
@@ -434,7 +429,7 @@ mod test {
 
         let req = Request::builder()
             .header("nittei-account", account.id.to_string())
-            .header("Authorization", format!("Bearer {}", token))
+            .header("Authorization", format!("Bearer {token}"))
             .body(Body::empty())
             .unwrap();
         let res = protect_route_inner(&ctx, req.headers()).await;
@@ -451,7 +446,7 @@ mod test {
 
         let req = Request::builder()
             .header("nittei-account", account.id.to_string())
-            .header("Authorization", format!("Bearer {}", token))
+            .header("Authorization", format!("Bearer {token}"))
             .body(Body::empty())
             .unwrap();
         let res = protect_route_inner(&ctx, req.headers()).await;
@@ -467,7 +462,7 @@ mod test {
         let token = get_token(true, user.id.clone());
 
         let req = Request::builder()
-            .header("Authorization", format!("Bearer {}", token))
+            .header("Authorization", format!("Bearer {token}"))
             .body(Body::empty())
             .unwrap();
         let res = protect_route_inner(&ctx, req.headers()).await;
@@ -484,7 +479,7 @@ mod test {
 
         let req = Request::builder()
             .header("nittei-account", account.id.to_string() + "s")
-            .header("Authorization", format!("Bearer {}", token))
+            .header("Authorization", format!("Bearer {token}"))
             .body(Body::empty())
             .unwrap();
         let res = protect_route_inner(&ctx, req.headers()).await;
@@ -498,7 +493,7 @@ mod test {
         let token = "sajfosajfposajfopaso12";
 
         let req = Request::builder()
-            .header("Authorization", format!("Bearer {}", token))
+            .header("Authorization", format!("Bearer {token}"))
             .body(Body::empty())
             .unwrap();
         let res = protect_route_inner(&ctx, req.headers()).await;

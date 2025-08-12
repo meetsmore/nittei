@@ -87,10 +87,9 @@ impl From<UseCaseError> for NitteiError {
             UseCaseError::InvalidTimespan => {
                 Self::BadClientData("The provided start_ts and end_ts are invalid".into())
             }
-            UseCaseError::NotFound(entity, event_id) => Self::NotFound(format!(
-                "The {} with id: {}, was not found.",
-                entity, event_id
-            )),
+            UseCaseError::NotFound(entity, event_id) => {
+                Self::NotFound(format!("The {entity} with id: {event_id}, was not found."))
+            }
         }
     }
 }
@@ -127,32 +126,57 @@ impl UseCase for GetEventsForUsersInTimeRangeUseCase {
             HashMap::new()
         };
 
-        // Get the events and the recurring events for the users during the timespan
-        let normal_events_and_recurring_events = ctx
-            .repos
-            .events
-            .find_events_and_recurring_events_for_users_for_timespan(
+        // Execute in parallel
+        // Get the normal events
+        // And the recurring events that are active for the users during the timespan
+        let (normal_events, recurring_events) = tokio::join!(
+            ctx.repos.events.find_events_for_users_for_timespan(
                 &self.user_ids,
                 timespan.clone(),
                 self.include_tentative,
                 self.include_non_busy,
-            )
-            .await
-            .map_err(|err| {
+            ),
+            ctx.repos
+                .events
+                .find_recurring_events_for_users_for_timespan(
+                    &self.user_ids,
+                    timespan.clone(),
+                    self.include_tentative,
+                    self.include_non_busy,
+                ),
+        );
+
+        let normal_events = match normal_events {
+            Ok(events) => events
+                .into_iter()
+                .filter(|event| event.account_id == self.account_id)
+                .collect::<Vec<_>>(),
+            Err(err) => {
                 error!(
                     "[get_events_for_users_in_time_range] Got an error while finding events {:?}",
                     err
                 );
-                UseCaseError::InternalError
-            })?
-            .into_iter()
-            .filter(|event| event.account_id == self.account_id)
-            .collect::<Vec<_>>();
+                return Err(UseCaseError::InternalError);
+            }
+        };
+
+        let recurring_events = match recurring_events {
+            Ok(events) => events
+                .into_iter()
+                .filter(|event| event.account_id == self.account_id)
+                .collect::<Vec<_>>(),
+            Err(err) => {
+                error!(
+                    "[get_events_for_users_in_time_range] Got an error while finding recurring events {:?}",
+                    err
+                );
+                return Err(UseCaseError::InternalError);
+            }
+        };
 
         // Get the recurring events uids
-        let recurring_events_uids = normal_events_and_recurring_events
+        let recurring_events_uids = recurring_events
             .iter()
-            .filter(|event| event.recurrence.is_some())
             .map(|event| event.id.clone())
             .collect::<Vec<_>>();
 
@@ -176,7 +200,7 @@ impl UseCase for GetEventsForUsersInTimeRangeUseCase {
             generate_map_exceptions_original_start_times(&exceptions);
 
         // Concat the normal events and the recurring events with the exceptions
-        let all_events = [normal_events_and_recurring_events, exceptions].concat();
+        let all_events = [normal_events, recurring_events, exceptions].concat();
 
         let events_to_return = if !self.generate_instances_for_recurring {
             // If we don't want to generate instances, we just return the events

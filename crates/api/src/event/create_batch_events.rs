@@ -135,8 +135,7 @@ impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::NotFound(calendar_id) => Self::NotFound(format!(
-                "The calendar with id: {}, was not found.",
-                calendar_id
+                "The calendar with id: {calendar_id}, was not found."
             )),
             UseCaseError::InvalidRecurrenceRule => {
                 Self::BadClientData("Invalid recurrence rule specified for the event".into())
@@ -186,7 +185,7 @@ impl UseCase for CreateBatchEventsUseCase {
             let calendar = calendars
                 .iter()
                 .find(|c| c.id == event.calendar_id)
-                .ok_or(UseCaseError::NotFound(event.calendar_id.clone()))?;
+                .ok_or_else(|| UseCaseError::NotFound(event.calendar_id.clone()))?;
             if calendar.user_id != event.user.id {
                 return Err(UseCaseError::NotFound(event.calendar_id.clone()));
             }

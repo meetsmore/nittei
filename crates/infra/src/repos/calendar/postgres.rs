@@ -71,8 +71,10 @@ impl ICalendarRepo for PostgresCalendarRepo {
         .await
         .map_err(|e| {
             error!(
-                "Unable to insert calendar: {:?}. DB returned error: {:?}",
-                calendar, e
+                calendar_id = %calendar.id,
+                key = ?calendar.key,
+                error = ?e,
+                "Failed to insert calendar"
             );
             e
         })?;
@@ -101,8 +103,10 @@ impl ICalendarRepo for PostgresCalendarRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Unable to save calendar: {:?}. DB returned error: {:?}",
-                calendar, e
+                calendar_id = %calendar.id,
+                key = ?calendar.key,
+                error = ?e,
+                "Failed to save calendar"
             );
         })?;
         Ok(())
@@ -122,8 +126,9 @@ impl ICalendarRepo for PostgresCalendarRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Find calendar with id: {:?} failed. DB returned error: {:?}",
-                calendar_id, e
+                calendar_id = %calendar_id,
+                error = ?e,
+                "Failed to find calendar with id"
             );
         })?
         .map(|cal| cal.try_into())
@@ -148,8 +153,9 @@ impl ICalendarRepo for PostgresCalendarRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Find calendars with ids: {:?} failed. DB returned error: {:?}",
-                calendar_ids, e
+                calendar_ids = ?calendar_ids,
+                error = ?e,
+                "Failed to find calendars with ids"
             );
         })?
         .into_iter()
@@ -171,8 +177,9 @@ impl ICalendarRepo for PostgresCalendarRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Find calendar by user id: {:?} failed. DB returned error: {:?}",
-                user_id, e
+                user_id = %user_id,
+                error = ?e,
+                "Failed to find calendar by user id"
             );
         })?
         .into_iter()
@@ -199,8 +206,10 @@ impl ICalendarRepo for PostgresCalendarRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Find calendar by user id: {:?} and key: {:?} failed. DB returned error: {:?}",
-                user_id, key, e
+                user_id = %user_id,
+                key = %key,
+                error = ?e,
+                "Failed to find calendar by user id and key"
             );
         })?
         .map(|cal| cal.try_into())
@@ -223,8 +232,9 @@ impl ICalendarRepo for PostgresCalendarRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Find calendars by user ids: {:?} failed. DB returned error: {:?}",
-                user_ids, e
+                user_ids = ?user_ids,
+                error = ?e,
+                "Failed to find calendars by user ids"
             );
         })?
         .into_iter()
@@ -246,8 +256,9 @@ impl ICalendarRepo for PostgresCalendarRepo {
         .map(|_| ())
         .inspect_err(|e| {
             error!(
-                "Delete calendar with id: {:?} failed. DB returned error: {:?}",
-                calendar_id, e
+                calendar_id = %calendar_id,
+                error = ?e,
+                "Failed to delete calendar with id"
             );
         })?;
         Ok(())
@@ -272,8 +283,9 @@ impl ICalendarRepo for PostgresCalendarRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Find calendars by metadata: {:?} failed. DB returned error: {:?}",
-                query, e
+                query = ?query,
+                error = ?e,
+                "Failed to find calendars by metadata"
             );
         })?
         .into_iter()

@@ -3,6 +3,7 @@ use std::{
     convert::{TryFrom, TryInto},
 };
 
+use anyhow::Context;
 use chrono::{DateTime, Utc};
 use nittei_domain::{
     CalendarEvent,
@@ -62,9 +63,9 @@ impl TryFrom<MostRecentCreatedServiceEventsRaw> for MostRecentCreatedServiceEven
             created: e
                 .created
                 .map(|c| {
-                    DateTime::from_timestamp_millis(c).ok_or(anyhow::anyhow!(
-                        "Unable to convert created timestamp to DateTime"
-                    ))
+                    DateTime::from_timestamp_millis(c).ok_or_else(|| {
+                        anyhow::anyhow!("Unable to convert created timestamp to DateTime")
+                    })
                 })
                 // If the created timestamp is None, return None
                 // If we got an error in the internal Result, return it
@@ -143,11 +144,15 @@ impl TryFrom<EventRaw> for CalendarEvent {
 
     fn try_from(e: EventRaw) -> anyhow::Result<Self> {
         let recurrence: Option<RRuleOptions> = match e.recurrence_jsonb {
-            Some(json) => serde_json::from_value(json)?,
+            Some(json) => {
+                serde_json::from_value(json).context("Unable to convert recurrence to JSON")?
+            }
             None => None,
         };
         let reminders: Vec<CalendarEventReminder> = match e.reminders_jsonb {
-            Some(json) => serde_json::from_value(json)?,
+            Some(json) => {
+                serde_json::from_value(json).context("Unable to convert reminders to JSON")?
+            }
             None => Vec::new(),
         };
 
@@ -168,12 +173,12 @@ impl TryFrom<EventRaw> for CalendarEvent {
             duration: e.duration,
             busy: e.busy,
             end_time: e.end_time,
-            created: DateTime::from_timestamp_millis(e.created).ok_or(anyhow::anyhow!(
-                "Unable to convert created timestamp to DateTime"
-            ))?,
-            updated: DateTime::from_timestamp_millis(e.updated).ok_or(anyhow::anyhow!(
-                "Unable to convert updated timestamp to DateTime"
-            ))?,
+            created: DateTime::from_timestamp_millis(e.created).ok_or_else(|| {
+                anyhow::anyhow!("Unable to convert created timestamp to DateTime")
+            })?,
+            updated: DateTime::from_timestamp_millis(e.updated).ok_or_else(|| {
+                anyhow::anyhow!("Unable to convert updated timestamp to DateTime")
+            })?,
             recurrence,
             recurring_until: e.recurring_until,
             exdates: e.exdates,
@@ -181,7 +186,8 @@ impl TryFrom<EventRaw> for CalendarEvent {
             original_start_time: e.original_start_time,
             reminders,
             service_id: e.service_uid.map(|id| id.into()),
-            metadata: serde_json::from_value(e.metadata)?,
+            metadata: serde_json::from_value(e.metadata)
+                .context("Unable to convert metadata to JSON")?,
         })
     }
 }
@@ -189,10 +195,10 @@ impl TryFrom<EventRaw> for CalendarEvent {
 #[async_trait::async_trait]
 impl IEventRepo for PostgresEventRepo {
     #[instrument(name = "calendar_event::insert")]
-    async fn insert(&self, e: &CalendarEvent) -> anyhow::Result<()> {
-        let status: String = e.status.clone().into();
-        let recurrence = if e.recurrence.is_some() {
-            Some(serde_json::to_value(&e.recurrence)?)
+    async fn insert(&self, event: &CalendarEvent) -> anyhow::Result<()> {
+        let status: String = event.status.clone().into();
+        let recurrence = if event.recurrence.is_some() {
+            Some(serde_json::to_value(&event.recurrence)?)
         } else {
             None
         };
@@ -228,41 +234,42 @@ impl IEventRepo for PostgresEventRepo {
             )
             VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
             "#,
-            e.id.as_ref(),
-            e.account_id.as_ref(),
-            e.user_id.as_ref(),
-            e.calendar_id.as_ref(),
-            e.external_parent_id,
-            e.external_id,
-            e.title,
-            e.description,
-            e.event_type,
-            e.location,
+            event.id.as_ref(),
+            event.account_id.as_ref(),
+            event.user_id.as_ref(),
+            event.calendar_id.as_ref(),
+            event.external_parent_id,
+            event.external_id,
+            event.title,
+            event.description,
+            event.event_type,
+            event.location,
             status,
-            e.all_day,
-            e.start_time,
-            e.duration,
-            e.end_time,
-            e.busy,
-            e.created.timestamp_millis(),
-            e.updated.timestamp_millis(),
+            event.all_day,
+            event.start_time,
+            event.duration,
+            event.end_time,
+            event.busy,
+            event.created.timestamp_millis(),
+            event.updated.timestamp_millis(),
             // (recurrence_jsonb) JSONB field
             &recurrence as _,
-            e.recurring_until,
-            &e.exdates,
-            e.recurring_event_id.as_ref().map(|id| id.as_ref()),
-            e.original_start_time,
+            event.recurring_until,
+            &event.exdates,
+            event.recurring_event_id.as_ref().map(|id| id.as_ref()),
+            event.original_start_time,
             // (reminders_jsonb) JSONB field
-            Json(&e.reminders) as _,
-            e.service_id.as_ref().map(|id| id.as_ref()),
-            Json(&e.metadata) as _,
+            Json(&event.reminders) as _,
+            event.service_id.as_ref().map(|id| id.as_ref()),
+            Json(&event.metadata) as _,
         )
         .execute(&self.pool)
         .await
         .inspect_err(|err| {
             error!(
-                "Unable to insert calendar_event: {:?}. DB returned error: {:?}",
-                e, err
+                event = ?event,
+                error = ?err,
+                "Failed to insert calendar_event"
             );
         })?;
 
@@ -333,8 +340,8 @@ impl IEventRepo for PostgresEventRepo {
 
         query.execute(&self.pool).await.inspect_err(|err| {
             error!(
-                "Unable to insert calendar_events: {:?}. DB returned error: {:?}",
-                events, err
+                error = ?err,
+                "Failed to insert calendar_events"
             );
         })?;
         Ok(())
@@ -403,8 +410,9 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|err| {
             error!(
-                "Unable to save calendar_event: {:?}. DB returned error: {:?}",
-                e, err
+                event = ?e,
+                error = ?err,
+                "Failed to save calendar_event"
             );
         })?;
 
@@ -425,8 +433,9 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|err| {
             error!(
-                "Find calendar event with id: {:?} failed. DB returned error: {:?}",
-                event_uid, err
+                event_uid = %event_uid,
+                error = ?err,
+                "Failed to find calendar event with id"
             );
         })?
         .map(|e| e.try_into())
@@ -449,9 +458,14 @@ impl IEventRepo for PostgresEventRepo {
             EventRaw,
             r#"
             SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e
-            WHERE e.recurring_event_uid = ANY($1) AND e.original_start_time >= $2 AND e.original_start_time <= $3
+            WHERE e.recurring_event_uid = ANY($1::uuid[]) AND
+                (
+                    (e.original_start_time >= $2 AND e.original_start_time <= $3)
+                    OR
+                    (e.start_time >= $2 AND e.start_time <= $3)
+                )
             "#,
-            &recurring_event_ids,
+            &recurring_event_ids as &[Uuid],
             timespan.start(),
             timespan.end(),
         )
@@ -459,8 +473,9 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|err| {
             error!(
-                "Find calendar events with recurring_event_ids: {:?} failed. DB returned error: {:?}",
-                recurring_event_ids, err
+                recurring_event_ids = ?recurring_event_ids,
+                error = ?err,
+                "Failed to find calendar events with recurring_event_ids"
             );
         })?
         .into_iter()
@@ -489,8 +504,9 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|err| {
             error!(
-                "Find calendar event with id and recurring_event_id: {:?} failed. DB returned error: {:?}",
-                event_id, err
+                event_id = %event_id,
+                error = ?err,
+                "Failed to find calendar event with id and recurring_event_id"
             );
         })?
         .into_iter()
@@ -518,8 +534,10 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|err| {
             error!(
-                "Find calendar event with external_id: {:?} failed. DB returned error: {:?}",
-                external_id, err
+                account_uid = %account_uid,
+                external_id = %external_id,
+                error = ?err,
+                "Failed to find calendar event with external_id"
             );
         })?
         .into_iter()
@@ -538,7 +556,7 @@ impl IEventRepo for PostgresEventRepo {
             EventRaw,
             r#"
             SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e
-            WHERE e.account_uid = $1 AND e.external_id = any($2)
+            WHERE e.account_uid = $1 AND e.external_id = any($2::text[])
             "#,
             account_uid.as_ref(),
             external_ids,
@@ -547,8 +565,10 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|err| {
             error!(
-                "Find calendar events with external_ids: {:?} failed. DB returned error: {:?}",
-                external_ids, err
+                account_uid = %account_uid,
+                external_ids = ?external_ids,
+                error = ?err,
+                "Failed to find calendar events with external_ids"
             );
         })?
         .into_iter()
@@ -563,16 +583,17 @@ impl IEventRepo for PostgresEventRepo {
             EventRaw,
             r#"
             SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e
-            WHERE e.event_uid = ANY($1)
+            WHERE e.event_uid = ANY($1::uuid[])
             "#,
-            &ids
+            &ids as &[Uuid],
         )
         .fetch_all(&self.pool)
         .await
         .inspect_err(|e| {
             error!(
-                "Find calendar events with ids: {:?} failed. DB returned error: {:?}",
-                event_ids, e
+                event_ids = ?event_ids,
+                error = ?e,
+                "Failed to find calendar events with ids"
             );
         })?
         .into_iter()
@@ -607,8 +628,9 @@ impl IEventRepo for PostgresEventRepo {
             .await
             .inspect_err(|e| {
                 error!(
-                    "Find calendar events for calendar id: {:?} failed. DB returned error: {:?}",
-                    calendar_id, e
+                    calendar_id = %calendar_id,
+                    error = ?e,
+                    "Failed to find calendar events for calendar id"
                 );
             })?
             .into_iter()
@@ -628,8 +650,9 @@ impl IEventRepo for PostgresEventRepo {
             .await
             .inspect_err(|e| {
                 error!(
-                    "Find calendar events for calendar id: {:?} failed. DB returned error: {:?}",
-                    calendar_id, e
+                    calendar_id = %calendar_id,
+                    error = ?e,
+                    "Failed to find calendar events for calendar id"
                 );
             })?
             .into_iter()
@@ -653,14 +676,14 @@ impl IEventRepo for PostgresEventRepo {
             EventRaw,
             r#"
                     SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e
-                    WHERE e.calendar_uid  = any($1)
+                    WHERE e.calendar_uid  = any($1::uuid[])
                     AND (
                         (e.start_time <= $2 AND e.end_time >= $3)
                         OR 
                         (e.start_time < $2 AND e.recurrence_jsonb IS NOT NULL AND (e.recurring_until IS NULL OR e.recurring_until > $3))
                     )
                     "#,
-            &calendar_ids,
+            &calendar_ids as &[Uuid],
             timespan.end(),
             timespan.start()
         )
@@ -668,8 +691,9 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Find calendar events for calendar ids: {:?} failed. DB returned error: {:?}",
-                calendar_ids, e
+                calendar_ids = ?calendar_ids,
+                error = ?e,
+                "Failed to find calendar events for calendar ids"
             );
         })?
         .into_iter()
@@ -677,13 +701,13 @@ impl IEventRepo for PostgresEventRepo {
         .collect()
     }
 
-    /// Find events and recurring events for users
-    /// Events need to be "busy" and with the status "confirmed"
+    /// Find recurring events for users that are active during the timespan
+    /// By default, events need to be "busy" and with the status "confirmed"
     ///
-    /// It excludes events that have an original_start_time
-    /// This is used to find the normal events and the recurring events for a user
-    #[instrument(name = "calendar_event::find_events_and_recurring_events_for_users_for_timespan", fields(user_ids = ?user_ids, timespan = ?timespan, include_tentative = %include_tentative, include_non_busy = %include_non_busy))]
-    async fn find_events_and_recurring_events_for_users_for_timespan(
+    /// The parameter `include_tentative` is used to include events with the status "tentative" (default: false)
+    /// The parameter `include_non_busy` is used to include events that are not "busy" (default: false)
+    #[instrument(name = "calendar_event::find_recurring_events_for_users_for_timespan", fields(user_ids = ?user_ids, timespan = ?timespan))]
+    async fn find_recurring_events_for_users_for_timespan(
         &self,
         user_ids: &[ID],
         timespan: TimeSpan,
@@ -708,28 +732,86 @@ impl IEventRepo for PostgresEventRepo {
             EventRaw,
             r#"
             SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e
-            WHERE e.user_uid = any($1)
-            AND (
-                (e.start_time < $2 AND e.end_time > $3)
-                OR
-                (e.start_time < $2 AND e.recurrence_jsonb IS NOT NULL AND (e.recurring_until IS NULL OR e.recurring_until > $3))
-            )
-            AND busy = any($4)
-            AND status = any($5)
-            AND e.original_start_time IS NULL
+            WHERE e.user_uid = any($1::uuid[])
+                AND e.start_time <= $2
+                AND e.recurrence_jsonb IS NOT NULL
+                AND (e.recurring_until IS NULL OR e.recurring_until >= $3)
+                AND busy = any($4::boolean[])
+                AND status = any($5::text[])
             "#,
-            &user_ids,
+            &user_ids as &[Uuid],
             timespan.end(),
             timespan.start(),
-            &expected_busy,
-            &expected_status,
+            &expected_busy as &[bool],
+            &expected_status as &[String],
         )
         .fetch_all(&self.pool)
         .await
         .inspect_err(|e| {
             error!(
-                "Find calendar events for user ids: {:?} failed. DB returned error: {:?}",
-                user_ids, e
+                user_ids = ?user_ids,
+                error = ?e,
+                "Failed to find recurring events for user ids"
+            );
+        })?
+        .into_iter()
+        .map(|e| e.try_into())
+        .collect()
+    }
+
+    /// Find events for users during timespan
+    /// By default, events need to be "busy" and with the status "confirmed"
+    /// This excludes events that have a recurrence_jsonb and an original_start_time (ex: recurring events and their exceptions)
+    ///
+    /// The parameter `include_tentative` is used to include events with the status "tentative" (default: false)
+    /// The parameter `include_non_busy` is used to include events that are not "busy" (default: false)
+    #[instrument(name = "calendar_event::find_events_for_users_for_timespan", fields(user_ids = ?user_ids, timespan = ?timespan, include_tentative = %include_tentative, include_non_busy = %include_non_busy))]
+    async fn find_events_for_users_for_timespan(
+        &self,
+        user_ids: &[ID],
+        timespan: TimeSpan,
+        include_tentative: bool,
+        include_non_busy: bool,
+    ) -> anyhow::Result<Vec<CalendarEvent>> {
+        let user_ids = user_ids.iter().map(|id| *id.as_ref()).collect::<Vec<_>>();
+        let expected_busy: Vec<bool> = if include_non_busy {
+            vec![true, false]
+        } else {
+            vec![true]
+        };
+        let expected_status: Vec<String> = if include_tentative {
+            vec![
+                CalendarEventStatus::Tentative.into(),
+                CalendarEventStatus::Confirmed.into(),
+            ]
+        } else {
+            vec![CalendarEventStatus::Confirmed.into()]
+        };
+        sqlx::query_as!(
+            EventRaw,
+            r#"
+            SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e
+            WHERE e.user_uid = any($1::uuid[])
+                AND e.start_time <= $2
+                AND e.end_time >= $3
+                AND busy = any($4::boolean[])
+                AND status = any($5::text[])
+                AND e.recurrence_jsonb IS NULL
+                AND e.original_start_time IS NULL
+            "#,
+            &user_ids as &[Uuid],
+            timespan.end(),
+            timespan.start(),
+            &expected_busy as &[bool],
+            &expected_status as &[String],
+        )
+        .fetch_all(&self.pool)
+        .await
+        .inspect_err(|e| {
+            error!(
+                user_ids = ?user_ids,
+                error = ?e,
+                "Failed to find events for user ids"
             );
         })?
         .into_iter()
@@ -766,26 +848,27 @@ impl IEventRepo for PostgresEventRepo {
             EventRaw,
             r#"
                     SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e
-                    WHERE e.calendar_uid  = any($1)
+                    WHERE e.calendar_uid  = any($1::uuid[])
                     AND (
                         (e.start_time < $2 AND e.end_time > $3)
                         OR
                         (e.start_time < $2 AND e.recurrence_jsonb IS NOT NULL AND (e.recurring_until IS NULL OR e.recurring_until > $3))
                     )
                     AND busy = true
-                    AND status = any($4)
+                    AND status = any($4::text[])
                     "#,
-            &calendar_ids,
+            &calendar_ids as &[Uuid],
             timespan.end(),
             timespan.start(),
-            expected_status.as_slice()
+            &expected_status as &[String],
         )
         .fetch_all(&self.pool)
         .await
         .inspect_err(|e| {
             error!(
-                "Find calendar events for calendar ids: {:?} failed. DB returned error: {:?}",
-                calendar_ids, e
+                calendar_ids = ?calendar_ids,
+                error = ?e,
+                "Failed to find calendar events for calendar ids"
             );
         })?
         .into_iter()
@@ -932,11 +1015,14 @@ impl IEventRepo for PostgresEventRepo {
         // Limit if needed
         if let Some(limit) = params.limit {
             query.push(" LIMIT ");
-            query.push(format!("{}", limit));
+            query.push(format!("{limit}"));
         }
 
         let rows = query.build().fetch_all(&self.pool).await.inspect_err(|e| {
-            error!("Search events failed. DB returned error: {:?}", e);
+            error!(
+                error = ?e,
+                "Failed to search events"
+            );
         })?;
 
         let events_raw: Vec<EventRaw> = rows
@@ -1086,11 +1172,14 @@ impl IEventRepo for PostgresEventRepo {
         // Limit if needed
         if let Some(limit) = params.limit {
             query.push(" LIMIT ");
-            query.push(format!("{}", limit));
+            query.push(format!("{limit}"));
         }
 
         let rows = query.build().fetch_all(&self.pool).await.inspect_err(|e| {
-            error!("Search events failed. DB returned error: {:?}", e);
+            error!(
+                error = ?e,
+                "Failed to search events"
+            );
         })?;
 
         let events_raw: Vec<EventRaw> = rows
@@ -1121,19 +1210,20 @@ impl IEventRepo for PostgresEventRepo {
                 WHERE service_uid = $1
                 ORDER BY e.user_uid, created DESC
             ) AS events ON events.user_uid = users.user_uid
-            WHERE users.user_uid = ANY($2)
+            WHERE users.user_uid = ANY($2::uuid[])
             "#,
             service_id.as_ref(),
-            &user_ids
+            &user_ids as &[Uuid],
         )
         .fetch_all(&self.pool)
         .await
         .inspect_err(|e| {
-                error!(
-                    "Find most recently created service events for service id: {} failed. DB returned error: {:?}",
-                    service_id, e
-                );
-            })?;
+            error!(
+                service_id = %service_id,
+                error = ?e,
+                "Failed to find most recently created service events"
+            );
+        })?;
 
         most_recent_created_service_events
             .into_iter()
@@ -1156,7 +1246,7 @@ impl IEventRepo for PostgresEventRepo {
             SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata
             FROM calendar_events AS e
             WHERE e.service_uid = $1 AND
-            e.user_uid = ANY($2) AND
+            e.user_uid = ANY($2::uuid[]) AND
             e.start_time <= $3 AND e.end_time >= $4
             "#,
             service_id.as_ref(),
@@ -1168,12 +1258,12 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|e| {
                 error!(
-                    "Find calendar events for service id: {}, user_ids: {:?}, min_time: {}, max_time: {} failed. DB returned error: {:?}",
-                    service_id,
-                    user_ids,
-                    min_time,
-                    max_time,
-                     e
+                    service_id = %service_id,
+                    user_ids = ?user_ids,
+                    min_time = %min_time,
+                    max_time = %max_time,
+                    error = ?e,
+                    "Failed to find calendar events"
                 )})?
         .into_iter().map(|e| e.try_into()).collect()
     }
@@ -1205,12 +1295,12 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|e| {
                 error!(
-                    "Find service calendar events for user_id: {}, busy: {}, min_time: {}, max_time: {} failed. DB returned error: {:?}",
-                    user_id,
-                    busy,
-                    min_time,
-                    max_time,
-                     e
+                    user_id = %user_id,
+                    busy = %busy,
+                    min_time = %min_time,
+                    max_time = %max_time,
+                    error = ?e,
+                    "Failed to find service calendar events"
                 );
             })?.into_iter().map(|e| e.try_into()).collect()
     }
@@ -1218,11 +1308,11 @@ impl IEventRepo for PostgresEventRepo {
     /// Delete a calendar event by its uid
     #[instrument(name = "calendar_event::delete", fields(event_uid = %event_uid))]
     async fn delete(&self, event_uid: &ID) -> anyhow::Result<()> {
-        sqlx::query!(
+        let event = sqlx::query!(
             r#"
             DELETE FROM calendar_events AS e
             WHERE e.event_uid = $1
-            RETURNING event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata
+            RETURNING event_uid
             "#,
             event_uid.as_ref(),
         )
@@ -1230,12 +1320,19 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Delete calendar event with id: {:?} failed. DB returned error: {:?}",
-                event_uid, e
+                event_uid = %event_uid,
+                error = ?e,
+                "Failed to delete calendar event"
             );
-        })?
-        .ok_or_else(|| anyhow::Error::msg("Unable to delete calendar event"))
-        .map(|_| ())
+        })?;
+
+        if event.is_none() {
+            tracing::warn!(
+                "Tried to delete calendar event with id: {:?}, but it does not exist",
+                event_uid
+            );
+        }
+        Ok(())
     }
 
     /// Delete multiple calendar events by their uids
@@ -1245,16 +1342,17 @@ impl IEventRepo for PostgresEventRepo {
         sqlx::query!(
             r#"
             DELETE FROM calendar_events AS e
-            WHERE e.event_uid = ANY($1)
+            WHERE e.event_uid = ANY($1::uuid[])
             "#,
-            &ids
+            &ids as &[Uuid],
         )
         .execute(&self.pool)
         .await
         .inspect_err(|e| {
             error!(
-                "Delete calendar events with ids: {:?} failed. DB returned error: {:?}",
-                event_ids, e
+                event_ids = ?event_ids,
+                error = ?e,
+                "Failed to delete calendar events"
             );
         })?;
         Ok(())
@@ -1274,8 +1372,9 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Delete calendar event by service id: {:?} failed. DB returned error: {:?}",
-                service_id, e
+                service_id = %service_id,
+                error = ?e,
+                "Failed to delete calendar event by service id"
             );
         })?;
         Ok(())
@@ -1305,8 +1404,9 @@ impl IEventRepo for PostgresEventRepo {
         .await
         .inspect_err(|e| {
             error!(
-                "Find calendar events by metadata: {:?} failed. DB returned error: {:?}",
-                query, e
+                query = ?query,
+                error = ?e,
+                "Failed to find calendar events by metadata"
             );
         })?
         .into_iter()

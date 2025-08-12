@@ -121,10 +121,9 @@ impl From<UseCaseError> for NitteiError {
             UseCaseError::InvalidTimespan => {
                 Self::BadClientData("The provided start_ts and end_ts are invalid".into())
             }
-            UseCaseError::NotFound(entity, event_id) => Self::NotFound(format!(
-                "The {} with id: {}, was not found.",
-                entity, event_id
-            )),
+            UseCaseError::NotFound(entity, event_id) => {
+                Self::NotFound(format!("The {entity} with id: {event_id}, was not found."))
+            }
         }
     }
 }
@@ -156,10 +155,8 @@ impl UseCase for GetEventInstancesUseCase {
         let main_event = event_and_exceptions.iter().find(|e| e.id == self.event_id);
 
         // If the main event is not found, return an error
-        let main_event = main_event.ok_or(UseCaseError::NotFound(
-            "CalendarEvent".into(),
-            self.event_id.clone(),
-        ))?;
+        let main_event = main_event
+            .ok_or_else(|| UseCaseError::NotFound("CalendarEvent".into(), self.event_id.clone()))?;
 
         // If the user_id of the main event is different from the user_id of the user, return an error
         if self.user_id != main_event.user_id {
