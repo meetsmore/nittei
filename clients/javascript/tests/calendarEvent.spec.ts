@@ -838,6 +838,11 @@ describe('CalendarEvent API', () => {
           duration: 1000,
           startTime: new Date(1000),
         })
+        const event2 = await adminClient.events.create(userId, {
+          calendarId,
+          duration: 1000,
+          startTime: new Date(2000),
+        })
         const externalId = crypto.randomUUID()
         await adminClient.events.create(userId, {
           calendarId,
@@ -845,10 +850,17 @@ describe('CalendarEvent API', () => {
           startTime: new Date(2000),
           externalId,
         })
+        const externalId2 = crypto.randomUUID()
+        await adminClient.events.create(userId, {
+          calendarId,
+          duration: 1000,
+          startTime: new Date(2000),
+          externalId: externalId2,
+        })
 
         await adminClient.events.removeMany({
-          eventIds: [event1.event.id],
-          externalIds: [externalId],
+          eventIds: [event1.event.id, event2.event.id],
+          externalIds: [externalId, externalId2],
         })
 
         // Refetch the events
@@ -863,11 +875,28 @@ describe('CalendarEvent API', () => {
             throw e
           }
         }
-        const event2Deleted =
-          await adminClient.events.getByExternalId(externalId)
-
         expect(event1Deleted).toBe(null)
-        expect(event2Deleted.events.length).toBe(0)
+
+        let event2Deleted: CalendarEventDTO | null
+        try {
+          const res = await adminClient.events.getById(event2.event.id)
+          event2Deleted = res.event
+        } catch (e) {
+          if (e instanceof NotFoundError) {
+            event2Deleted = null
+          } else {
+            throw e
+          }
+        }
+        expect(event2Deleted).toBe(null)
+
+        const externalEvent1Deleted =
+          await adminClient.events.getByExternalId(externalId)
+        const externalEvent2Deleted =
+          await adminClient.events.getByExternalId(externalId2)
+
+        expect(externalEvent1Deleted.events.length).toBe(0)
+        expect(externalEvent2Deleted.events.length).toBe(0)
       })
     })
 

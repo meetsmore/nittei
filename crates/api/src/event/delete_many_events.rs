@@ -76,15 +76,9 @@ impl UseCase for DeleteManyEventsUseCase {
     const NAME: &'static str = "DeleteManyEvents";
 
     async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
-        // If both event_ids and external_ids are None or if both are empty, return an error
-        if self.event_ids.is_none() && self.external_ids.is_none() {
-            tracing::warn!("[delete_many_events] No event ids or external ids provided");
-            return Err(UseCaseError::BadRequest);
-        }
-
-        // If both event_ids and external_ids exist, but are empty, return an error
-        if self.event_ids.as_ref().map(|v| v.len()).unwrap_or(1) == 0
-            && self.external_ids.as_ref().map(|v| v.len()).unwrap_or(1) == 0
+        // If both event_ids and external_ids don't exist or are empty, return an error
+        if self.event_ids.as_ref().map(|v| v.len()).unwrap_or(0) == 0
+            && self.external_ids.as_ref().map(|v| v.len()).unwrap_or(0) == 0
         {
             tracing::warn!("[delete_many_events] No event ids or external ids provided");
             return Err(UseCaseError::BadRequest);
@@ -96,7 +90,7 @@ impl UseCase for DeleteManyEventsUseCase {
         {
             ctx.repos.events.find_many(ids.as_slice())
         } else {
-            Box::pin(future::ok(Vec::new())) // Creates an already-resolved future
+            Box::pin(future::ok(Vec::new())) // Already-resolved future
         };
 
         // Find events by external ids (it isn't awaited here, but instead in the try_join below)
@@ -107,7 +101,7 @@ impl UseCase for DeleteManyEventsUseCase {
                 .events
                 .find_many_by_external_ids(&self.account_uid, ids.as_slice())
         } else {
-            Box::pin(future::ok(Vec::new())) // Another already-resolved future
+            Box::pin(future::ok(Vec::new())) // Already-resolved future
         };
 
         // Join the two futures and wait for them to complete
