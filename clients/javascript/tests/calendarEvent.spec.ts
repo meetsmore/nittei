@@ -882,6 +882,7 @@ describe('CalendarEvent API', () => {
     let calendarId: string
     let eventId1: string
     let eventId2: string
+    let eventId3: string
     beforeAll(async () => {
       const data = await setupAccount()
       adminClient = data.client
@@ -915,6 +916,17 @@ describe('CalendarEvent API', () => {
         },
       })
       eventId2 = eventRes2.event.id
+
+      const eventRes3 = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date('2025-04-12T03:00:00.000Z'),
+        status: 'confirmed',
+        busy: true,
+        originalStartTime: new Date('2025-04-12T00:00:00.000Z'),
+        recurringEventId: eventRes2.event.id,
+      })
+      eventId3 = eventRes3.event.id
     })
 
     it('should be able to get events of users during timespan, with recurrence', async () => {
@@ -924,7 +936,7 @@ describe('CalendarEvent API', () => {
         endTime: new Date('2025-11-09T00:00:00.000Z'),
       })
 
-      expect(res.events.length).toBe(2)
+      expect(res.events.length).toBe(3)
       expect(res.events).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -935,6 +947,11 @@ describe('CalendarEvent API', () => {
           expect.objectContaining({
             event: expect.objectContaining({
               id: eventId2,
+            }),
+          }),
+          expect.objectContaining({
+            event: expect.objectContaining({
+              id: eventId3,
             }),
           }),
         ])
