@@ -52,7 +52,7 @@ mod tests {
         let res = ctx
             .repos
             .schedules
-            .find_many(&[schedule.id.clone()])
+            .find_many(std::slice::from_ref(&schedule.id))
             .await
             .unwrap();
         assert_eq!(res.len(), 1);
