@@ -197,15 +197,15 @@ pub async fn update_resource_values(
         user_resource.set_availability(availability.clone());
     }
 
-    if let Some(buffer) = update.buffer_after {
-        if !user_resource.set_buffer_after(buffer) {
-            return Err(UpdateServiceResourceError::InvalidBuffer);
-        }
+    if let Some(buffer) = update.buffer_after
+        && !user_resource.set_buffer_after(buffer)
+    {
+        return Err(UpdateServiceResourceError::InvalidBuffer);
     }
-    if let Some(buffer) = update.buffer_before {
-        if !user_resource.set_buffer_before(buffer) {
-            return Err(UpdateServiceResourceError::InvalidBuffer);
-        }
+    if let Some(buffer) = update.buffer_before
+        && !user_resource.set_buffer_before(buffer)
+    {
+        return Err(UpdateServiceResourceError::InvalidBuffer);
     }
 
     if let Some(closest_booking_time) = update.closest_booking_time {
@@ -217,12 +217,12 @@ pub async fn update_resource_values(
         user_resource.closest_booking_time = closest_booking_time;
     }
 
-    if let Some(furthest_booking_time) = &update.furthest_booking_time {
-        if *furthest_booking_time < 0 {
-            return Err(UpdateServiceResourceError::InvalidBookingTimespan(
-                "Furthest booking time cannot be negative.".into(),
-            ));
-        }
+    if let Some(furthest_booking_time) = &update.furthest_booking_time
+        && *furthest_booking_time < 0
+    {
+        return Err(UpdateServiceResourceError::InvalidBookingTimespan(
+            "Furthest booking time cannot be negative.".into(),
+        ));
     }
     user_resource.furthest_booking_time = update.furthest_booking_time;
 

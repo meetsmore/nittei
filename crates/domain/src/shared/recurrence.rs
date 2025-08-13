@@ -218,10 +218,10 @@ pub struct WeekDayRecurrence {
 
 impl WeekDayRecurrence {
     fn create(weekday: Weekday, n: Option<isize>) -> Option<Self> {
-        if let Some(n) = n {
-            if !Self::is_valid_n(n) {
-                return None;
-            }
+        if let Some(n) = n
+            && !Self::is_valid_n(n)
+        {
+            return None;
         }
         Some(Self { n, weekday })
     }
