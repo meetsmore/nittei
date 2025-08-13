@@ -11,20 +11,20 @@
 
 `Nittei` is a self-hosted calendar and scheduler server built upon [nittei](https://github.com/fmeringdal/nettu-scheduler).
 
-<!-- It aims to provide the building blocks for building calendar / booking apps with ease. It has a simple REST API and also a [JavaScript SDK](https://www.npmjs.com/package/@nittei/sdk-scheduler) and [Rust SDK](https://crates.io/crates/nittei_sdk). -->
-
 It supports authentication through
 
 - API keys for server - server
 - JSON Web Tokens for browser - server
 
-## Features
+## Concepts
 
-- **Multi-tenancy**: All resources are grouped by `Account`s
-- **Calendars**: For grouping `Calendar Event`s
-- **Calendar Events**: Supports recurrence rules, flexible querying and reminders
-- **Freebusy**: Find out when `User`s are free and when they are busy
-- **Metadata queries**: Add key-value metadata to your resources and then query on that metadata
+- **Accounts**: `Account`s are the way to handle multi-tenancy. Each account can have multiple users
+- **Users**: `User`s represent an actual user, and each one can belong to only one account
+- **Calendars**: Users can each have multiple `Calendar`s, which are used for grouping `Calendar Event`s
+- **Calendar Events**: `Calendar Event`s are the actual events. They support recurrence rules and be flexible queried
+- **Reminders**: `Calendar Event`s can have reminders
+- **Freebusy**: `User`s can be queried on their free busy
+- **Metadata**: `Calendar`s and `Calendar Event`s can contain metadata values, allowing to store anything alongside them
 
 More advanced features include
 
@@ -32,7 +32,7 @@ More advanced features include
 - **Integrations**: Connect your Nittei, Google and Outlook calendars
 - **Webhooks**: Notifying your server about `Calendar Event` reminders
 
-## Quick start
+## Getting started
 
 ### Prerequisites
 
@@ -149,6 +149,20 @@ This will install
 - [Reminders](examples/reminders.md)
 
 - [Creating JWT for end-users](examples/jwt.md)
+
+## Main Rust dependencies used
+
+- [Tokio](https://github.com/tokio-rs/tokio): async runtime needed for using async/await
+- [Axum](https://github.com/tokio-rs/axum): HTTP framework
+- [validator](https://github.com/Keats/validator) + [axum-valid](https://github.com/gengteng/axum-valid): add validation step when deserializing structs and enums
+- [SQLx](https://github.com/launchbadge/sqlx): async, pure Rust SQL crate featuring compile-time checked queries
+- [serde](https://github.com/serde-rs/serde): serialization (and deserialization) framework
+- [anyhow](https://github.com/dtolnay/anyhow): easy to use Error type for applications
+- [chrono](https://github.com/chronotope/chrono): library providing structs/enums for handling datetimes and timezones
+- [rrule](https://github.com/fmeringdal/rust-rrule): library for generating instances of recurring events
+- [ts-rs](https://github.com/Aleph-Alpha/ts-rs): automatically generate Typescript types from Rust structs and enums
+- [tracing](https://github.com/tokio-rs/tracing): handles tracing and logging
+- [tikv-jemallocator](https://github.com/tikv/jemallocator): replaces default memory allocator with Jemalloc
 
 ## Contributing
 
