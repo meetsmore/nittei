@@ -1,7 +1,3 @@
-<!-- <div align="center">
-<img width="400" src="docs/logo.png" alt="logo">
-</div> -->
-
 # Nittei
 
 [![MIT licensed](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
