@@ -57,7 +57,9 @@ pub async fn search_events_controller(
         created_at: body.filter.created_at.take(),
         updated_at: body.filter.updated_at.take(),
         sort: body.sort.take(),
-        limit: body.limit.or(Some(1000)), // Default limit to 1000
+        limit: body
+            .limit
+            .or(Some(APP_CONFIG.max_events_returned_by_search)),
     };
 
     execute(usecase, &ctx)
