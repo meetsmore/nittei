@@ -87,8 +87,7 @@ impl From<UseCaseError> for NitteiError {
             UseCaseError::InternalError => Self::InternalError,
             UseCaseError::InvalidDate(msg) => {
                 Self::BadClientData(format!(
-                    "Invalid datetime: {}. Should be YYYY-MM-DD, e.g. January 1. 2020 => 2020-1-1",
-                    msg
+                    "Invalid datetime: {msg}. Should be YYYY-MM-DD, e.g. January 1. 2020 => 2020-1-1"
                 ))
             }
             UseCaseError::InvalidInterval => {
@@ -357,21 +356,20 @@ impl GetServiceBookingSlotsUseCase {
                             let mut instances = e.expand(Some(timespan), &cal.settings)?;
 
                             // Add buffer to instances if event is a service event
-                            if let Some(service_id) = e.service_id {
-                                if let Some(service_resource) = all_service_resources
+                            if let Some(service_id) = e.service_id
+                                && let Some(service_resource) = all_service_resources
                                     .iter()
                                     .find(|s| s.service_id == service_id)
-                                {
-                                    let buffer_after_in_millis = TimeDelta::milliseconds(
-                                        service_resource.buffer_after * 60 * 1000,
-                                    );
-                                    let buffer_before_in_millis = TimeDelta::milliseconds(
-                                        service_resource.buffer_before * 60 * 1000,
-                                    );
-                                    for instance in instances.iter_mut() {
-                                        instance.end_time += buffer_after_in_millis;
-                                        instance.start_time -= buffer_before_in_millis;
-                                    }
+                            {
+                                let buffer_after_in_millis = TimeDelta::milliseconds(
+                                    service_resource.buffer_after * 60 * 1000,
+                                );
+                                let buffer_before_in_millis = TimeDelta::milliseconds(
+                                    service_resource.buffer_before * 60 * 1000,
+                                );
+                                for instance in instances.iter_mut() {
+                                    instance.end_time += buffer_after_in_millis;
+                                    instance.start_time -= buffer_before_in_millis;
                                 }
                             }
                             Ok(instances)
@@ -634,7 +632,7 @@ mod test {
         let recurrence = RRuleOptions::default();
         match availability_event3.set_recurrence(recurrence) {
             Ok(_) => {}
-            Err(e) => panic!("Error setting recurrence: {:?}", e),
+            Err(e) => panic!("Error setting recurrence: {e:?}"),
         };
 
         ctx.repos.events.insert(&availability_event1).await.unwrap();

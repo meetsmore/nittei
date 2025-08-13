@@ -50,7 +50,7 @@ impl From<UseCaseError> for NitteiError {
     fn from(e: UseCaseError) -> Self {
         match e {
             UseCaseError::ServiceNotFound(id) => {
-                Self::NotFound(format!("Service with id: {} was not found.", id))
+                Self::NotFound(format!("Service with id: {id} was not found."))
             }
             UseCaseError::StorageError => Self::InternalError,
         }
@@ -76,18 +76,17 @@ impl UseCase for UpdateServiceUseCase {
             service.metadata = self.metadata.clone();
         }
         if let Some(opts) = &self.multi_person {
-            if let ServiceMultiPersonOptions::Group(new_count) = opts {
-                if let ServiceMultiPersonOptions::Group(old_count) = &service.multi_person {
-                    if new_count > old_count {
-                        // Delete all calendar events for this service, because
-                        // then it should be possible for more people to book
-                        ctx.repos
-                            .events
-                            .delete_by_service(&service.id)
-                            .await
-                            .map_err(|_| UseCaseError::StorageError)?;
-                    }
-                }
+            if let ServiceMultiPersonOptions::Group(new_count) = opts
+                && let ServiceMultiPersonOptions::Group(old_count) = &service.multi_person
+                && new_count > old_count
+            {
+                // Delete all calendar events for this service, because
+                // then it should be possible for more people to book
+                ctx.repos
+                    .events
+                    .delete_by_service(&service.id)
+                    .await
+                    .map_err(|_| UseCaseError::StorageError)?;
             }
             service.multi_person = opts.clone();
         }

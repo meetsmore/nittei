@@ -33,7 +33,7 @@ mod tests {
         let res = ctx
             .repos
             .accounts
-            .find_many(&[account.id.clone()])
+            .find_many(std::slice::from_ref(&account.id))
             .await
             .unwrap();
         assert!(res[0].eq(&account));

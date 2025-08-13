@@ -5,11 +5,15 @@ use axum::{
     middleware::Next,
     response::Response as AxumResponse,
 };
+use nittei_utils::config::APP_CONFIG;
 use opentelemetry::global::{self};
 use opentelemetry_http::HeaderExtractor;
 use tower_http::trace::{MakeSpan, OnFailure, OnResponse};
 use tracing::{Span, field::Empty};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
+
+const PATHS_TO_EXCLUDE_FROM_LOGGING_AND_TRACING: [&str; 2] =
+    ["/api/v1/healthcheck", "/api/v1/metrics"];
 
 /// Metadata for the request
 /// Used for logging and tracing
@@ -57,7 +61,10 @@ impl<B> MakeSpan<B> for NitteiTracingSpanBuilder {
             .map(|r| r.as_str().to_string())
             .unwrap_or_default();
 
-        if path == "/api/v1/healthcheck" {
+        // By default, exclude health check and metrics from tracing
+        if PATHS_TO_EXCLUDE_FROM_LOGGING_AND_TRACING.contains(&path)
+            && !APP_CONFIG.observability.observe_status_endpoints
+        {
             return Span::none();
         }
 
@@ -116,8 +123,12 @@ impl<B> OnResponse<B> for NitteiTracingOnResponse {
             ("ok", tracing::Level::INFO)
         };
 
-        // Exclude health check from logging
-        if path == "/api/v1/healthcheck" && status_code == 200 {
+        // By default, exclude health check from logging
+        // Only exclude if status code is 200
+        if PATHS_TO_EXCLUDE_FROM_LOGGING_AND_TRACING.contains(&path)
+            && status_code == 200
+            && !APP_CONFIG.observability.observe_status_endpoints
+        {
             return;
         }
 
@@ -190,13 +201,6 @@ impl<E: std::fmt::Debug> OnFailure<E> for NitteiTracingOnFailure {
         span.record("otel.status_code", "error");
         span.record("duration", latency.as_nanos());
         span.record("exception.type", std::any::type_name_of_val(&error));
-        span.record("exception.message", format!("{:?}", error));
-
-        tracing::error!(
-            parent: span,
-            error = ?error,
-            duration = %latency.as_nanos(),
-            "Request failed"
-        );
+        span.record("exception.message", format!("{error:?}"));
     }
 }

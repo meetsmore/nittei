@@ -218,10 +218,10 @@ pub struct WeekDayRecurrence {
 
 impl WeekDayRecurrence {
     fn create(weekday: Weekday, n: Option<isize>) -> Option<Self> {
-        if let Some(n) = n {
-            if !Self::is_valid_n(n) {
-                return None;
-            }
+        if let Some(n) = n
+            && !Self::is_valid_n(n)
+        {
+            return None;
         }
         Some(Self { n, weekday })
     }
@@ -249,7 +249,7 @@ impl WeekDayRecurrence {
 impl Display for WeekDayRecurrence {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let n_prefix = match self.n {
-            Some(n) => format!("{}", n),
+            Some(n) => format!("{n}"),
             None => "".into(),
         };
         write!(f, "{}{}", n_prefix, self.weekday)
@@ -318,7 +318,7 @@ impl<'de> Deserialize<'de> for WeekDayRecurrence {
             {
                 value
                     .parse::<WeekDayRecurrence>()
-                    .map_err(|_| E::custom(format!("Malformed weekday: {}", value)))
+                    .map_err(|_| E::custom(format!("Malformed weekday: {value}")))
             }
         }
 

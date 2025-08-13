@@ -24,17 +24,11 @@ pub fn init_subscriber() -> anyhow::Result<()> {
             .with_env_filter(env_filter)
             .init();
     } else {
-        let observability_config = nittei_utils::config::APP_CONFIG.observability.as_ref();
+        let observability_config = &nittei_utils::config::APP_CONFIG.observability;
         // In production, use the JSON format for logs
-        let service_name = observability_config
-            .and_then(|o| o.service_name.clone())
-            .unwrap_or_else(|| "unknown service".to_string());
-        let service_version = observability_config
-            .and_then(|o| o.service_version.clone())
-            .unwrap_or_else(|| "unknown version".to_string());
-        let service_env = observability_config
-            .and_then(|o| o.service_env.clone())
-            .unwrap_or_else(|| "unknown env".to_string());
+        let service_name = &observability_config.service_name;
+        let service_version = &observability_config.service_version;
+        let service_env = &observability_config.service_env;
 
         // Set the global propagator to trace context propagator
         let composite = TextMapCompositePropagator::new(vec![
@@ -45,8 +39,11 @@ pub fn init_subscriber() -> anyhow::Result<()> {
         global::set_text_map_propagator(composite);
 
         // Get the tracer - if no endpoint is provided, tracing will be disabled
-        let tracer_provider =
-            get_tracer_provider(service_name.clone(), service_version, service_env)?;
+        let tracer_provider = get_tracer_provider(
+            service_name.to_owned(),
+            service_version.to_owned(),
+            service_env.to_owned(),
+        )?;
 
         // Create a telemetry layer if a tracer is available
         let telemetry_layer = tracer_provider.map(|tracer_provider| {
@@ -87,25 +84,23 @@ fn get_tracer_provider(
     service_version: String,
     service_env: String,
 ) -> anyhow::Result<Option<SdkTracerProvider>> {
-    let otlp_endpoint = nittei_utils::config::APP_CONFIG
+    let otlp_endpoint = &nittei_utils::config::APP_CONFIG
         .observability
-        .as_ref()
-        .and_then(|o| o.otlp_tracing_endpoint.clone());
-    let datadog_endpoint = nittei_utils::config::APP_CONFIG
+        .otlp_tracing_endpoint;
+    let datadog_endpoint = &nittei_utils::config::APP_CONFIG
         .observability
-        .as_ref()
-        .and_then(|o| o.datadog_tracing_endpoint.clone());
+        .datadog_tracing_endpoint;
 
     if let Some(datadog_endpoint) = datadog_endpoint {
         Ok(Some(get_tracer_datadog(
-            datadog_endpoint,
+            datadog_endpoint.to_owned(),
             service_name,
             service_version,
             service_env,
         )?))
     } else if let Some(otlp_endpoint) = otlp_endpoint {
         Ok(Some(get_tracer_otlp(
-            otlp_endpoint,
+            otlp_endpoint.to_owned(),
             service_name,
             service_version,
             service_env,
@@ -179,12 +174,18 @@ fn get_tracer_otlp(
 /// This is a parent-based sampler, so if a parent exists, always sample
 /// If there is no parent, then this is based on the TRACING_SAMPLE_RATIO env var, defaults to 0.1
 fn get_sampler() -> Sampler {
-    // Get the sample ratio from the env var, default to 0.1
+    // Get the sample ratio from the env var, default is 0.1
     let ratio_to_sample = nittei_utils::config::APP_CONFIG
         .observability
-        .as_ref()
-        .and_then(|o| o.tracing_sample_rate)
-        .unwrap_or(0.1);
+        .tracing_sample_rate;
+
+    // If tracing is disabled, return an always off sampler
+    if nittei_utils::config::APP_CONFIG
+        .observability
+        .disable_tracing
+    {
+        return Sampler::AlwaysOff;
+    }
 
     // Create sampler based on
     // (1) parent => so if parent exists always sample

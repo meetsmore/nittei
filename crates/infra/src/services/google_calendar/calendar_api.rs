@@ -187,7 +187,7 @@ impl GoogleCalendarRestApi {
     ) -> anyhow::Result<T> {
         match self
             .client
-            .put(format!("{}/{}", GOOGLE_API_BASE_URL, path))
+            .put(format!("{GOOGLE_API_BASE_URL}/{path}"))
             .header("authorization", format!("Bearer {}", self.access_token))
             .json(body)
             .send()
@@ -217,7 +217,7 @@ impl GoogleCalendarRestApi {
     ) -> anyhow::Result<T> {
         match self
             .client
-            .post(format!("{}/{}", GOOGLE_API_BASE_URL, path))
+            .post(format!("{GOOGLE_API_BASE_URL}/{path}"))
             .header("authorization", format!("Bearer {}", self.access_token))
             .json(body)
             .send()
@@ -243,7 +243,7 @@ impl GoogleCalendarRestApi {
     async fn get<T: for<'de> Deserialize<'de>>(&self, path: String) -> anyhow::Result<T> {
         match self
             .client
-            .get(format!("{}/{}", GOOGLE_API_BASE_URL, path))
+            .get(format!("{GOOGLE_API_BASE_URL}/{path}"))
             .header("authorization", format!("Bearer {}", self.access_token))
             .send()
             .await
@@ -268,7 +268,7 @@ impl GoogleCalendarRestApi {
     async fn delete<T: for<'de> Deserialize<'de>>(&self, path: String) -> anyhow::Result<T> {
         match self
             .client
-            .delete(format!("{}/{}", GOOGLE_API_BASE_URL, path))
+            .delete(format!("{GOOGLE_API_BASE_URL}/{path}"))
             .header("authorization", format!("Bearer {}", self.access_token))
             .send()
             .await
@@ -302,7 +302,7 @@ impl GoogleCalendarRestApi {
         calendar_id: String,
         body: &GoogleCalendarEventAttributes,
     ) -> Result<GoogleCalendarEvent, ()> {
-        self.post(body, format!("calendars/{}/events", calendar_id))
+        self.post(body, format!("calendars/{calendar_id}/events"))
             .await
             .map_err(|e| {
                 error!("Failed to insert google calendar event to google calendar id: {} with body: {:?}. Error message: {:?}", calendar_id, body, e);
@@ -317,7 +317,7 @@ impl GoogleCalendarRestApi {
     ) -> Result<GoogleCalendarEvent, ()> {
         self.put(
             body,
-            format!("calendars/{}/events/{}", calendar_id, event_id),
+            format!("calendars/{calendar_id}/events/{event_id}"),
         )
         .await
             .map_err(|e| {
@@ -326,7 +326,7 @@ impl GoogleCalendarRestApi {
     }
 
     pub async fn remove(&self, calendar_id: String, event_id: String) -> Result<(), ()> {
-        self.delete(format!("calendars/{}/events/{}", calendar_id, event_id))
+        self.delete(format!("calendars/{calendar_id}/events/{event_id}"))
             .await
                 .map_err(|e| {
                 error!("Failed to delete google calendar event with google calendar id: {} and google event id: {}. Error message: {:?}", calendar_id, event_id, e);
@@ -338,8 +338,7 @@ impl GoogleCalendarRestApi {
         min_access_role: GoogleCalendarAccessRole,
     ) -> Result<ListCalendarsResponse, ()> {
         self.get(format!(
-            "users/me/calendarList?minAccessRole={:?}",
-            min_access_role
+            "users/me/calendarList?minAccessRole={min_access_role:?}"
         ))
         .await
         .map_err(|e| {

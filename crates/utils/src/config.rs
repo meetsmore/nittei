@@ -88,7 +88,7 @@ pub struct AppConfig {
 
     /// The observability configuration
     /// This is used to configure the observability tools
-    pub observability: Option<ObservabilityConfig>,
+    pub observability: ObservabilityConfig,
 }
 
 /// Observability configuration
@@ -98,22 +98,27 @@ pub struct ObservabilityConfig {
     /// Service name for the tracing
     /// Default is "unknown service"
     /// Env var: NITTEI__OBSERVABILITY__SERVICE_NAME
-    pub service_name: Option<String>,
+    pub service_name: String,
 
     /// Service version for the tracing
     /// Default is "unknown version"
     /// Env var: NITTEI__OBSERVABILITY__SERVICE_VERSION
-    pub service_version: Option<String>,
+    pub service_version: String,
 
     /// Service environment for the tracing
     /// Default is "unknown env"
     /// Env var: NITTEI__OBSERVABILITY__SERVICE_ENV
-    pub service_env: Option<String>,
+    pub service_env: String,
+
+    /// This is a flag to disable tracing
+    /// Default is false
+    /// Env var: NITTEI__OBSERVABILITY__DISABLE_TRACING
+    pub disable_tracing: bool,
 
     /// The tracing sample rate
     /// Default is 0.1
     /// Env var: NITTEI__OBSERVABILITY__TRACING_SAMPLE_RATE
-    pub tracing_sample_rate: Option<f64>,
+    pub tracing_sample_rate: f64,
 
     /// The OTLP tracing endpoint
     /// Env var: NITTEI__OBSERVABILITY__OTLP_TRACING_ENDPOINT
@@ -122,6 +127,12 @@ pub struct ObservabilityConfig {
     /// The Datadog tracing endpoint
     /// Env var: NITTEI__OBSERVABILITY__DATADOG_TRACING_ENDPOINT
     pub datadog_tracing_endpoint: Option<String>,
+
+    /// This is a flag to enabling observability on status endpoints
+    /// Ex: health check and metrics endpoints
+    /// Default is false
+    /// Env var: NITTEI__OBSERVABILITY__OBSERVE_STATUS_ENDPOINTS
+    pub observe_status_endpoints: bool,
 }
 
 /// Account configuration
@@ -242,6 +253,19 @@ fn parse_config() -> AppConfig {
             "postgresql://postgres:postgres@localhost:45432/nittei",
         )
         .expect("Failed to set default pg.database_url")
+        // Observability
+        .set_default("observability.service_name", "unknown service")
+        .expect("Failed to set default observability.service_name")
+        .set_default("observability.service_version", "unknown version")
+        .expect("Failed to set default observability.service_version")
+        .set_default("observability.service_env", "unknown env")
+        .expect("Failed to set default observability.service_env")
+        .set_default("observability.observe_status_endpoints", false)
+        .expect("Failed to set default observability.observe_status_endpoints")
+        .set_default("observability.tracing_sample_rate", 0.1)
+        .expect("Failed to set default observability.tracing_sample_rate")
+        .set_default("observability.disable_tracing", false)
+        .expect("Failed to set default observability.disable_tracing")
         .build()
         .expect("Failed to build the configuration object");
 
