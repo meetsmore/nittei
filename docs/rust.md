@@ -1,21 +1,20 @@
 # New to Rust
 
-As Rust is a relatively new language compared to older languages such as C, Java, and even Javascript, it can be useful to have a rough overview of what makes Rust interesting, and how it differs from these languages (with a heavy focus on Typescript for us).
+As Rust is a relatively new language compared to older languages such as C, Java, and even Javascript, it can be useful to have a rough overview of what makes Rust interesting, and how it differs from these languages (with a heavy focus on Typescript).
 
 First, what is Rust ?
 
 Rust is a modern systems programming language focused on **performance**, **safety**, and **concurrency**, without needing a garbage collector. It's often compared to C++, as it's where its advantages can shine the best (safety without sacrificing performance).
 
-While its main domain is systems programming, it's also a very good language for writing backends. Of course, for most backends/APIs, having awesome performance isn't a hard requirement, and is often considered overkill compared to the complexity that is required to achieve it. But, one of the big advantages of Rust compared to other languages (C++, C, ...) is that it allows to achieve it while providing a lot of safety mechanisms. This includes the borrow checker, but it also includes the explicit handling of `undefined` values (via Option<>) and of errors (via Result<>).
+While its main domain is systems programming, it's also a very good language for writing backends. Of course, for most backends/APIs, having awesome performance isn't a hard requirement, and is often considered overkill compared to the complexity that is required to achieve it. But, one of the big advantages of Rust compared to other languages (C++, C, ...) is that it can achieve performance while providing a lot of safety mechanisms. This includes the borrow checker, but it also includes the explicit handling of `undefined` values (via `Option<...>`) and of errors (via `Result<...>`).
 
-For backends, it's mainly compared to Golang, as both are performant compiled languages that can be used for backends. Both have their advantages and disadvantages, but we could argue that Rust is more oriented towards safety, at the cost of increased complexity, while Golang is more oriented towards simplicity, which makes it easy to learn, use, and understand.
+For backends, Rust is mainly compared to Golang, as both are performant compiled languages that can be used for backends. Rust is more oriented towards safety and performance, at the cost of increased complexity. On the other hand, Golang's main aim is simplicity, which makes it easy to learn, use, and understand. In short, both have their advantages and disadvantages.
 
-## Comparisons with Typescript
+## Comparisons with TypeScript
 
 ### 🦀 Variables are immutable by default
 
 ```ts
-// Typescript
 let x = 5;
 x = 6;
 ```
