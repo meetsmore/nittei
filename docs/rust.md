@@ -157,3 +157,14 @@ tokio = { version = "1.0", features = ["full"] }
 ### ✅ When in doubt, check the compiler
 
 Rust’s compiler is very strict — but its error messages are famously helpful. Trust it!
+
+## Going further
+
+Resources that can help when learning, or just developing in Rust
+
+- [Official Rust book](https://doc.rust-lang.org/book/)
+- [Official page for crates](https://crates.io/)
+- [Official page for crates' docs](https://docs.rs/)
+- [Rust cheat sheet](https://cheats.rs/)
+- [Guide to the ecosystem](https://blessed.rs/crates)
+- [Awesome Rust repository](https://github.com/rust-unofficial/awesome-rust)
