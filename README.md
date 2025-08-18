@@ -160,6 +160,10 @@ This will install
 - [tracing](https://github.com/tokio-rs/tracing): handles tracing and logging
 - [tikv-jemallocator](https://github.com/tikv/jemallocator): replaces default memory allocator with Jemalloc
 
+## New to Rust
+
+You can check [docs/rust.md](./docs/rust.md) to get a small introduction to Rust.
+
 ## Contributing
 
 Contributions are welcome and are greatly appreciated!
