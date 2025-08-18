@@ -741,8 +741,10 @@ pub mod update_event_v2 {
     fn validate_recurring_event_id_and_original_start_time_v2(
         body: &UpdateEventRequestBodyV2,
     ) -> Result<(), ValidationError> {
-        if (body.recurring_event_id.is_some() && body.original_start_time.is_none())
-            || (body.recurring_event_id.is_none() && body.original_start_time.is_some())
+        if let Some(recurring_event_id) = &body.recurring_event_id
+            && let Some(original_start_time) = &body.original_start_time
+            && ((recurring_event_id.is_some() && original_start_time.is_none())
+                || (recurring_event_id.is_none() && original_start_time.is_some()))
         {
             return Err(ValidationError::new(
                 "Both recurring_event_id and original_start_time must be provided, or must be omitted",
