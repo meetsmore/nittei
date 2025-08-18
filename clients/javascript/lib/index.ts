@@ -14,15 +14,15 @@ import {
 } from './calendarClient'
 import { NitteiEventClient, NitteiEventUserClient } from './eventClient'
 import { NitteiHealthClient } from './healthClient'
-import { type PartialCredentials, createCreds } from './helpers/credentials'
+import { createCreds, type PartialCredentials } from './helpers/credentials'
 import {
   NitteiScheduleClient,
   NitteiScheduleUserClient,
 } from './scheduleClient'
 import { NitteiServiceClient, NitteiServiceUserClient } from './serviceClient'
 import {
-  NitteiUserUserClient,
   NitteiUserClient as _NitteiUserClient,
+  NitteiUserUserClient,
 } from './userClient'
 
 export interface INitteiUserClient {
@@ -122,9 +122,8 @@ export const NitteiClient = async (
 // Client types
 export type { ClientConfig, KeepAliveConfig, RetryConfig }
 
-// Errors
-export * from './helpers/errors'
-
 // Enums
 export * from './gen_types'
+// Errors
+export * from './helpers/errors'
 export * from './types'

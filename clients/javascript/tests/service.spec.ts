@@ -9,12 +9,10 @@ import { setupUserClient } from './helpers/fixtures'
 describe('Service API', () => {
   let client: INitteiClient
   let userClient: INitteiUserClient
-  let accountId: string
   let userId: string
   beforeAll(async () => {
     const data = await setupUserClient()
     client = data.accountClient
-    accountId = data.accountId
     userClient = data.userClient
     userId = data.userId
   })

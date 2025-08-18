@@ -15,12 +15,10 @@ dayjs.extend(timezone)
 
 describe('Requirements', () => {
   let client: INitteiClient | undefined
-  let accountId: string | undefined
 
   beforeAll(async () => {
     const account = await setupAccount()
 
-    accountId = account.accountId
     client = account.client
   })
 
@@ -400,7 +398,6 @@ describe('Requirements', () => {
     describe('A user calendar can be queried for availability (freebusy)', () => {
       let user1: UserDTO | undefined
       let user1Calendar1: CalendarDTO | undefined
-      let user1Calendar1Event1: CalendarEventDTO | undefined
 
       beforeAll(async () => {
         const res = await client?.user.create()
@@ -420,14 +417,13 @@ describe('Requirements', () => {
         if (!user1 || !user1Calendar1) {
           throw new Error('No user or calendar')
         }
-        const resEvent = await client?.events.create(user1.id, {
+        await client?.events.create(user1.id, {
           calendarId: user1Calendar1.id,
           duration: 1000 * 60 * 60,
           startTime: new Date(0),
           status: 'confirmed',
           busy: true,
         })
-        user1Calendar1Event1 = resEvent?.event
       })
 
       it('should show correct freebusy with a single event in calendar', async () => {
@@ -452,7 +448,6 @@ describe('Requirements', () => {
       let user1Calendar1Event1: CalendarEventDTO | undefined
       let user1Calendar2: CalendarDTO | undefined
       let user1Calendar2Event1: CalendarEventDTO | undefined
-      let user1Calendar2Event2: CalendarEventDTO | undefined
 
       beforeAll(async () => {
         const res = await client?.user.create()
@@ -567,14 +562,13 @@ describe('Requirements', () => {
           throw new Error('No user or calendar')
         }
         // Covers from 1h to 1h01
-        const res = await client?.events.create(user1.id, {
+        await client?.events.create(user1.id, {
           calendarId: user1Calendar2.id,
           duration: 1000 * 60, // 1min
           startTime: new Date(1000 * 60 * 60), // 1h
           status: 'confirmed',
           busy: true,
         })
-        user1Calendar2Event2 = res?.event
       })
 
       it('should query on the 2 calendars of of the user, and get one busy period covering the 3 events', async () => {

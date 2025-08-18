@@ -13,8 +13,9 @@ pub mod search_events;
 pub mod subscribers;
 pub mod sync_event_reminders;
 pub mod update_event;
+pub mod update_event_v2;
 
-use axum::routing::{delete, get, post, put};
+use axum::routing::{delete, get, patch, post, put};
 use create_event::{create_event_admin_controller, create_event_controller};
 use delete_event::{delete_event_admin_controller, delete_event_controller};
 use delete_many_events::delete_many_events_admin_controller;
@@ -23,6 +24,7 @@ use get_event_instances::{get_event_instances_admin_controller, get_event_instan
 use get_events_by_meta::get_events_by_meta_controller;
 use search_events::search_events_controller;
 use update_event::{update_event_admin_controller, update_event_controller};
+use update_event_v2::{update_event_admin_controller_v2, update_event_controller_v2};
 use utoipa_axum::router::OpenApiRouter;
 
 use crate::{event::create_batch_events::create_batch_events_admin_controller, shared::auth};
@@ -74,6 +76,12 @@ pub fn configure_routes() -> OpenApiRouter {
                 auth::account_can_modify_event_middleware,
             )),
         )
+        .route(
+            "/user/events_v2/{event_id}",
+            patch(update_event_admin_controller_v2).layer(axum::middleware::from_fn(
+                auth::account_can_modify_event_middleware,
+            )),
+        )
         // Delete an event by uid (admin route)
         .route(
             "/user/events/{event_id}",
@@ -104,6 +112,7 @@ pub fn configure_routes() -> OpenApiRouter {
         .route("/events/{event_id}", get(get_event_controller))
         // Update an event by uid
         .route("/events/{event_id}", put(update_event_controller))
+        .route("/events_v2/{event_id}", patch(update_event_controller_v2))
         // Delete an event by uid
         .route("/events/{event_id}", delete(delete_event_controller))
         // Get event instances

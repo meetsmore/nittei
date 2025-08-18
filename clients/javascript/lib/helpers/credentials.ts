@@ -1,5 +1,3 @@
-import type { AxiosRequestHeaders } from 'axios'
-
 /**
  * Partial credentials to be used for the client
  */
