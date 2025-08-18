@@ -398,6 +398,254 @@ describe('CalendarEvent API', () => {
       expect(res2.event.updated).toEqual(new Date(0))
     })
 
+    it('should be able to update event with v2 endpoint (PATCH behavior)', async () => {
+      const res = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+        title: 'original title',
+        description: 'original description',
+        eventType: 'meeting',
+        location: 'original location',
+        externalId: 'original-external-id',
+        externalParentId: 'original-parent-id',
+        metadata: { key: 'original-value' },
+        status: 'tentative',
+        allDay: false,
+        busy: true,
+      })
+      const eventId = res.event.id
+
+      // Test partial update - only update title and duration
+      const res2 = await adminClient.events.updateV2(eventId, {
+        title: 'updated title',
+        duration: 2000,
+      })
+
+      expect(res2.event.title).toBe('updated title')
+      expect(res2.event.duration).toEqual(2000)
+      expect(dayjs(res2.event.endTime)).toEqual(dayjs(3000)) // startTime + duration
+
+      // Other fields should remain unchanged
+      expect(res2.event.description).toBe('original description')
+      expect(res2.event.eventType).toBe('meeting')
+      expect(res2.event.location).toBe('original location')
+      expect(res2.event.externalId).toBe('original-external-id')
+      expect(res2.event.externalParentId).toBe('original-parent-id')
+      expect(res2.event.metadata).toEqual({ key: 'original-value' })
+      expect(res2.event.status).toBe('tentative')
+      expect(res2.event.allDay).toBe(false)
+      expect(res2.event.busy).toBe(true)
+    })
+
+    it('should be able to set optional fields to NULL with v2 endpoint', async () => {
+      const res = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+        busy: true,
+        title: 'original title',
+        description: 'original description',
+        eventType: 'meeting',
+        location: 'original location',
+        externalId: 'original-external-id',
+        externalParentId: 'original-parent-id',
+        metadata: { key: 'original-value' },
+      })
+      const eventId = res.event.id
+
+      // Test setting optional fields to NULL
+      const res2 = await adminClient.events.updateV2(eventId, {
+        title: null,
+        description: null,
+        eventType: null,
+        location: null,
+        externalId: null,
+        externalParentId: null,
+        metadata: null,
+      })
+
+      // Fields should be set to NULL
+      expect(res2.event.title).toBeNull()
+      expect(res2.event.description).toBeNull()
+      expect(res2.event.eventType).toBeNull()
+      expect(res2.event.location).toBeNull()
+      expect(res2.event.externalId).toBeNull()
+      expect(res2.event.externalParentId).toBeNull()
+      expect(res2.event.metadata).toBeNull()
+      // Note: serviceId is not exposed in the DTO
+
+      // Other fields should remain unchanged
+      expect(res2.event.duration).toEqual(1000)
+      expect(res2.event.startTime).toEqual(new Date(1000))
+      expect(res2.event.status).toBe('tentative')
+      expect(res2.event.allDay).toBe(false)
+      expect(res2.event.busy).toBe(true)
+    })
+
+    it('should be able to update exdates and reminders with v2 endpoint', async () => {
+      const res = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+        exdates: [new Date(2000)],
+        reminders: [{ delta: 15, identifier: 'reminder-1' }],
+      })
+      const eventId = res.event.id
+
+      // Test updating exdates and reminders
+      const res2 = await adminClient.events.updateV2(eventId, {
+        exdates: [new Date(3000), new Date(4000)],
+        reminders: [{ delta: 30, identifier: 'reminder-2' }],
+      })
+
+      expect(res2.event.exdates).toEqual([new Date(3000), new Date(4000)])
+      expect(res2.event.reminders).toEqual([
+        { delta: 30, identifier: 'reminder-2' },
+      ])
+
+      // Test setting to empty arrays
+      const res3 = await adminClient.events.updateV2(eventId, {
+        exdates: [],
+        reminders: [],
+      })
+
+      expect(res3.event.exdates).toEqual([])
+      expect(res3.event.reminders).toEqual([])
+    })
+
+    it('should handle recurrence updates with v2 endpoint', async () => {
+      const res = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+        recurrence: {
+          freq: 'daily',
+          interval: 1,
+          count: 5,
+        },
+      })
+      const eventId = res.event.id
+
+      // Test updating recurrence
+      const res2 = await adminClient.events.updateV2(eventId, {
+        recurrence: {
+          freq: 'weekly',
+          interval: 2,
+          count: 10,
+        },
+      })
+
+      expect(res2.event.recurrence).toEqual(
+        expect.objectContaining({
+          freq: 'weekly',
+          interval: 2,
+          count: 10,
+        })
+      )
+
+      // Test setting recurrence to NULL
+      const res3 = await adminClient.events.updateV2(eventId, {
+        recurrence: null,
+      })
+
+      expect(res3.event.recurrence).toBeNull()
+    })
+
+    it('should handle recurring event fields with v2 endpoint', async () => {
+      const recurringEventId = crypto.randomUUID()
+      const recurringEventId2 = crypto.randomUUID()
+
+      const res = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+        recurringEventId: recurringEventId,
+        originalStartTime: new Date(500),
+      })
+      const eventId = res.event.id
+
+      // Test updating recurring event fields
+      const res2 = await adminClient.events.updateV2(eventId, {
+        recurringEventId: recurringEventId2,
+        originalStartTime: new Date(600),
+      })
+
+      expect(res2.event.recurringEventId).toBe(recurringEventId2)
+      expect(res2.event.originalStartTime).toEqual(new Date(600))
+
+      // Test setting to NULL
+      const res3 = await adminClient.events.updateV2(eventId, {
+        recurringEventId: null,
+        originalStartTime: null,
+      })
+
+      expect(res3.event.recurringEventId).toBeNull()
+      expect(res3.event.originalStartTime).toBeNull()
+    })
+
+    it('should preserve existing values when fields are not provided in v2 update', async () => {
+      const recurringEventId = crypto.randomUUID()
+      const res = await adminClient.events.create(userId, {
+        calendarId,
+        duration: 1000,
+        startTime: new Date(1000),
+        title: 'original title',
+        description: 'original description',
+        eventType: 'meeting',
+        location: 'original location',
+        externalId: 'original-external-id',
+        externalParentId: 'original-parent-id',
+        metadata: { key: 'original-value' },
+        status: 'confirmed',
+        allDay: true,
+        busy: false,
+        exdates: [new Date(2000)],
+        reminders: [{ delta: 15, identifier: 'reminder-1' }],
+        recurrence: {
+          freq: 'daily',
+          interval: 1,
+          count: 5,
+        },
+        recurringEventId: recurringEventId,
+        originalStartTime: new Date(500),
+      })
+      const eventId = res.event.id
+
+      // Update only one field
+      const res2 = await adminClient.events.updateV2(eventId, {
+        title: 'only title updated',
+      })
+
+      // Only title should change
+      expect(res2.event.title).toBe('only title updated')
+
+      // All other fields should remain exactly the same
+      expect(res2.event.description).toBe('original description')
+      expect(res2.event.eventType).toBe('meeting')
+      expect(res2.event.location).toBe('original location')
+      expect(res2.event.externalId).toBe('original-external-id')
+      expect(res2.event.externalParentId).toBe('original-parent-id')
+      expect(res2.event.metadata).toEqual({ key: 'original-value' })
+      expect(res2.event.status).toBe('confirmed')
+      expect(res2.event.allDay).toBe(true)
+      expect(res2.event.busy).toBe(false)
+      // Note: serviceId is not exposed in the DTO
+      expect(res2.event.exdates).toEqual([new Date(2000)])
+      expect(res2.event.reminders).toEqual([
+        { delta: 15, identifier: 'reminder-1' },
+      ])
+      expect(res2.event.recurrence).toEqual(
+        expect.objectContaining({
+          freq: 'daily',
+          interval: 1,
+          count: 5,
+        })
+      )
+      expect(res2.event.recurringEventId).toBe(recurringEventId)
+      expect(res2.event.originalStartTime).toEqual(new Date(500))
+    })
+
     it('should be able to query on external ID', async () => {
       const commonExternalId = crypto.randomUUID()
       const resEvent1 = await adminClient.events.create(userId, {
@@ -794,7 +1042,7 @@ describe('CalendarEvent API', () => {
             userId: userId,
             updatedAt: {
               range: {
-                gte: new Date(new Date().getTime() + 10000),
+                gte: new Date(Date.now() + 10000),
               },
             },
           },

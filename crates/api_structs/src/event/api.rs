@@ -731,6 +731,168 @@ pub mod update_event {
     pub type APIResponse = CalendarEventResponse;
 }
 
+pub mod update_event_v2 {
+    use chrono::{DateTime, Utc};
+    use nittei_domain::CalendarEventStatus;
+
+    use super::*;
+
+    /// Validate that recurring_event_id and original_start_time are both provided or both omitted
+    fn validate_recurring_event_id_and_original_start_time_v2(
+        body: &UpdateEventRequestBodyV2,
+    ) -> Result<(), ValidationError> {
+        if (body.recurring_event_id.is_some() && body.original_start_time.is_none())
+            || (body.recurring_event_id.is_none() && body.original_start_time.is_some())
+        {
+            return Err(ValidationError::new(
+                "Both recurring_event_id and original_start_time must be provided, or must be omitted",
+            ));
+        }
+        Ok(())
+    }
+
+    /// Request body for updating an event
+    #[derive(Deserialize, Serialize, Validate, TS, ToSchema)]
+    #[serde(rename_all = "camelCase")]
+    #[ts(export)]
+    #[validate(schema(function = "validate_recurring_event_id_and_original_start_time_v2"))]
+    pub struct UpdateEventRequestBodyV2 {
+        /// Optional start time of the event (UTC)
+        #[serde(default)]
+        #[ts(type = "Date", optional)]
+        pub start_time: Option<DateTime<Utc>>,
+
+        /// Optional title of the event
+        /// None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+        #[serde(default, with = "::serde_with::rust::double_option")]
+        #[validate(length(min = 1))]
+        #[ts(optional, as = "Option<_>")]
+        pub title: Option<Option<String>>,
+
+        /// Optional description of the event
+        /// None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+        #[serde(default, with = "::serde_with::rust::double_option")]
+        #[validate(length(min = 1))]
+        #[ts(optional, as = "Option<_>")]
+        pub description: Option<Option<String>>,
+
+        /// Optional type of the event
+        /// e.g. "meeting", "reminder", "birthday"
+        /// None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+        #[serde(default, with = "::serde_with::rust::double_option")]
+        #[validate(length(min = 1))]
+        #[ts(optional, as = "Option<_>")]
+        pub event_type: Option<Option<String>>,
+
+        /// Optional external parent event ID
+        /// This is useful for external applications that need to link Nittei's events to a wider data model (e.g. a project, an order, etc.)
+        /// None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+        #[serde(default, with = "::serde_with::rust::double_option")]
+        #[validate(length(min = 1))]
+        #[ts(optional, as = "Option<_>")]
+        pub external_parent_id: Option<Option<String>>,
+
+        /// Optional external event ID
+        /// This is useful for external applications that need to link Nittei's events to their own data models
+        /// None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+        #[serde(default, with = "::serde_with::rust::double_option")]
+        #[validate(length(min = 1))]
+        #[ts(optional, as = "Option<_>")]
+        pub external_id: Option<Option<String>>,
+
+        /// Optional location of the event
+        /// None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+        #[serde(default, with = "::serde_with::rust::double_option")]
+        #[validate(length(min = 1))]
+        #[ts(optional, as = "Option<_>")]
+        pub location: Option<Option<String>>,
+
+        /// Optional status of the event
+        #[serde(default)]
+        #[ts(as = "Option<_>", optional)]
+        pub status: Option<CalendarEventStatus>,
+
+        /// Optional flag to indicate if the event is an all day event
+        /// Default is false
+        #[serde(default)]
+        #[ts(optional)]
+        pub all_day: Option<bool>,
+
+        /// Optional duration of the event in milliseconds
+        #[serde(default)]
+        #[ts(type = "number")]
+        #[ts(optional)]
+        pub duration: Option<i64>,
+
+        /// Optional busy flag
+        #[serde(default)]
+        #[ts(optional)]
+        pub busy: Option<bool>,
+
+        /// Optional new recurrence rule
+        /// None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+        #[serde(default, with = "::serde_with::rust::double_option")]
+        #[ts(optional, as = "Option<_>")]
+        pub recurrence: Option<Option<RRuleOptions>>,
+
+        /// Optional service UUID
+        /// None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+        #[serde(default, with = "::serde_with::rust::double_option")]
+        #[ts(optional, as = "Option<_>")]
+        pub service_id: Option<Option<ID>>,
+
+        /// Optional list of exclusion dates for the recurrence rule
+        /// None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+        #[serde(default)]
+        #[ts(type = "Array<Date>")]
+        #[ts(optional)]
+        pub exdates: Option<Vec<DateTime<Utc>>>,
+
+        /// Optional recurring event ID
+        /// This is the ID of the recurring event that this event is part of
+        /// Default is None
+        /// None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+        #[serde(default, with = "::serde_with::rust::double_option")]
+        #[ts(optional, as = "Option<_>")]
+        pub recurring_event_id: Option<Option<ID>>,
+
+        /// Optional original start time of the event
+        /// This is the original start time of the event before it was moved (only for recurring events)
+        /// Default is None
+        #[serde(default, with = "::serde_with::rust::double_option")]
+        #[ts(type = "Date | null", optional)]
+        pub original_start_time: Option<Option<DateTime<Utc>>>,
+
+        /// Optional list of reminders
+        #[serde(default)]
+        #[ts(optional)]
+        pub reminders: Option<Vec<CalendarEventReminder>>,
+
+        /// Optional metadata (e.g. {"key": "value"})
+        /// None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+        #[serde(default, with = "::serde_with::rust::double_option")]
+        #[ts(optional, as = "Option<_>")]
+        pub metadata: Option<Option<serde_json::Value>>,
+
+        /// Optional created date to use to replace the current one
+        #[serde(default)]
+        #[ts(type = "Date", optional)]
+        pub created: Option<DateTime<Utc>>,
+
+        /// Optional updated date to use to replace the current one
+        #[serde(default)]
+        #[ts(type = "Date", optional)]
+        pub updated: Option<DateTime<Utc>>,
+    }
+
+    #[derive(Deserialize)]
+    pub struct PathParams {
+        pub event_id: ID,
+    }
+
+    pub type APIResponse = CalendarEventResponse;
+}
+
 pub mod send_event_reminders {
     use super::*;
 

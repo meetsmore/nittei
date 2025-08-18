@@ -1,9 +1,10 @@
 import axios, {
-  type AxiosRequestConfig,
-  type AxiosInstance,
-  type AxiosResponse,
   AxiosError,
+  type AxiosInstance,
+  type AxiosRequestConfig,
+  type AxiosResponse,
 } from 'axios'
+import axiosRetry, { isNetworkOrIdempotentRequestError } from 'axios-retry'
 import type { ICredentials } from './helpers/credentials'
 import {
   BadRequestError,
@@ -12,7 +13,6 @@ import {
   UnauthorizedError,
   UnprocessableEntityError,
 } from './helpers/errors'
-import axiosRetry, { isNetworkOrIdempotentRequestError } from 'axios-retry'
 
 /**
  * Configuration for the keep alive feature
@@ -118,7 +118,7 @@ export abstract class NitteiBaseClient {
     data?: unknown
     params?: Record<string, unknown>
   }): Promise<AxiosResponse<T>> {
-    let res: AxiosResponse<T> | undefined = undefined
+    let res: AxiosResponse<T> | undefined
     try {
       res = await this.axiosClient({ method, url: path, data, params })
     } catch (error) {
@@ -301,11 +301,13 @@ export const createAxiosInstanceFrontend = (
       }
       const filteredMap = Object.entries(params)
         .filter(([, value]) => value !== undefined)
-        .reduce((acc, [key, value]) => {
-          acc[key] = value
-          return acc
-          // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-        }, {} as any)
+        .reduce(
+          (acc, [key, value]) => {
+            acc[key] = value
+            return acc
+          },
+          {} as Record<string, string>
+        )
       return new URLSearchParams(filteredMap).toString()
     },
   }
@@ -352,11 +354,13 @@ export const createAxiosInstanceBackend = async (
       }
       const filteredMap = Object.entries(params)
         .filter(([, value]) => value !== undefined)
-        .reduce((acc, [key, value]) => {
-          acc[key] = value
-          return acc
-          // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-        }, {} as any)
+        .reduce(
+          (acc, [key, value]) => {
+            acc[key] = value
+            return acc
+          },
+          {} as Record<string, string>
+        )
       return new URLSearchParams(filteredMap).toString()
     },
   }

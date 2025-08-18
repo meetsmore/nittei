@@ -138,6 +138,7 @@ impl Meta<ID> for CalendarEvent {
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct CalendarEventReminder {
+    #[ts(type = "number")]
     pub delta: i64, // In minutes
     pub identifier: String,
 }
