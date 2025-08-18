@@ -64,7 +64,7 @@ export class NitteiEventClient extends NitteiBaseClient {
     eventId: ID,
     data: UpdateEventRequestBodyV2
   ): Promise<CalendarEventResponse> {
-    const res = await this.put<CalendarEventResponse>(
+    const res = await this.patch<CalendarEventResponse>(
       `/user/events_v2/${eventId}`,
       data
     )

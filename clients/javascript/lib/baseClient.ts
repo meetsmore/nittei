@@ -113,7 +113,7 @@ export abstract class NitteiBaseClient {
     data,
     params,
   }: {
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE'
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
     path: string
     data?: unknown
     params?: Record<string, unknown>
@@ -194,6 +194,24 @@ export abstract class NitteiBaseClient {
   protected async put<T>(path: string, data: unknown): Promise<T> {
     const res = await this.callApi<T>({
       method: 'PUT',
+      path,
+      data,
+    })
+
+    return res.data
+  }
+
+  /**
+   * Make a PATCH request to the API
+   * @private
+   * @param path - path to the endpoint
+   * @param data - data to send to the server
+   * @throws Error if the status code is 400 or higher
+   * @returns response's data
+   */
+  protected async patch<T>(path: string, data: unknown): Promise<T> {
+    const res = await this.callApi<T>({
+      method: 'PATCH',
       path,
       data,
     })
