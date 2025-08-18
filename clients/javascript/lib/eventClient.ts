@@ -34,6 +34,12 @@ export type Timespan = {
  * This is an admin client (usually backend)
  */
 export class NitteiEventClient extends NitteiBaseClient {
+  /**
+   * Update an event
+   * @param eventId - id of the event
+   * @param data - data of the event
+   * @returns - the updated event
+   */
   public async update(
     eventId: ID,
     data: UpdateEventRequestBody
@@ -48,6 +54,12 @@ export class NitteiEventClient extends NitteiBaseClient {
     }
   }
 
+  /**
+   * Update an event (V2)
+   * @param eventId - id of the event
+   * @param data - data of the event
+   * @returns - the updated event
+   */
   public async updateV2(
     eventId: ID,
     data: UpdateEventRequestBodyV2
@@ -234,6 +246,12 @@ export class NitteiEventClient extends NitteiBaseClient {
  * This is an end user client (usually frontend)
  */
 export class NitteiEventUserClient extends NitteiBaseClient {
+  /**
+   * Update an event
+   * @param eventId - id of the event
+   * @param data - data of the event
+   * @returns - the updated event
+   */
   public async update(
     eventId: ID,
     data: UpdateEventRequestBody
@@ -248,6 +266,12 @@ export class NitteiEventUserClient extends NitteiBaseClient {
     }
   }
 
+  /**
+   * Update an event (V2)
+   * @param eventId - id of the event
+   * @param data - data of the event
+   * @returns - the updated event
+   */
   public async updateV2(
     eventId: ID,
     data: UpdateEventRequestBodyV2
