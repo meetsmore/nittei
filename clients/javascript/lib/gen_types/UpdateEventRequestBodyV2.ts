@@ -10,42 +10,38 @@ import type { JsonValue } from './serde_json/JsonValue'
  */
 export type UpdateEventRequestBodyV2 = {
   /**
-   * Optional start time of the event (UTC)
-   */
-  startTime?: Date
-  /**
    * Optional title of the event
    * None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
    */
-  title?: string | null | null
+  title?: string | null
   /**
    * Optional description of the event
    * None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
    */
-  description?: string | null | null
+  description?: string | null
   /**
    * Optional type of the event
    * e.g. "meeting", "reminder", "birthday"
    * None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
    */
-  eventType?: string | null | null
+  eventType?: string | null
   /**
    * Optional external parent event ID
    * This is useful for external applications that need to link Nittei's events to a wider data model (e.g. a project, an order, etc.)
    * None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
    */
-  externalParentId?: string | null | null
+  externalParentId?: string | null
   /**
    * Optional external event ID
    * This is useful for external applications that need to link Nittei's events to their own data models
    * None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
    */
-  externalId?: string | null | null
+  externalId?: string | null
   /**
    * Optional location of the event
    * None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
    */
-  location?: string | null | null
+  location?: string | null
   /**
    * Optional status of the event
    */
@@ -55,6 +51,10 @@ export type UpdateEventRequestBodyV2 = {
    * Default is false
    */
   allDay?: boolean
+  /**
+   * Optional start time of the event (UTC)
+   */
+  startTime?: Date
   /**
    * Optional duration of the event in milliseconds
    */
@@ -67,12 +67,12 @@ export type UpdateEventRequestBodyV2 = {
    * Optional new recurrence rule
    * None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
    */
-  recurrence?: RRuleOptions | null | null
+  recurrence?: RRuleOptions | null
   /**
    * Optional service UUID
    * None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
    */
-  serviceId?: ID | null | null
+  serviceId?: ID | null
   /**
    * Optional list of exclusion dates for the recurrence rule
    * None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
@@ -84,7 +84,7 @@ export type UpdateEventRequestBodyV2 = {
    * Default is None
    * None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
    */
-  recurringEventId?: ID | null | null
+  recurringEventId?: ID | null
   /**
    * Optional original start time of the event
    * This is the original start time of the event before it was moved (only for recurring events)
@@ -99,7 +99,7 @@ export type UpdateEventRequestBodyV2 = {
    * Optional metadata (e.g. {"key": "value"})
    * None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
    */
-  metadata?: JsonValue | null | null
+  metadata?: JsonValue | null
   /**
    * Optional created date to use to replace the current one
    */

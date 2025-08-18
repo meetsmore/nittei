@@ -757,23 +757,18 @@ pub mod update_event_v2 {
     #[ts(export)]
     #[validate(schema(function = "validate_recurring_event_id_and_original_start_time_v2"))]
     pub struct UpdateEventRequestBodyV2 {
-        /// Optional start time of the event (UTC)
-        #[serde(default)]
-        #[ts(type = "Date", optional)]
-        pub start_time: Option<DateTime<Utc>>,
-
         /// Optional title of the event
         /// None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
         #[serde(default, with = "::serde_with::rust::double_option")]
         #[validate(length(min = 1))]
-        #[ts(optional, as = "Option<_>")]
+        #[ts(optional, as = "_")]
         pub title: Option<Option<String>>,
 
         /// Optional description of the event
         /// None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
         #[serde(default, with = "::serde_with::rust::double_option")]
         #[validate(length(min = 1))]
-        #[ts(optional, as = "Option<_>")]
+        #[ts(optional, as = "_")]
         pub description: Option<Option<String>>,
 
         /// Optional type of the event
@@ -781,7 +776,7 @@ pub mod update_event_v2 {
         /// None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
         #[serde(default, with = "::serde_with::rust::double_option")]
         #[validate(length(min = 1))]
-        #[ts(optional, as = "Option<_>")]
+        #[ts(optional, as = "_")]
         pub event_type: Option<Option<String>>,
 
         /// Optional external parent event ID
@@ -789,7 +784,7 @@ pub mod update_event_v2 {
         /// None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
         #[serde(default, with = "::serde_with::rust::double_option")]
         #[validate(length(min = 1))]
-        #[ts(optional, as = "Option<_>")]
+        #[ts(optional, as = "_")]
         pub external_parent_id: Option<Option<String>>,
 
         /// Optional external event ID
@@ -797,14 +792,14 @@ pub mod update_event_v2 {
         /// None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
         #[serde(default, with = "::serde_with::rust::double_option")]
         #[validate(length(min = 1))]
-        #[ts(optional, as = "Option<_>")]
+        #[ts(optional, as = "_")]
         pub external_id: Option<Option<String>>,
 
         /// Optional location of the event
         /// None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
         #[serde(default, with = "::serde_with::rust::double_option")]
         #[validate(length(min = 1))]
-        #[ts(optional, as = "Option<_>")]
+        #[ts(optional, as = "_")]
         pub location: Option<Option<String>>,
 
         /// Optional status of the event
@@ -817,6 +812,11 @@ pub mod update_event_v2 {
         #[serde(default)]
         #[ts(optional)]
         pub all_day: Option<bool>,
+
+        /// Optional start time of the event (UTC)
+        #[serde(default)]
+        #[ts(type = "Date", optional)]
+        pub start_time: Option<DateTime<Utc>>,
 
         /// Optional duration of the event in milliseconds
         #[serde(default)]
@@ -832,13 +832,13 @@ pub mod update_event_v2 {
         /// Optional new recurrence rule
         /// None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
         #[serde(default, with = "::serde_with::rust::double_option")]
-        #[ts(optional, as = "Option<_>")]
+        #[ts(optional, as = "_")]
         pub recurrence: Option<Option<RRuleOptions>>,
 
         /// Optional service UUID
         /// None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
         #[serde(default, with = "::serde_with::rust::double_option")]
-        #[ts(optional, as = "Option<_>")]
+        #[ts(optional, as = "_")]
         pub service_id: Option<Option<ID>>,
 
         /// Optional list of exclusion dates for the recurrence rule
@@ -853,7 +853,7 @@ pub mod update_event_v2 {
         /// Default is None
         /// None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
         #[serde(default, with = "::serde_with::rust::double_option")]
-        #[ts(optional, as = "Option<_>")]
+        #[ts(optional, as = "_")]
         pub recurring_event_id: Option<Option<ID>>,
 
         /// Optional original start time of the event
@@ -871,7 +871,7 @@ pub mod update_event_v2 {
         /// Optional metadata (e.g. {"key": "value"})
         /// None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
         #[serde(default, with = "::serde_with::rust::double_option")]
-        #[ts(optional, as = "Option<_>")]
+        #[ts(optional, as = "_")]
         pub metadata: Option<Option<serde_json::Value>>,
 
         /// Optional created date to use to replace the current one
