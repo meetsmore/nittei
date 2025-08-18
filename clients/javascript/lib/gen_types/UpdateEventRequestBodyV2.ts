@@ -11,35 +11,53 @@ import type { JsonValue } from './serde_json/JsonValue'
 export type UpdateEventRequestBodyV2 = {
   /**
    * Optional title of the event
-   * None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+   * Default is None (don't update)
+   *
+   * Rust: None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+   * TS: undefined = don't update, null = set to NULL, string = set to value
    */
   title?: string | null
   /**
    * Optional description of the event
-   * None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+   * Default is None (don't update)
+   *
+   * Rust: None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+   * TS: undefined = don't update, null = set to NULL, string = set to value
    */
   description?: string | null
   /**
    * Optional type of the event
    * e.g. "meeting", "reminder", "birthday"
-   * None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+   * Default is None (don't update)
+   *
+   * Rust: None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+   * TS: undefined = don't update, null = set to NULL, string = set to value
    */
   eventType?: string | null
   /**
    * Optional external parent event ID
    * This is useful for external applications that need to link Nittei's events to a wider data model (e.g. a project, an order, etc.)
-   * None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+   * Default is None (don't update)
+   *
+   * Rust: None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+   * TS: undefined = don't update, null = set to NULL, string = set to value
    */
   externalParentId?: string | null
   /**
    * Optional external event ID
    * This is useful for external applications that need to link Nittei's events to their own data models
-   * None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+   * Default is None (don't update)
+   *
+   * Rust: None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+   * TS: undefined = don't update, null = set to NULL, string = set to value
    */
   externalId?: string | null
   /**
    * Optional location of the event
-   * None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+   * Default is None (don't update)
+   *
+   * Rust: None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+   * TS: undefined = don't update, null = set to NULL, string = set to value
    */
   location?: string | null
   /**
@@ -48,64 +66,90 @@ export type UpdateEventRequestBodyV2 = {
   status?: CalendarEventStatus | null
   /**
    * Optional flag to indicate if the event is an all day event
-   * Default is false
+   * Default is None (don't update)
    */
   allDay?: boolean
   /**
    * Optional start time of the event (UTC)
+   * Default is None (don't update)
    */
   startTime?: Date
   /**
    * Optional duration of the event in milliseconds
+   * Default is None (don't update)
    */
   duration?: number
   /**
    * Optional busy flag
+   * Default is None (don't update)
    */
   busy?: boolean
   /**
    * Optional new recurrence rule
-   * None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+   * Default is None (don't update)
+   *
+   * Rust: None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+   * TS: undefined = don't update, null = set to NULL, object = set to value
    */
   recurrence?: RRuleOptions | null
   /**
    * Optional service UUID
-   * None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+   * Default is None (don't update)
+   *
+   * Rust: None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+   * TS: undefined = don't update, null = set to NULL, string = set to value
    */
   serviceId?: ID | null
   /**
    * Optional list of exclusion dates for the recurrence rule
-   * None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+   * Default is None (don't update)
+   *
+   * Rust: None = don't update, Some(value) = set to value
+   * TS: undefined = don't update, array = set to value
    */
   exdates?: Array<Date>
   /**
    * Optional recurring event ID
    * This is the ID of the recurring event that this event is part of
-   * Default is None
-   * None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+   * Default is None (don't update)
+   *
+   * Rust: None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+   * TS: undefined = don't update, null = set to NULL, string = set to value
    */
   recurringEventId?: ID | null
   /**
    * Optional original start time of the event
    * This is the original start time of the event before it was moved (only for recurring events)
-   * Default is None
+   * Default is None (don't update)
+   *
+   * Rust: None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+   * TS: undefined = don't update, null = set to NULL, date = set to value
    */
   originalStartTime?: Date | null
   /**
    * Optional list of reminders
+   * Default is None (don't update)
+   *
+   * Rust: None = don't update, Some(value) = set to value
+   * TS: undefined = don't update, array = set to value
    */
   reminders?: Array<CalendarEventReminder>
   /**
    * Optional metadata (e.g. {"key": "value"})
-   * None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+   * Default is None (don't update)
+   *
+   * Rust: None = don't update, Some(None) = set to NULL, Some(Some(value)) = set to value
+   * TS: undefined = don't update, null = set to NULL, object = set to value
    */
   metadata?: JsonValue | null
   /**
    * Optional created date to use to replace the current one
+   * Default is None (don't update)
    */
   created?: Date
   /**
    * Optional updated date to use to replace the current one
+   * Default is None (don't update)
    */
   updated?: Date
 }
