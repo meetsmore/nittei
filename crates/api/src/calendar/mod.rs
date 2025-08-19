@@ -1,6 +1,7 @@
 pub mod add_sync_calendar;
 pub mod create_calendar;
 pub mod delete_calendar;
+pub mod export_ical;
 pub mod get_calendar;
 pub mod get_calendar_events;
 pub mod get_calendars;
@@ -14,6 +15,7 @@ use add_sync_calendar::add_sync_calendar_admin_controller;
 use axum::routing::{delete, get, post, put};
 use create_calendar::{create_calendar_admin_controller, create_calendar_controller};
 use delete_calendar::{delete_calendar_admin_controller, delete_calendar_controller};
+use export_ical::{export_calendar_ical_admin_controller, export_calendar_ical_controller};
 use get_calendar::{get_calendar_admin_controller, get_calendar_controller};
 use get_calendar_events::{get_calendar_events_admin_controller, get_calendar_events_controller};
 use get_calendars_by_meta::get_calendars_by_meta_controller;
@@ -68,6 +70,11 @@ pub fn configure_routes() -> OpenApiRouter {
             "/user/calendar/{calendar_id}/events",
             get(get_calendar_events_admin_controller),
         )
+        // Export calendar as iCalendar format (admin route)
+        .route(
+            "/user/calendar/{calendar_id}/ical",
+            get(export_calendar_ical_admin_controller),
+        )
         .route(
             "/user/{user_id}/calendar/provider/google",
             get(get_google_calendars_admin_controller),
@@ -106,6 +113,11 @@ pub fn configure_routes() -> OpenApiRouter {
         .route(
             "/calendar/{calendar_id}/events",
             get(get_calendar_events_controller),
+        )
+        // Export calendar as iCalendar format
+        .route(
+            "/calendar/{calendar_id}/ical",
+            get(export_calendar_ical_controller),
         )
         // Calendar providers
         .route(
