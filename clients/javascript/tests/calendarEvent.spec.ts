@@ -704,7 +704,7 @@ describe('CalendarEvent API', () => {
       const externalParentId2 = crypto.randomUUID()
       const res2 = await adminClient.events.update(eventId, {
         eventType: 'block',
-        parentId: externalParentId2,
+        externalParentId: externalParentId2,
         externalId: externalId2,
       })
       expect(res2.event.externalId).toBe(externalId2)
