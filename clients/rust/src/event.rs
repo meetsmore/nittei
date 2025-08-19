@@ -71,26 +71,33 @@ pub struct GetEventsInstancesInput {
     pub end_time: DateTime<Utc>,
 }
 
+// UpdateEventInput is the input for the update event endpoint
+//
+// For fields that have a double `Option`, they are optional fields in the model, so
+// - If the wrapper is None, the field is not updated
+// - If the wrapper is Some(None), the field is set to NULL
+// - If the wrapper is Some(Some(value)), the field is set to the value
 pub struct UpdateEventInput {
     pub event_id: ID,
-    pub title: Option<String>,
-    pub description: Option<String>,
-    pub event_type: Option<String>,
-    pub external_parent_id: Option<String>,
-    pub external_id: Option<String>,
-    pub location: Option<String>,
+
+    pub title: Option<Option<String>>,
+    pub description: Option<Option<String>>,
+    pub event_type: Option<Option<String>>,
+    pub external_parent_id: Option<Option<String>>,
+    pub external_id: Option<Option<String>>,
+    pub location: Option<Option<String>>,
     pub status: Option<CalendarEventStatus>,
     pub all_day: Option<bool>,
     pub start_time: Option<DateTime<Utc>>,
     pub duration: Option<i64>,
     pub busy: Option<bool>,
     pub reminders: Option<Vec<CalendarEventReminder>>,
-    pub recurrence: Option<RRuleOptions>,
-    pub recurring_event_id: Option<ID>,
-    pub original_start_time: Option<DateTime<Utc>>,
-    pub service_id: Option<ID>,
+    pub recurrence: Option<Option<RRuleOptions>>,
+    pub recurring_event_id: Option<Option<ID>>,
+    pub original_start_time: Option<Option<DateTime<Utc>>>,
+    pub service_id: Option<Option<ID>>,
     pub exdates: Option<Vec<DateTime<Utc>>>,
-    pub metadata: Option<serde_json::Value>,
+    pub metadata: Option<Option<serde_json::Value>>,
 }
 
 impl CalendarEventClient {
@@ -179,7 +186,7 @@ impl CalendarEventClient {
             location: input.location,
             all_day: input.all_day,
             status: input.status,
-            parent_id: input.external_parent_id,
+            external_parent_id: input.external_parent_id,
             external_id: input.external_id,
             busy: input.busy,
             start_time: input.start_time,
@@ -195,7 +202,7 @@ impl CalendarEventClient {
             updated: None,
         };
         self.base
-            .put(body, format!("user/events/{event_id}"), StatusCode::OK)
+            .patch(body, format!("user/events/{event_id}"), StatusCode::OK)
             .await
     }
 }

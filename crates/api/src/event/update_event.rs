@@ -57,7 +57,7 @@ pub async fn update_event_admin_controller(
         title: body.title.take(),
         description: body.description.take(),
         event_type: body.event_type.take(),
-        external_parent_id: body.parent_id.take(),
+        external_parent_id: body.external_parent_id.take(),
         external_id: body.external_id.take(),
         location: body.location.take(),
         status: body.status.take(),
@@ -113,7 +113,7 @@ pub async fn update_event_controller(
         title: body.title.take(),
         description: body.description.take(),
         event_type: body.event_type.take(),
-        external_parent_id: body.parent_id.take(),
+        external_parent_id: body.external_parent_id.take(),
         external_id: body.external_id.take(),
         location: body.location.take(),
         status: body.status.take(),
@@ -145,24 +145,24 @@ pub struct UpdateEventUseCase {
     pub user: User,
     pub event_id: ID,
 
-    pub title: Option<String>,
-    pub description: Option<String>,
-    pub event_type: Option<String>,
-    pub external_parent_id: Option<String>,
-    pub external_id: Option<String>,
-    pub location: Option<String>,
+    pub title: Option<Option<String>>,
+    pub description: Option<Option<String>>,
+    pub event_type: Option<Option<String>>,
+    pub external_parent_id: Option<Option<String>>,
+    pub external_id: Option<Option<String>>,
+    pub location: Option<Option<String>>,
     pub status: Option<CalendarEventStatus>,
     pub all_day: Option<bool>,
     pub start_time: Option<DateTime<Utc>>,
     pub busy: Option<bool>,
     pub duration: Option<i64>,
     pub reminders: Option<Vec<CalendarEventReminder>>,
-    pub service_id: Option<ID>,
-    pub recurrence: Option<RRuleOptions>,
+    pub service_id: Option<Option<ID>>,
+    pub recurrence: Option<Option<RRuleOptions>>,
     pub exdates: Option<Vec<DateTime<Utc>>>,
-    pub recurring_event_id: Option<ID>,
-    pub original_start_time: Option<DateTime<Utc>>,
-    pub metadata: Option<serde_json::Value>,
+    pub recurring_event_id: Option<Option<ID>>,
+    pub original_start_time: Option<Option<DateTime<Utc>>>,
+    pub metadata: Option<Option<serde_json::Value>>,
     pub created: Option<DateTime<Utc>>,
     pub updated: Option<DateTime<Utc>>,
 
@@ -255,15 +255,26 @@ impl UseCase for UpdateEventUseCase {
             }
         };
 
-        if service_id.is_some() {
-            e.service_id.clone_from(service_id);
+        if let Some(service_id_value) = service_id {
+            if service_id_value.is_some() {
+                e.service_id = service_id_value.take();
+            } else {
+                // Set to NULL
+                e.service_id = None;
+            }
         }
 
-        if let Some(exdates) = exdates {
-            e.exdates.clone_from(exdates);
+        if let Some(exdates_value) = exdates {
+            e.exdates = exdates_value.clone();
         }
-        if let Some(metadata) = metadata {
-            e.metadata = Some(metadata.clone());
+
+        if let Some(metadata_value) = metadata {
+            if metadata_value.is_some() {
+                e.metadata = metadata_value.take();
+            } else {
+                // Set to NULL
+                e.metadata = None;
+            }
         }
 
         if let Some(reminders) = &reminders {
@@ -278,16 +289,16 @@ impl UseCase for UpdateEventUseCase {
 
         let mut start_or_duration_change = false;
 
-        if let Some(start_time) = start_time {
+        if let Some(start_time_value) = start_time {
             // Only change the exdates if the start time has actually changed
-            if e.start_time != *start_time {
+            if e.start_time != *start_time_value {
                 e.exdates = Vec::new();
             }
-            e.start_time = *start_time;
+            e.start_time = *start_time_value;
             start_or_duration_change = true;
         }
-        if let Some(duration) = duration {
-            e.duration = *duration;
+        if let Some(duration_value) = duration {
+            e.duration = *duration_value;
             start_or_duration_change = true;
         }
 
@@ -295,30 +306,39 @@ impl UseCase for UpdateEventUseCase {
             e.end_time = e.start_time + TimeDelta::milliseconds(e.duration);
         }
 
-        if let Some(busy) = busy {
-            e.busy = *busy;
+        if let Some(busy_value) = busy {
+            e.busy = *busy_value;
         }
 
         // Handle the new recurrence
-        let valid_recurrence = if let Some(rrule_opts) = recurrence.clone() {
-            // ? should exdates be deleted when rrules are updated
-            e.set_recurrence(rrule_opts).map_err(|e| {
-                tracing::error!("[update_event] Failed to set recurrence {:?}", e);
-                UseCaseError::InvalidRecurrenceRule
-            })?
-
-        // Otherwise, we we don't have a new recurrence, but we have an existing one
-        // And the start time or duration has changed, we need to update the recurrence
-        } else if start_or_duration_change && e.recurrence.is_some() {
-            // This unwrap is safe as we have checked that recurrence "is_some"
-            #[allow(clippy::unwrap_used)]
-            e.set_recurrence(e.recurrence.clone().unwrap())
-                .map_err(|e| {
+        let valid_recurrence = if let Some(recurrence_value) = &recurrence {
+            if let Some(rrule_opts) = recurrence_value {
+                // ? should exdates be deleted when rrules are updated
+                e.set_recurrence(rrule_opts.clone()).map_err(|e| {
                     tracing::error!("[update_event] Failed to set recurrence {:?}", e);
                     UseCaseError::InvalidRecurrenceRule
                 })?
+            } else {
+                // Set to NULL
+                e.recurrence = None;
+                true
+            }
+        // Otherwise, we we don't have a new recurrence, but we have an existing one
+        // And the start time or duration has changed, we need to update the recurrence
+        } else if start_or_duration_change {
+            if e.recurrence.is_some() {
+                // This unwrap is safe as we have checked that recurrence "is_some"
+                #[allow(clippy::unwrap_used)]
+                e.set_recurrence(e.recurrence.clone().unwrap())
+                    .map_err(|e| {
+                        tracing::error!("[update_event] Failed to set recurrence {:?}", e);
+                        UseCaseError::InvalidRecurrenceRule
+                    })?
+            } else {
+                e.recurrence = None;
+                true
+            }
         } else {
-            e.recurrence = None;
             true
         };
 
@@ -326,54 +346,95 @@ impl UseCase for UpdateEventUseCase {
             return Err(UseCaseError::InvalidRecurrenceRule);
         };
 
-        if let Some(recurring_event_id) = recurring_event_id {
-            // Check if the recurring event exists
-            e.recurring_event_id = Some(recurring_event_id.clone());
+        if let Some(recurring_event_id_value) = recurring_event_id {
+            if recurring_event_id_value.is_some() {
+                // Check if the recurring event exists
+                e.recurring_event_id = recurring_event_id_value.take();
+            } else {
+                // Set to NULL
+                e.recurring_event_id = None;
+            }
         }
 
-        if let Some(original_start_time) = original_start_time {
-            e.original_start_time = Some(*original_start_time);
+        if let Some(original_start_time_value) = original_start_time {
+            if original_start_time_value.is_some() {
+                e.original_start_time = original_start_time_value.take();
+            } else {
+                // Set to NULL
+                e.original_start_time = None;
+            }
         }
 
-        if title.is_some() {
-            e.title.clone_from(title);
+        if let Some(title_value) = title {
+            if title_value.is_some() {
+                e.title = title_value.take();
+            } else {
+                // Set to NULL
+                e.title = None;
+            }
         }
 
-        if description.is_some() {
-            e.description.clone_from(description);
+        if let Some(description_value) = description {
+            if description_value.is_some() {
+                e.description = description_value.take();
+            } else {
+                // Set to NULL
+                e.description = None;
+            }
         }
 
-        if event_type.is_some() {
-            e.event_type.clone_from(event_type);
+        if let Some(event_type_value) = event_type {
+            if event_type_value.is_some() {
+                e.event_type = event_type_value.take();
+            } else {
+                // Set to NULL
+                e.event_type = None;
+            }
         }
 
-        if external_parent_id.is_some() {
-            e.external_parent_id.clone_from(external_parent_id);
+        if let Some(external_parent_id_value) = external_parent_id {
+            if external_parent_id_value.is_some() {
+                e.external_parent_id = external_parent_id_value.take();
+            } else {
+                // Set to NULL
+                e.external_parent_id = None;
+            }
         }
 
-        if external_id.is_some() {
-            e.external_id.clone_from(external_id);
+        if let Some(external_id_value) = external_id {
+            if external_id_value.is_some() {
+                e.external_id = external_id_value.take();
+            } else {
+                // Set to NULL
+                e.external_id = None;
+            }
         }
 
-        if location.is_some() {
-            e.location.clone_from(location);
+        if let Some(location_value) = location {
+            if location_value.is_some() {
+                e.location = location_value.take();
+            } else {
+                // Set to NULL
+                e.location = None;
+            }
         }
 
-        if let Some(status) = status {
-            e.status = status.clone();
+        if let Some(status_value) = status {
+            e.status = status_value.clone();
         }
 
-        if let Some(all_day) = all_day {
-            e.all_day = *all_day;
+        if let Some(all_day_value) = all_day {
+            e.all_day = *all_day_value;
         }
 
-        if let Some(created) = created {
-            e.created = *created;
+        if let Some(created_value) = created {
+            e.created = *created_value;
         }
 
-        if let Some(updated) = updated {
-            e.updated = *updated;
+        if let Some(updated_value) = updated {
+            e.updated = *updated_value;
         } else {
+            // Set to current time
             e.updated = Utc::now();
         }
 
