@@ -183,6 +183,32 @@ pub mod delete_calendar {
     pub type APIResponse = CalendarResponse;
 }
 
+pub mod get_calendar_events_ical {
+    use chrono::{DateTime, Utc};
+
+    use super::*;
+
+    #[derive(Debug, Deserialize)]
+    pub struct PathParams {
+        pub calendar_id: ID,
+    }
+
+    #[derive(Debug, Deserialize)]
+    pub struct QueryParams {
+        /// Optional start time for the query (UTC)
+        ///
+        /// Default to 3 months before now
+        pub start_time: Option<DateTime<Utc>>,
+
+        /// Optional end time for the query (UTC)
+        ///
+        /// Default to 6 months from now
+        pub end_time: Option<DateTime<Utc>>,
+    }
+
+    pub type APIResponse = String;
+}
+
 pub mod get_calendar_events {
     use chrono::{DateTime, Utc};
     use nittei_domain::EventWithInstances;

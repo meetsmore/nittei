@@ -5,6 +5,7 @@ mod date;
 mod event;
 pub mod event_group;
 mod event_instance;
+pub mod ical;
 pub mod providers;
 mod reminder;
 mod schedule;
@@ -32,6 +33,11 @@ pub use event_instance::{
     EventWithInstances,
     FreeBusy,
     get_free_busy,
+};
+pub use ical::{
+    generate_ical_content,
+    generate_ical_content_for_event,
+    generate_ical_content_for_instance,
 };
 pub use reminder::{EventRemindersExpansionJob, Reminder};
 pub use schedule::{Schedule, ScheduleRule};
