@@ -37,7 +37,7 @@ pub use event_instance::{
 pub use ical::{
     generate_ical_content,
     generate_ical_content_for_event,
-    generate_ical_content_for_instance,
+    generate_ical_content_for_exception,
 };
 pub use reminder::{EventRemindersExpansionJob, Reminder};
 pub use schedule::{Schedule, ScheduleRule};

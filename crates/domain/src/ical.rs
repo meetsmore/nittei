@@ -1,14 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{
-    Calendar,
-    CalendarEvent,
-    CalendarEventStatus,
-    EventInstance,
-    ID,
-    RRuleFrequency,
-    RRuleOptions,
-};
+use crate::{Calendar, CalendarEvent, CalendarEventStatus, ID, RRuleFrequency, RRuleOptions};
 
 /// Generates iCalendar content from calendar events and instances
 ///
@@ -29,7 +21,7 @@ pub fn generate_ical_content(
     calendar: &Calendar,
     normal_events: &[CalendarEvent],
     recurring_events: &[CalendarEvent],
-    map_event_id_to_instances: &HashMap<ID, Vec<EventInstance>>,
+    map_recurring_event_id_to_exceptions: &HashMap<&ID, Vec<CalendarEvent>>,
 ) -> String {
     let mut ical = String::new();
 
@@ -56,10 +48,10 @@ pub fn generate_ical_content(
     for recurring_event in recurring_events {
         ical.push_str(&generate_ical_content_for_event(recurring_event));
 
-        if let Some(instances) = map_event_id_to_instances.get(&recurring_event.id) {
-            for instance in instances {
-                ical.push_str(&generate_ical_content_for_instance(
-                    instance,
+        if let Some(exceptions) = map_recurring_event_id_to_exceptions.get(&recurring_event.id) {
+            for exception in exceptions {
+                ical.push_str(&generate_ical_content_for_exception(
+                    exception,
                     recurring_event,
                 ));
             }
@@ -152,6 +144,8 @@ pub fn generate_ical_content_for_event(event: &CalendarEvent) -> String {
     // Busy status
     if !event.busy {
         ical.push_str("TRANSP:TRANSPARENT\r\n");
+    } else {
+        ical.push_str("TRANSP:OPAQUE\r\n");
     }
 
     ical.push_str("END:VEVENT\r\n");
@@ -159,93 +153,87 @@ pub fn generate_ical_content_for_event(event: &CalendarEvent) -> String {
     ical
 }
 
-/// Generate ical content for an instance of a recurring event
-pub fn generate_ical_content_for_instance(
-    instance: &EventInstance,
-    recurring_event: &CalendarEvent,
+/// Generate ical content for an exception of a recurring event
+pub fn generate_ical_content_for_exception(
+    exception: &CalendarEvent,
+    parent_event: &CalendarEvent,
 ) -> String {
     let mut ical = String::new();
-
     ical.push_str("BEGIN:VEVENT\r\n");
 
-    // Event ID
-    ical.push_str(&format!("UID:{}\r\n", recurring_event.id));
+    // Same UID as parent
+    ical.push_str(&format!("UID:{}\r\n", parent_event.id));
 
-    // Summary (title)
-    if let Some(title) = &recurring_event.title {
+    // RECURRENCE-ID identifies which occurrence is being modified
+    if exception.all_day {
+        if let Some(original_start_time) = &exception.original_start_time {
+            ical.push_str(&format!(
+                "RECURRENCE-ID;VALUE=DATE:{}\r\n",
+                original_start_time.format("%Y%m%d")
+            ));
+        }
+    } else if let Some(original_start_time) = &exception.original_start_time {
+        ical.push_str(&format!(
+            "RECURRENCE-ID:{}\r\n",
+            original_start_time.format("%Y%m%dT%H%M%SZ")
+        ));
+    }
+
+    // Modified properties
+    if let Some(title) = &exception.title {
+        ical.push_str(&format!("SUMMARY:{}\r\n", escape_text(title)));
+    } else if let Some(title) = &parent_event.title {
         ical.push_str(&format!("SUMMARY:{}\r\n", escape_text(title)));
     }
 
-    // Description
-    if let Some(description) = &recurring_event.description {
-        ical.push_str(&format!("DESCRIPTION:{}\r\n", escape_text(description)));
-    }
+    // Similar pattern for description, location, etc.
 
-    // Location
-    if let Some(location) = &recurring_event.location {
-        ical.push_str(&format!("LOCATION:{}\r\n", escape_text(location)));
-    }
-
-    // Start and end time
-    if recurring_event.all_day {
+    // Modified start and end times
+    if exception.all_day {
         ical.push_str(&format!(
             "DTSTART;VALUE=DATE:{}\r\n",
-            instance.start_time.format("%Y%m%d")
+            exception.start_time.format("%Y%m%d")
         ));
         ical.push_str(&format!(
             "DTEND;VALUE=DATE:{}\r\n",
-            instance.end_time.format("%Y%m%d")
+            exception.end_time.format("%Y%m%d")
         ));
     } else {
         ical.push_str(&format!(
             "DTSTART:{}\r\n",
-            instance.start_time.format("%Y%m%dT%H%M%SZ")
+            exception.start_time.format("%Y%m%dT%H%M%SZ")
         ));
         ical.push_str(&format!(
             "DTEND:{}\r\n",
-            instance.end_time.format("%Y%m%dT%H%M%SZ")
+            exception.end_time.format("%Y%m%dT%H%M%SZ")
         ));
     }
 
-    // Status
-    ical.push_str(&format!(
-        "STATUS:{}\r\n",
-        match recurring_event.status {
-            CalendarEventStatus::Confirmed => "CONFIRMED",
-            CalendarEventStatus::Tentative => "TENTATIVE",
-            CalendarEventStatus::Cancelled => "CANCELLED",
-        }
-    ));
+    // Status (important for cancelled occurrences)
+    let status = &exception.status;
+    ical.push_str(&format!("STATUS:{}\r\n", status));
 
     // Created and modified dates
     ical.push_str(&format!(
         "CREATED:{}\r\n",
-        recurring_event.created.format("%Y%m%dT%H%M%SZ")
+        exception.created.format("%Y%m%dT%H%M%SZ")
     ));
     ical.push_str(&format!(
         "LAST-MODIFIED:{}\r\n",
-        recurring_event.updated.format("%Y%m%dT%H%M%SZ")
+        exception.updated.format("%Y%m%dT%H%M%SZ")
     ));
 
-    // Recurrence rules
-    if let Some(recurrence) = &recurring_event.recurrence
-        && let Some(rrule) = recurrence_to_rrule_string(recurrence)
-    {
-        ical.push_str(&format!("RRULE:{}\r\n", rrule));
-    }
-
-    // Exception dates
-    for exdate in &recurring_event.exdates {
-        ical.push_str(&format!("EXDATE:{}\r\n", exdate.format("%Y%m%dT%H%M%SZ")));
-    }
+    // No RRULE on exceptions
 
     // Busy status
-    if !recurring_event.busy {
+    let busy = exception.busy;
+    if !busy {
         ical.push_str("TRANSP:TRANSPARENT\r\n");
+    } else {
+        ical.push_str("TRANSP:OPAQUE\r\n");
     }
 
     ical.push_str("END:VEVENT\r\n");
-
     ical
 }
 

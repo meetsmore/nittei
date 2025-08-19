@@ -9,15 +9,7 @@ use axum::{
 };
 use chrono::{DateTime, Months, Utc};
 use nittei_api_structs::get_calendar_events_ical::{PathParams, QueryParams};
-use nittei_domain::{
-    Account,
-    ID,
-    TimeSpan,
-    User,
-    expand_event_and_remove_exceptions,
-    generate_ical_content,
-    generate_map_exceptions_original_start_times,
-};
+use nittei_domain::{Account, ID, TimeSpan, User, generate_ical_content};
 use nittei_infra::NitteiContext;
 use tracing::error;
 
@@ -280,29 +272,15 @@ impl UseCase for ExportCalendarIcalUseCase {
         );
 
         // Generate map of exceptions for recurring events
-        let map_recurring_event_id_to_exceptions =
-            generate_map_exceptions_original_start_times(&exceptions);
+        let mut map_recurring_event_id_to_exceptions = HashMap::new();
 
-        // Expand recurring events and remove exceptions
-        let mut map_event_id_to_instances = HashMap::new();
-
-        for event in &recurring_events {
-            let exceptions = map_recurring_event_id_to_exceptions
-                .get(&event.id)
-                .map(Vec::as_slice)
-                .unwrap_or(&[]);
-
-            let instances =
-                expand_event_and_remove_exceptions(&calendar, event, exceptions, timespan.clone())
-                    .map_err(|e| {
-                        error!(
-                            "[export_calendar_ical] Got an error while expanding an event: {:?}",
-                            e
-                        );
-                        UseCaseError::InternalError
-                    })?;
-
-            map_event_id_to_instances.insert(event.id.clone(), instances);
+        for event in &exceptions {
+            if let Some(recurring_event_id) = &event.recurring_event_id {
+                map_recurring_event_id_to_exceptions
+                    .entry(recurring_event_id)
+                    .or_insert_with(Vec::new)
+                    .push(event.clone());
+            }
         }
 
         // Generate iCalendar content
@@ -310,7 +288,7 @@ impl UseCase for ExportCalendarIcalUseCase {
             &calendar,
             &normal_events,
             &recurring_events,
-            &map_event_id_to_instances,
+            &map_recurring_event_id_to_exceptions,
         );
 
         Ok(UseCaseResponse { ical_content })

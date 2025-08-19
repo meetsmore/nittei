@@ -84,23 +84,73 @@ async fn test_export_calendar_ical_user_endpoint() {
         .await
         .expect("Expected to export calendar as iCal");
 
-    // Verify iCal content structure
-    assert!(ical_content.contains("BEGIN:VCALENDAR"));
-    assert!(ical_content.contains("END:VCALENDAR"));
-    assert!(ical_content.contains("VERSION:2.0"));
-    assert!(ical_content.contains("PRODID:-//Nittei//Calendar API//EN"));
+    // Verify iCal content structure using template validation
+    let expected_structure = r#"BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Nittei//Calendar API//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Test Calendar
+X-WR-TIMEZONE:UTC
+BEGIN:VEVENT
+UID:*
+SUMMARY:Test Event
+DESCRIPTION:Test Description
+LOCATION:Test Location
+DTSTART:*
+DTEND:*
+STATUS:CONFIRMED
+CREATED:*
+LAST-MODIFIED:*
+TRANSP:OPAQUE
+END:VEVENT
+END:VCALENDAR"#;
 
-    // Verify calendar properties
-    assert!(ical_content.contains("X-WR-CALNAME:Test Calendar"));
-    assert!(ical_content.contains("X-WR-TIMEZONE:UTC"));
+    // Split into lines and validate structure
+    let expected_lines: Vec<&str> = expected_structure.lines().collect();
+    let actual_lines: Vec<&str> = ical_content.lines().collect();
 
-    // Verify event properties in iCal format
-    assert!(ical_content.contains("SUMMARY:Test Event"));
-    assert!(ical_content.contains("DESCRIPTION:Test Description"));
-    assert!(ical_content.contains("LOCATION:Test Location"));
-    assert!(ical_content.contains("STATUS:CONFIRMED"));
-    assert!(ical_content.contains("DTSTART:"));
-    assert!(ical_content.contains("DTEND:"));
+    // Check that all expected lines are present (ignoring dynamic values marked with *)
+    for (i, expected_line) in expected_lines.iter().enumerate() {
+        if expected_line.ends_with("*") {
+            // Skip wildcard lines (dynamic values)
+            continue;
+        }
+
+        if !actual_lines.contains(expected_line) {
+            panic!("Missing expected line {}: '{}'", i + 1, expected_line);
+        }
+    }
+
+    // Verify specific structure requirements
+    assert_eq!(actual_lines[0], "BEGIN:VCALENDAR");
+    assert_eq!(*actual_lines.last().unwrap(), "END:VCALENDAR");
+
+    // Verify event block is properly contained
+    let event_start = actual_lines
+        .iter()
+        .position(|&line| line == "BEGIN:VEVENT")
+        .unwrap();
+    let event_end = actual_lines
+        .iter()
+        .position(|&line| line == "END:VEVENT")
+        .unwrap();
+    assert!(
+        event_start < event_end,
+        "Event block not properly contained"
+    );
+
+    // Verify dynamic values are present and properly formatted
+    let event_lines = &actual_lines[event_start..=event_end];
+    assert!(event_lines.iter().any(|line| line.starts_with("UID:")));
+    assert!(event_lines.iter().any(|line| line.starts_with("DTSTART:")));
+    assert!(event_lines.iter().any(|line| line.starts_with("DTEND:")));
+    assert!(event_lines.iter().any(|line| line.starts_with("CREATED:")));
+    assert!(
+        event_lines
+            .iter()
+            .any(|line| line.starts_with("LAST-MODIFIED:"))
+    );
 }
 
 #[tokio::test]
@@ -212,29 +262,85 @@ async fn test_export_calendar_ical_admin_endpoint() {
         .await
         .expect("Expected to export calendar as iCal");
 
-    // Verify iCal content structure
-    assert!(ical_content.contains("BEGIN:VCALENDAR"));
-    assert!(ical_content.contains("END:VCALENDAR"));
-    assert!(ical_content.contains("VERSION:2.0"));
-    assert!(ical_content.contains("PRODID:-//Nittei//Calendar API//EN"));
+    // Verify iCal content structure using template validation
+    let expected_structure = r#"BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Nittei//Calendar API//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Admin Test Calendar
+X-WR-TIMEZONE:Europe/Oslo
+BEGIN:VEVENT
+UID:*
+SUMMARY:First Event
+DESCRIPTION:First event description
+DTSTART:*
+DTEND:*
+STATUS:CONFIRMED
+CREATED:*
+LAST-MODIFIED:*
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+UID:*
+SUMMARY:Second Event
+LOCATION:Office
+DTSTART;VALUE=DATE:*
+DTEND;VALUE=DATE:*
+STATUS:TENTATIVE
+CREATED:*
+LAST-MODIFIED:*
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR"#;
 
-    // Verify calendar properties
-    assert!(ical_content.contains("X-WR-CALNAME:Admin Test Calendar"));
-    assert!(ical_content.contains("X-WR-TIMEZONE:Europe/Oslo"));
+    // Split into lines and validate structure
+    let expected_lines: Vec<&str> = expected_structure.lines().collect();
+    let actual_lines: Vec<&str> = ical_content.lines().collect();
 
-    // Verify both events are present in iCal
-    assert!(ical_content.contains("SUMMARY:First Event"));
-    assert!(ical_content.contains("DESCRIPTION:First event description"));
-    assert!(ical_content.contains("STATUS:CONFIRMED"));
-    assert!(ical_content.contains("DTSTART:"));
-    assert!(ical_content.contains("DTEND:"));
+    // Check that all expected lines are present (ignoring dynamic values marked with *)
+    for (i, expected_line) in expected_lines.iter().enumerate() {
+        if expected_line.ends_with("*") {
+            // Skip wildcard lines (dynamic values)
+            continue;
+        }
 
-    assert!(ical_content.contains("SUMMARY:Second Event"));
-    assert!(ical_content.contains("LOCATION:Office"));
-    assert!(ical_content.contains("STATUS:TENTATIVE"));
-    // All-day events use DATE format
-    assert!(ical_content.contains("DTSTART;VALUE=DATE:"));
-    assert!(ical_content.contains("DTEND;VALUE=DATE:"));
+        if !actual_lines.contains(expected_line) {
+            panic!("Missing expected line {}: '{}'", i + 1, expected_line);
+        }
+    }
+
+    // Verify specific structure requirements
+    assert_eq!(actual_lines[0], "BEGIN:VCALENDAR");
+    assert_eq!(*actual_lines.last().unwrap(), "END:VCALENDAR");
+
+    // Verify we have exactly 2 events
+    let event_count = actual_lines
+        .iter()
+        .filter(|&&line| line == "BEGIN:VEVENT")
+        .count();
+    assert_eq!(event_count, 2, "Expected 2 events");
+
+    // Verify dynamic values are present and properly formatted
+    assert!(actual_lines.iter().any(|line| line.starts_with("UID:")));
+    assert!(actual_lines.iter().any(|line| line.starts_with("DTSTART:")));
+    assert!(actual_lines.iter().any(|line| line.starts_with("DTEND:")));
+    assert!(
+        actual_lines
+            .iter()
+            .any(|line| line.starts_with("DTSTART;VALUE=DATE:"))
+    );
+    assert!(
+        actual_lines
+            .iter()
+            .any(|line| line.starts_with("DTEND;VALUE=DATE:"))
+    );
+    assert!(actual_lines.iter().any(|line| line.starts_with("CREATED:")));
+    assert!(
+        actual_lines
+            .iter()
+            .any(|line| line.starts_with("LAST-MODIFIED:"))
+    );
 }
 
 #[tokio::test]
@@ -330,26 +436,68 @@ async fn test_export_calendar_ical_with_recurring_events() {
         .await
         .expect("Expected to export calendar as iCal");
 
-    // Verify iCal content structure
-    assert!(ical_content.contains("BEGIN:VCALENDAR"));
-    assert!(ical_content.contains("END:VCALENDAR"));
-    assert!(ical_content.contains("VERSION:2.0"));
-    assert!(ical_content.contains("PRODID:-//Nittei//Calendar API//EN"));
+    // Verify iCal content structure using template validation
+    let expected_structure = r#"BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Nittei//Calendar API//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Recurring Events Calendar
+X-WR-TIMEZONE:UTC
+BEGIN:VEVENT
+UID:*
+SUMMARY:Daily Meeting
+DESCRIPTION:Daily standup meeting
+LOCATION:Conference Room
+DTSTART:*
+DTEND:*
+STATUS:CONFIRMED
+RRULE:FREQ=DAILY;COUNT=5
+CREATED:*
+LAST-MODIFIED:*
+TRANSP:OPAQUE
+END:VEVENT
+END:VCALENDAR"#;
 
-    // Verify calendar properties
-    assert!(ical_content.contains("X-WR-CALNAME:Recurring Events Calendar"));
-    assert!(ical_content.contains("X-WR-TIMEZONE:UTC"));
+    // Split into lines and validate structure
+    let expected_lines: Vec<&str> = expected_structure.lines().collect();
+    let actual_lines: Vec<&str> = ical_content.lines().collect();
 
-    // Verify recurring event is present in iCal
-    assert!(ical_content.contains("SUMMARY:Daily Meeting"));
-    assert!(ical_content.contains("DESCRIPTION:Daily standup meeting"));
-    assert!(ical_content.contains("LOCATION:Conference Room"));
-    assert!(ical_content.contains("STATUS:CONFIRMED"));
-    assert!(ical_content.contains("DTSTART:"));
-    assert!(ical_content.contains("DTEND:"));
+    // print!("actual_lines: {:?}", actual_lines);
 
-    // Verify recurrence rule is present
-    assert!(ical_content.contains("RRULE:FREQ=DAILY;COUNT=5"));
+    // Check that all expected lines are present (ignoring dynamic values marked with *)
+    for (i, expected_line) in expected_lines.iter().enumerate() {
+        if expected_line.ends_with("*") {
+            // Skip wildcard lines (dynamic values)
+            continue;
+        }
+
+        if !actual_lines.contains(expected_line) {
+            panic!("Missing expected line {}: '{}'", i + 1, expected_line);
+        }
+    }
+
+    // Verify specific structure requirements
+    assert_eq!(actual_lines[0], "BEGIN:VCALENDAR");
+    assert_eq!(*actual_lines.last().unwrap(), "END:VCALENDAR");
+
+    // Verify we have exactly 1 event
+    let event_count = actual_lines
+        .iter()
+        .filter(|&&line| line == "BEGIN:VEVENT")
+        .count();
+    assert_eq!(event_count, 1, "Expected 1 recurring event");
+
+    // Verify dynamic values are present and properly formatted
+    assert!(actual_lines.iter().any(|line| line.starts_with("UID:")));
+    assert!(actual_lines.iter().any(|line| line.starts_with("DTSTART:")));
+    assert!(actual_lines.iter().any(|line| line.starts_with("DTEND:")));
+    assert!(actual_lines.iter().any(|line| line.starts_with("CREATED:")));
+    assert!(
+        actual_lines
+            .iter()
+            .any(|line| line.starts_with("LAST-MODIFIED:"))
+    );
 }
 
 #[tokio::test]
@@ -401,19 +549,41 @@ async fn test_export_empty_calendar_ical() {
         .await
         .expect("Expected to export calendar as iCal");
 
-    // Verify iCal content structure for empty calendar
-    assert!(ical_content.contains("BEGIN:VCALENDAR"));
-    assert!(ical_content.contains("END:VCALENDAR"));
-    assert!(ical_content.contains("VERSION:2.0"));
-    assert!(ical_content.contains("PRODID:-//Nittei//Calendar API//EN"));
+    // Verify iCal content structure using template validation for empty calendar
+    let expected_structure = r#"BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Nittei//Calendar API//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Empty Calendar
+X-WR-TIMEZONE:UTC
+END:VCALENDAR"#;
 
-    // Verify calendar properties
-    assert!(ical_content.contains("X-WR-CALNAME:Empty Calendar"));
-    assert!(ical_content.contains("X-WR-TIMEZONE:UTC"));
+    // Split into lines and validate structure
+    let expected_lines: Vec<&str> = expected_structure.lines().collect();
+    let actual_lines: Vec<&str> = ical_content.lines().collect();
+
+    // Check that all expected lines are present
+    for (i, expected_line) in expected_lines.iter().enumerate() {
+        if !actual_lines.contains(expected_line) {
+            panic!("Missing expected line {}: '{}'", i + 1, expected_line);
+        }
+    }
+
+    // Verify specific structure requirements
+    assert_eq!(actual_lines[0], "BEGIN:VCALENDAR");
+    assert_eq!(*actual_lines.last().unwrap(), "END:VCALENDAR");
 
     // Verify no events are present (only calendar header/footer)
-    assert!(!ical_content.contains("BEGIN:VEVENT"));
-    assert!(!ical_content.contains("END:VEVENT"));
+    assert!(!actual_lines.contains(&"BEGIN:VEVENT"));
+    assert!(!actual_lines.contains(&"END:VEVENT"));
+
+    // Verify we have exactly the expected number of lines (no extra content)
+    assert_eq!(
+        actual_lines.len(),
+        expected_lines.len(),
+        "Empty calendar should have no extra content"
+    );
 }
 
 #[tokio::test]
