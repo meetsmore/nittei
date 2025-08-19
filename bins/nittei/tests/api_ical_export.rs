@@ -1,6 +1,6 @@
 mod helpers;
 
-use chrono::DateTime;
+use chrono::Utc;
 use helpers::setup::spawn_app;
 use nittei_domain::{CalendarEventStatus, RRuleFrequency, RRuleOptions, Weekday};
 use nittei_sdk::{CreateCalendarInput, CreateEventInput, CreateUserInput, NitteiSDK};
@@ -43,7 +43,8 @@ async fn test_export_calendar_ical_user_endpoint() {
         .unwrap()
         .calendar;
 
-    // Create an event
+    // Create an event within the default timespan (1 month ago)
+    let event_start = Utc::now() - chrono::Duration::days(30);
     let _event = admin_client
         .event
         .create(CreateEventInput {
@@ -65,52 +66,41 @@ async fn test_export_calendar_ical_user_endpoint() {
             recurring_event_id: None,
             original_start_time: None,
             service_id: None,
-            start_time: DateTime::from_timestamp_millis(1704067200000).unwrap(), // 2024-01-01 00:00:00 UTC
+            start_time: event_start,
             metadata: None,
         })
         .await
         .unwrap()
         .event;
 
-    // Test the iCal export endpoint using the SDK client
-    // Since the SDK doesn't have an iCal export method, we'll test that the calendar and events were created correctly
-    // and verify the calendar structure that would be used for iCal export
-
-    // Verify calendar was created with correct properties
-    let calendar_get = admin_client
+    // Test the iCal export endpoint using the SDK client (using default timespan)
+    let ical_content = admin_client
         .calendar
-        .get(calendar.id.clone())
-        .await
-        .expect("Expected to get calendar")
-        .calendar;
-
-    assert_eq!(calendar_get.id, calendar.id);
-    assert_eq!(calendar_get.name, Some("Test Calendar".to_string()));
-    assert_eq!(calendar_get.settings.timezone, chrono_tz::UTC.to_string());
-    assert_eq!(calendar_get.settings.week_start, Weekday::Mon);
-
-    // Verify event was created correctly
-    let events = admin_client
-        .calendar
-        .get_events(nittei_sdk::GetCalendarEventsInput {
+        .export_ical(nittei_sdk::ExportCalendarIcalInput {
             calendar_id: calendar.id.clone(),
-            start_time: DateTime::from_timestamp_millis(1704067200000).unwrap(), // 2024-01-01 00:00:00 UTC
-            end_time: DateTime::from_timestamp_millis(1704153600000).unwrap(), // 2024-01-02 00:00:00 UTC
+            start_time: None, // Use default (3 months ago)
+            end_time: None,   // Use default (6 months in future)
         })
         .await
-        .expect("Expected to get calendar events");
+        .expect("Expected to export calendar as iCal");
 
-    assert_eq!(events.events.len(), 1);
-    let event = &events.events[0];
-    assert_eq!(event.event.title, Some("Test Event".to_string()));
-    assert_eq!(
-        event.event.description,
-        Some("Test Description".to_string())
-    );
-    assert_eq!(event.event.location, Some("Test Location".to_string()));
-    assert_eq!(event.event.status, CalendarEventStatus::Confirmed);
-    assert!(!event.event.all_day);
-    assert!(event.event.busy);
+    // Verify iCal content structure
+    assert!(ical_content.contains("BEGIN:VCALENDAR"));
+    assert!(ical_content.contains("END:VCALENDAR"));
+    assert!(ical_content.contains("VERSION:2.0"));
+    assert!(ical_content.contains("PRODID:-//Nittei//Calendar API//EN"));
+
+    // Verify calendar properties
+    assert!(ical_content.contains("X-WR-CALNAME:Test Calendar"));
+    assert!(ical_content.contains("X-WR-TIMEZONE:UTC"));
+
+    // Verify event properties in iCal format
+    assert!(ical_content.contains("SUMMARY:Test Event"));
+    assert!(ical_content.contains("DESCRIPTION:Test Description"));
+    assert!(ical_content.contains("LOCATION:Test Location"));
+    assert!(ical_content.contains("STATUS:CONFIRMED"));
+    assert!(ical_content.contains("DTSTART:"));
+    assert!(ical_content.contains("DTEND:"));
 }
 
 #[tokio::test]
@@ -151,7 +141,10 @@ async fn test_export_calendar_ical_admin_endpoint() {
         .unwrap()
         .calendar;
 
-    // Create multiple events
+    // Create multiple events within the default timespan
+    let event1_start = Utc::now() - chrono::Duration::days(60); // 2 months ago
+    let event2_start = Utc::now() + chrono::Duration::days(30); // 1 month in future
+
     let _event1 = admin_client
         .event
         .create(CreateEventInput {
@@ -173,7 +166,7 @@ async fn test_export_calendar_ical_admin_endpoint() {
             recurring_event_id: None,
             original_start_time: None,
             service_id: None,
-            start_time: DateTime::from_timestamp_millis(1704067200000).unwrap(), // 2024-01-01 00:00:00 UTC
+            start_time: event1_start,
             metadata: None,
         })
         .await
@@ -201,66 +194,47 @@ async fn test_export_calendar_ical_admin_endpoint() {
             recurring_event_id: None,
             original_start_time: None,
             service_id: None,
-            start_time: DateTime::from_timestamp_millis(1704153600000).unwrap(), // 2024-01-02 00:00:00 UTC
+            start_time: event2_start,
             metadata: None,
         })
         .await
         .unwrap()
         .event;
 
-    // Test the iCal export endpoint using the SDK client
-    // Verify calendar was created with correct properties
-    let calendar_get = admin_client
+    // Test the iCal export endpoint using the SDK client (using default timespan)
+    let ical_content = admin_client
         .calendar
-        .get(calendar.id.clone())
-        .await
-        .expect("Expected to get calendar")
-        .calendar;
-
-    assert_eq!(calendar_get.id, calendar.id);
-    assert_eq!(calendar_get.name, Some("Admin Test Calendar".to_string()));
-    assert_eq!(
-        calendar_get.settings.timezone,
-        chrono_tz::Europe::Oslo.to_string()
-    );
-
-    // Verify both events were created correctly
-    let events = admin_client
-        .calendar
-        .get_events(nittei_sdk::GetCalendarEventsInput {
+        .export_ical(nittei_sdk::ExportCalendarIcalInput {
             calendar_id: calendar.id.clone(),
-            start_time: DateTime::from_timestamp_millis(1704067200000).unwrap(), // 2024-01-01 00:00:00 UTC
-            end_time: DateTime::from_timestamp_millis(1704240000000).unwrap(), // 2024-01-03 00:00:00 UTC
+            start_time: None, // Use default (3 months ago)
+            end_time: None,   // Use default (6 months in future)
         })
         .await
-        .expect("Expected to get calendar events");
+        .expect("Expected to export calendar as iCal");
 
-    assert_eq!(events.events.len(), 2);
+    // Verify iCal content structure
+    assert!(ical_content.contains("BEGIN:VCALENDAR"));
+    assert!(ical_content.contains("END:VCALENDAR"));
+    assert!(ical_content.contains("VERSION:2.0"));
+    assert!(ical_content.contains("PRODID:-//Nittei//Calendar API//EN"));
 
-    // Find the first event
-    let event1 = events
-        .events
-        .iter()
-        .find(|e| e.event.title == Some("First Event".to_string()))
-        .unwrap();
-    assert_eq!(
-        event1.event.description,
-        Some("First event description".to_string())
-    );
-    assert_eq!(event1.event.status, CalendarEventStatus::Confirmed);
-    assert!(!event1.event.all_day);
-    assert!(event1.event.busy);
+    // Verify calendar properties
+    assert!(ical_content.contains("X-WR-CALNAME:Admin Test Calendar"));
+    assert!(ical_content.contains("X-WR-TIMEZONE:Europe/Oslo"));
 
-    // Find the second event
-    let event2 = events
-        .events
-        .iter()
-        .find(|e| e.event.title == Some("Second Event".to_string()))
-        .unwrap();
-    assert_eq!(event2.event.location, Some("Office".to_string()));
-    assert_eq!(event2.event.status, CalendarEventStatus::Tentative);
-    assert!(event2.event.all_day);
-    assert!(!event2.event.busy);
+    // Verify both events are present in iCal
+    assert!(ical_content.contains("SUMMARY:First Event"));
+    assert!(ical_content.contains("DESCRIPTION:First event description"));
+    assert!(ical_content.contains("STATUS:CONFIRMED"));
+    assert!(ical_content.contains("DTSTART:"));
+    assert!(ical_content.contains("DTEND:"));
+
+    assert!(ical_content.contains("SUMMARY:Second Event"));
+    assert!(ical_content.contains("LOCATION:Office"));
+    assert!(ical_content.contains("STATUS:TENTATIVE"));
+    // All-day events use DATE format
+    assert!(ical_content.contains("DTSTART;VALUE=DATE:"));
+    assert!(ical_content.contains("DTEND;VALUE=DATE:"));
 }
 
 #[tokio::test]
@@ -301,7 +275,7 @@ async fn test_export_calendar_ical_with_recurring_events() {
         .unwrap()
         .calendar;
 
-    // Create a recurring event (daily for 5 days)
+    // Create a recurring event (daily for 5 days) within the default timespan
     let recurrence = RRuleOptions {
         freq: RRuleFrequency::Daily,
         interval: 1,
@@ -316,6 +290,7 @@ async fn test_export_calendar_ical_with_recurring_events() {
         weekstart: None,
     };
 
+    let recurring_event_start = Utc::now() + chrono::Duration::days(7); // 1 week in future
     let _recurring_event = admin_client
         .event
         .create(CreateEventInput {
@@ -337,55 +312,44 @@ async fn test_export_calendar_ical_with_recurring_events() {
             recurring_event_id: None,
             original_start_time: None,
             service_id: None,
-            start_time: DateTime::from_timestamp_millis(1704067200000).unwrap(), // 2024-01-01 00:00:00 UTC
+            start_time: recurring_event_start,
             metadata: None,
         })
         .await
         .unwrap()
         .event;
 
-    // Test the iCal export endpoint using the SDK client
-    // Verify calendar was created with correct properties
-    let calendar_get = admin_client
+    // Test the iCal export endpoint using the SDK client (using default timespan)
+    let ical_content = admin_client
         .calendar
-        .get(calendar.id.clone())
-        .await
-        .expect("Expected to get calendar")
-        .calendar;
-
-    assert_eq!(calendar_get.id, calendar.id);
-    assert_eq!(
-        calendar_get.name,
-        Some("Recurring Events Calendar".to_string())
-    );
-
-    // Verify recurring event was created correctly
-    let events = admin_client
-        .calendar
-        .get_events(nittei_sdk::GetCalendarEventsInput {
+        .export_ical(nittei_sdk::ExportCalendarIcalInput {
             calendar_id: calendar.id.clone(),
-            start_time: DateTime::from_timestamp_millis(1704067200000).unwrap(), // 2024-01-01 00:00:00 UTC
-            end_time: DateTime::from_timestamp_millis(1706745600000).unwrap(), // 2024-01-10 00:00:00 UTC
+            start_time: None, // Use default (3 months ago)
+            end_time: None,   // Use default (6 months in future)
         })
         .await
-        .expect("Expected to get calendar events");
+        .expect("Expected to export calendar as iCal");
 
-    assert_eq!(events.events.len(), 1);
-    let event = &events.events[0];
-    assert_eq!(event.event.title, Some("Daily Meeting".to_string()));
-    assert_eq!(
-        event.event.description,
-        Some("Daily standup meeting".to_string())
-    );
-    assert_eq!(event.event.location, Some("Conference Room".to_string()));
-    assert_eq!(event.event.status, CalendarEventStatus::Confirmed);
-    assert!(event.event.recurrence.is_some());
+    // Verify iCal content structure
+    assert!(ical_content.contains("BEGIN:VCALENDAR"));
+    assert!(ical_content.contains("END:VCALENDAR"));
+    assert!(ical_content.contains("VERSION:2.0"));
+    assert!(ical_content.contains("PRODID:-//Nittei//Calendar API//EN"));
 
-    // Verify recurrence options
-    let recurrence = event.event.recurrence.as_ref().unwrap();
-    assert_eq!(recurrence.freq, RRuleFrequency::Daily);
-    assert_eq!(recurrence.interval, 1);
-    assert_eq!(recurrence.count, Some(5));
+    // Verify calendar properties
+    assert!(ical_content.contains("X-WR-CALNAME:Recurring Events Calendar"));
+    assert!(ical_content.contains("X-WR-TIMEZONE:UTC"));
+
+    // Verify recurring event is present in iCal
+    assert!(ical_content.contains("SUMMARY:Daily Meeting"));
+    assert!(ical_content.contains("DESCRIPTION:Daily standup meeting"));
+    assert!(ical_content.contains("LOCATION:Conference Room"));
+    assert!(ical_content.contains("STATUS:CONFIRMED"));
+    assert!(ical_content.contains("DTSTART:"));
+    assert!(ical_content.contains("DTEND:"));
+
+    // Verify recurrence rule is present
+    assert!(ical_content.contains("RRULE:FREQ=DAILY;COUNT=5"));
 }
 
 #[tokio::test]
@@ -426,31 +390,30 @@ async fn test_export_empty_calendar_ical() {
         .unwrap()
         .calendar;
 
-    // Test the iCal export endpoint using the SDK client
-    // Verify calendar was created with correct properties
-    let calendar_get = admin_client
+    // Test the iCal export endpoint using the SDK client (using default timespan)
+    let ical_content = admin_client
         .calendar
-        .get(calendar.id.clone())
-        .await
-        .expect("Expected to get calendar")
-        .calendar;
-
-    assert_eq!(calendar_get.id, calendar.id);
-    assert_eq!(calendar_get.name, Some("Empty Calendar".to_string()));
-    assert_eq!(calendar_get.settings.timezone, chrono_tz::UTC.to_string());
-
-    // Verify no events exist
-    let events = admin_client
-        .calendar
-        .get_events(nittei_sdk::GetCalendarEventsInput {
+        .export_ical(nittei_sdk::ExportCalendarIcalInput {
             calendar_id: calendar.id.clone(),
-            start_time: DateTime::from_timestamp_millis(1704067200000).unwrap(), // 2024-01-01 00:00:00 UTC
-            end_time: DateTime::from_timestamp_millis(1704153600000).unwrap(), // 2024-01-02 00:00:00 UTC
+            start_time: None, // Use default (3 months ago)
+            end_time: None,   // Use default (6 months in future)
         })
         .await
-        .expect("Expected to get calendar events");
+        .expect("Expected to export calendar as iCal");
 
-    assert_eq!(events.events.len(), 0);
+    // Verify iCal content structure for empty calendar
+    assert!(ical_content.contains("BEGIN:VCALENDAR"));
+    assert!(ical_content.contains("END:VCALENDAR"));
+    assert!(ical_content.contains("VERSION:2.0"));
+    assert!(ical_content.contains("PRODID:-//Nittei//Calendar API//EN"));
+
+    // Verify calendar properties
+    assert!(ical_content.contains("X-WR-CALNAME:Empty Calendar"));
+    assert!(ical_content.contains("X-WR-TIMEZONE:UTC"));
+
+    // Verify no events are present (only calendar header/footer)
+    assert!(!ical_content.contains("BEGIN:VEVENT"));
+    assert!(!ical_content.contains("END:VEVENT"));
 }
 
 #[tokio::test]
@@ -494,18 +457,18 @@ async fn test_export_calendar_ical_unauthorized() {
     // Test that unauthorized access fails by creating a new SDK client without API key
     let unauthorized_client = NitteiSDK::new(address, "invalid_api_key".to_string());
 
-    // Try to get calendar events with invalid API key - should fail
-    let events_result = unauthorized_client
+    // Try to export calendar as iCal with invalid API key - should fail
+    let ical_result = unauthorized_client
         .calendar
-        .get_events(nittei_sdk::GetCalendarEventsInput {
+        .export_ical(nittei_sdk::ExportCalendarIcalInput {
             calendar_id: calendar.id.clone(),
-            start_time: DateTime::from_timestamp_millis(1704067200000).unwrap(), // 2024-01-01 00:00:00 UTC
-            end_time: DateTime::from_timestamp_millis(1704153600000).unwrap(), // 2024-01-02 00:00:00 UTC
+            start_time: None, // Use default (3 months ago)
+            end_time: None,   // Use default (6 months in future)
         })
         .await;
 
     // Should return an error due to invalid API key
-    assert!(events_result.is_err());
+    assert!(ical_result.is_err());
 }
 
 #[tokio::test]
@@ -522,19 +485,14 @@ async fn test_export_calendar_ical_not_found() {
     // Test the iCal export endpoint with non-existent calendar
     let non_existent_id = nittei_sdk::ID::default();
 
-    // Try to get non-existent calendar - should fail
-    let calendar_result = admin_client.calendar.get(non_existent_id.clone()).await;
-    assert!(calendar_result.is_err());
-
-    // Try to get events from non-existent calendar - should fail
-    let events_result = admin_client
+    // Try to export non-existent calendar as iCal - should fail
+    let ical_result = admin_client
         .calendar
-        .get_events(nittei_sdk::GetCalendarEventsInput {
-            calendar_id: non_existent_id,
-            start_time: DateTime::from_timestamp_millis(1704067200000).unwrap(), // 2024-01-01 00:00:00 UTC
-            end_time: DateTime::from_timestamp_millis(1704153600000).unwrap(), // 2024-01-02 00:00:00 UTC
+        .export_ical(nittei_sdk::ExportCalendarIcalInput {
+            calendar_id: non_existent_id.clone(),
+            start_time: None, // Use default (3 months ago)
+            end_time: None,   // Use default (6 months in future)
         })
         .await;
-
-    assert!(events_result.is_err());
+    assert!(ical_result.is_err());
 }

@@ -126,6 +126,30 @@ impl BaseClient {
         self.handle_api_response(res, expected_status_code).await
     }
 
+    /// Get a text response from the API.
+    ///
+    /// This is useful for endpoints that return plain text, such as iCal exports.
+    pub async fn get_text(
+        &self,
+        path: String,
+        query_params: Option<Vec<(String, String)>>,
+        expected_status_code: StatusCode,
+    ) -> APIResponse<String> {
+        let res = match self
+            .get_client(Method::GET, path, query_params)
+            .send()
+            .await
+        {
+            Ok(res) => res,
+            Err(_) => return Err(self.network_error()),
+        };
+        let res = self.check_status_code(res, expected_status_code).await?;
+        res.text().await.map_err(|e| APIError {
+            variant: APIErrorVariant::MalformedResponse,
+            message: e.to_string(),
+        })
+    }
+
     pub async fn delete<T: for<'de> Deserialize<'de>>(
         &self,
         path: String,

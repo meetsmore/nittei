@@ -68,6 +68,16 @@ pub struct GetOutlookCalendars {
     pub min_access_role: OutlookCalendarAccessRole,
 }
 
+/// Input for exporting a calendar as iCal.
+///
+/// Timespan defaults to 3 months in the past and 6 months in the future if not provided.
+///
+pub struct ExportCalendarIcalInput {
+    pub calendar_id: ID,
+    pub start_time: Option<DateTime<Utc>>,
+    pub end_time: Option<DateTime<Utc>>,
+}
+
 impl CalendarClient {
     pub(crate) fn new(base: Arc<BaseClient>) -> Self {
         Self { base }
@@ -242,6 +252,36 @@ impl CalendarClient {
                     "minAccessRole".to_string(),
                     format!("{:?}", input.min_access_role),
                 )]),
+                StatusCode::OK,
+            )
+            .await
+    }
+
+    /// Export a calendar as iCal.
+    ///
+    /// Timespan defaults to 3 months in the past and 6 months in the future if not provided.
+    ///
+    /// Returns a plain text response containing the iCal content.
+    ///
+    pub async fn export_ical(&self, input: ExportCalendarIcalInput) -> APIResponse<String> {
+        let mut query_params = Vec::new();
+
+        if let Some(start_time) = input.start_time {
+            query_params.push(("startTime".to_string(), start_time.to_string()));
+        }
+
+        if let Some(end_time) = input.end_time {
+            query_params.push(("endTime".to_string(), end_time.to_string()));
+        }
+
+        self.base
+            .get_text(
+                format!("user/calendar/{}/ical", input.calendar_id),
+                if query_params.is_empty() {
+                    None
+                } else {
+                    Some(query_params)
+                },
                 StatusCode::OK,
             )
             .await

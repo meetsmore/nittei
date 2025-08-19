@@ -16,6 +16,7 @@ pub use base::{APIError, APIErrorVariant, APIResponse};
 use calendar::CalendarClient;
 pub use calendar::{
     CreateCalendarInput,
+    ExportCalendarIcalInput,
     GetCalendarEventsInput,
     GetGoogleCalendars,
     GetOutlookCalendars,
