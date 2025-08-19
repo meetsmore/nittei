@@ -15,7 +15,6 @@ import type { CreateEventRequestBody } from './gen_types/CreateEventRequestBody'
 import type { GetEventInstancesAPIResponse } from './gen_types/GetEventInstancesAPIResponse'
 import type { ID } from './gen_types/ID'
 import type { UpdateEventRequestBody } from './gen_types/UpdateEventRequestBody'
-import type { UpdateEventRequestBodyV2 } from './gen_types/UpdateEventRequestBodyV2'
 import {
   convertEventDates,
   convertInstanceDates,
@@ -44,28 +43,8 @@ export class NitteiEventClient extends NitteiBaseClient {
     eventId: ID,
     data: UpdateEventRequestBody
   ): Promise<CalendarEventResponse> {
-    const res = await this.put<CalendarEventResponse>(
-      `/user/events/${eventId}`,
-      data
-    )
-
-    return {
-      event: convertEventDates(res.event),
-    }
-  }
-
-  /**
-   * Update an event (V2)
-   * @param eventId - id of the event
-   * @param data - data of the event
-   * @returns - the updated event
-   */
-  public async updateV2(
-    eventId: ID,
-    data: UpdateEventRequestBodyV2
-  ): Promise<CalendarEventResponse> {
     const res = await this.patch<CalendarEventResponse>(
-      `/user/events_v2/${eventId}`,
+      `/user/events/${eventId}`,
       data
     )
 
@@ -258,26 +237,6 @@ export class NitteiEventUserClient extends NitteiBaseClient {
   ): Promise<CalendarEventResponse> {
     const res = await this.put<CalendarEventResponse>(
       `/events/${eventId}`,
-      data
-    )
-
-    return {
-      event: convertEventDates(res.event),
-    }
-  }
-
-  /**
-   * Update an event (V2)
-   * @param eventId - id of the event
-   * @param data - data of the event
-   * @returns - the updated event
-   */
-  public async updateV2(
-    eventId: ID,
-    data: UpdateEventRequestBodyV2
-  ): Promise<CalendarEventResponse> {
-    const res = await this.put<CalendarEventResponse>(
-      `/events_v2/${eventId}`,
       data
     )
 

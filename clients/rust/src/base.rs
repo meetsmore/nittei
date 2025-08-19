@@ -50,6 +50,7 @@ impl BaseClient {
             Method::GET => self.client.get(&url).query(&query.unwrap_or_default()),
             Method::POST => self.client.post(&url),
             Method::PUT => self.client.put(&url),
+            Method::PATCH => self.client.patch(&url),
             Method::DELETE => self.client.delete(&url),
             _ => unimplemented!(),
         };
@@ -163,6 +164,24 @@ impl BaseClient {
     ) -> APIResponse<T> {
         let res = match self
             .get_client(Method::PUT, path, None)
+            .json(&body)
+            .send()
+            .await
+        {
+            Ok(res) => res,
+            Err(_) => return Err(self.network_error()),
+        };
+        self.handle_api_response(res, expected_status_code).await
+    }
+
+    pub async fn patch<T: for<'de> Deserialize<'de>, S: Serialize>(
+        &self,
+        body: S,
+        path: String,
+        expected_status_code: StatusCode,
+    ) -> APIResponse<T> {
+        let res = match self
+            .get_client(Method::PATCH, path, None)
             .json(&body)
             .send()
             .await
