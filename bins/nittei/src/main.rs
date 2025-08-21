@@ -4,7 +4,7 @@ use nittei_infra::setup_context;
 use nittei_utils::config;
 use tikv_jemallocator::Jemalloc;
 use tokio::signal;
-use tracing::info;
+use tracing::{error, info};
 
 /// Use jemalloc as the global allocator
 /// This is a performance optimization for the application
@@ -38,7 +38,11 @@ fn main() {
                 .enable_all() // Enable all features
                 .build()
                 .unwrap()
-                .block_on(run());
+                .block_on(run())
+                .inspect_err(|e| {
+                    error!(error = ?e, "[run] Failed to run");
+                    std::process::exit(1);
+                });
         }
         "multi_thread" => {
             let mut runtime = tokio::runtime::Builder::new_multi_thread();
@@ -57,7 +61,10 @@ fn main() {
 
             // Build the runtime and block on the run function
             #[allow(clippy::unwrap_used)]
-            let _ = runtime.build().unwrap().block_on(run());
+            let _ = runtime.build().unwrap().block_on(run()).inspect_err(|e| {
+                error!(error = ?e, "[run] Failed to run");
+                std::process::exit(1);
+            });
         }
         _ => {
             tracing::error!(
@@ -73,10 +80,15 @@ fn main() {
 async fn run() -> anyhow::Result<()> {
     print_runtime_info();
 
-    let context = setup_context().await?;
+    let context = setup_context()
+        .await
+        .inspect_err(|e| error!(error = ?e, "[setup_context] Failed to setup context"))?;
+
     let (tx, rx) = tokio::sync::oneshot::channel::<()>();
 
-    let app = Application::new(context).await?;
+    let app = Application::new(context)
+        .await
+        .inspect_err(|e| error!(error = ?e, "[Application::new] Failed to create application"))?;
 
     // Listen for SIGINT (Ctrl+C) to shutdown the service
     // This sends a message on the channel to shutdown the server gracefully

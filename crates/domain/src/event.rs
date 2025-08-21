@@ -41,6 +41,16 @@ impl From<CalendarEventStatus> for String {
     }
 }
 
+impl std::fmt::Display for CalendarEventStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CalendarEventStatus::Tentative => write!(f, "tentative"),
+            CalendarEventStatus::Confirmed => write!(f, "confirmed"),
+            CalendarEventStatus::Cancelled => write!(f, "cancelled"),
+        }
+    }
+}
+
 impl TryFrom<String> for CalendarEventStatus {
     type Error = anyhow::Error;
     fn try_from(e: String) -> anyhow::Result<CalendarEventStatus> {
