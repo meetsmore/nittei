@@ -12,6 +12,7 @@ import {
   NotFoundError,
   UnauthorizedError,
   UnprocessableEntityError,
+  sanitizeErrorData,
 } from './helpers/errors'
 
 /**
@@ -126,13 +127,15 @@ export abstract class NitteiBaseClient {
       // We handle the errors ourselves in the `handleStatusCode` call below
       // This is just in case
       if (error instanceof AxiosError) {
+        const sanitizedData = sanitizeErrorData(error?.response?.data ?? error.cause?.message ?? error.message)
         throw new Error(
-          `Request failed with ${error?.status ? `status code ${error.status}` : 'no status code'} (${error?.response?.data ?? error.cause?.message ?? error.toJSON()})`
+          `Request failed with ${error?.status ? `status code ${error.status}` : 'no status code'} (${sanitizedData})`
         )
       }
       // This might happen if we don't have any status code
+      const sanitizedMessage = sanitizeErrorData((error as Error)?.message ?? String(error))
       throw new Error(
-        `Unknown error (no status code) (${(error as Error)?.message ?? error})`
+        `Unknown error (no status code) (${sanitizedMessage})`
       )
     }
 
@@ -261,30 +264,33 @@ export abstract class NitteiBaseClient {
    */
   private handleStatusCode(res: AxiosResponse): void {
     if (res.status >= 500) {
+      const sanitizedError = sanitizeErrorData(res.data)
       throw new Error(
-        `Internal server error, please try again later (${res.status}) (${res.data})`
+        `Internal server error, please try again later (${res.status}) (${sanitizedError})`
       )
     }
 
     if (res.status >= 400) {
+      const sanitizedData = sanitizeErrorData(res.data)
+      
       if (res.status === 400) {
-        throw new BadRequestError(res.data)
+        throw new BadRequestError(sanitizedData)
       }
       if (res.status === 401 || res.status === 403) {
-        throw new UnauthorizedError(res.data)
+        throw new UnauthorizedError(sanitizedData)
       }
       if (res.status === 404) {
-        throw new NotFoundError(res.data)
+        throw new NotFoundError(sanitizedData)
       }
       if (res.status === 409) {
-        throw new ConflictError(res.data)
+        throw new ConflictError(sanitizedData)
       }
       if (res.status === 422) {
-        throw new UnprocessableEntityError(res.data)
+        throw new UnprocessableEntityError(sanitizedData)
       }
 
       throw new Error(
-        `Request failed with status code ${res.status} (${res.data})`
+        `Request failed with status code ${res.status} (${sanitizedData})`
       )
     }
   }
