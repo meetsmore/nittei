@@ -430,7 +430,11 @@ export const createAxiosInstanceBackend = async (
 // Idempotent endpoints (populated by the decorator)
 const idempotentEndpoints = new Set<string>()
 
-// Decorator factory to mark methods that are idempotent POST requests
+/**
+ * Mark the method as idempotent, which effectively adds it to the list of endpoints that can be retried without side-effects
+ * @param endpoint - the endpoint to mark as idempotent (url)
+ * @returns the decorator function
+ */
 export function IdempotentRequest(endpoint: string) {
   // Register this endpoint as idempotent
   idempotentEndpoints.add(endpoint)
@@ -442,7 +446,9 @@ export function IdempotentRequest(endpoint: string) {
   ): PropertyDescriptor => descriptor
 }
 
-// Internal function for checking if an HTTP request can be retried without side-effects
+/**
+ * Internal function for checking if an HTTP request can be retried without side-effects
+ */
 const canRequestBeRetried = (error: AxiosError): boolean => {
   // Default condition
   if (isNetworkOrIdempotentRequestError(error)) {
