@@ -1,4 +1,4 @@
-import { NitteiBaseClient } from './baseClient'
+import { IdempotentRequest, NitteiBaseClient } from './baseClient'
 import type {
   AccountSearchEventsRequestBody,
   SearchEventsAPIResponse,
@@ -8,6 +8,8 @@ import type { AddAccountIntegrationRequestBody } from './gen_types/AddAccountInt
 import type { CreateAccountRequestBody } from './gen_types/CreateAccountRequestBody'
 import type { CreateAccountResponseBody } from './gen_types/CreateAccountResponseBody'
 import { convertEventDates } from './helpers/datesConverters'
+
+const ACCOUNT_SEARCH_EVENTS_ENDPOINT = '/account/events/search'
 
 /**
  * Client for the account endpoints
@@ -83,9 +85,10 @@ export class NitteiAccountClient extends NitteiBaseClient {
    * @param params - search parameters, check {@link AccountSearchEventsRequestBody} for more details
    * @returns - the events found
    */
+  @IdempotentRequest(ACCOUNT_SEARCH_EVENTS_ENDPOINT)
   public async searchEventsInAccount(params: AccountSearchEventsRequestBody) {
     const res = await this.post<SearchEventsAPIResponse>(
-      '/account/events/search',
+      ACCOUNT_SEARCH_EVENTS_ENDPOINT,
       params
     )
 
