@@ -336,7 +336,7 @@ export const createAxiosInstanceFrontend = (
     axiosRetry(axiosClient, {
       retries: args.retry.maxRetries ?? 3,
       retryDelay: axiosRetry.exponentialDelay,
-      retryCondition: isNetworkOrIdempotentRequestError, // Retry on network errors or idempotent requests (GET, PUT, DELETE)
+      retryCondition: canRequestBeRetried,
       shouldResetTimeout: true,
     })
   }
@@ -419,10 +419,34 @@ export const createAxiosInstanceBackend = async (
     axiosRetry(axiosClient, {
       retries: args.retry.maxRetries ?? 3,
       retryDelay: axiosRetry.exponentialDelay,
-      retryCondition: isNetworkOrIdempotentRequestError, // Retry on network errors or idempotent requests (GET, PUT, DELETE)
+      retryCondition: canRequestBeRetried,
       shouldResetTimeout: true,
     })
   }
 
   return axiosClient
+}
+
+// List of endpoints that can be retried without side-effects
+const ENDPOINTS_THAT_CAN_BE_RETRIED: string[] = [
+  '/account/events/search',
+  '/events/search',
+]
+
+// Internal function for checking if an HTTP request can be retried without side-effects
+const canRequestBeRetried = (error: AxiosError): boolean => {
+  // Default condition
+  if (isNetworkOrIdempotentRequestError(error)) {
+    return true
+  }
+
+  // Allow some POST requests to be retried (e.g. searches)
+  if (
+    error.config?.url &&
+    ENDPOINTS_THAT_CAN_BE_RETRIED.includes(error.config.url)
+  ) {
+    return true
+  }
+
+  return false
 }
