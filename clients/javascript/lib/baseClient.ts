@@ -427,11 +427,20 @@ export const createAxiosInstanceBackend = async (
   return axiosClient
 }
 
-// List of endpoints that can be retried without side-effects
-const ENDPOINTS_THAT_CAN_BE_RETRIED: string[] = [
-  '/account/events/search',
-  '/events/search',
-]
+// Idempotent endpoints (populated by the decorator)
+const idempotentEndpoints = new Set<string>()
+
+// Decorator factory to mark methods that are idempotent POST requests
+export function IdempotentRequest(endpoint: string) {
+  // Register this endpoint as idempotent
+  idempotentEndpoints.add(endpoint)
+
+  return (
+    _target: unknown,
+    _propertyKey: string | symbol,
+    descriptor: PropertyDescriptor
+  ): PropertyDescriptor => descriptor
+}
 
 // Internal function for checking if an HTTP request can be retried without side-effects
 const canRequestBeRetried = (error: AxiosError): boolean => {
@@ -441,10 +450,7 @@ const canRequestBeRetried = (error: AxiosError): boolean => {
   }
 
   // Allow some POST requests to be retried (e.g. searches)
-  if (
-    error.config?.url &&
-    ENDPOINTS_THAT_CAN_BE_RETRIED.includes(error.config.url)
-  ) {
+  if (idempotentEndpoints.has(error.config?.url ?? '')) {
     return true
   }
 

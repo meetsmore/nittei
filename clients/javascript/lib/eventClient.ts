@@ -1,4 +1,4 @@
-import { NitteiBaseClient } from './baseClient'
+import { IdempotentRequest, NitteiBaseClient } from './baseClient'
 import type {
   CreateBatchEventsAPIResponse,
   CreateBatchEventsRequestBody,
@@ -27,6 +27,8 @@ export type Timespan = {
   startTime: Date
   endTime: Date
 }
+
+const EVENT_SEARCH_ENDPOINT = '/events/search'
 
 /**
  * Client for the events' endpoints
@@ -151,11 +153,12 @@ export class NitteiEventClient extends NitteiBaseClient {
    * @param options - options - see {@link SearchEventsRequestBody} for more details
    * @returns - the events found
    */
+  @IdempotentRequest(EVENT_SEARCH_ENDPOINT)
   public async searchEvents(
     options: SearchEventsRequestBody
   ): Promise<SearchEventsAPIResponse> {
     const res = await this.post<SearchEventsAPIResponse>(
-      '/events/search',
+      EVENT_SEARCH_ENDPOINT,
       options
     )
 
