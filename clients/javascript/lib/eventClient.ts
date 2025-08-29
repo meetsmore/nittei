@@ -56,26 +56,6 @@ export class NitteiEventClient extends NitteiBaseClient {
   }
 
   /**
-   * Update an event (V2)
-   * @param eventId - id of the event
-   * @param data - data of the event
-   * @returns - the updated event
-   */
-  public async updateV2(
-    eventId: ID,
-    data: UpdateEventRequestBody
-  ): Promise<CalendarEventResponse> {
-    const res = await this.patch<CalendarEventResponse>(
-      `/user/events_v2/${eventId}`,
-      data
-    )
-
-    return {
-      event: convertEventDates(res.event),
-    }
-  }
-
-  /**
    * Create a new calendar event
    * @param userId - id of the user
    * @param data - data of the event

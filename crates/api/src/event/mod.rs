@@ -74,12 +74,6 @@ pub fn configure_routes() -> OpenApiRouter {
                 auth::account_can_modify_event_middleware,
             )),
         )
-        .route(
-            "/user/events_v2/{event_id}",
-            patch(update_event_admin_controller).layer(axum::middleware::from_fn(
-                auth::account_can_modify_event_middleware,
-            )),
-        )
         // Delete an event by uid (admin route)
         .route(
             "/user/events/{event_id}",
@@ -110,7 +104,6 @@ pub fn configure_routes() -> OpenApiRouter {
         .route("/events/{event_id}", get(get_event_controller))
         // Update an event by uid
         .route("/events/{event_id}", patch(update_event_controller))
-        .route("/events_v2/{event_id}", patch(update_event_controller))
         // Delete an event by uid
         .route("/events/{event_id}", delete(delete_event_controller))
         // Get event instances
