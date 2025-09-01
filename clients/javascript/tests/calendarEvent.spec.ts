@@ -528,11 +528,13 @@ describe('CalendarEvent API', () => {
       const eventId = res.event.id
 
       // Test updating recurrence
+      const until = new Date(3000).toISOString()
       const res2 = await adminClient.events.update(eventId, {
         recurrence: {
           freq: 'weekly',
           interval: 2,
           count: 10,
+          until,
         },
       })
 
@@ -544,12 +546,19 @@ describe('CalendarEvent API', () => {
         })
       )
 
+      expect(dayjs(res2.event.recurrence?.until)).toEqual(dayjs(until))
+      // We remove 1000ms because the API always add the duration to the until, to be sure we can get overlapping instances
+      expect(
+        dayjs(res2.event.recurringUntil).subtract(1000, 'ms').toDate()
+      ).toEqual(dayjs(until).toDate())
+
       // Test setting recurrence to NULL
       const res3 = await adminClient.events.update(eventId, {
         recurrence: null,
       })
 
       expect(res3.event.recurrence).toBeNull()
+      expect(res3.event.recurringUntil).toBeNull()
     })
 
     it('should handle recurring event fields', async () => {
