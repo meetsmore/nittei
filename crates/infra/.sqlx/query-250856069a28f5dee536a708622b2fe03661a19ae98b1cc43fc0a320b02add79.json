@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                    SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e\n                    WHERE e.calendar_uid  = any($1::uuid[])\n                    AND (\n                        (e.start_time < $2 AND e.end_time > $3)\n                        OR\n                        (e.start_time < $2 AND e.recurrence_jsonb IS NOT NULL AND (e.recurring_until IS NULL OR e.recurring_until > $3))\n                    )\n                    AND busy = true\n                    AND status = any($4::text[])\n                    ",
+  "query": "\n                    SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e\n                    WHERE e.calendar_uid  = any($1::uuid[])\n                    AND (\n                        (e.start_time <= $2 AND e.end_time >= $3)\n                        OR \n                        (e.start_time < $2 AND e.recurrence_jsonb IS NOT NULL AND (e.recurring_until IS NULL OR e.recurring_until >= $3))\n                    )\n                    ",
   "describe": {
     "columns": [
       {
@@ -138,8 +138,7 @@
       "Left": [
         "UuidArray",
         "Timestamptz",
-        "Timestamptz",
-        "TextArray"
+        "Timestamptz"
       ]
     },
     "nullable": [
@@ -171,5 +170,5 @@
       false
     ]
   },
-  "hash": "7bd47c5ffc7a88798087e8c535e68b38243670a2e691fdcc795552f6cfac9025"
+  "hash": "250856069a28f5dee536a708622b2fe03661a19ae98b1cc43fc0a320b02add79"
 }

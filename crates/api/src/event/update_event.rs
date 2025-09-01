@@ -321,6 +321,7 @@ impl UseCase for UpdateEventUseCase {
             } else {
                 // Set to NULL
                 e.recurrence = None;
+                e.recurring_until = None;
                 true
             }
         // Otherwise, we we don't have a new recurrence, but we have an existing one
@@ -336,6 +337,7 @@ impl UseCase for UpdateEventUseCase {
                     })?
             } else {
                 e.recurrence = None;
+                e.recurring_until = None;
                 true
             }
         } else {
