@@ -281,7 +281,7 @@ describe('CalendarEvent API', () => {
       expect(resEventTokyo.event).toBeDefined()
       expect(resEventTokyo.event.calendarId).toBe(calendarTokyoId)
       expect(resEventTokyo.event.recurringUntil).toEqual(
-        dayjs('2024-12-12T15:29:59.000Z').toDate() // 30 minutes after until
+        dayjs('2024-12-12T14:59:59.000Z').toDate()
       )
       expect(resEventTokyo.event.recurrence).toEqual(
         expect.objectContaining({
@@ -528,11 +528,13 @@ describe('CalendarEvent API', () => {
       const eventId = res.event.id
 
       // Test updating recurrence
+      const until = new Date(3000).toISOString()
       const res2 = await adminClient.events.update(eventId, {
         recurrence: {
           freq: 'weekly',
           interval: 2,
           count: 10,
+          until: until,
         },
       })
 
@@ -543,6 +545,8 @@ describe('CalendarEvent API', () => {
           count: 10,
         })
       )
+      expect(dayjs(res2.event.recurrence?.until)).toEqual(dayjs(until))
+      expect(res2.event.recurringUntil).toEqual(dayjs(until).toDate())
 
       // Test setting recurrence to NULL
       const res3 = await adminClient.events.update(eventId, {
@@ -550,6 +554,7 @@ describe('CalendarEvent API', () => {
       })
 
       expect(res3.event.recurrence).toBeNull()
+      expect(res3.event.recurringUntil).toBeNull()
     })
 
     it('should handle recurring event fields', async () => {

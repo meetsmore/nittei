@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                    SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e\n                    WHERE e.calendar_uid = $1\n                    AND (\n                        (e.start_time <= $2 AND e.end_time >= $3)\n                        OR\n                        (e.start_time < $2 AND e.recurrence_jsonb IS NOT NULL AND (e.recurring_until IS NULL OR e.recurring_until > $3))\n                    )\n                    ",
+  "query": "\n                    SELECT event_uid, calendar_uid, user_uid, account_uid, external_parent_id, external_id, title, description, event_type, location, all_day, status, start_time, duration, busy, end_time, created, updated, recurrence_jsonb, recurring_until, exdates, recurring_event_uid, original_start_time, reminders_jsonb, service_uid, metadata FROM calendar_events AS e\n                    WHERE e.calendar_uid  = any($1::uuid[])\n                    AND (\n                        (e.start_time < $2 AND e.end_time > $3)\n                        OR\n                        (e.start_time < $2 AND e.recurrence_jsonb IS NOT NULL AND (e.recurring_until IS NULL OR e.recurring_until >= $3))\n                    )\n                    AND busy = true\n                    AND status = any($4::text[])\n                    ",
   "describe": {
     "columns": [
       {
@@ -136,9 +136,10 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid",
+        "UuidArray",
         "Timestamptz",
-        "Timestamptz"
+        "Timestamptz",
+        "TextArray"
       ]
     },
     "nullable": [
@@ -170,5 +171,5 @@
       false
     ]
   },
-  "hash": "ac33a78c2d15f32199209b7e480ebce5aee0e4c783f021078e2160def3d7e746"
+  "hash": "fa89eaf94b8cdaf29179f5c2debac490cef3661dfd8f0fef08f15450b709e631"
 }
