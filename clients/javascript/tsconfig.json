@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "moduleResolution": "Node16",
-    "module": "Node16",
-    "target": "ES2015",
+    "moduleResolution": "nodenext",
+    "module": "nodenext",
+    "target": "ES2022",
     "declaration": true,
     "declarationDir": "dist",
     "outDir": "dist",
@@ -13,7 +13,8 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "isolatedModules": true
   },
   "include": ["lib/**/*", "tests/**/*", "scripts/**/*"],
   "exclude": ["node_modules"]
