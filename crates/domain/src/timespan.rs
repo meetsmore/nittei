@@ -1,5 +1,3 @@
-use std::error::Error;
-
 use chrono::{DateTime, prelude::*};
 use chrono_tz::Tz;
 use serde::{Deserialize, Serialize};
@@ -42,21 +40,6 @@ impl TimeSpan {
 
     pub fn end(&self) -> DateTime<Utc> {
         self.end_time
-    }
-}
-
-#[derive(Debug)]
-pub struct InvalidTimeSpanError(i64, i64);
-
-impl Error for InvalidTimeSpanError {}
-
-impl std::fmt::Display for InvalidTimeSpanError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(
-            f,
-            "Provided timespan start_ts: {} and end_ts: {} is invalid. It should be between 1 hour and 40 days.",
-            self.0, self.1
-        )
     }
 }
 
