@@ -6,4 +6,3 @@ pub mod metadata;
 pub mod recurrence;
 pub mod recurrence_query;
 pub mod string_query;
-pub mod weekday;
