@@ -462,7 +462,7 @@ impl IEventRepo for PostgresEventRepo {
                 (
                     (e.original_start_time >= $2 AND e.original_start_time <= $3)
                     OR
-                    (e.start_time >= $2 AND e.start_time <= $3)
+                    (e.start_time <= $3 AND e.end_time >= $2)
                 )
             "#,
             &recurring_event_ids as &[Uuid],

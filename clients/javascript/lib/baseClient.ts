@@ -342,7 +342,7 @@ export const createAxiosInstanceFrontend = (
     axiosRetry(axiosClient, {
       retries: args.retry.maxRetries ?? 3,
       retryDelay: axiosRetry.exponentialDelay,
-      retryCondition: isNetworkOrIdempotentRequestError, // Retry on network errors or idempotent requests (GET, PUT, DELETE)
+      retryCondition: canRequestBeRetried,
       shouldResetTimeout: true,
     })
   }
@@ -425,10 +425,46 @@ export const createAxiosInstanceBackend = async (
     axiosRetry(axiosClient, {
       retries: args.retry.maxRetries ?? 3,
       retryDelay: axiosRetry.exponentialDelay,
-      retryCondition: isNetworkOrIdempotentRequestError, // Retry on network errors or idempotent requests (GET, PUT, DELETE)
+      retryCondition: canRequestBeRetried,
       shouldResetTimeout: true,
     })
   }
 
   return axiosClient
+}
+
+// Idempotent endpoints (populated by the decorator)
+const idempotentEndpoints = new Set<string>()
+
+/**
+ * Mark the method as idempotent, which effectively adds it to the list of endpoints that can be retried without side-effects
+ * @param endpoint - the endpoint to mark as idempotent (url)
+ * @returns the decorator function
+ */
+export function IdempotentRequest(endpoint: string) {
+  // Register this endpoint as idempotent
+  idempotentEndpoints.add(endpoint)
+
+  return (
+    _target: unknown,
+    _propertyKey: string | symbol,
+    descriptor: PropertyDescriptor
+  ): PropertyDescriptor => descriptor
+}
+
+/**
+ * Internal function for checking if an HTTP request can be retried without side-effects
+ */
+const canRequestBeRetried = (error: AxiosError): boolean => {
+  // Default condition
+  if (isNetworkOrIdempotentRequestError(error)) {
+    return true
+  }
+
+  // Allow some POST requests to be retried (e.g. searches)
+  if (idempotentEndpoints.has(error.config?.url ?? '')) {
+    return true
+  }
+
+  return false
 }

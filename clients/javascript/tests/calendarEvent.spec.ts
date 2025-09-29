@@ -398,7 +398,7 @@ describe('CalendarEvent API', () => {
       expect(res2.event.updated).toEqual(new Date(0))
     })
 
-    it('should be able to update event with v2 endpoint (PATCH behavior)', async () => {
+    it('should be able to update event with PATCH behavior', async () => {
       const res = await adminClient.events.create(userId, {
         calendarId,
         duration: 1000,
@@ -417,7 +417,7 @@ describe('CalendarEvent API', () => {
       const eventId = res.event.id
 
       // Test partial update - only update title and duration
-      const res2 = await adminClient.events.updateV2(eventId, {
+      const res2 = await adminClient.events.update(eventId, {
         title: 'updated title',
         duration: 2000,
       })
@@ -438,7 +438,7 @@ describe('CalendarEvent API', () => {
       expect(res2.event.busy).toBe(true)
     })
 
-    it('should be able to set optional fields to NULL with v2 endpoint', async () => {
+    it('should be able to set optional fields to NULL', async () => {
       const res = await adminClient.events.create(userId, {
         calendarId,
         duration: 1000,
@@ -455,7 +455,7 @@ describe('CalendarEvent API', () => {
       const eventId = res.event.id
 
       // Test setting optional fields to NULL
-      const res2 = await adminClient.events.updateV2(eventId, {
+      const res2 = await adminClient.events.update(eventId, {
         title: null,
         description: null,
         eventType: null,
@@ -483,7 +483,7 @@ describe('CalendarEvent API', () => {
       expect(res2.event.busy).toBe(true)
     })
 
-    it('should be able to update exdates and reminders with v2 endpoint', async () => {
+    it('should be able to update exdates and reminders', async () => {
       const res = await adminClient.events.create(userId, {
         calendarId,
         duration: 1000,
@@ -494,7 +494,7 @@ describe('CalendarEvent API', () => {
       const eventId = res.event.id
 
       // Test updating exdates and reminders
-      const res2 = await adminClient.events.updateV2(eventId, {
+      const res2 = await adminClient.events.update(eventId, {
         exdates: [new Date(3000), new Date(4000)],
         reminders: [{ delta: 30, identifier: 'reminder-2' }],
       })
@@ -505,7 +505,7 @@ describe('CalendarEvent API', () => {
       ])
 
       // Test setting to empty arrays
-      const res3 = await adminClient.events.updateV2(eventId, {
+      const res3 = await adminClient.events.update(eventId, {
         exdates: [],
         reminders: [],
       })
@@ -514,7 +514,7 @@ describe('CalendarEvent API', () => {
       expect(res3.event.reminders).toEqual([])
     })
 
-    it('should handle recurrence updates with v2 endpoint', async () => {
+    it('should handle recurrence updates', async () => {
       const res = await adminClient.events.create(userId, {
         calendarId,
         duration: 1000,
@@ -528,11 +528,13 @@ describe('CalendarEvent API', () => {
       const eventId = res.event.id
 
       // Test updating recurrence
-      const res2 = await adminClient.events.updateV2(eventId, {
+      const until = new Date(3000).toISOString()
+      const res2 = await adminClient.events.update(eventId, {
         recurrence: {
           freq: 'weekly',
           interval: 2,
           count: 10,
+          until,
         },
       })
 
@@ -544,15 +546,22 @@ describe('CalendarEvent API', () => {
         })
       )
 
+      expect(dayjs(res2.event.recurrence?.until)).toEqual(dayjs(until))
+      // We remove 1000ms because the API always add the duration to the until, to be sure we can get overlapping instances
+      expect(
+        dayjs(res2.event.recurringUntil).subtract(1000, 'ms').toDate()
+      ).toEqual(dayjs(until).toDate())
+
       // Test setting recurrence to NULL
-      const res3 = await adminClient.events.updateV2(eventId, {
+      const res3 = await adminClient.events.update(eventId, {
         recurrence: null,
       })
 
       expect(res3.event.recurrence).toBeNull()
+      expect(res3.event.recurringUntil).toBeNull()
     })
 
-    it('should handle recurring event fields with v2 endpoint', async () => {
+    it('should handle recurring event fields', async () => {
       const recurringEventId = crypto.randomUUID()
       const recurringEventId2 = crypto.randomUUID()
 
@@ -566,7 +575,7 @@ describe('CalendarEvent API', () => {
       const eventId = res.event.id
 
       // Test updating recurring event fields
-      const res2 = await adminClient.events.updateV2(eventId, {
+      const res2 = await adminClient.events.update(eventId, {
         recurringEventId: recurringEventId2,
         originalStartTime: new Date(600),
       })
@@ -575,7 +584,7 @@ describe('CalendarEvent API', () => {
       expect(res2.event.originalStartTime).toEqual(new Date(600))
 
       // Test setting to NULL
-      const res3 = await adminClient.events.updateV2(eventId, {
+      const res3 = await adminClient.events.update(eventId, {
         recurringEventId: null,
         originalStartTime: null,
       })
@@ -584,7 +593,7 @@ describe('CalendarEvent API', () => {
       expect(res3.event.originalStartTime).toBeNull()
     })
 
-    it('should preserve existing values when fields are not provided in v2 update', async () => {
+    it('should preserve existing values when fields are not provided in update', async () => {
       const recurringEventId = crypto.randomUUID()
       const res = await adminClient.events.create(userId, {
         calendarId,
@@ -613,7 +622,7 @@ describe('CalendarEvent API', () => {
       const eventId = res.event.id
 
       // Update only one field
-      const res2 = await adminClient.events.updateV2(eventId, {
+      const res2 = await adminClient.events.update(eventId, {
         title: 'only title updated',
       })
 

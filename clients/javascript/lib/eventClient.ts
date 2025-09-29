@@ -1,4 +1,4 @@
-import { NitteiBaseClient } from './baseClient'
+import { IdempotentRequest, NitteiBaseClient } from './baseClient'
 import type {
   CreateBatchEventsAPIResponse,
   CreateBatchEventsRequestBody,
@@ -28,6 +28,8 @@ export type Timespan = {
   endTime: Date
 }
 
+const EVENT_SEARCH_ENDPOINT = '/events/search'
+
 /**
  * Client for the events' endpoints
  * This is an admin client (usually backend)
@@ -45,26 +47,6 @@ export class NitteiEventClient extends NitteiBaseClient {
   ): Promise<CalendarEventResponse> {
     const res = await this.patch<CalendarEventResponse>(
       `/user/events/${eventId}`,
-      data
-    )
-
-    return {
-      event: convertEventDates(res.event),
-    }
-  }
-
-  /**
-   * Update an event (V2)
-   * @param eventId - id of the event
-   * @param data - data of the event
-   * @returns - the updated event
-   */
-  public async updateV2(
-    eventId: ID,
-    data: UpdateEventRequestBody
-  ): Promise<CalendarEventResponse> {
-    const res = await this.patch<CalendarEventResponse>(
-      `/user/events_v2/${eventId}`,
       data
     )
 
@@ -151,11 +133,12 @@ export class NitteiEventClient extends NitteiBaseClient {
    * @param options - options - see {@link SearchEventsRequestBody} for more details
    * @returns - the events found
    */
+  @IdempotentRequest(EVENT_SEARCH_ENDPOINT)
   public async searchEvents(
     options: SearchEventsRequestBody
   ): Promise<SearchEventsAPIResponse> {
     const res = await this.post<SearchEventsAPIResponse>(
-      '/events/search',
+      EVENT_SEARCH_ENDPOINT,
       options
     )
 
