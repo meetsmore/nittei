@@ -8,6 +8,7 @@ export class BadRequestError extends Error {
    */
   constructor(public apiMessage: string) {
     super('Bad request')
+    this.name = 'BadRequestError'
   }
 }
 
@@ -21,6 +22,7 @@ export class NotFoundError extends Error {
    */
   constructor(public apiMessage: string) {
     super('Not found')
+    this.name = 'NotFoundError'
   }
 }
 
@@ -34,6 +36,7 @@ export class UnauthorizedError extends Error {
    */
   constructor(public apiMessage: string) {
     super('Unauthorized')
+    this.name = 'UnauthorizedError'
   }
 }
 
@@ -48,6 +51,7 @@ export class ConflictError extends Error {
    */
   constructor(public apiMessage: string) {
     super('Conflict')
+    this.name = 'ConflictError'
   }
 }
 
@@ -62,6 +66,7 @@ export class UnprocessableEntityError extends Error {
    */
   constructor(public apiMessage: string) {
     super('Unprocessable entity')
+    this.name = 'UnprocessableEntityError'
   }
 }
 
@@ -78,7 +83,10 @@ export function sanitizeErrorData(data: unknown): string {
   if (typeof data === 'string') {
     // Remove potential tokens, API keys, passwords, etc.
     return data
-      .replace(/(?:token|key|password|secret|auth)['":\s]*["']?[A-Za-z0-9+/=._-]{10,}["']?/gi, '[REDACTED]')
+      .replace(
+        /(?:token|key|password|secret|auth)['":\s]*["']?[A-Za-z0-9+/=._-]{10,}["']?/gi,
+        '[REDACTED]'
+      )
       .replace(/Bearer\s+[A-Za-z0-9+/=._-]+/gi, 'Bearer [REDACTED]')
       .replace(/[A-Za-z0-9+/=._-]{32,}/g, '[REDACTED]')
       .trim()
@@ -87,16 +95,22 @@ export function sanitizeErrorData(data: unknown): string {
   // If it's an object, extract safe error message
   if (typeof data === 'object' && data !== null) {
     const errorObj = data as Record<string, unknown>
-    
+
     // Common error message fields
-    const messageFields = ['message', 'error', 'detail', 'description', 'reason']
-    
+    const messageFields = [
+      'message',
+      'error',
+      'detail',
+      'description',
+      'reason',
+    ]
+
     for (const field of messageFields) {
       if (typeof errorObj[field] === 'string') {
         return sanitizeErrorData(errorObj[field])
       }
     }
-    
+
     // If no message field found, return sanitized JSON string
     try {
       const sanitizedObj = sanitizeObject(errorObj)
@@ -115,21 +129,33 @@ export function sanitizeErrorData(data: unknown): string {
  */
 function sanitizeObject(obj: Record<string, unknown>): Record<string, unknown> {
   const sanitized: Record<string, unknown> = {}
-  
+
   for (const [key, value] of Object.entries(obj)) {
     // Skip potentially sensitive keys
-    const sensitiveKeys = ['token', 'key', 'password', 'secret', 'auth', 'authorization', 'credential']
-    if (sensitiveKeys.some(sensitiveKey => key.toLowerCase().includes(sensitiveKey))) {
+    const sensitiveKeys = [
+      'token',
+      'key',
+      'password',
+      'secret',
+      'auth',
+      'authorization',
+      'credential',
+    ]
+    if (
+      sensitiveKeys.some(sensitiveKey =>
+        key.toLowerCase().includes(sensitiveKey)
+      )
+    ) {
       sanitized[key] = '[REDACTED]'
       continue
     }
-    
+
     if (typeof value === 'string') {
       sanitized[key] = sanitizeErrorData(value)
     } else if (typeof value === 'object' && value !== null) {
       if (Array.isArray(value)) {
-        sanitized[key] = value.map(item => 
-          typeof item === 'object' && item !== null 
+        sanitized[key] = value.map(item =>
+          typeof item === 'object' && item !== null
             ? sanitizeObject(item as Record<string, unknown>)
             : sanitizeErrorData(item)
         )
@@ -140,6 +166,6 @@ function sanitizeObject(obj: Record<string, unknown>): Record<string, unknown> {
       sanitized[key] = value
     }
   }
-  
+
   return sanitized
 }
