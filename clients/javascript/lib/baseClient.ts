@@ -127,7 +127,7 @@ export abstract class NitteiBaseClient {
       // This is just in case
       if (error instanceof AxiosError) {
         throw new Error(
-          `Request failed with ${error?.status ? `status code ${error.status}` : 'no status code'} (${error?.response?.data ?? error.cause?.message ?? error.toJSON()})`
+          `Request failed with ${error?.status ? `status code ${error.status}` : 'no status code'} (${error?.response?.data ?? (error.cause as Error)?.message ?? error.toJSON()})`
         )
       }
       // This might happen if we don't have any status code
