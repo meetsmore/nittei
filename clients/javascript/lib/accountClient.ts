@@ -7,7 +7,7 @@ import type { AccountResponse } from './gen_types/AccountResponse'
 import type { AddAccountIntegrationRequestBody } from './gen_types/AddAccountIntegrationRequestBody'
 import type { CreateAccountRequestBody } from './gen_types/CreateAccountRequestBody'
 import type { CreateAccountResponseBody } from './gen_types/CreateAccountResponseBody'
-import { convertEventDates } from './helpers/datesConverters'
+import { replaceEventStringsToDates } from './helpers/datesConverters'
 
 const ACCOUNT_SEARCH_EVENTS_ENDPOINT = '/account/events/search'
 
@@ -92,8 +92,10 @@ export class NitteiAccountClient extends NitteiBaseClient {
       params
     )
 
-    return {
-      events: res.events.map(convertEventDates),
+    for (const event of res.events) {
+      replaceEventStringsToDates(event)
     }
+
+    return res
   }
 }
