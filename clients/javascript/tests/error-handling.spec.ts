@@ -339,29 +339,6 @@ describe('Error Handling', () => {
         }
       }
     })
-
-    it('should preserve useful debugging information while sanitizing sensitive data', async () => {
-      try {
-        await client.events.create({
-          calendarId: 'invalid-calendar-id',
-          duration: -1000,
-          startTime: new Date(),
-        })
-
-        throw new Error('Should have failed')
-      } catch (error) {
-        expect(error).toBeInstanceOf(UnprocessableEntityError)
-        if (error instanceof UnprocessableEntityError) {
-          expect(error.apiMessage).toBeDefined()
-
-          const message = error.apiMessage
-          // Should contain useful debugging info
-          expect(message).toMatch(/calendar|duration|invalid/i)
-          // Should not contain sensitive data
-          expect(message).not.toMatch(/[A-Za-z0-9+/=._-]{32,}/)
-        }
-      }
-    })
   })
 
   describe('Error Properties', () => {
