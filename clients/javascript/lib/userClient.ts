@@ -12,8 +12,8 @@ import type { UpdateUserRequestBody } from './gen_types/UpdateUserRequestBody'
 import type { UserDTO } from './gen_types/UserDTO'
 import type { UserResponse } from './gen_types/UserResponse'
 import {
-  convertEventDates,
-  convertInstanceDates,
+  replaceEventStringsToDates,
+  replaceInstanceStringsToDates,
 } from './helpers/datesConverters'
 
 /**
@@ -109,14 +109,14 @@ export class NitteiUserClient extends NitteiBaseClient {
       }
     )
 
-    return {
-      events: res.events.map(event => {
-        return {
-          event: convertEventDates(event.event),
-          instances: event.instances.map(convertInstanceDates),
-        }
-      }),
+    for (const event of res.events) {
+      replaceEventStringsToDates(event.event)
+      for (const instance of event.instances) {
+        replaceInstanceStringsToDates(instance)
+      }
     }
+
+    return res
   }
 
   /**
@@ -138,10 +138,11 @@ export class NitteiUserClient extends NitteiBaseClient {
       }
     )
 
-    return {
-      userId: res.userId,
-      busy: res.busy.map(convertInstanceDates),
+    for (const instance of res.busy) {
+      replaceInstanceStringsToDates(instance)
     }
+
+    return res
   }
 
   /**
@@ -162,7 +163,10 @@ export class NitteiUserClient extends NitteiBaseClient {
       if (!res?.[key]) {
         return acc
       }
-      acc[key] = res[key].map(convertInstanceDates)
+      for (const instance of res[key]) {
+        replaceInstanceStringsToDates(instance)
+      }
+      acc[key] = res[key]
       return acc
     }, {} as MultipleFreeBusyAPIResponse)
   }

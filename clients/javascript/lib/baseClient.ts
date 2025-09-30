@@ -128,7 +128,9 @@ export abstract class NitteiBaseClient {
       // This is just in case
       if (error instanceof AxiosError) {
         const sanitizedErrorData = sanitizeErrorData(
-          error?.response?.data ?? error.cause?.message ?? error.message
+          error?.response?.data ??
+            (error.cause as Error)?.message ??
+            error.message
         )
         throw new Error(
           `Request failed with ${error?.status ? `status code ${error.status}` : 'no status code'} (${sanitizedErrorData})`

@@ -15,8 +15,8 @@ import type { OutlookCalendarAccessRole } from './gen_types/OutlookCalendarAcces
 import type { RemoveSyncCalendarPathParams } from './gen_types/RemoveSyncCalendarPathParams'
 import type { RemoveSyncCalendarRequestBody } from './gen_types/RemoveSyncCalendarRequestBody'
 import {
-  convertEventDates,
-  convertInstanceDates,
+  replaceEventStringsToDates,
+  replaceInstanceStringsToDates,
 } from './helpers/datesConverters'
 
 /**
@@ -173,13 +173,14 @@ export class NitteiCalendarClient extends NitteiBaseClient {
       }
     )
 
-    return {
-      calendar: res.calendar,
-      events: res.events?.map(event => ({
-        event: convertEventDates(event.event),
-        instances: event.instances?.map(convertInstanceDates),
-      })),
+    for (const event of res.events) {
+      replaceEventStringsToDates(event.event)
+      for (const instance of event.instances) {
+        replaceInstanceStringsToDates(instance)
+      }
     }
+
+    return res
   }
 
   /**
@@ -311,12 +312,13 @@ export class NitteiCalendarUserClient extends NitteiBaseClient {
       }
     )
 
-    return {
-      calendar: res.calendar,
-      events: res.events.map(event => ({
-        event: convertEventDates(event.event),
-        instances: event.instances.map(convertInstanceDates),
-      })),
+    for (const event of res.events) {
+      replaceEventStringsToDates(event.event)
+      for (const instance of event.instances) {
+        replaceInstanceStringsToDates(instance)
+      }
     }
+
+    return res
   }
 }
