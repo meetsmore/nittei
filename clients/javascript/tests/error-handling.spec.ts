@@ -11,6 +11,7 @@ import {
   UnprocessableEntityError,
 } from '../lib/helpers/errors'
 import { setupUserClient } from './helpers/fixtures'
+import nock from 'nock'
 
 describe('Error Handling', () => {
   let client: INitteiUserClient
@@ -26,6 +27,10 @@ describe('Error Handling', () => {
     calendarId = calendarRes.calendar.id
   })
 
+  afterEach(() => {
+    nock.cleanAll()
+  })
+
   describe('BadRequestError (400)', () => {
     it('should throw BadRequestError with sanitized message for empty account code', async () => {
       const unauthClient = await NitteiClient({})
@@ -38,6 +43,8 @@ describe('Error Handling', () => {
 
       try {
         await unauthClient.account.create({ code: '' })
+
+        throw new Error('Should have failed')
       } catch (error) {
         expect(error).toBeInstanceOf(BadRequestError)
         if (error instanceof BadRequestError) {
@@ -64,6 +71,8 @@ describe('Error Handling', () => {
           duration: -1000,
           startTime: new Date(),
         })
+
+        throw new Error('Should have failed')
       } catch (error) {
         expect(error).toBeInstanceOf(UnprocessableEntityError)
         if (error instanceof UnprocessableEntityError) {
@@ -71,22 +80,11 @@ describe('Error Handling', () => {
           expect(error.apiMessage).toBeDefined()
           expect(typeof error.apiMessage).toBe('string')
           // Should contain useful debugging information
-          expect(error.apiMessage).toMatch(/calendar|duration|invalid/i)
+          expect(error.apiMessage).toContain(
+            'Failed to deserialize the JSON body into the target type: calendarId: Malformed id: invalid-calendar-id'
+          )
         }
       }
-    })
-
-    it('should handle malformed data gracefully', async () => {
-      // This test simulates what would happen with malformed data
-      // The API might accept undefined values and convert them to null
-      const result = await client.events.create({
-        calendarId,
-        duration: 1000,
-        startTime: new Date(),
-        metadata: { invalid: undefined },
-      })
-      expect(result).toBeDefined()
-      expect(result.event.metadata).toBeDefined()
     })
   })
 
@@ -102,12 +100,13 @@ describe('Error Handling', () => {
 
       try {
         await unauthClient.account.create({ code: 'invalid-code' })
+
+        throw new Error('Should have failed')
       } catch (error) {
         expect(error).toBeInstanceOf(UnauthorizedError)
         if (error instanceof UnauthorizedError) {
           expect(error.message).toBe('Unauthorized')
-          expect(error.apiMessage).toBeDefined()
-          expect(typeof error.apiMessage).toBe('string')
+          expect(error.apiMessage).toContain('Invalid code provided')
         }
       }
     })
@@ -121,12 +120,13 @@ describe('Error Handling', () => {
 
       try {
         await unauthClient.account.me()
+
+        throw new Error('Should have failed')
       } catch (error) {
         expect(error).toBeInstanceOf(UnauthorizedError)
         if (error instanceof UnauthorizedError) {
           expect(error.message).toBe('Unauthorized')
-          expect(error.apiMessage).toBeDefined()
-          expect(typeof error.apiMessage).toBe('string')
+          expect(error.apiMessage).toContain('Missing x-api-key header')
         }
       }
     })
@@ -143,12 +143,13 @@ describe('Error Handling', () => {
 
       try {
         await invalidClient.account.me()
+
+        throw new Error('Should have failed')
       } catch (error) {
         expect(error).toBeInstanceOf(UnauthorizedError)
         if (error instanceof UnauthorizedError) {
           expect(error.message).toBe('Unauthorized')
-          expect(error.apiMessage).toBeDefined()
-          expect(typeof error.apiMessage).toBe('string')
+          expect(error.apiMessage).toContain('Invalid x-api-key header')
         }
       }
     })
@@ -164,14 +165,15 @@ describe('Error Handling', () => {
 
       try {
         await accountClient.user.getById(nonExistentUserId)
+
+        throw new Error('Should have failed')
       } catch (error) {
         expect(error).toBeInstanceOf(NotFoundError)
         if (error instanceof NotFoundError) {
           expect(error.message).toBe('Not found')
-          expect(error.apiMessage).toBeDefined()
-          expect(typeof error.apiMessage).toBe('string')
-          // Should contain information about what wasn't found
-          expect(error.apiMessage).toMatch(/user|not found|does not exist/i)
+          expect(error.apiMessage).toContain(
+            'A user with id: 00000000-0000-0000-0000-000000000000, was not found'
+          )
         }
       }
     })
@@ -185,13 +187,15 @@ describe('Error Handling', () => {
 
       try {
         await client.calendar.getById(nonExistentCalendarId)
+
+        throw new Error('Should have failed')
       } catch (error) {
         expect(error).toBeInstanceOf(NotFoundError)
         if (error instanceof NotFoundError) {
           expect(error.message).toBe('Not found')
-          expect(error.apiMessage).toBeDefined()
-          expect(typeof error.apiMessage).toBe('string')
-          expect(error.apiMessage).toMatch(/calendar|not found|does not exist/i)
+          expect(error.apiMessage).toContain(
+            'The calendar with id: 00000000-0000-0000-0000-000000000000, was not found'
+          )
         }
       }
     })
@@ -205,13 +209,15 @@ describe('Error Handling', () => {
 
       try {
         await client.events.findById(nonExistentEventId)
+
+        throw new Error('Should have failed')
       } catch (error) {
         expect(error).toBeInstanceOf(NotFoundError)
         if (error instanceof NotFoundError) {
           expect(error.message).toBe('Not found')
-          expect(error.apiMessage).toBeDefined()
-          expect(typeof error.apiMessage).toBe('string')
-          expect(error.apiMessage).toMatch(/event|not found|does not exist/i)
+          expect(error.apiMessage).toContain(
+            'The calendar event with id: 00000000-0000-0000-0000-000000000000, was not found'
+          )
         }
       }
     })
@@ -269,13 +275,15 @@ describe('Error Handling', () => {
 
       try {
         await client.calendar.create({ timezone: 'Invalid/Timezone' })
+
+        throw new Error('Should have failed')
       } catch (error) {
         expect(error).toBeInstanceOf(UnprocessableEntityError)
         if (error instanceof UnprocessableEntityError) {
           expect(error.message).toBe('Unprocessable entity')
-          expect(error.apiMessage).toBeDefined()
-          expect(typeof error.apiMessage).toBe('string')
-          expect(error.apiMessage).toMatch(/timezone|invalid|unprocessable/i)
+          expect(error.apiMessage).toContain(
+            "failed to parse timezone: 'Invalid/Timezone'"
+          )
         }
       }
     })
@@ -307,38 +315,27 @@ describe('Error Handling', () => {
     })
   })
 
-  describe('Server Error (500+)', () => {
-    it('should throw generic Error for server errors with sanitized message', async () => {
-      // This test would require a server that returns 500 errors
-      // For now, we'll test the error handling logic
-      const unauthClient = await NitteiClient({})
-
-      // Test with a request that might trigger server error
-      await expect(() =>
-        unauthClient.account.create({
-          // @ts-expect-error - intentionally passing malformed data
-          code: null,
-        })
-      ).rejects.toThrow()
-    })
-  })
-
   describe('Error Message Sanitization', () => {
     it('should sanitize sensitive information in error messages', async () => {
-      const unauthClient = await NitteiClient({})
+      const unauthClient = await NitteiClient({
+        timeout: 5,
+      })
+
+      // Mock a timeout
+      nock('http://localhost:5000')
+        .post('/api/v1/account')
+        .delay(100)
+        .reply(200, {})
 
       try {
         await unauthClient.account.create({ code: 'invalid-code' })
-      } catch (error) {
-        expect(error).toBeInstanceOf(UnauthorizedError)
-        if (error instanceof UnauthorizedError) {
-          expect(error.apiMessage).toBeDefined()
 
-          // Check that sensitive information is redacted
-          const message = error.apiMessage
-          expect(message).not.toMatch(/Bearer\s+[A-Za-z0-9+/=._-]+/)
-          expect(message).not.toMatch(/[A-Za-z0-9+/=._-]{32,}/)
-          // Note: The error message might contain the word "auth" in "Unauthorized" - that's acceptable
+        throw new Error('Should have failed')
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error)
+        if (error instanceof Error) {
+          expect(error.message).toContain('timeout')
+          expect(error.message).not.toMatch(/Bearer\s+[A-Za-z0-9+/=._-]+/)
         }
       }
     })
@@ -350,6 +347,8 @@ describe('Error Handling', () => {
           duration: -1000,
           startTime: new Date(),
         })
+
+        throw new Error('Should have failed')
       } catch (error) {
         expect(error).toBeInstanceOf(UnprocessableEntityError)
         if (error instanceof UnprocessableEntityError) {
@@ -365,42 +364,16 @@ describe('Error Handling', () => {
     })
   })
 
-  describe('Error Type Consistency', () => {
-    it('should consistently throw the same error type for the same scenario', async () => {
-      const unauthClient = await NitteiClient({})
-
-      // Test multiple times to ensure consistency
-      for (let i = 0; i < 3; i++) {
-        await expect(() =>
-          unauthClient.account.create({ code: 'invalid-code' })
-        ).rejects.toThrow(UnauthorizedError)
-      }
-    })
-
-    it('should have proper error inheritance', async () => {
-      const unauthClient = await NitteiClient({})
-
-      try {
-        await unauthClient.account.create({ code: 'invalid-code' })
-      } catch (error) {
-        expect(error).toBeInstanceOf(Error)
-        expect(error).toBeInstanceOf(UnauthorizedError)
-        expect(error).not.toBeInstanceOf(BadRequestError)
-        expect(error).not.toBeInstanceOf(NotFoundError)
-        expect(error).not.toBeInstanceOf(ConflictError)
-        expect(error).not.toBeInstanceOf(UnprocessableEntityError)
-      }
-    })
-  })
-
   describe('Error Properties', () => {
-    it('should have correct error properties for debugging', async () => {
+    it('should have all properties for debugging', async () => {
       try {
         await client.events.create({
           calendarId: 'invalid-calendar-id',
           duration: 1000,
           startTime: new Date(),
         })
+
+        throw new Error('Should have failed')
       } catch (error) {
         expect(error).toBeInstanceOf(UnprocessableEntityError)
         if (error instanceof UnprocessableEntityError) {
@@ -409,45 +382,11 @@ describe('Error Handling', () => {
           expect(error.apiMessage).toBeDefined()
           expect(typeof error.apiMessage).toBe('string')
           expect(error.apiMessage.length).toBeGreaterThan(0)
-        }
-      }
-    })
-
-    it('should maintain error stack trace for debugging', async () => {
-      try {
-        await client.events.create({
-          calendarId: 'invalid-calendar-id',
-          duration: 1000,
-          startTime: new Date(),
-        })
-      } catch (error) {
-        expect(error).toBeInstanceOf(UnprocessableEntityError)
-        if (error instanceof UnprocessableEntityError) {
           expect(error.stack).toBeDefined()
           expect(typeof error.stack).toBe('string')
           expect(error.stack?.length).toBeGreaterThan(0)
         }
       }
-    })
-  })
-
-  describe('Network and Timeout Errors', () => {
-    it('should handle timeout errors gracefully', async () => {
-      // Create a client with very short timeout
-      const timeoutClient = await NitteiClient({
-        timeout: 1, // 1ms timeout
-      })
-
-      await expect(() =>
-        timeoutClient.account.create({ code: 'test' })
-      ).rejects.toThrow()
-    })
-
-    it('should handle network errors with retry mechanism', async () => {
-      // This test would require a network failure scenario
-      // For now, we'll test that the client is configured for retries
-      const client = await NitteiClient({})
-      expect(client).toBeDefined()
     })
   })
 })

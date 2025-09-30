@@ -73,6 +73,8 @@ export class UnprocessableEntityError extends Error {
 /**
  * Sanitizes error response data to prevent leaking sensitive information
  * while preserving useful error details for debugging
+ * @param data - error response data
+ * @returns error as a string
  */
 export function sanitizeErrorData(data: unknown): string {
   if (!data) {
@@ -88,7 +90,6 @@ export function sanitizeErrorData(data: unknown): string {
         '[REDACTED]'
       )
       .replace(/Bearer\s+[A-Za-z0-9+/=._-]+/gi, 'Bearer [REDACTED]')
-      .replace(/[A-Za-z0-9+/=._-]{32,}/g, '[REDACTED]')
       .trim()
   }
 
@@ -126,6 +127,8 @@ export function sanitizeErrorData(data: unknown): string {
 
 /**
  * Recursively sanitizes an object, removing potentially sensitive values
+ * @param obj - object to sanitize
+ * @returns sanitized object
  */
 function sanitizeObject(obj: Record<string, unknown>): Record<string, unknown> {
   const sanitized: Record<string, unknown> = {}
