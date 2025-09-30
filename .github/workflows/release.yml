@@ -191,10 +191,10 @@ jobs:
           # v1.0.0 --> 1.0.0
           VERSION=${GITHUB_REF#refs/*/}
           echo "VERSION=${VERSION:1}" >> $GITHUB_ENV
-      - name: Setup Node.js 20
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           registry-url: "https://npm.pkg.github.com"
           scope: "@meetsmore"
 
