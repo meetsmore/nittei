@@ -4,6 +4,7 @@ import axios, {
   type AxiosRequestConfig,
   type AxiosResponse,
 } from 'axios'
+import CacheableLookup from 'cacheable-lookup'
 import axiosRetry, { isNetworkOrIdempotentRequestError } from 'axios-retry'
 import type { ICredentials } from './helpers/credentials'
 import {
@@ -400,26 +401,35 @@ export const createAxiosInstanceBackend = async (
     typeof module !== 'undefined' &&
     module.exports
   ) {
+    // Create a cacheable lookup agent
+    const cacheableLookup = new CacheableLookup()
+
     if (args.baseUrl.startsWith('https')) {
       // This is a dynamic import to avoid loading the https module in the browser
       const https = await import('node:https')
       // Default values are what we evaluated to be good for our load
-      config.httpsAgent = new https.Agent({
+      const httpsAgent = new https.Agent({
         keepAlive: true,
         maxSockets: args.keepAlive.maxSockets ?? 75,
         maxFreeSockets: args.keepAlive.maxFreeSockets ?? 10,
         keepAliveMsecs: args.keepAlive.keepAliveMsecs ?? 60000,
       })
+
+      cacheableLookup.install(httpsAgent)
+      config.httpsAgent = httpsAgent
     } else {
       // This is a dynamic import to avoid loading the http module in the browser
       const http = await import('node:http')
       // Default values are what we evaluated to be good for our load
-      config.httpAgent = new http.Agent({
+      const httpAgent = new http.Agent({
         keepAlive: true,
         maxSockets: args.keepAlive.maxSockets ?? 75,
         maxFreeSockets: args.keepAlive.maxFreeSockets ?? 10,
         keepAliveMsecs: args.keepAlive.keepAliveMsecs ?? 60000,
       })
+
+      cacheableLookup.install(httpAgent)
+      config.httpAgent = httpAgent
     }
   }
 
