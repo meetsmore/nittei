@@ -4,7 +4,6 @@ import axios, {
   type AxiosRequestConfig,
   type AxiosResponse,
 } from 'axios'
-import CacheableLookup from 'cacheable-lookup'
 import axiosRetry, { isNetworkOrIdempotentRequestError } from 'axios-retry'
 import type { ICredentials } from './helpers/credentials'
 import {
@@ -401,8 +400,9 @@ export const createAxiosInstanceBackend = async (
     typeof module !== 'undefined' &&
     module.exports
   ) {
+    const CacheableLookupLib = await import('cacheable-lookup')
     // Create a cacheable lookup agent
-    const cacheableLookup = new CacheableLookup()
+    const cacheableLookup = new CacheableLookupLib.default()
 
     if (args.baseUrl.startsWith('https')) {
       // This is a dynamic import to avoid loading the https module in the browser
