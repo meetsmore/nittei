@@ -400,8 +400,12 @@ export const createAxiosInstanceBackend = async (
     typeof module !== 'undefined' &&
     module.exports
   ) {
+    // This is a dynamic import to avoid loading this module in the browser
     const CacheableLookupLib = await import('cacheable-lookup')
-    // Create a cacheable lookup agent
+
+    // Create a cacheable lookup instance
+    // Goal is to make DNS lookup fully async + avoid hitting the limit of 4 UV threads
+    // See https://marmelab.com/blog/2025/07/28/dns-in-nodejs.html (for example) on the subject
     const cacheableLookup = new CacheableLookupLib.default()
 
     if (args.baseUrl.startsWith('https')) {
