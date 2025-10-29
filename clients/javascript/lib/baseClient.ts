@@ -400,26 +400,40 @@ export const createAxiosInstanceBackend = async (
     typeof module !== 'undefined' &&
     module.exports
   ) {
+    // This is a dynamic import to avoid loading this module in the browser
+    const CacheableLookupLib = await import('cacheable-lookup')
+
+    // Create a cacheable lookup instance
+    // Goal is to make DNS lookup fully async + avoid hitting the limit of 4 UV threads
+    // See https://marmelab.com/blog/2025/07/28/dns-in-nodejs.html (for example) on the subject
+    const cacheableLookup = new CacheableLookupLib.default()
+
     if (args.baseUrl.startsWith('https')) {
       // This is a dynamic import to avoid loading the https module in the browser
       const https = await import('node:https')
       // Default values are what we evaluated to be good for our load
-      config.httpsAgent = new https.Agent({
+      const httpsAgent = new https.Agent({
         keepAlive: true,
         maxSockets: args.keepAlive.maxSockets ?? 75,
         maxFreeSockets: args.keepAlive.maxFreeSockets ?? 10,
         keepAliveMsecs: args.keepAlive.keepAliveMsecs ?? 60000,
       })
+
+      cacheableLookup.install(httpsAgent)
+      config.httpsAgent = httpsAgent
     } else {
       // This is a dynamic import to avoid loading the http module in the browser
       const http = await import('node:http')
       // Default values are what we evaluated to be good for our load
-      config.httpAgent = new http.Agent({
+      const httpAgent = new http.Agent({
         keepAlive: true,
         maxSockets: args.keepAlive.maxSockets ?? 75,
         maxFreeSockets: args.keepAlive.maxFreeSockets ?? 10,
         keepAliveMsecs: args.keepAlive.keepAliveMsecs ?? 60000,
       })
+
+      cacheableLookup.install(httpAgent)
+      config.httpAgent = httpAgent
     }
   }
 
