@@ -26,6 +26,12 @@ export type KeepAliveConfig = {
    * Whether to keep the connection alive
    */
   enabled: boolean
+
+  /**
+   * Whether to use the cacheable lookup library for DNS lookups
+   */
+  useCacheableLookupDNS?: boolean
+
   /**
    * Maximum number of sockets to keep alive
    */
@@ -422,7 +428,9 @@ export const createAxiosInstanceBackend = async (
         keepAliveMsecs: args.keepAlive.keepAliveMsecs ?? 60000,
       })
 
-      cacheableLookup.install(httpsAgent)
+      if (args.keepAlive.useCacheableLookupDNS) {
+        cacheableLookup.install(httpsAgent)
+      }
       config.httpsAgent = httpsAgent
     } else {
       // Import the module here to avoid loading this module in the browser
@@ -435,7 +443,9 @@ export const createAxiosInstanceBackend = async (
         keepAliveMsecs: args.keepAlive.keepAliveMsecs ?? 60000,
       })
 
-      cacheableLookup.install(httpAgent)
+      if (args.keepAlive.useCacheableLookupDNS) {
+        cacheableLookup.install(httpAgent)
+      }
       config.httpAgent = httpAgent
     }
   }
