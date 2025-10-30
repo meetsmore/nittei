@@ -15,6 +15,11 @@ export const setupAccount = async (options?: { timeout?: number }) => {
 
   const config: Parameters<typeof NitteiClient>[0] = {
     apiKey: account.secretApiKey,
+    // Test the keep alive feature at the same time
+    keepAlive: {
+      enabled: true,
+      useCacheableLookupDNS: true,
+    },
   }
   if (options?.timeout) {
     config.timeout = options.timeout

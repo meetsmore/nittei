@@ -14,6 +14,9 @@ import {
   UnprocessableEntityError,
   sanitizeErrorData,
 } from './helpers/errors'
+import type cacheableLookupType from 'cacheable-lookup'
+import type httpsType from 'node:https'
+import type httpType from 'node:http'
 
 /**
  * Configuration for the keep alive feature
@@ -23,6 +26,12 @@ export type KeepAliveConfig = {
    * Whether to keep the connection alive
    */
   enabled: boolean
+
+  /**
+   * Whether to use the cacheable lookup library for DNS lookups
+   */
+  useCacheableLookupDNS?: boolean
+
   /**
    * Maximum number of sockets to keep alive
    */
@@ -400,17 +409,17 @@ export const createAxiosInstanceBackend = async (
     typeof module !== 'undefined' &&
     module.exports
   ) {
-    // This is a dynamic import to avoid loading this module in the browser
-    const CacheableLookupLib = await import('cacheable-lookup')
+    // Import the module here to avoid loading this module in the browser
+    const CacheableLookup: typeof cacheableLookupType = require('cacheable-lookup')
 
     // Create a cacheable lookup instance
     // Goal is to make DNS lookup fully async + avoid hitting the limit of 4 UV threads
     // See https://marmelab.com/blog/2025/07/28/dns-in-nodejs.html (for example) on the subject
-    const cacheableLookup = new CacheableLookupLib.default()
+    const cacheableLookup = new CacheableLookup()
 
     if (args.baseUrl.startsWith('https')) {
-      // This is a dynamic import to avoid loading the https module in the browser
-      const https = await import('node:https')
+      // Import the module here to avoid loading this module in the browser
+      const https: typeof httpsType = require('node:https')
       // Default values are what we evaluated to be good for our load
       const httpsAgent = new https.Agent({
         keepAlive: true,
@@ -419,11 +428,13 @@ export const createAxiosInstanceBackend = async (
         keepAliveMsecs: args.keepAlive.keepAliveMsecs ?? 60000,
       })
 
-      cacheableLookup.install(httpsAgent)
+      if (args.keepAlive.useCacheableLookupDNS) {
+        cacheableLookup.install(httpsAgent)
+      }
       config.httpsAgent = httpsAgent
     } else {
-      // This is a dynamic import to avoid loading the http module in the browser
-      const http = await import('node:http')
+      // Import the module here to avoid loading this module in the browser
+      const http: typeof httpType = require('node:http')
       // Default values are what we evaluated to be good for our load
       const httpAgent = new http.Agent({
         keepAlive: true,
@@ -432,7 +443,9 @@ export const createAxiosInstanceBackend = async (
         keepAliveMsecs: args.keepAlive.keepAliveMsecs ?? 60000,
       })
 
-      cacheableLookup.install(httpAgent)
+      if (args.keepAlive.useCacheableLookupDNS) {
+        cacheableLookup.install(httpAgent)
+      }
       config.httpAgent = httpAgent
     }
   }
