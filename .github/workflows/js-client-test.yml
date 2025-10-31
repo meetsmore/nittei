@@ -1,7 +1,7 @@
 name: JavaScript client tests
 
 env:
-  RUST_VERSION: 1.90.0
+  RUST_VERSION: 1.91.0
   RUST_BACKTRACE: 1
 
 on:

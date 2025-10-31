@@ -7,7 +7,7 @@ FROM messense/rust-musl-cross:${ARCH}-musl AS builder
 
 ARG ARCH=x86_64
 ARG APP_NAME=nittei
-ARG RUST_VERSION=1.90.0
+ARG RUST_VERSION=1.91.0
 
 # Install and set the specific Rust version
 RUN rustup install ${RUST_VERSION} && rustup default ${RUST_VERSION}
@@ -33,7 +33,7 @@ RUN cargo build --release --bin nittei-migrate --target ${ARCH}-unknown-linux-mu
   cp ./target/${ARCH}-unknown-linux-musl/release/nittei-migrate /nittei-migrate
 
 #Create a new stage with a minimal image
-FROM alpine:3.22.0
+FROM alpine:3.22.2
 
 # Set the git repository url and commit hash for DD
 ARG GIT_REPO_URL
