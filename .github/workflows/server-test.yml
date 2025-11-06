@@ -91,3 +91,12 @@ jobs:
       - name: Run server tests
         run: |
           cargo test --workspace -- --skip export_bindings_
+
+      - name: Clear old cache
+        if: always()
+        run: |
+
+          echo "Clearing old cache"
+          cargo install cargo-sweep
+          # Clear cache older than 30 days
+          cargo sweep --time 30
