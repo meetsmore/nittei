@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use opentelemetry::{global, propagation::TextMapCompositePropagator, trace::TracerProvider};
 use opentelemetry_datadog::{ApiVersion, DatadogPipelineBuilder, DatadogPropagator};
 use opentelemetry_otlp::{WithExportConfig, WithHttpConfig};
@@ -14,7 +16,10 @@ use tracing_subscriber::{EnvFilter, Registry, layer::SubscriberExt};
 /// It should only be called once!
 pub fn init_subscriber() -> anyhow::Result<()> {
     // Filter the spans that are shown based on the RUST_LOG env var or the default value ("info")
-    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
+    let env_filter = EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| EnvFilter::new("info"))
+        // Downgrade opentelemetry_sdk errors to warnings
+        .add_directive("opentelemetry_sdk=warn".parse()?);
 
     // If the binary is compiled in debug mode (aka for development)
     // use the compact format for logs
@@ -125,7 +130,8 @@ fn get_tracer_datadog(
     config.sampler = Box::new(get_sampler());
     config.id_generator = Box::new(RandomIdGenerator::default());
 
-    let http_client = reqwest::blocking::Client::new();
+    let http_client = get_http_client()?;
+
     DatadogPipelineBuilder::default()
         .with_http_client(http_client)
         .with_service_name(service_name)
@@ -146,7 +152,7 @@ fn get_tracer_otlp(
     service_version: String,
     service_env: String,
 ) -> anyhow::Result<SdkTracerProvider> {
-    let http_client = reqwest::blocking::Client::new();
+    let http_client = get_http_client()?;
     let otlp_exporter = opentelemetry_otlp::SpanExporter::builder()
         .with_http()
         .with_http_client(http_client)
@@ -191,4 +197,14 @@ fn get_sampler() -> Sampler {
     // (1) parent => so if parent exists always sample
     // (2) if no parent, then the trace id ratio
     Sampler::ParentBased(Box::new(Sampler::TraceIdRatioBased(ratio_to_sample)))
+}
+
+/// Get the HTTP client to be used
+/// This is used to send traces to the tracing endpoint
+fn get_http_client() -> anyhow::Result<reqwest::Client> {
+    reqwest::Client::builder()
+        .timeout(Duration::from_secs(10))
+        .connect_timeout(Duration::from_secs(5))
+        .build()
+        .map_err(|e| anyhow::anyhow!("Failed to create HTTP client for telemetry: {}", e))
 }
