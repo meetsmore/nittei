@@ -201,6 +201,8 @@ fn get_sampler() -> Sampler {
 
 /// Get the HTTP client to be used
 /// This is used to send traces to the tracing endpoint
+///
+/// The exporter runs on a different thread than the main thread, so we need to use a blocking client.
 fn get_http_client() -> anyhow::Result<reqwest::blocking::Client> {
     reqwest::blocking::Client::builder()
         .timeout(Duration::from_secs(10))
