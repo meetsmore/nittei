@@ -201,8 +201,8 @@ fn get_sampler() -> Sampler {
 
 /// Get the HTTP client to be used
 /// This is used to send traces to the tracing endpoint
-fn get_http_client() -> anyhow::Result<reqwest::Client> {
-    reqwest::Client::builder()
+fn get_http_client() -> anyhow::Result<reqwest::blocking::Client> {
+    reqwest::blocking::Client::builder()
         .timeout(Duration::from_secs(10))
         .connect_timeout(Duration::from_secs(5))
         .build()
