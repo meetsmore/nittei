@@ -32,7 +32,10 @@ use tokio::{
 use tower::ServiceBuilder;
 use tower_http::{
     catch_panic::CatchPanicLayer,
-    compression::CompressionLayer,
+    compression::{
+        CompressionLayer,
+        predicate::{NotForContentType, Predicate, SizeAbove},
+    },
     cors::CorsLayer,
     decompression::RequestDecompressionLayer,
     sensitive_headers::SetSensitiveHeadersLayer,
@@ -147,7 +150,15 @@ impl Application {
                     .layer(SetSensitiveHeadersLayer::new(sensitive_headers))
                     .layer(CorsLayer::permissive())
                     .layer(RequestDecompressionLayer::new())
-                    .layer(CompressionLayer::new())
+                    // Only compress responses larger than 10KB, and add the default content-type filtering
+                    .layer(
+                        CompressionLayer::default().compress_when(
+                            SizeAbove::new(10 * 1024)
+                                .and(NotForContentType::GRPC)
+                                .and(NotForContentType::IMAGES)
+                                .and(NotForContentType::SSE),
+                        ),
+                    )
                     // Catch panics and convert them into responses.
                     .layer(CatchPanicLayer::new())
                     .layer(
