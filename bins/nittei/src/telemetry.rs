@@ -8,26 +8,31 @@ use opentelemetry_sdk::{
     propagation::TraceContextPropagator,
     trace::{self, RandomIdGenerator, Sampler, SdkTracerProvider},
 };
-use tracing::warn;
-use tracing_subscriber::{EnvFilter, Registry, layer::SubscriberExt};
+use tracing::{Level, warn};
+use tracing_subscriber::{EnvFilter, Layer, Registry, filter, layer::SubscriberExt};
 
 /// Register a subscriber as global default to process span data.
 ///
 /// It should only be called once!
 pub fn init_subscriber() -> anyhow::Result<()> {
     // Filter the spans that are shown based on the RUST_LOG env var or the default value ("info")
-    let env_filter = EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| EnvFilter::new("info"))
-        // Downgrade opentelemetry_sdk errors to warnings
-        .add_directive("opentelemetry_sdk=warn".parse()?);
+    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
+
+    // Create a filter that excludes error-level events from opentelemetry_sdk
+    let fmt_filter = filter::filter_fn(|metadata| {
+        !(metadata.level() == &Level::ERROR && metadata.target().starts_with("opentelemetry_sdk"))
+    });
 
     // If the binary is compiled in debug mode (aka for development)
     // use the compact format for logs
     if cfg!(debug_assertions) {
-        tracing_subscriber::fmt()
-            .compact()
-            .with_env_filter(env_filter)
-            .init();
+        let subscriber = Registry::default().with(env_filter).with(
+            tracing_subscriber::fmt::layer()
+                .compact()
+                .with_filter(fmt_filter),
+        );
+
+        tracing::subscriber::set_global_default(subscriber)?;
     } else {
         let observability_config = &nittei_utils::config::APP_CONFIG.observability;
         // In production, use the JSON format for logs
@@ -62,7 +67,8 @@ pub fn init_subscriber() -> anyhow::Result<()> {
                 .with(
                     tracing_subscriber::fmt::layer()
                         .json()
-                        .with_current_span(false),
+                        .with_current_span(false)
+                        .with_filter(fmt_filter),
                 )
                 .with(telemetry_layer);
 
@@ -73,7 +79,8 @@ pub fn init_subscriber() -> anyhow::Result<()> {
             let subscriber = Registry::default().with(env_filter).with(
                 tracing_subscriber::fmt::layer()
                     .json()
-                    .with_current_span(false),
+                    .with_current_span(false)
+                    .with_filter(fmt_filter),
             );
 
             // Set the global subscriber
