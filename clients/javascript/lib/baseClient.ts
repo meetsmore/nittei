@@ -420,8 +420,9 @@ export const createAxiosInstanceBackend = async (
         keepAlive: true,
         maxSockets: args.keepAlive.maxSockets ?? 75,
         maxFreeSockets: args.keepAlive.maxFreeSockets ?? 10,
-        freeSocketTimeout: 30000, // closes idle connections after 30s
+        freeSocketTimeout: 15000, // closes idle connections after 15s
         socketActiveTTL: 600000, // force recycle even active sockets after 10min
+        timeout: 60000, // timeout after 1min
       })
 
       if (args.keepAlive.useCacheableLookupDNS) {
@@ -436,8 +437,9 @@ export const createAxiosInstanceBackend = async (
         keepAlive: true,
         maxSockets: args.keepAlive.maxSockets ?? 75,
         maxFreeSockets: args.keepAlive.maxFreeSockets ?? 10,
-        freeSocketTimeout: 30000, // closes idle connections after 30s
+        freeSocketTimeout: 15000, // closes idle connections after 15s
         socketActiveTTL: 600000, // force recycle even active sockets after 10min
+        timeout: 60000, // timeout after 1min
       })
 
       if (args.keepAlive.useCacheableLookupDNS) {
