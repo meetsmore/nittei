@@ -41,6 +41,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "agentkeepalive": "4.6.0",
     "axios": "1.12.2",
     "axios-retry": "4.5.0",
     "cacheable-lookup": "^6.1.0",

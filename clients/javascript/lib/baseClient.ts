@@ -15,8 +15,7 @@ import {
   sanitizeErrorData,
 } from './helpers/errors'
 import type cacheableLookupType from 'cacheable-lookup'
-import type httpsType from 'node:https'
-import type httpType from 'node:http'
+import type * as agentkeepaliveModuleType from 'agentkeepalive'
 
 /**
  * Configuration for the keep alive feature
@@ -40,10 +39,6 @@ export type KeepAliveConfig = {
    * Maximum number of free sockets to keep alive
    */
   maxFreeSockets?: number
-  /**
-   * Keep alive milliseconds (how long to keep the connection alive)
-   */
-  keepAliveMsecs?: number
 }
 
 /**
@@ -419,13 +414,15 @@ export const createAxiosInstanceBackend = async (
 
     if (args.baseUrl.startsWith('https')) {
       // Import the module here to avoid loading this module in the browser
-      const https: typeof httpsType = require('node:https')
+      const agentkeepalive: typeof agentkeepaliveModuleType = require('agentkeepalive')
       // Default values are what we evaluated to be good for our load
-      const httpsAgent = new https.Agent({
+      const httpsAgent = new agentkeepalive.HttpsAgent({
         keepAlive: true,
         maxSockets: args.keepAlive.maxSockets ?? 75,
         maxFreeSockets: args.keepAlive.maxFreeSockets ?? 10,
-        keepAliveMsecs: args.keepAlive.keepAliveMsecs ?? 60000,
+        freeSocketTimeout: 15000, // closes idle connections after 15s
+        socketActiveTTL: 600000, // force recycle even active sockets after 10min
+        timeout: 60000, // timeout after 1min
       })
 
       if (args.keepAlive.useCacheableLookupDNS) {
@@ -434,13 +431,15 @@ export const createAxiosInstanceBackend = async (
       config.httpsAgent = httpsAgent
     } else {
       // Import the module here to avoid loading this module in the browser
-      const http: typeof httpType = require('node:http')
+      const agentkeepalive: typeof agentkeepaliveModuleType = require('agentkeepalive')
       // Default values are what we evaluated to be good for our load
-      const httpAgent = new http.Agent({
+      const httpAgent = new agentkeepalive.HttpAgent({
         keepAlive: true,
         maxSockets: args.keepAlive.maxSockets ?? 75,
         maxFreeSockets: args.keepAlive.maxFreeSockets ?? 10,
-        keepAliveMsecs: args.keepAlive.keepAliveMsecs ?? 60000,
+        freeSocketTimeout: 15000, // closes idle connections after 15s
+        socketActiveTTL: 600000, // force recycle even active sockets after 10min
+        timeout: 60000, // timeout after 1min
       })
 
       if (args.keepAlive.useCacheableLookupDNS) {
