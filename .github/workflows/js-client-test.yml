@@ -141,3 +141,12 @@ jobs:
         run: |
           kill $(lsof -t -i:${NITTEI__HTTP_PORT}) || true
           echo "Stopped server"
+
+      - name: Clear old cache
+        if: always()
+        run: |
+
+          echo "Clearing old cache"
+          cargo install cargo-sweep
+          # Clear cache older than 30 days
+          cargo sweep --time 30
