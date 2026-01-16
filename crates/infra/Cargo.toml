@@ -23,10 +23,10 @@ futures = "0.3"
 
 tracing = "0.1"
 
-reqwest = { version = "0.12", default-features = false, features = [
+reqwest = { version = "0.13", default-features = false, features = [
   "http2",
   "json",
-  "rustls-tls",
+  "rustls",
 ] }
 
 chrono = { version = "0.4.39", features = ["serde"] }
