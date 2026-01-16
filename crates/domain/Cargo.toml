@@ -19,7 +19,7 @@ chrono-tz = { version = "0.10.1", features = ["serde"] }
 anyhow = "1.0"
 url = "2.3"
 uuid = { version = "1.1", features = ["serde", "v4"] }
-jsonwebtoken = "9"
+jsonwebtoken = "10"
 thiserror = "2.0"
 itertools = "0.14"
 rand = "0.9"

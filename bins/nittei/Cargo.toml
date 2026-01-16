@@ -52,10 +52,10 @@ opentelemetry-otlp = { version = "0.30.0", features = [
     "tls",
 ] }
 opentelemetry-datadog = { version = "0.18.0", features = ["reqwest-client"] }
-reqwest = { version = "0.12", default-features = false, features = [
+reqwest = { version = "0.13", default-features = false, features = [
     "http2",
     "json",
-    "rustls-tls",
+    "rustls",
 ] }
 
 chrono = "0.4.39"
