@@ -38,7 +38,7 @@ impl NitteiError {
     fn error_response(&self) -> impl IntoResponse {
         (
             self.status_code(),
-            [(header::CONTENT_TYPE, "text/html; charset=utf-8")],
+            [(header::CONTENT_TYPE, "text/plain; charset=utf-8")],
             self.to_string(),
         )
     }

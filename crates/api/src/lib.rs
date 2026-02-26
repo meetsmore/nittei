@@ -12,8 +12,8 @@ mod user;
 
 use std::sync::Arc;
 
+use anyhow::anyhow;
 use axum::{Extension, Router, http::header};
-use futures::lock::Mutex;
 use http_logger::metadata_middleware;
 use job_schedulers::{start_reminder_generation_job, start_send_reminders_job};
 use nittei_domain::{
@@ -27,7 +27,10 @@ use nittei_domain::{
 use nittei_infra::NitteiContext;
 use tokio::{
     net::TcpListener,
-    sync::oneshot::{self, Sender},
+    sync::{
+        Mutex,
+        oneshot::{self, Sender},
+    },
 };
 use tower::ServiceBuilder;
 use tower_http::{
@@ -210,11 +213,10 @@ impl Application {
                 info!("[server] Server stopped");
             })
             .await
-            .unwrap_or_else(|e| {
+            .map_err(|e| {
                 error!("[server] Server error: {:?}", e);
-                // Exit the process with an error code
-                std::process::exit(1);
-            });
+                anyhow!("Server error: {e:?}")
+            })?;
 
         info!("[server] Server closed");
 
@@ -293,71 +295,37 @@ impl Application {
 
             self.context.repos.accounts.insert(&account).await?;
 
-            let account_google_client_id_env = "NITTEI__ACCOUNT__GOOGLE__CLIENT_ID";
-            let account_google_client_secret_env = "NITTEI__ACCOUNT__GOOGLE__CLIENT_SECRET";
-            let account_google_redirect_uri_env = "NITTEI__ACCOUNT__GOOGLE__REDIRECT_URI";
             let google_config = nittei_utils::config::APP_CONFIG
                 .account
                 .as_ref()
                 .and_then(|a| a.google.as_ref());
-            if let Some(google_client_id) = google_config.map(|g| g.client_id.clone()) {
-                let google_client_secret = google_config
-                    .map(|g| g.client_secret.clone())
-                    .unwrap_or_else(|| {
-                        panic!(
-                            "{account_google_client_secret_env} should be specified also when {account_google_client_id_env} is specified."
-                        )
-                    });
-                let google_redirect_uri = google_config
-                    .map(|g| g.redirect_uri.clone())
-                    .unwrap_or_else(|| {
-                        panic!(
-                            "{account_google_redirect_uri_env} should be specified also when {account_google_client_id_env} is specified."
-                        )
-                    });
+            if let Some(google_config) = google_config {
                 self.context
                     .repos
                     .account_integrations
                     .insert(&AccountIntegration {
                         account_id: account.id.clone(),
-                        client_id: google_client_id,
-                        client_secret: google_client_secret,
-                        redirect_uri: google_redirect_uri,
+                        client_id: google_config.client_id.clone(),
+                        client_secret: google_config.client_secret.clone(),
+                        redirect_uri: google_config.redirect_uri.clone(),
                         provider: IntegrationProvider::Google,
                     })
                     .await?;
             }
 
-            let account_outlook_client_id_env = "NITTEI__ACCOUNT__OUTLOOK__CLIENT_ID";
-            let account_outlook_client_secret_env = "NITTEI__ACCOUNT__OUTLOOK__CLIENT_SECRET";
-            let account_outlook_redirect_uri_env = "NITTEI__ACCOUNT__OUTLOOK__REDIRECT_URI";
             let outlook_config = nittei_utils::config::APP_CONFIG
                 .account
                 .as_ref()
                 .and_then(|a| a.outlook.as_ref());
-            if let Some(outlook_client_id) = outlook_config.map(|o| o.client_id.clone()) {
-                let outlook_client_secret = outlook_config
-                    .map(|o| o.client_secret.clone())
-                    .unwrap_or_else(|| {
-                        panic!(
-                            "{account_outlook_client_secret_env} should be specified also when {account_outlook_client_id_env} is specified."
-                        )
-                    });
-                let outlook_redirect_uri = outlook_config
-                    .map(|o| o.redirect_uri.clone())
-                    .unwrap_or_else(|| {
-                        panic!(
-                            "{account_outlook_redirect_uri_env} should be specified also when {account_outlook_client_id_env} is specified."
-                        )
-                    });
+            if let Some(outlook_config) = outlook_config {
                 self.context
                     .repos
                     .account_integrations
                     .insert(&AccountIntegration {
                         account_id: account.id.clone(),
-                        client_id: outlook_client_id,
-                        client_secret: outlook_client_secret,
-                        redirect_uri: outlook_redirect_uri,
+                        client_id: outlook_config.client_id.clone(),
+                        client_secret: outlook_config.client_secret.clone(),
+                        redirect_uri: outlook_config.redirect_uri.clone(),
                         provider: IntegrationProvider::Outlook,
                     })
                     .await?;
@@ -401,12 +369,10 @@ impl Application {
                 if cfg!(debug_assertions) {
                     // In debug mode, stop the server immediately
                     info!("[shutdown_handler] Stopping server...");
-                    if let Some(server_handle) = shared_state.lock().await.shutdown_tx.take() {
-                        server_handle.send(()).unwrap_or_else(|_| {
-                            error!("[shutdown_handler] Failed to send shutdown signal");
-                            // Exit the process with an error code
-                            std::process::exit(1);
-                        });
+                    if let Some(server_handle) = shared_state.lock().await.shutdown_tx.take()
+                        && server_handle.send(()).is_err()
+                    {
+                        error!("[shutdown_handler] Failed to send shutdown signal");
                     }
                     info!("[shutdown_handler] api crate - shutdown complete");
                 } else {
@@ -422,12 +388,10 @@ impl Application {
                     info!("[shutdown_handler] Stopping server...");
 
                     // Shutdown the server
-                    if let Some(server_handle) = shared_state.lock().await.shutdown_tx.take() {
-                        server_handle.send(()).unwrap_or_else(|_| {
-                            error!("[shutdown_handler] Failed to send shutdown signal");
-                            // Exit the process with an error code
-                            std::process::exit(1);
-                        });
+                    if let Some(server_handle) = shared_state.lock().await.shutdown_tx.take()
+                        && server_handle.send(()).is_err()
+                    {
+                        error!("[shutdown_handler] Failed to send shutdown signal");
                     }
 
                     info!("[shutdown_handler] api crate - shutdown complete");

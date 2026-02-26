@@ -352,6 +352,7 @@ describe('Requirements', () => {
           calendarId: user1Calendar1.id,
           duration: 1000 * 60 * 60,
           startTime: new Date(0),
+          status: 'confirmed',
           busy: true,
         })
         user1Calendar1Event1 = resEvent1?.event
@@ -624,6 +625,7 @@ describe('Requirements', () => {
           calendarId: user1Calendar1.id,
           duration: 1000 * 60 * 60,
           startTime: new Date(0),
+          status: 'confirmed',
           busy: true,
         })
         expect(resEvent1?.event.calendarId).toBe(user1Calendar1.id)
@@ -633,6 +635,7 @@ describe('Requirements', () => {
           calendarId: user2Calendar1.id,
           duration: 1000 * 60 * 60,
           startTime: new Date(1000 * 60 * 61),
+          status: 'confirmed',
           busy: true,
         })
         expect(resEvent2?.event.calendarId).toBe(user2Calendar1.id)
