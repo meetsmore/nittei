@@ -1,3 +1,4 @@
+
 # This Dockerfile is based on the debian.Dockerfile and adds the ddprof tool to the image.
 
 # Usage:
@@ -36,8 +37,8 @@ RUN ARCH_IN_URL=$(case "${ARCH}" in \
   tar xvf ddprof-linux.tar.xz && \
   mv ddprof/bin/ddprof /ddprof
 
-# Use the distroless base image for final image
-FROM gcr.io/distroless/cc-debian12
+# Use the distroless :debug variant which includes busybox shell
+FROM gcr.io/distroless/cc-debian12:debug
 
 # Set the git repository url and commit hash for DD
 ARG GIT_REPO_URL
@@ -57,4 +58,10 @@ COPY --from=builder --chown=nonroot:nonroot /nittei /nittei
 COPY --from=builder --chown=nonroot:nonroot /nittei-migrate /nittei-migrate
 COPY --from=builder --chown=nonroot:nonroot /ddprof /ddprof
 
-CMD ["/ddprof", "--preset", "cpu_live_heap", "/nittei"]
+# Enable ddprof debug logging
+CMD ["/ddprof", \
+  "--preset", "cpu_live_heap", \
+  "--log-mode", "stdout", \
+  "--log-level", "debug", \
+  "--show-config", \
+  "/nittei"]
