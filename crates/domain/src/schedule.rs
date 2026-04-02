@@ -6,9 +6,7 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use crate::{
-    CompatibleInstances,
-    Meta,
-    date,
+    CompatibleInstances, Meta, date,
     event_instance::EventInstance,
     shared::entity::{Entity, ID},
     timespan::TimeSpan,
@@ -337,7 +335,7 @@ impl Day {
 
 impl std::fmt::Display for Day {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}-{}-{}", self.year, self.month, self.day)
+        write!(f, "{}-{:02}-{:02}", self.year, self.month, self.day)
     }
 }
 
@@ -366,8 +364,14 @@ impl Schedule {
         let mut weekday_lookup = HashMap::new();
         for rule in &self.rules {
             match &rule.variant {
-                ScheduleRuleVariant::Date(date) => {
-                    date_lookup.insert(date, &rule.intervals);
+                ScheduleRuleVariant::Date(datestr) => {
+                    // Normalize the date string so lookup always matches
+                    // regardless of zero-padding (e.g. "2026-4-2" vs "2026-04-02")
+                    let normalized = match datestr.parse::<Day>() {
+                        Ok(day) => day.to_string(),
+                        Err(_) => datestr.clone(),
+                    };
+                    date_lookup.insert(normalized, &rule.intervals);
                 }
                 ScheduleRuleVariant::WDay(wkay) => {
                     weekday_lookup.insert(wkay, &rule.intervals);
@@ -503,7 +507,7 @@ mod test {
                     }],
                 },
                 ScheduleRule {
-                    variant: ScheduleRuleVariant::Date("1970-1-12".into()),
+                    variant: ScheduleRuleVariant::Date("1970-01-12".into()),
                     intervals: vec![ScheduleRuleInterval {
                         start: Time {
                             hours: 9,
