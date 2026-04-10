@@ -6,7 +6,9 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use crate::{
-    CompatibleInstances, Meta, date,
+    CompatibleInstances,
+    Meta,
+    date,
     event_instance::EventInstance,
     shared::entity::{Entity, ID},
     timespan::TimeSpan,
