@@ -1,3 +1,4 @@
+import nock from 'nock'
 import {
   type INitteiClient,
   type INitteiUserClient,
@@ -11,7 +12,6 @@ import {
   UnprocessableEntityError,
 } from '../lib/helpers/errors'
 import { setupUserClient } from './helpers/fixtures'
-import nock from 'nock'
 
 describe('Error Handling', () => {
   let client: INitteiUserClient

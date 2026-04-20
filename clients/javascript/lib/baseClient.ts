@@ -1,3 +1,4 @@
+import type * as agentkeepaliveModuleType from 'agentkeepalive'
 import axios, {
   AxiosError,
   type AxiosInstance,
@@ -5,17 +6,16 @@ import axios, {
   type AxiosResponse,
 } from 'axios'
 import axiosRetry, { isNetworkOrIdempotentRequestError } from 'axios-retry'
+import type cacheableLookupType from 'cacheable-lookup'
 import type { ICredentials } from './helpers/credentials'
 import {
   BadRequestError,
   ConflictError,
   NotFoundError,
+  sanitizeErrorData,
   UnauthorizedError,
   UnprocessableEntityError,
-  sanitizeErrorData,
 } from './helpers/errors'
-import type cacheableLookupType from 'cacheable-lookup'
-import type * as agentkeepaliveModuleType from 'agentkeepalive'
 
 /**
  * Configuration for the keep alive feature
