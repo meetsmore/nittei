@@ -97,9 +97,10 @@ jobs:
           # Remove the temporary folder
           rm -rf ./lib/gen_types_copy
 
-      - name: Build JS
+      - name: Type check and build JS
         run: |
           cd clients/javascript
+          pnpm run type-check
           pnpm run build
 
       - name: Start server and run tests
