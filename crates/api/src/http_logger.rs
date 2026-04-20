@@ -93,7 +93,7 @@ impl<B> MakeSpan<B> for NitteiTracingSpanBuilder {
         );
 
         // Set the parent span for the OpenTelemetry span
-        span.set_parent(parent_cx);
+        let _ = span.set_parent(parent_cx);
 
         span
     }

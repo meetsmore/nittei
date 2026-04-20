@@ -6,6 +6,7 @@
     "declaration": true,
     "declarationDir": "dist",
     "outDir": "dist",
+    "rootDir": ".",
     "strict": true,
     "alwaysStrict": true,
     "sourceMap": true,
@@ -14,7 +15,8 @@
     "resolveJsonModule": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "skipLibCheck": true
   },
   "include": ["lib/**/*", "tests/**/*", "scripts/**/*"],
   "exclude": ["node_modules"]

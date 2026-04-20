@@ -2,19 +2,19 @@
   "name": "@meetsmore/nittei-client",
   "version": "0.0.1",
   "description": "The Nittei Javascript library provides convenient access to the Nittei API from server-side JavaScript applications or web applications",
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
+  "types": "./dist/index.d.mts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "require": "./dist/index.js",
+      "types": "./dist/index.d.mts",
+      "require": "./dist/index.cjs",
       "import": "./dist/index.mjs"
     }
   },
   "packageManager": "pnpm@9.2.0",
   "scripts": {
-    "build": "tsup",
+    "build": "tsdown lib/index.ts",
     "deploy": "pnpm run build && pnpm publish --no-git-checks",
     "format": "biome check --fix ./lib ./tests",
     "clean-generated-files": "rm -rf ./lib/gen_types",
@@ -42,24 +42,24 @@
   "license": "MIT",
   "dependencies": {
     "agentkeepalive": "4.6.0",
-    "axios": "1.12.2",
+    "axios": "1.15.1",
     "axios-retry": "4.5.0",
     "cacheable-lookup": "^6.1.0",
-    "dayjs": "1.11.18"
+    "dayjs": "1.11.20"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.4",
     "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "9.0.10",
-    "@types/node": "22.10.6",
-    "@types/uuid": "10.0.0",
-    "jest": "30.2.0",
-    "jsonwebtoken": "9.0.2",
-    "nock": "14.0.10",
-    "ts-jest": "29.4.4",
-    "tsup": "8.5.0",
-    "tsx": "4.20.6",
-    "typescript": "5.9.2",
+    "@types/node": "24.1.0",
+    "@types/uuid": "11.0.0",
+    "jest": "30.3.0",
+    "jsonwebtoken": "9.0.3",
+    "nock": "14.0.12",
+    "ts-jest": "29.4.9",
+    "tsdown": "^0.21.9",
+    "tsx": "4.21.0",
+    "typescript": "6.0.3",
     "uuid": "11.1.0"
   }
 }

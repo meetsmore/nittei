@@ -1,7 +1,7 @@
 name: JavaScript client tests
 
 env:
-  RUST_VERSION: 1.94.0
+  RUST_VERSION: 1.95.0
   RUST_BACKTRACE: 1
 
 on:
@@ -97,9 +97,10 @@ jobs:
           # Remove the temporary folder
           rm -rf ./lib/gen_types_copy
 
-      - name: Build JS
+      - name: Type check and build JS
         run: |
           cd clients/javascript
+          pnpm run type-check
           pnpm run build
 
       - name: Start server and run tests
