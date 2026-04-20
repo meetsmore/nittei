@@ -4,7 +4,7 @@
 # docker buildx build -f debianWithDD.Dockerfile -t image:tag --build-arg='ARCH=x86_64' --platform linux/amd64 .
 # docker buildx build -f debianWithDD.Dockerfile -t image:tag --build-arg='ARCH=aarch64' --platform linux/arm64 .
 
-FROM rust:1.95.0-trixie-slim AS builder
+FROM rust:1.95.0-slim-trixie AS builder
 
 WORKDIR /app/nittei
 
