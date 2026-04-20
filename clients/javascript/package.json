@@ -2,19 +2,19 @@
   "name": "@meetsmore/nittei-client",
   "version": "0.0.1",
   "description": "The Nittei Javascript library provides convenient access to the Nittei API from server-side JavaScript applications or web applications",
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
+  "types": "./dist/index.d.mts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "require": "./dist/index.js",
+      "types": "./dist/index.d.mts",
+      "require": "./dist/index.cjs",
       "import": "./dist/index.mjs"
     }
   },
   "packageManager": "pnpm@9.2.0",
   "scripts": {
-    "build": "tsup",
+    "build": "tsdown lib/index.ts",
     "deploy": "pnpm run build && pnpm publish --no-git-checks",
     "format": "biome check --fix ./lib ./tests",
     "clean-generated-files": "rm -rf ./lib/gen_types",
@@ -57,7 +57,7 @@
     "jsonwebtoken": "9.0.3",
     "nock": "14.0.12",
     "ts-jest": "29.4.9",
-    "tsup": "8.5.1",
+    "tsdown": "^0.21.9",
     "tsx": "4.21.0",
     "typescript": "6.0.3",
     "uuid": "11.1.0"
