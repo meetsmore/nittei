@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use itertools::Itertools;
-use rand::{Rng, rng};
+use rand::{RngExt, rng};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
@@ -11,12 +11,14 @@ use crate::{CalendarEvent, ID};
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
+#[derive(Default)]
 pub enum RoundRobinAlgorithm {
     /// Optimizes for availability
     ///
     /// This assigns the `Service Event` to the member which was
     /// least recently assigned a `Service Event` for the given
     /// `Service`.
+    #[default]
     Availability,
     /// Optimizes for equal distribution
     ///
@@ -25,12 +27,6 @@ pub enum RoundRobinAlgorithm {
     /// time period. Time period in this context is hard coded to be
     /// two weeks.
     EqualDistribution,
-}
-
-impl Default for RoundRobinAlgorithm {
-    fn default() -> Self {
-        Self::Availability
-    }
 }
 
 #[derive(Debug, Clone)]

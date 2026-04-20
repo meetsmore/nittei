@@ -1,2 +1,5 @@
 packages:
-  - "clients/javascript"
+  - clients/javascript
+
+onlyBuiltDependencies:
+  - esbuild

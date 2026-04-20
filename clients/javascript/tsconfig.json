@@ -6,6 +6,7 @@
     "declaration": true,
     "declarationDir": "dist",
     "outDir": "dist",
+    "rootDir": ".",
     "strict": true,
     "alwaysStrict": true,
     "sourceMap": true,
