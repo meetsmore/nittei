@@ -33,7 +33,7 @@ RUN cargo build --release --bin nittei-migrate --target ${ARCH}-unknown-linux-mu
   cp ./target/${ARCH}-unknown-linux-musl/release/nittei-migrate /nittei-migrate
 
 #Create a new stage with a minimal image
-FROM alpine:3.22.2
+FROM alpine:3.23.4
 
 # Set the git repository url and commit hash for DD
 ARG GIT_REPO_URL
