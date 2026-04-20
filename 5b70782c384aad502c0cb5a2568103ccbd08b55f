@@ -1,0 +1,14 @@
+.github/workflows/js-client-test.yml
+  h_bd6e824018ebee 100,103
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.0",
+  "base_commit_sha": "5b70782c384aad502c0cb5a2568103ccbd08b55f",
+  "prompts": {},
+  "humans": {
+    "h_bd6e824018ebee": {
+      "author": "Guillaume Deconinck"
+    }
+  }
+}
