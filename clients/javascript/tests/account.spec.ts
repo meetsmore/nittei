@@ -93,6 +93,7 @@ describe('Account API', () => {
     let eventId2: string
     let recurringEventId: string
     let recurringExceptionEventId: string
+    let expiredRecurringEventId: string
 
     const externalId = 'externalId'
     const externalId2 = 'externalId2'
@@ -174,6 +175,20 @@ describe('Account API', () => {
       })
 
       recurringExceptionEventId = exceptionEventRes.event.id
+
+      const expiredRecurringEventRes = await adminClient.events.create(userId, {
+        calendarId,
+        status: 'confirmed',
+        duration: 500,
+        startTime: new Date(1400),
+        recurrence: {
+          freq: 'weekly',
+          interval: 1,
+          until: new Date(3000).toISOString(),
+        },
+      })
+
+      expiredRecurringEventId = expiredRecurringEventRes.event.id
     })
 
     it('should be able to search for events in the account (by startTime, for multiple users)', async () => {
@@ -187,7 +202,7 @@ describe('Account API', () => {
           },
         },
       })
-      expect(res.events.length).toBe(3)
+      expect(res.events.length).toBe(4)
       expect(res.events).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -198,6 +213,9 @@ describe('Account API', () => {
           }),
           expect.objectContaining({
             id: eventId2,
+          }),
+          expect.objectContaining({
+            id: expiredRecurringEventId,
           }),
         ])
       )
@@ -215,7 +233,7 @@ describe('Account API', () => {
         },
         sort: 'startTimeAsc',
       })
-      expect(res.events.length).toBe(3)
+      expect(res.events.length).toBe(4)
       // Expect this order explicitly as we sort by startTimeAsc
       expect(res.events).toEqual([
         expect.objectContaining({
@@ -226,6 +244,9 @@ describe('Account API', () => {
         }),
         expect.objectContaining({
           id: eventId2,
+        }),
+        expect.objectContaining({
+          id: expiredRecurringEventId,
         }),
       ])
     })
@@ -247,7 +268,7 @@ describe('Account API', () => {
       // Expect only the last one, as we explicitly sorted by startTimeDesc and limited to 1
       expect(res.events).toEqual([
         expect.objectContaining({
-          id: eventId2,
+          id: expiredRecurringEventId,
         }),
       ])
     })
@@ -263,7 +284,7 @@ describe('Account API', () => {
           },
         },
       })
-      expect(res.events.length).toBe(3)
+      expect(res.events.length).toBe(4)
       expect(res.events).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -274,6 +295,9 @@ describe('Account API', () => {
           }),
           expect.objectContaining({
             id: recurringExceptionEventId,
+          }),
+          expect.objectContaining({
+            id: expiredRecurringEventId,
           }),
         ])
       )
@@ -290,10 +314,13 @@ describe('Account API', () => {
           },
         },
       })
-      expect(res.events.length).toBe(1)
+      expect(res.events.length).toBe(2)
       expect(res.events).toEqual([
         expect.objectContaining({
           id: recurringEventId,
+        }),
+        expect.objectContaining({
+          id: expiredRecurringEventId,
         }),
       ])
     })
@@ -335,12 +362,36 @@ describe('Account API', () => {
             eq: userId,
           },
           recurrence: {
+            existsAndRecurringAt: new Date(1500),
+          },
+        },
+      })
+
+      expect(res.events.length).toBe(2)
+      expect(res.events).toEqual([
+        expect.objectContaining({
+          id: recurringEventId,
+        }),
+        expect.objectContaining({
+          id: expiredRecurringEventId,
+        }),
+      ])
+
+      // Search outside of the recurrence range
+      const res2 = await adminClient.account.searchEventsInAccount({
+        filter: {
+          userId: {
+            eq: userId,
+          },
+          recurrence: {
             existsAndRecurringAt: new Date(10000),
           },
         },
       })
-      expect(res.events.length).toBe(1)
-      expect(res.events).toEqual([
+
+      // Only contains the recurring event, and not the expired one
+      expect(res2.events.length).toBe(1)
+      expect(res2.events).toEqual([
         expect.objectContaining({
           id: recurringEventId,
         }),
