@@ -47,9 +47,10 @@ pub async fn get_multiple_freebusy_controller(
     Extension(ctx): Extension<NitteiContext>,
     body: Json<MultipleFreeBusyRequestBody>,
 ) -> Result<Json<MultipleFreeBusyAPIResponse>, NitteiError> {
-    let _account = protect_public_account_route(&headers, &ctx).await?;
+    let account = protect_public_account_route(&headers, &ctx).await?;
 
     let usecase = GetMultipleFreeBusyUseCase {
+        account_id: account.id,
         user_ids: body.user_ids.clone(),
         start_time: body.start_time,
         end_time: body.end_time,
@@ -63,6 +64,7 @@ pub async fn get_multiple_freebusy_controller(
 
 #[derive(Debug)]
 pub struct GetMultipleFreeBusyUseCase {
+    pub account_id: ID,
     pub user_ids: Vec<ID>,
     pub start_time: DateTime<Utc>,
     pub end_time: DateTime<Utc>,
@@ -75,6 +77,7 @@ pub struct GetMultipleFreeBusyResponse(pub HashMap<ID, Vec<EventInstance>>);
 pub enum UseCaseError {
     InternalError,
     InvalidTimespan,
+    UserNotFound(ID),
 }
 
 impl From<UseCaseError> for NitteiError {
@@ -83,6 +86,9 @@ impl From<UseCaseError> for NitteiError {
             UseCaseError::InternalError => Self::InternalError,
             UseCaseError::InvalidTimespan => {
                 Self::BadClientData("The provided start_ts and end_ts are invalid".into())
+            }
+            UseCaseError::UserNotFound(user_id) => {
+                Self::NotFound(format!("A user with id: {user_id}, was not found."))
             }
         }
     }
@@ -97,6 +103,8 @@ impl UseCase for GetMultipleFreeBusyUseCase {
     const NAME: &'static str = "GetMultipleFreebusy";
 
     async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
+        self.ensure_users_belong_to_account(ctx).await?;
+
         let timespan = TimeSpan::new(self.start_time, self.end_time);
         if timespan.greater_than(APP_CONFIG.event_instances_query_duration_limit) {
             return Err(UseCaseError::InvalidTimespan);
@@ -121,6 +129,21 @@ impl UseCase for GetMultipleFreeBusyUseCase {
 }
 
 impl GetMultipleFreeBusyUseCase {
+    async fn ensure_users_belong_to_account(&self, ctx: &NitteiContext) -> Result<(), UseCaseError> {
+        for user_id in &self.user_ids {
+            let user = ctx
+                .repos
+                .users
+                .find_by_account_id(user_id, &self.account_id)
+                .await
+                .map_err(|_| UseCaseError::InternalError)?;
+            if user.is_none() {
+                return Err(UseCaseError::UserNotFound(user_id.clone()));
+            }
+        }
+        Ok(())
+    }
+
     async fn get_calendars_from_user_ids(
         &self,
         ctx: &NitteiContext,
@@ -160,19 +183,33 @@ impl GetMultipleFreeBusyUseCase {
         // End result
         let mut events_per_user: HashMap<ID, Vec<EventInstance>> = HashMap::new();
 
-        // Fetch all events for all calendars
+        // Group calendars by user once so each user is queried with the same semantics
+        // as the single-user freebusy endpoint.
+        let mut calendar_ids_by_user: HashMap<ID, Vec<ID>> = HashMap::new();
+        for calendar in &calendars {
+            calendar_ids_by_user
+                .entry(calendar.user_id.clone())
+                .or_default()
+                .push(calendar.id.clone());
+        }
+
+        // Fetch all events for all users (using calendar groups)
         // This is not executed yet (lazy)
-        let all_events_futures = calendars.clone().into_iter().map(|calendar| {
+        let all_events_futures = calendar_ids_by_user.into_iter().map(|(user_id, calendar_ids)| {
             let timespan = timespan.clone();
 
             async move {
                 let events = ctx
                     .repos
                     .events
-                    .find_by_calendar(&calendar.id, Some(timespan))
+                    .find_busy_events_and_recurring_events_for_calendars(
+                        &calendar_ids,
+                        timespan,
+                        false,
+                    )
                     .await
-                    .unwrap_or_default(); // TODO: Handle error
-                Ok((calendar.user_id.clone(), events))
+                    .map_err(|_| UseCaseError::InternalError)?;
+                Ok((user_id, events))
                     as Result<(ID, Vec<CalendarEvent>), UseCaseError>
             }
             .boxed()
@@ -198,7 +235,10 @@ impl GetMultipleFreeBusyUseCase {
                             error!("Got an error when expanding events {:?}", e);
                             UseCaseError::InternalError
                         })?;
-                        events_per_user.insert(user_id, expanded_events);
+                        events_per_user
+                            .entry(user_id)
+                            .or_default()
+                            .extend(expanded_events);
                     }
                     Err(e) => return Err(e),
                 }
@@ -230,12 +270,15 @@ mod test {
         ctx.repos.users.insert(&user).await.unwrap();
         let calendar = Calendar::new(&user.id(), &user.account_id, None, None);
         ctx.repos.calendars.insert(&calendar).await.unwrap();
+        let second_calendar = Calendar::new(&user.id(), &user.account_id, None, None);
+        ctx.repos.calendars.insert(&second_calendar).await.unwrap();
         let one_hour = 1000 * 60 * 60;
         let mut e1 = CalendarEvent {
             calendar_id: calendar.id.clone(),
             user_id: user.id.clone(),
             account_id: user.account_id.clone(),
             busy: true,
+            status: nittei_domain::CalendarEventStatus::Confirmed,
             duration: one_hour,
             end_time: DateTime::<Utc>::MAX_UTC,
             ..Default::default()
@@ -256,6 +299,7 @@ mod test {
             user_id: user.id.clone(),
             account_id: user.account_id.clone(),
             busy: true,
+            status: nittei_domain::CalendarEventStatus::Confirmed,
             duration: one_hour,
             end_time: DateTime::<Utc>::MAX_UTC,
             start_time: DateTime::from_timestamp_millis(one_hour * 4).unwrap(),
@@ -277,6 +321,7 @@ mod test {
             user_id: user.id.clone(),
             account_id: user.account_id.clone(),
             busy: true,
+            status: nittei_domain::CalendarEventStatus::Confirmed,
             duration: one_hour,
             end_time: DateTime::from_timestamp_millis(one_hour).unwrap(),
             ..Default::default()
@@ -292,12 +337,25 @@ mod test {
                 panic!("{e:?}");
             }
         };
+        let e4 = CalendarEvent {
+            calendar_id: second_calendar.id.clone(),
+            user_id: user.id.clone(),
+            account_id: user.account_id.clone(),
+            busy: true,
+            status: nittei_domain::CalendarEventStatus::Confirmed,
+            start_time: DateTime::from_timestamp_millis(90000000).unwrap(),
+            end_time: DateTime::from_timestamp_millis(93600000).unwrap(),
+            duration: one_hour,
+            ..Default::default()
+        };
 
         ctx.repos.events.insert(&e1).await.unwrap();
         ctx.repos.events.insert(&e2).await.unwrap();
         ctx.repos.events.insert(&e3).await.unwrap();
+        ctx.repos.events.insert(&e4).await.unwrap();
 
         let mut usecase = GetMultipleFreeBusyUseCase {
+            account_id: account.id.clone(),
             user_ids: vec![user.id().clone()],
             start_time: DateTime::from_timestamp_millis(86400000).unwrap(),
             end_time: DateTime::from_timestamp_millis(172800000).unwrap(),
@@ -310,7 +368,7 @@ mod test {
         assert_eq!(map_instances.len(), 1);
         assert!(map_instances.contains_key(&user.id()));
         let instances = map_instances.get(&user.id()).unwrap();
-        assert_eq!(instances.len(), 4);
+        assert_eq!(instances.len(), 5);
         assert_eq!(
             instances[0],
             EventInstance {
@@ -323,12 +381,20 @@ mod test {
             instances[1],
             EventInstance {
                 busy: true,
+                start_time: DateTime::from_timestamp_millis(90000000).unwrap(),
+                end_time: DateTime::from_timestamp_millis(93600000).unwrap(),
+            }
+        );
+        assert_eq!(
+            instances[2],
+            EventInstance {
+                busy: true,
                 start_time: DateTime::from_timestamp_millis(100800000).unwrap(),
                 end_time: DateTime::from_timestamp_millis(104400000).unwrap(),
             }
         );
         assert_eq!(
-            instances[2],
+            instances[3],
             EventInstance {
                 busy: true,
                 start_time: DateTime::from_timestamp_millis(172800000).unwrap(),
@@ -336,7 +402,7 @@ mod test {
             }
         );
         assert_eq!(
-            instances[3],
+            instances[4],
             EventInstance {
                 busy: true,
                 start_time: DateTime::from_timestamp_millis(172800000).unwrap(),

@@ -61,9 +61,10 @@ pub async fn get_freebusy_controller(
     mut params: Path<PathParams>,
     Extension(ctx): Extension<NitteiContext>,
 ) -> Result<Json<GetUserFreeBusyAPIResponse>, NitteiError> {
-    let _account = protect_public_account_route(&headers, &ctx).await?;
+    let account = protect_public_account_route(&headers, &ctx).await?;
 
     let usecase = GetFreeBusyUseCase {
+        account_id: account.id,
         user_id: std::mem::take(&mut params.user_id),
         calendar_ids: query_params.calendar_ids.take(),
         start_time: query_params.start_time,
@@ -84,6 +85,7 @@ pub async fn get_freebusy_controller(
 
 #[derive(Debug)]
 pub struct GetFreeBusyUseCase {
+    pub account_id: ID,
     pub user_id: ID,
     pub calendar_ids: Option<Vec<ID>>,
     pub start_time: DateTime<Utc>,
@@ -101,6 +103,7 @@ pub struct GetFreeBusyResponse {
 pub enum UseCaseError {
     InternalError,
     InvalidTimespan,
+    UserNotFound(ID),
 }
 
 impl From<UseCaseError> for NitteiError {
@@ -109,6 +112,9 @@ impl From<UseCaseError> for NitteiError {
             UseCaseError::InternalError => Self::InternalError,
             UseCaseError::InvalidTimespan => {
                 Self::BadClientData("The provided start_ts and end_ts are invalid".into())
+            }
+            UseCaseError::UserNotFound(user_id) => {
+                Self::NotFound(format!("A user with id: {user_id}, was not found."))
             }
         }
     }
@@ -123,6 +129,8 @@ impl UseCase for GetFreeBusyUseCase {
     const NAME: &'static str = "GetUserFreebusy";
 
     async fn execute(&mut self, ctx: &NitteiContext) -> Result<Self::Response, Self::Error> {
+        self.ensure_user_belongs_to_account(ctx).await?;
+
         let timespan = TimeSpan::new(self.start_time, self.end_time);
         if timespan.greater_than(APP_CONFIG.event_instances_query_duration_limit) {
             return Err(UseCaseError::InvalidTimespan);
@@ -146,6 +154,19 @@ impl UseCase for GetFreeBusyUseCase {
 }
 
 impl GetFreeBusyUseCase {
+    async fn ensure_user_belongs_to_account(
+        &self,
+        ctx: &NitteiContext,
+    ) -> Result<(), UseCaseError> {
+        ctx.repos
+            .users
+            .find_by_account_id(&self.user_id, &self.account_id)
+            .await
+            .map_err(|_| UseCaseError::InternalError)?
+            .ok_or_else(|| UseCaseError::UserNotFound(self.user_id.clone()))
+            .map(|_| ())
+    }
+
     async fn get_event_instances_from_calendars(
         &self,
         timespan: TimeSpan,
@@ -317,6 +338,7 @@ mod test {
             .unwrap();
 
         let mut freebusy_params: GetFreeBusyUseCase = GetFreeBusyUseCase {
+            account_id: account.id.clone(),
             user_id: user.id().clone(),
             calendar_ids: Some(vec![calendar.id.clone()]),
             start_time: DateTime::parse_from_rfc3339("2025-01-09T00:00:00Z")
