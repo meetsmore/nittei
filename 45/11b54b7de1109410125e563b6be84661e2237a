@@ -1,0 +1,29 @@
+CLAUDE.md
+  s_68a598f074f916::t_af145552600b00 1-71
+README.md
+  h_f948a6a5342a21 8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.11",
+  "base_commit_sha": "4511b54b7de1109410125e563b6be84661e2237a",
+  "prompts": {},
+  "humans": {
+    "h_bd6e824018ebee": {
+      "author": "Guillaume Deconinck"
+    },
+    "h_f948a6a5342a21": {
+      "author": "Guillaume Deconinck <deconinck.guillaume@meetsmore.com>"
+    }
+  },
+  "sessions": {
+    "s_68a598f074f916": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4bcef12f-e9bb-42f8-9fd9-d5cec7f2b224",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Guillaume Deconinck <deconinck.guillaume@meetsmore.com>"
+    }
+  }
+}
