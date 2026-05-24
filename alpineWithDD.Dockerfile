@@ -1,50 +1,59 @@
 # This Dockerfile is based on the alpine.Dockerfile and adds the ddprof tool to the image.
 #
 # Usage:
-# docker buildx build -f alpineWithDD.Dockerfile -t image:tag --build-arg='ARCH=x86_64' --platform linux/amd64 .
-# docker buildx build -f alpineWithDD.Dockerfile -t image:tag --build-arg='ARCH=aarch64' --platform linux/arm64 .
+# docker buildx build -f alpineWithDD.Dockerfile -t image:tag --platform linux/amd64 .
+# docker buildx build -f alpineWithDD.Dockerfile -t image:tag --platform linux/arm64 .
 
-ARG ARCH=x86_64
-FROM messense/rust-musl-cross:${ARCH}-musl AS builder
+ARG TARGETARCH=amd64
 
-ARG ARCH=x86_64
-ARG APP_NAME=nittei
+FROM messense/rust-musl-cross:x86_64-musl AS builder-amd64
+ENV MUSL_TARGET=x86_64-unknown-linux-musl
+
+FROM messense/rust-musl-cross:aarch64-musl AS builder-arm64
+ENV MUSL_TARGET=aarch64-unknown-linux-musl
+
+FROM builder-${TARGETARCH} AS builder
+
+ARG TARGETARCH
 ARG RUST_VERSION=1.95.0
+ENV BUILD_PROFILE=release-dd
+ENV RUSTFLAGS="-C force-frame-pointers=yes"
 
 # Install and set the specific Rust version
 RUN rustup install ${RUST_VERSION} && rustup default ${RUST_VERSION}
 
 # Install the musl target for the correct architecture
-RUN rustup target add ${ARCH}-unknown-linux-musl
+RUN rustup target add ${MUSL_TARGET}
 
 # Verify the Rust and target setup
 RUN rustc --version && rustup show
 
 # Copy source code
+COPY .cargo .cargo
 COPY ./Cargo.toml ./Cargo.lock ./
 COPY ./crates ./crates
 COPY ./bins ./bins
 COPY ./clients/rust ./clients/rust
 
-# Build application
-RUN cargo build --release --target ${ARCH}-unknown-linux-musl && \
-  cp ./target/${ARCH}-unknown-linux-musl/release/${APP_NAME} /${APP_NAME}
+RUN cargo build --locked --profile ${BUILD_PROFILE} --target ${MUSL_TARGET} \
+  --bin nittei \
+  --bin nittei-migrate
 
-# Build migrate binary
-RUN cargo build --release --bin nittei-migrate --target ${ARCH}-unknown-linux-musl && \
-  cp ./target/${ARCH}-unknown-linux-musl/release/nittei-migrate /nittei-migrate
+RUN mkdir -p /out \
+  && cp ./target/${MUSL_TARGET}/${BUILD_PROFILE}/nittei /out/nittei \
+  && cp ./target/${MUSL_TARGET}/${BUILD_PROFILE}/nittei-migrate /out/nittei-migrate
 
 # Install ddprof
-RUN ARCH_IN_URL=$(case "${ARCH}" in \
-  x86_64) echo "amd64" ;; \
-  aarch64) echo "arm64" ;; \
+RUN ARCH_IN_URL=$(case "${TARGETARCH}" in \
+  amd64) echo "amd64" ;; \
+  arm64) echo "arm64" ;; \
   *) echo "unsupported-arch" && exit 1 ;; \
   esac) && \
   curl -Lo ddprof-linux.tar.xz https://github.com/DataDog/ddprof/releases/latest/download/ddprof-${ARCH_IN_URL}-linux.tar.xz && \
   tar xvf ddprof-linux.tar.xz && \
   mv ddprof/bin/ddprof /ddprof
 
-#Create a new stage with a minimal image
+# Create a new stage with a minimal image
 FROM alpine:3.23.4
 
 # Set the git repository url and commit hash for DD
@@ -59,11 +68,7 @@ ENV DD_SOURCE_CODE_PATH_MAPPING="/app/nittei/bins:/bins,/app/nittei/crates:/crat
 ARG RUST_BACKTRACE=1
 ENV RUST_BACKTRACE=${RUST_BACKTRACE}
 
-ARG APP_NAME=nittei
-ENV APP_NAME=${APP_NAME}
-
-COPY --from=builder /${APP_NAME} /${APP_NAME}
-COPY --from=builder /nittei-migrate /nittei-migrate
+COPY --from=builder /out/ /
 COPY --from=builder /ddprof /ddprof
 
-CMD ["/bin/sh", "-c", "exec /ddprof --preset cpu_live_heap /${APP_NAME}"]
+CMD ["/ddprof", "--preset", "cpu_live_heap", "/nittei"]

@@ -44,6 +44,12 @@ This project uses [Just](https://github.com/casey/just) as a task manager. To in
 brew install just
 ```
 
+On Linux, including WSL, install [`mold`](https://github.com/rui314/mold) too. The repository Cargo config uses it as the linker for Linux builds.
+
+```sh
+sudo apt install mold
+```
+
 Once Rust and Just are installed, a few more utility tools can be installed by running
 
 ```sh
