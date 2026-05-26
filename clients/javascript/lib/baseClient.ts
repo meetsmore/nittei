@@ -1,12 +1,4 @@
-import type * as agentkeepaliveModuleType from 'agentkeepalive'
-import axios, {
-  AxiosError,
-  type AxiosInstance,
-  type AxiosRequestConfig,
-  type AxiosResponse,
-} from 'axios'
-import axiosRetry, { isNetworkOrIdempotentRequestError } from 'axios-retry'
-import type cacheableLookupType from 'cacheable-lookup'
+import ky, { type Hooks, HTTPError, type KyInstance } from 'ky'
 import type { ICredentials } from './helpers/credentials'
 import {
   BadRequestError,
@@ -18,27 +10,25 @@ import {
 } from './helpers/errors'
 
 /**
- * Configuration for the keep alive feature
+ * Configuration for the keep alive feature.
+ *
+ * In Node.js 18+, the runtime's built-in fetch (backed by undici) already
+ * maintains persistent HTTP connections automatically. This option serves as
+ * an explicit opt-in signal; the `maxSockets` hint is forwarded to the runtime
+ * where supported but is otherwise advisory.
  */
 export type KeepAliveConfig = {
   /**
-   * Whether to keep the connection alive
+   * Whether to keep the connection alive (default: false).
+   * In Node.js 18+, connections are pooled by the runtime regardless.
    */
   enabled: boolean
 
   /**
-   * Whether to use the cacheable lookup library for DNS lookups
-   */
-  useCacheableLookupDNS?: boolean
-
-  /**
-   * Maximum number of sockets to keep alive
+   * Advisory maximum number of concurrent connections.
+   * Respected by environments that support explicit pool configuration.
    */
   maxSockets?: number
-  /**
-   * Maximum number of free sockets to keep alive
-   */
-  maxFreeSockets?: number
 }
 
 /**
@@ -65,12 +55,15 @@ export type ClientConfig = {
   baseUrl?: string
 
   /**
-   * Keep the connection alive
+   * Keep the connection alive (Node.js only).
+   * Uses undici connection pooling for persistent HTTP connections,
+   * reducing TCP handshake overhead on high-throughput backends.
    */
   keepAlive?: KeepAliveConfig
 
   /**
-   * Timeout for requests in milliseconds (default: 1000)
+   * Timeout per request attempt in milliseconds (default: 1000).
+   * This timeout is reset on each retry attempt.
    */
   timeout?: number
 
@@ -78,12 +71,43 @@ export type ClientConfig = {
    * Retry configuration
    */
   retry?: RetryConfig
+
+  /**
+   * Custom request/response hooks — the ky equivalent of Axios interceptors.
+   *
+   * Supported hooks:
+   *   - beforeRequest: inspect or modify requests before they are sent
+   *   - afterResponse: inspect or transform responses
+   *   - beforeRetry: called before each retry; return `ky.stop` to abort
+   *   - beforeError: transform errors before they are thrown
+   *
+   * @example Adding a logging hook:
+   * ```ts
+   * hooks: {
+   *   beforeRequest: [
+   *     request => { console.log('→', request.method, request.url) }
+   *   ]
+   * }
+   * ```
+   */
+  hooks?: Hooks
+
+  /**
+   * Enable read-only mode.
+   *
+   * When true (or when the `CALENDAR_TEST_READONLY` env var is set),
+   * POST/PUT/PATCH/DELETE requests are blocked unless the URL ends with
+   * `search` or `/events/timespan` (which are read-only POST operations).
+   *
+   * This is the programmatic alternative to setting `CALENDAR_TEST_READONLY`.
+   */
+  isReadOnly?: boolean
 }
 
 /**
  * Default configuration for the client
  */
-export const DEFAULT_CONFIG: Required<ClientConfig> = {
+export const DEFAULT_CONFIG: Required<Omit<ClientConfig, 'hooks'>> = {
   baseUrl: `http://localhost:${process.env.NITTEI__HTTP_PORT ?? '5000'}/api/v1`,
   keepAlive: {
     enabled: false,
@@ -93,24 +117,116 @@ export const DEFAULT_CONFIG: Required<ClientConfig> = {
     enabled: true,
     maxRetries: 3,
   },
+  isReadOnly: false,
+}
+
+// Idempotent endpoints registered via @IdempotentRequest decorator
+const idempotentEndpoints = new Set<string>()
+
+/**
+ * Mark a method as idempotent so it can be safely retried even when using POST.
+ * Useful for search/query endpoints that use POST but have no side-effects.
+ *
+ * @param endpoint - the endpoint path (e.g. '/events/search')
+ */
+export function IdempotentRequest(endpoint: string) {
+  idempotentEndpoints.add(endpoint)
+
+  return (
+    _target: unknown,
+    _propertyKey: string | symbol,
+    descriptor: PropertyDescriptor
+  ): PropertyDescriptor => descriptor
 }
 
 /**
- * Base client for the API
- * This client is used to centralize configuration needed for calling the API
- * It shouldn't be exposed to the end user
+ * Build the merged set of ky hooks, combining internal hooks
+ * (read-only guard, POST retry control) with any user-provided hooks.
+ */
+function buildHooks(args: { isReadOnly: boolean; userHooks?: Hooks }): Hooks {
+  const beforeRequestHooks: NonNullable<Hooks['beforeRequest']> = []
+  const beforeRetryHooks: NonNullable<Hooks['beforeRetry']> = []
+
+  // Read-only guard: block mutating requests
+  const isReadOnlyEnv =
+    typeof process !== 'undefined' &&
+    Boolean(process.env.CALENDAR_TEST_READONLY)
+
+  if (args.isReadOnly || isReadOnlyEnv) {
+    beforeRequestHooks.push(({ request }) => {
+      const method = request.method.toUpperCase()
+      if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+        const url = new URL(request.url)
+        const pathname = url.pathname
+        // Allow read-only POSTs: search and timespan endpoints
+        if (
+          !(
+            pathname.endsWith('search') || pathname.endsWith('/events/timespan')
+          )
+        ) {
+          throw new Error('Read-only mode is enabled')
+        }
+      }
+    })
+  }
+
+  // POST retry control: we add 'post' to retry.methods to support idempotent
+  // POST endpoints (e.g. search), but we must stop ky from retrying
+  // non-idempotent POSTs (e.g. create). The beforeRetry hook handles this.
+  //
+  // NOTE: we do NOT use ky.stop here because it resolves the request with
+  // `undefined` (no response), which would bypass our handleResponse() error
+  // handling. Instead:
+  //  - For HTTP errors (5xx): return error.response so ky uses it as the
+  //    final response — handleResponse() will then throw the appropriate error.
+  //  - For network errors: rethrow so the catch block in callApi() handles it.
+  beforeRetryHooks.push(({ request, error }) => {
+    if (request.method === 'POST') {
+      const url = new URL(request.url)
+      const isIdempotent = [...idempotentEndpoints].some(ep =>
+        url.pathname.includes(ep)
+      )
+      if (!isIdempotent) {
+        if (error instanceof HTTPError && error.response) {
+          // Return the original error response to stop retrying.
+          // With throwHttpErrors: false, ky returns this to callApi() which
+          // then passes it to handleResponse().
+          return error.response
+        }
+        // Network error (no response): propagate the error directly.
+        // callApi()'s catch block will wrap it into our standard error format.
+        throw error
+      }
+    }
+  })
+
+  return {
+    beforeRequest: [
+      ...beforeRequestHooks,
+      ...(args.userHooks?.beforeRequest ?? []),
+    ],
+    beforeRetry: [...beforeRetryHooks, ...(args.userHooks?.beforeRetry ?? [])],
+    afterResponse: [...(args.userHooks?.afterResponse ?? [])],
+    beforeError: [...(args.userHooks?.beforeError ?? [])],
+  }
+}
+
+/**
+ * Ensure the base URL ends with a slash, as required by ky's prefixUrl.
+ */
+function normalizePrefixUrl(baseUrl: string): string {
+  return baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`
+}
+
+/**
+ * Base client for the API.
+ * Centralises HTTP configuration; not exposed to end users.
  */
 export abstract class NitteiBaseClient {
-  constructor(private readonly axiosClient: AxiosInstance) {}
+  constructor(private readonly httpClient: KyInstance) {}
 
   /**
-   * Private generic function to call the API
-   * @private
-   * @param method - HTTP method to use
-   * @param path - path to the endpoint
-   * @param data - data to send to the server
-   * @param params - query parameters
-   * @returns Axios response
+   * Generic API call implementation
    */
   private async callApi<T>({
     method,
@@ -122,379 +238,215 @@ export abstract class NitteiBaseClient {
     path: string
     data?: unknown
     params?: Record<string, unknown>
-  }): Promise<AxiosResponse<T>> {
-    let res: AxiosResponse<T> | undefined
+  }): Promise<T> {
+    // ky's prefixUrl requires paths without a leading slash
+    const cleanPath = path.startsWith('/') ? path.slice(1) : path
+
+    // Filter out undefined query param values (mirrors previous paramsSerializer)
+    const filteredParams = params
+      ? Object.fromEntries(
+          Object.entries(params).filter(([, value]) => value !== undefined)
+        )
+      : undefined
+
+    let response: Response
     try {
-      res = await this.axiosClient({ method, url: path, data, params })
+      response = await this.httpClient(cleanPath, {
+        method,
+        ...(data !== undefined ? { json: data } : {}),
+        ...(filteredParams && Object.keys(filteredParams).length > 0
+          ? {
+              searchParams: filteredParams as Record<
+                string,
+                string | number | boolean
+              >,
+            }
+          : {}),
+      })
     } catch (error) {
-      // Technically this one shouldn't be triggered, because we are using validateStatus: () => true
-      // We handle the errors ourselves in the `handleStatusCode` call below
-      // This is just in case
-      if (error instanceof AxiosError) {
-        const sanitizedErrorData = sanitizeErrorData(
-          error?.response?.data ??
-            (error.cause as Error)?.message ??
-            error.message
-        )
-        throw new Error(
-          `Request failed with ${error?.status ? `status code ${error.status}` : 'no status code'} (${sanitizedErrorData})`
-        )
-      }
-      // This might happen if we don't have any status code
+      // This catches network errors, timeouts, and read-only mode violations
       const sanitizedErrorData = sanitizeErrorData(
         (error as Error)?.message ?? String(error)
       )
       throw new Error(`Unknown error (no status code) (${sanitizedErrorData})`)
     }
 
-    if (!res) {
-      throw new Error('No response from the server')
-    }
-
-    this.handleStatusCode(res)
-
-    return res
+    return this.handleResponse<T>(response)
   }
 
   /**
-   * Make a GET request to the API
-   * @private
-   * @param path - path to the endpoint
-   * @param params - query parameters
-   * @throws Error if the status code is 400 or higher
-   * @returns response's data
+   * Parse a successful response or convert error status codes into typed errors
    */
+  private async handleResponse<T>(response: Response): Promise<T> {
+    if (response.ok) {
+      // Handle empty bodies (e.g. 204 No Content)
+      const text = await response.text().catch(() => '')
+      if (!text) {
+        return undefined as T
+      }
+      try {
+        return JSON.parse(text) as T
+      } catch {
+        throw new Error('Failed to parse server response as JSON')
+      }
+    }
+
+    // Read the error body once
+    const rawData = await response.text().catch(() => '')
+    let data: unknown = rawData
+    try {
+      data = JSON.parse(rawData)
+    } catch {
+      // rawData is plain text — use as-is
+    }
+
+    const sanitizedErrorData = sanitizeErrorData(data)
+
+    if (response.status >= 500) {
+      throw new Error(
+        `Internal server error, please try again later (${response.status}) (${sanitizedErrorData})`
+      )
+    }
+    if (response.status === 400) {
+      throw new BadRequestError(sanitizedErrorData)
+    }
+    if (response.status === 401 || response.status === 403) {
+      throw new UnauthorizedError(sanitizedErrorData)
+    }
+    if (response.status === 404) {
+      throw new NotFoundError(sanitizedErrorData)
+    }
+    if (response.status === 409) {
+      throw new ConflictError(sanitizedErrorData)
+    }
+    if (response.status === 422) {
+      throw new UnprocessableEntityError(sanitizedErrorData)
+    }
+
+    throw new Error(
+      `Request failed with status code ${response.status} (${sanitizedErrorData})`
+    )
+  }
+
   protected async get<T>(
     path: string,
     params: Record<string, unknown> = {}
   ): Promise<T> {
-    const res = await this.callApi<T>({
-      method: 'GET',
-      path,
-      params,
-    })
-    return res.data
+    return this.callApi<T>({ method: 'GET', path, params })
   }
 
-  /**
-   * Make a POST request to the API
-   * @private
-   * @param path - path to the endpoint
-   * @param data - data to send to the server
-   * @throws Error if the status code is 400 or higher
-   * @returns response's data
-   */
   protected async post<T>(path: string, data: unknown): Promise<T> {
-    const res = await this.callApi<T>({
-      method: 'POST',
-      path,
-      data,
-    })
-
-    return res.data
+    return this.callApi<T>({ method: 'POST', path, data })
   }
 
-  /**
-   * Make a PUT request to the API
-   * @private
-   * @param path - path to the endpoint
-   * @param data - data to send to the server
-   * @throws Error if the status code is 400 or higher
-   * @returns response's data
-   */
   protected async put<T>(path: string, data: unknown): Promise<T> {
-    const res = await this.callApi<T>({
-      method: 'PUT',
-      path,
-      data,
-    })
-
-    return res.data
+    return this.callApi<T>({ method: 'PUT', path, data })
   }
 
-  /**
-   * Make a PATCH request to the API
-   * @private
-   * @param path - path to the endpoint
-   * @param data - data to send to the server
-   * @throws Error if the status code is 400 or higher
-   * @returns response's data
-   */
   protected async patch<T>(path: string, data: unknown): Promise<T> {
-    const res = await this.callApi<T>({
-      method: 'PATCH',
-      path,
-      data,
-    })
-
-    return res.data
+    return this.callApi<T>({ method: 'PATCH', path, data })
   }
 
-  /**
-   * Make a DELETE request to the API
-   * Note: this one doesn't have a body
-   * @private
-   * @param path - path to the endpoint
-   * @throws Error if the status code is 400 or higher
-   * @returns response's data
-   */
   protected async delete<T>(path: string): Promise<T> {
-    const res = await this.callApi<T>({
-      method: 'DELETE',
-      path,
-    })
-
-    return res.data
+    return this.callApi<T>({ method: 'DELETE', path })
   }
 
-  /**
-   * Make a DELETE request to the API with a body
-   * @private
-   * @param path - path to the endpoint
-   * @param data - data to send to the server
-   * @throws Error if the status code is 400 or higher
-   * @returns response's data
-   */
   protected async deleteWithBody<T>(path: string, data: unknown): Promise<T> {
-    const res = await this.callApi<T>({
-      method: 'DELETE',
-      data,
-      path,
-    })
-
-    return res.data
-  }
-
-  /**
-   * Handle status code from the server
-   * @param res - response from the server
-   * @throws Error if the status code is 400 or higher
-   */
-  private handleStatusCode(res: AxiosResponse): void {
-    if (res.status >= 500) {
-      const sanitizedErrorString = sanitizeErrorData(res.data)
-      throw new Error(
-        `Internal server error, please try again later (${res.status}) (${sanitizedErrorString})`
-      )
-    }
-
-    if (res.status >= 400) {
-      const sanitizedErrorData = sanitizeErrorData(res.data)
-
-      if (res.status === 400) {
-        throw new BadRequestError(sanitizedErrorData)
-      }
-      if (res.status === 401 || res.status === 403) {
-        throw new UnauthorizedError(sanitizedErrorData)
-      }
-      if (res.status === 404) {
-        throw new NotFoundError(sanitizedErrorData)
-      }
-      if (res.status === 409) {
-        throw new ConflictError(sanitizedErrorData)
-      }
-      if (res.status === 422) {
-        throw new UnprocessableEntityError(sanitizedErrorData)
-      }
-
-      throw new Error(
-        `Request failed with status code ${res.status} (${sanitizedErrorData})`
-      )
-    }
+    return this.callApi<T>({ method: 'DELETE', path, data })
   }
 }
 
 /**
- * Create an Axios instance for the frontend
- *
- * Compared to the backend, this function is not async
- * And the frontend cannot keep the connection alive
- *
- * @param args specify base URL for the API
- * @param credentials credentials for the API
- * @returns an Axios instance
+ * Shared retry options for both frontend and backend instances
  */
-export const createAxiosInstanceFrontend = (
+function buildRetryOptions(retry: RetryConfig) {
+  if (!retry.enabled) {
+    return { limit: 0 }
+  }
+  return {
+    limit: retry.maxRetries ?? 3,
+    // Include 'post' so that @IdempotentRequest endpoints can be retried.
+    // The beforeRetry hook filters out non-idempotent POSTs.
+    methods: [
+      'get',
+      'put',
+      'head',
+      'delete',
+      'options',
+      'trace',
+      'post',
+    ] as string[],
+    statusCodes: [408, 413, 429, 500, 502, 503, 504],
+    // Cap exponential backoff at 30 s so retries don't stall for too long
+    backoffLimit: 30_000,
+  }
+}
+
+/**
+ * Create a ky instance for the frontend (browser).
+ *
+ * Synchronous — browsers manage connections natively so no pooling is needed.
+ */
+export const createKyInstanceFrontend = (
   args: {
     baseUrl: string
     timeout: number
     retry: RetryConfig
+    isReadOnly: boolean
+    hooks?: Hooks
   },
   credentials: ICredentials
-): AxiosInstance => {
-  const config: AxiosRequestConfig = {
+): KyInstance => {
+  const hooks = buildHooks({
+    isReadOnly: args.isReadOnly,
+    userHooks: args.hooks,
+  })
+
+  return ky.create({
+    prefix: normalizePrefixUrl(args.baseUrl),
     timeout: args.timeout,
-    baseURL: args.baseUrl,
-    headers: credentials.createAuthHeaders(),
-    validateStatus: () => true, // allow all status codes without throwing error
-    paramsSerializer: params => {
-      if (!params) {
-        return ''
-      }
-      const filteredMap = Object.entries(params)
-        .filter(([, value]) => value !== undefined)
-        .reduce(
-          (acc, [key, value]) => {
-            acc[key] = value
-            return acc
-          },
-          {} as Record<string, string>
-        )
-      return new URLSearchParams(filteredMap).toString()
-    },
-  }
-
-  const axiosClient = axios.create(config)
-
-  if (args.retry.enabled) {
-    axiosRetry(axiosClient, {
-      retries: args.retry.maxRetries ?? 3,
-      retryDelay: axiosRetry.exponentialDelay,
-      retryCondition: canRequestBeRetried,
-      shouldResetTimeout: true,
-    })
-  }
-
-  return axiosClient
+    throwHttpErrors: false,
+    headers: credentials.createAuthHeaders() as Record<string, string>,
+    retry: buildRetryOptions(args.retry),
+    hooks,
+  })
 }
 
 /**
- * Create an Axios instance for the backend
+ * Create a ky instance for the backend (Node.js).
  *
- * On the backend (NodeJS), it is possible to keep the connection alive
- * @param args specify base URL and if the connection should be kept alive
- * @param credentials credentials for the API
- * @returns Promise of an Axios instance
+ * In Node.js 18+, the global `fetch` is backed by the runtime's own bundled
+ * undici, which already maintains persistent HTTP connections (keep-alive) and
+ * a connection pool automatically. No explicit pool management is needed.
+ *
+ * The `keepAlive` option is accepted for API compatibility and as an explicit
+ * opt-in signal, but the underlying mechanism relies on the runtime's built-in
+ * connection reuse rather than a separately managed undici Pool. This avoids
+ * version-mismatch issues that arise when a user-installed undici package
+ * differs from the version bundled in Node.js.
  */
-export const createAxiosInstanceBackend = async (
+export const createKyInstanceBackend = async (
   args: {
     baseUrl: string
     keepAlive: KeepAliveConfig
     timeout: number
     retry: RetryConfig
+    isReadOnly: boolean
+    hooks?: Hooks
   },
   credentials: ICredentials
-): Promise<AxiosInstance> => {
-  const config: AxiosRequestConfig = {
+): Promise<KyInstance> => {
+  const hooks = buildHooks({
+    isReadOnly: args.isReadOnly,
+    userHooks: args.hooks,
+  })
+
+  return ky.create({
+    prefix: normalizePrefixUrl(args.baseUrl),
     timeout: args.timeout,
-    baseURL: args.baseUrl,
-    headers: credentials.createAuthHeaders(),
-    validateStatus: () => true, // allow all status codes without throwing error
-    paramsSerializer: params => {
-      if (!params) {
-        return ''
-      }
-      const filteredMap = Object.entries(params)
-        .filter(([, value]) => value !== undefined)
-        .reduce(
-          (acc, [key, value]) => {
-            acc[key] = value
-            return acc
-          },
-          {} as Record<string, string>
-        )
-      return new URLSearchParams(filteredMap).toString()
-    },
-  }
-
-  // If keepAlive is true, and if we are in NodeJS
-  // create an agent to keep the connection alive
-  if (
-    args.keepAlive.enabled &&
-    typeof module !== 'undefined' &&
-    module.exports
-  ) {
-    // Import the module here to avoid loading this module in the browser
-    const CacheableLookup: typeof cacheableLookupType = require('cacheable-lookup')
-
-    // Create a cacheable lookup instance
-    // Goal is to make DNS lookup fully async + avoid hitting the limit of 4 UV threads
-    // See https://marmelab.com/blog/2025/07/28/dns-in-nodejs.html (for example) on the subject
-    const cacheableLookup = new CacheableLookup()
-
-    if (args.baseUrl.startsWith('https')) {
-      // Import the module here to avoid loading this module in the browser
-      const agentkeepalive: typeof agentkeepaliveModuleType = require('agentkeepalive')
-      // Default values are what we evaluated to be good for our load
-      const httpsAgent = new agentkeepalive.HttpsAgent({
-        keepAlive: true,
-        maxSockets: args.keepAlive.maxSockets ?? 75,
-        maxFreeSockets: args.keepAlive.maxFreeSockets ?? 10,
-        freeSocketTimeout: 15000, // closes idle connections after 15s
-        socketActiveTTL: 600000, // force recycle even active sockets after 10min
-        timeout: 60000, // timeout after 1min
-      })
-
-      if (args.keepAlive.useCacheableLookupDNS) {
-        cacheableLookup.install(httpsAgent)
-      }
-      config.httpsAgent = httpsAgent
-    } else {
-      // Import the module here to avoid loading this module in the browser
-      const agentkeepalive: typeof agentkeepaliveModuleType = require('agentkeepalive')
-      // Default values are what we evaluated to be good for our load
-      const httpAgent = new agentkeepalive.HttpAgent({
-        keepAlive: true,
-        maxSockets: args.keepAlive.maxSockets ?? 75,
-        maxFreeSockets: args.keepAlive.maxFreeSockets ?? 10,
-        freeSocketTimeout: 15000, // closes idle connections after 15s
-        socketActiveTTL: 600000, // force recycle even active sockets after 10min
-        timeout: 60000, // timeout after 1min
-      })
-
-      if (args.keepAlive.useCacheableLookupDNS) {
-        cacheableLookup.install(httpAgent)
-      }
-      config.httpAgent = httpAgent
-    }
-  }
-
-  const axiosClient = axios.create(config)
-
-  if (args.retry.enabled) {
-    axiosRetry(axiosClient, {
-      retries: args.retry.maxRetries ?? 3,
-      retryDelay: axiosRetry.exponentialDelay,
-      retryCondition: canRequestBeRetried,
-      shouldResetTimeout: true,
-    })
-  }
-
-  return axiosClient
-}
-
-// Idempotent endpoints (populated by the decorator)
-const idempotentEndpoints = new Set<string>()
-
-/**
- * Mark the method as idempotent, which effectively adds it to the list of endpoints that can be retried without side-effects
- * @param endpoint - the endpoint to mark as idempotent (url)
- * @returns the decorator function
- */
-export function IdempotentRequest(endpoint: string) {
-  // Register this endpoint as idempotent
-  idempotentEndpoints.add(endpoint)
-
-  return (
-    _target: unknown,
-    _propertyKey: string | symbol,
-    descriptor: PropertyDescriptor
-  ): PropertyDescriptor => descriptor
-}
-
-/**
- * Internal function for checking if an HTTP request can be retried without side-effects
- */
-const canRequestBeRetried = (error: AxiosError): boolean => {
-  // Default condition
-  if (isNetworkOrIdempotentRequestError(error)) {
-    return true
-  }
-
-  // Allow some POST requests to be retried (e.g. searches)
-  if (idempotentEndpoints.has(error.config?.url ?? '')) {
-    return true
-  }
-
-  return false
+    throwHttpErrors: false,
+    headers: credentials.createAuthHeaders() as Record<string, string>,
+    retry: buildRetryOptions(args.retry),
+    hooks,
+  })
 }

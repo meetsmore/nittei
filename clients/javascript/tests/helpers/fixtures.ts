@@ -18,7 +18,6 @@ export const setupAccount = async (options?: { timeout?: number }) => {
     // Test the keep alive feature at the same time
     keepAlive: {
       enabled: true,
-      useCacheableLookupDNS: true,
     },
   }
   if (options?.timeout) {

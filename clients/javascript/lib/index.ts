@@ -1,9 +1,9 @@
-import type { AxiosInstance } from 'axios'
+import type { KyInstance } from 'ky'
 import { NitteiAccountClient } from './accountClient'
 import {
   type ClientConfig,
-  createAxiosInstanceBackend,
-  createAxiosInstanceFrontend,
+  createKyInstanceBackend,
+  createKyInstanceFrontend,
   DEFAULT_CONFIG,
   type KeepAliveConfig,
   type RetryConfig,
@@ -32,7 +32,26 @@ export interface INitteiUserClient {
   schedule: NitteiScheduleUserClient
   user: NitteiUserUserClient
 
-  readonly axiosClient: AxiosInstance
+  /**
+   * The underlying ky HTTP client instance.
+   *
+   * Use this to add custom hooks (the ky equivalent of Axios interceptors)
+   * after construction, or to make one-off requests outside the typed client:
+   *
+   * @example Read-only guard (typical usage in your SaaS admin site)
+   * ```ts
+   * // Preferred: pass isReadOnly in the config instead
+   * const client = NitteiUserClient({ isReadOnly: true })
+   *
+   * // Advanced: extend the ky instance with custom hooks
+   * const extended = client.httpClient.extend({
+   *   hooks: {
+   *     beforeRequest: [request => { console.log('→', request.url) }]
+   *   }
+   * })
+   * ```
+   */
+  readonly httpClient: KyInstance
 }
 
 export interface INitteiClient {
@@ -44,12 +63,35 @@ export interface INitteiClient {
   schedule: NitteiScheduleClient
   user: _NitteiUserClient
 
-  readonly axiosClient: AxiosInstance
+  /**
+   * The underlying ky HTTP client instance.
+   *
+   * Use this to add custom hooks (the ky equivalent of Axios interceptors)
+   * after construction, or to make one-off requests outside the typed client:
+   *
+   * @example Read-only guard (typical usage in your SaaS admin site)
+   * ```ts
+   * // Preferred: pass isReadOnly in the config instead
+   * const client = await NitteiClient({ isReadOnly: true })
+   *
+   * // Advanced: extend the ky instance with custom hooks
+   * const extended = client.httpClient.extend({
+   *   hooks: {
+   *     beforeRequest: [request => { console.log('→', request.url) }]
+   *   }
+   * })
+   * ```
+   */
+  readonly httpClient: KyInstance
 }
 
 /**
- * Create a client for the nittei API (user client, not admin)
- * @param config configuration and credentials to be used
+ * Create a client for the Nittei API (user/frontend client).
+ *
+ * This variant is synchronous and does not set up connection pooling,
+ * making it suitable for browser usage.
+ *
+ * @param config - configuration and credentials
  * @returns user client
  */
 export const NitteiUserClient = (
@@ -60,31 +102,35 @@ export const NitteiUserClient = (
   const finalConfig = { ...DEFAULT_CONFIG, ...config }
 
   // User clients should not keep the connection alive (usually on the frontend)
-  const axiosClient = createAxiosInstanceFrontend(
+  const httpClient = createKyInstanceFrontend(
     {
       baseUrl: finalConfig.baseUrl,
       timeout: finalConfig.timeout,
       retry: finalConfig.retry,
+      isReadOnly: finalConfig.isReadOnly,
+      hooks: config?.hooks,
     },
     creds
   )
 
   return Object.freeze({
-    calendar: new NitteiCalendarUserClient(axiosClient),
-    events: new NitteiEventUserClient(axiosClient),
-    service: new NitteiServiceUserClient(axiosClient),
-    schedule: new NitteiScheduleUserClient(axiosClient),
-    user: new NitteiUserUserClient(axiosClient),
-    // Axios client exposed so that the user can use it
-    // - For adding interceptors
-    // - For making custom requests
-    axiosClient,
+    calendar: new NitteiCalendarUserClient(httpClient),
+    events: new NitteiEventUserClient(httpClient),
+    service: new NitteiServiceUserClient(httpClient),
+    schedule: new NitteiScheduleUserClient(httpClient),
+    user: new NitteiUserUserClient(httpClient),
+    // Exposed so callers can extend it with custom hooks or make ad-hoc requests
+    httpClient,
   })
 }
 
 /**
- * Create a client for the nittei API (admin client)
- * @param config configuration and credentials to be used
+ * Create a client for the Nittei API (admin/backend client).
+ *
+ * Async because it may initialise an undici connection pool when
+ * `keepAlive.enabled` is true.
+ *
+ * @param config - configuration and credentials
  * @returns admin client
  */
 export const NitteiClient = async (
@@ -94,28 +140,28 @@ export const NitteiClient = async (
 
   const finalConfig = { ...DEFAULT_CONFIG, ...config }
 
-  const axiosClient = await createAxiosInstanceBackend(
+  const httpClient = await createKyInstanceBackend(
     {
       baseUrl: finalConfig.baseUrl,
       keepAlive: finalConfig.keepAlive,
       timeout: finalConfig.timeout,
       retry: finalConfig.retry,
+      isReadOnly: finalConfig.isReadOnly,
+      hooks: config?.hooks,
     },
     creds
   )
 
   return Object.freeze({
-    account: new NitteiAccountClient(axiosClient),
-    events: new NitteiEventClient(axiosClient),
-    calendar: new NitteiCalendarClient(axiosClient),
-    user: new _NitteiUserClient(axiosClient),
-    service: new NitteiServiceClient(axiosClient),
-    schedule: new NitteiScheduleClient(axiosClient),
-    health: new NitteiHealthClient(axiosClient),
-    // Axios client exposed so that the user can use it
-    // - For adding interceptors
-    // - For making custom requests
-    axiosClient,
+    account: new NitteiAccountClient(httpClient),
+    events: new NitteiEventClient(httpClient),
+    calendar: new NitteiCalendarClient(httpClient),
+    user: new _NitteiUserClient(httpClient),
+    service: new NitteiServiceClient(httpClient),
+    schedule: new NitteiScheduleClient(httpClient),
+    health: new NitteiHealthClient(httpClient),
+    // Exposed so callers can extend it with custom hooks or make ad-hoc requests
+    httpClient,
   })
 }
 

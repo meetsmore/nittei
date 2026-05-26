@@ -28,6 +28,14 @@ describe('Error Handling', () => {
   })
 
   afterEach(() => {
+    // Abort pending (delayed) interceptors before cleaning up so their async
+    // timers don't fire after the test finishes and bleed into later suites.
+    nock.abortPendingRequests()
+    nock.cleanAll()
+  })
+
+  afterAll(() => {
+    nock.abortPendingRequests()
     nock.cleanAll()
   })
 
@@ -334,7 +342,8 @@ describe('Error Handling', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(Error)
         if (error instanceof Error) {
-          expect(error.message).toContain('timeout')
+          // ky reports timeouts as "Request timed out: …" (Axios used "timeout of … exceeded")
+          expect(error.message).toMatch(/timeout|timed out/i)
           expect(error.message).not.toMatch(/Bearer\s+[A-Za-z0-9+/=._-]+/)
         }
       }
