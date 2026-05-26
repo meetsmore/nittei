@@ -19,9 +19,7 @@ async fn liveness() -> (StatusCode, Json<APIResponse>) {
 /// Readiness probe — confirms the service can handle traffic.
 /// k8s removes the pod from the load balancer (but does NOT restart it) when this fails.
 /// Checks DB connectivity so traffic is only routed when dependencies are reachable.
-async fn readiness(
-    Extension(ctx): Extension<NitteiContext>,
-) -> (StatusCode, Json<APIResponse>) {
+async fn readiness(Extension(ctx): Extension<NitteiContext>) -> (StatusCode, Json<APIResponse>) {
     match ctx.repos.status.check_connection().await {
         Ok(_) => (
             StatusCode::OK,
