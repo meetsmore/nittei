@@ -61,8 +61,8 @@ async fn metrics() -> (StatusCode, String) {
 pub fn configure_routes() -> OpenApiRouter {
     OpenApiRouter::new()
         // Liveness probe: is the process alive?
-        .route("/healthz/live", get(liveness))
+        .route("/health/live", get(liveness))
         // Readiness probe: is the service ready to serve traffic?
-        .route("/healthz/ready", get(readiness))
+        .route("/health/ready", get(readiness))
         .route("/metrics", get(metrics))
 }
