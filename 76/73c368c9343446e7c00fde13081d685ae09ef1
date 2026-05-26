@@ -1,0 +1,30 @@
+debianWithDD.Dockerfile
+  s_8bf35e9583d471::t_60c04d774090dc 14-18
+scripts/build_release.sh
+  s_8bf35e9583d471::t_17edb202b119e8 7,12-14,20-21,24-25,28-41,43-74
+  h_f948a6a5342a21 8,42
+  s_8bf35e9583d471::t_c22c55b17812f8 15-19,22-23,26-27
+debian.Dockerfile
+  s_8bf35e9583d471::t_ce3a944e617bcb 10-13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "7673c368c9343446e7c00fde13081d685ae09ef1",
+  "prompts": {},
+  "humans": {
+    "h_f948a6a5342a21": {
+      "author": "Guillaume Deconinck <deconinck.guillaume@meetsmore.com>"
+    }
+  },
+  "sessions": {
+    "s_8bf35e9583d471": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "2ab5bad1-5d16-447e-92da-9611da9b0ee0",
+        "model": "default"
+      },
+      "human_author": "Guillaume Deconinck <deconinck.guillaume@meetsmore.com>"
+    }
+  }
+}
