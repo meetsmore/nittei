@@ -1,0 +1,33 @@
+crates/infra/src/repos/shared/query_structs.rs
+  h_f948a6a5342a21 27,95,139
+bins/nittei/src/main.rs
+  s_bee5b64e7a0c43::t_377da7f43c0933 70-78
+crates/infra/Cargo.toml
+  h_f948a6a5342a21 38,40
+bins/nittei/Cargo.toml
+  s_bee5b64e7a0c43::t_778bab83b36423 55
+  h_f948a6a5342a21 43,46-48,54
+bins/nittei/src/telemetry.rs
+  h_f948a6a5342a21 3,159
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "0bdb28120f28ca6b7b0c54e550d8fbd638f14c41",
+  "prompts": {},
+  "humans": {
+    "h_f948a6a5342a21": {
+      "author": "Guillaume Deconinck <deconinck.guillaume@meetsmore.com>"
+    }
+  },
+  "sessions": {
+    "s_bee5b64e7a0c43": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c89a569f-6136-4dca-8a90-182bf53f78f5",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Guillaume Deconinck <deconinck.guillaume@meetsmore.com>"
+    }
+  }
+}
