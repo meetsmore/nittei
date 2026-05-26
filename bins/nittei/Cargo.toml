@@ -40,22 +40,19 @@ tracing-subscriber = { version = "0.3", features = [
     "json",
     "registry",
 ] }
-opentelemetry = { version = "0.31.0", default-features = false, features = [
+opentelemetry = { version = "0.32.0", default-features = false, features = [
     "trace",
 ] }
-opentelemetry_sdk = { version = "0.31.0", features = ["rt-tokio"] }
-tracing-opentelemetry = "0.32.1"
-opentelemetry-otlp = { version = "0.31.1", features = [
+opentelemetry_sdk = { version = "0.32.0", features = ["rt-tokio"] }
+tracing-opentelemetry = "0.33.0"
+opentelemetry-otlp = { version = "0.32.0", features = [
     "reqwest-client",
     "reqwest-rustls",
     "http-proto",
     "tls",
 ] }
-opentelemetry-datadog = { version = "0.19.0", features = ["reqwest-client"] }
-reqwest = { version = "0.12.28", default-features = false, features = [
-    "http2",
-    "json",
-    "rustls-tls",
+opentelemetry-datadog = { version = "0.20.0", features = [
+    "reqwest-client",
 ] }
 
 chrono = "0.4.39"

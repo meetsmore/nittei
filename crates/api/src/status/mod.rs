@@ -4,8 +4,22 @@ use nittei_infra::{NitteiContext, metrics::INFRA_REGISTRY};
 use prometheus::TextEncoder;
 use utoipa_axum::router::OpenApiRouter;
 
-/// Get the status of the service
-async fn status(Extension(ctx): Extension<NitteiContext>) -> (StatusCode, Json<APIResponse>) {
+/// Liveness probe — confirms the process is running.
+/// k8s restarts the pod if this returns a non-2xx status.
+/// No external dependency checks: if the process can respond, it is alive.
+async fn liveness() -> (StatusCode, Json<APIResponse>) {
+    (
+        StatusCode::OK,
+        Json(APIResponse {
+            message: "Ok!\r\n".into(),
+        }),
+    )
+}
+
+/// Readiness probe — confirms the service can handle traffic.
+/// k8s removes the pod from the load balancer (but does NOT restart it) when this fails.
+/// Checks DB connectivity so traffic is only routed when dependencies are reachable.
+async fn readiness(Extension(ctx): Extension<NitteiContext>) -> (StatusCode, Json<APIResponse>) {
     match ctx.repos.status.check_connection().await {
         Ok(_) => (
             StatusCode::OK,
@@ -14,11 +28,11 @@ async fn status(Extension(ctx): Extension<NitteiContext>) -> (StatusCode, Json<A
             }),
         ),
         Err(e) => {
-            tracing::error!("[status] Error checking connection: {:?}", e);
+            tracing::error!("[status] Readiness check failed: {:?}", e);
             (
-                StatusCode::INTERNAL_SERVER_ERROR,
+                StatusCode::SERVICE_UNAVAILABLE,
                 Json(APIResponse {
-                    message: "Internal Server Error".into(),
+                    message: "Service Unavailable".into(),
                 }),
             )
         }
@@ -46,7 +60,9 @@ async fn metrics() -> (StatusCode, String) {
 /// Configure the routes for the status module
 pub fn configure_routes() -> OpenApiRouter {
     OpenApiRouter::new()
-        // Get the health status of the service
-        .route("/healthcheck", get(status))
+        // Liveness probe: is the process alive?
+        .route("/health/live", get(liveness))
+        // Readiness probe: is the service ready to serve traffic?
+        .route("/health/ready", get(readiness))
         .route("/metrics", get(metrics))
 }
