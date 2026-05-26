@@ -1,0 +1,16 @@
+AGENTS.md
+  h_f948a6a5342a21 1-72
+CLAUDE.md
+  h_f948a6a5342a21 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "1bf17961f355b7f245184a5c8845a7b488e786b3",
+  "prompts": {},
+  "humans": {
+    "h_f948a6a5342a21": {
+      "author": "Guillaume Deconinck <deconinck.guillaume@meetsmore.com>"
+    }
+  }
+}
