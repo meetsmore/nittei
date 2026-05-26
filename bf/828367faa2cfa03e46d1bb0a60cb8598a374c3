@@ -1,0 +1,33 @@
+bins/nittei/tests/api.rs
+  s_4c22fae897893d::t_67b9c8b3806e08 30,32-38
+crates/api/src/status/mod.rs
+  s_4c22fae897893d::t_2f6eb9cb787af8 7-24,33,35,37,65-68
+charts/nittei/templates/deployment.yaml
+  s_4c22fae897893d::t_6d7262339d2089 112-113
+charts/nittei/values.yaml
+  s_4c22fae897893d::t_76ac6cb2788344 108-110,115,118
+  s_4c22fae897893d::t_b07d5b98de16e3 96-100
+  s_4c22fae897893d::t_d8fa492051b10a 116-117
+  s_4c22fae897893d::t_a068e684c4163c 106,113
+  s_4c22fae897893d::t_3b41a253a7fdcc 101-103
+clients/javascript/lib/healthClient.ts
+  s_4c22fae897893d::t_11181173087733 7-18
+clients/rust/src/status.rs
+  s_4c22fae897893d::t_f749ca2d089c61 18-19,21-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "bf828367faa2cfa03e46d1bb0a60cb8598a374c3",
+  "prompts": {},
+  "sessions": {
+    "s_4c22fae897893d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "399f4198-ebab-42ab-a1af-cdbf84969fc9",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Guillaume Deconinck <deconinck.guillaume@meetsmore.com>"
+    }
+  }
+}
