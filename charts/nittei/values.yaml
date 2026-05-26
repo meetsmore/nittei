@@ -93,16 +93,29 @@ resources:
   #   cpu: 100m
   #   memory: 128Mi
 
+startupProbe:
+  httpGet:
+    path: /api/v1/healthz/live
+    port: 5000
+  # Allow up to 60s for the app to start (failureThreshold * periodSeconds)
+  # periodSeconds is kept short so k8s detects a successful start with minimal delay
+  failureThreshold: 60
+  periodSeconds: 1
 livenessProbe:
   httpGet:
-    path: /api/v1/healthcheck
+    path: /api/v1/healthz/live
     port: 5000
-  initialDelaySeconds: 2
+  # initialDelaySeconds not needed — startupProbe guards the startup window
+  periodSeconds: 10
+  failureThreshold: 3
 readinessProbe:
   httpGet:
-    path: /api/v1/healthcheck
+    path: /api/v1/healthz/ready
     port: 5000
-  initialDelaySeconds: 2
+  # initialDelaySeconds not needed — startupProbe guards the startup window
+  # Faster than liveness: detect DB unavailability within ~15s (periodSeconds * failureThreshold)
+  periodSeconds: 5
+  failureThreshold: 3
 
 autoscaling:
   enabled: false
