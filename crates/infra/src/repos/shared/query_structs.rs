@@ -24,7 +24,7 @@ pub struct MetadataFindQuery {
 ///
 /// This mutates the query_builder !
 pub fn apply_id_query(
-    query_builder: &mut sqlx::QueryBuilder<'_, Postgres>,
+    query_builder: &mut sqlx::QueryBuilder<Postgres>,
     field_name: &str,
     id_query: &Option<IDQuery>,
 ) {
@@ -92,7 +92,7 @@ pub fn apply_id_query(
 ///
 /// This effectively mutates the query_builder !
 pub fn apply_string_query(
-    query_builder: &mut sqlx::QueryBuilder<'_, Postgres>,
+    query_builder: &mut sqlx::QueryBuilder<Postgres>,
     field_name: &str,
     string_query: &Option<StringQuery>,
 ) {
@@ -136,7 +136,7 @@ pub fn apply_string_query(
 ///
 /// This effectively mutates the query_builder !
 pub fn apply_datetime_query(
-    query_builder: &mut sqlx::QueryBuilder<'_, Postgres>,
+    query_builder: &mut sqlx::QueryBuilder<Postgres>,
     field_name: &str,
     datetime_query: &Option<DateTimeQuery>,
     convert_to_millis: bool,

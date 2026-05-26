@@ -6,32 +6,68 @@
       {
         "ordinal": 0,
         "name": "schedule_uid",
-        "type_info": "Uuid"
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "schedules",
+            "name": "schedule_uid"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "user_uid",
-        "type_info": "Uuid"
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "schedules",
+            "name": "user_uid"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "rules",
-        "type_info": "Json"
+        "type_info": "Json",
+        "origin": {
+          "Table": {
+            "table": "schedules",
+            "name": "rules"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "timezone",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "schedules",
+            "name": "timezone"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "metadata",
-        "type_info": "Jsonb"
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "schedules",
+            "name": "metadata"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "account_uid",
-        "type_info": "Uuid"
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "account_uid"
+          }
+        }
       }
     ],
     "parameters": {
