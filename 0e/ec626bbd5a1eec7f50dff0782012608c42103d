@@ -1,0 +1,37 @@
+clients/javascript/lib/baseClient.ts
+  s_08a02b8bd9e3c5::t_cc468cfb072032 417-418,420,429
+clients/javascript/tests/account.spec.ts
+  s_08a02b8bd9e3c5::t_ff28a7fcb62440 13,40
+clients/javascript/tests/calendar.spec.ts
+  s_08a02b8bd9e3c5::t_ff28a7fcb62440 16
+clients/javascript/tests/calendarEvent.spec.ts
+  s_08a02b8bd9e3c5::t_ff28a7fcb62440 24
+clients/javascript/tests/health.spec.ts
+  s_08a02b8bd9e3c5::t_ff28a7fcb62440 5
+clients/javascript/tests/helpers/fixtures.ts
+  s_08a02b8bd9e3c5::t_ff28a7fcb62440 9,24
+clients/javascript/tests/schedule.spec.ts
+  s_08a02b8bd9e3c5::t_ff28a7fcb62440 16
+clients/javascript/lib/index.ts
+  s_08a02b8bd9e3c5::t_56b1962445cf06 104,106,111
+clients/javascript/tests/error-handling.spec.ts
+  s_08a02b8bd9e3c5::t_ff28a7fcb62440 44,101,123,144,328
+clients/javascript/tests/user.spec.ts
+  s_08a02b8bd9e3c5::t_ff28a7fcb62440 23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "0eec626bbd5a1eec7f50dff0782012608c42103d",
+  "prompts": {},
+  "sessions": {
+    "s_08a02b8bd9e3c5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2438a4a8-6c7d-4222-b3b5-bf31b70740e2",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Guillaume Deconinck <deconinck.guillaume@meetsmore.com>"
+    }
+  }
+}
