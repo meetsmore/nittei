@@ -1,0 +1,41 @@
+clients/javascript/tests/retry.spec.ts
+  s_f4faac9f039106::t_97ad9ca7a00ad1 84,100
+  s_f4faac9f039106::t_9a9783c4880973 1-83,85-99,101-121,123-138,140-165,167-182,184-191,286-390
+  s_f4faac9f039106::t_41d1a7590dc057 122,139
+  s_f4faac9f039106::t_ef963b54132b90 166,183
+  s_f4faac9f039106::t_0fe98ab88eb122 200
+  s_f4faac9f039106::t_72885177ddcd9d 192-199,201-218,225-227,230-232,234-236,238-240,244-285
+  s_f4faac9f039106::t_c14b32ac64b55d 219-224,228-229,233,237,241-243
+clients/javascript/lib/index.ts
+  h_f948a6a5342a21 139
+clients/javascript/lib/baseClient.ts
+  s_f4faac9f039106::t_7332bbe4ad9e76 404-407,439-442
+  s_f4faac9f039106::t_47a3b75118b738 373,376-377
+  s_f4faac9f039106::t_a075a9627653e2 13-14,16,30-35
+  h_f948a6a5342a21 417-418
+  s_f4faac9f039106::t_2708beb8023af3 157-160,168
+  s_f4faac9f039106::t_0ff4c449dd5f2f 238-243
+  s_f4faac9f039106::t_7e43c1f7ad15f7 254-271
+  s_f4faac9f039106::t_0fb2ee423fbbc9 363-372
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "0b0886cc6a07190457ce74faf1665ab64d277984",
+  "prompts": {},
+  "humans": {
+    "h_f948a6a5342a21": {
+      "author": "Guillaume Deconinck <deconinck.guillaume@meetsmore.com>"
+    }
+  },
+  "sessions": {
+    "s_f4faac9f039106": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6a39468-3415-426d-bd6a-eeb08fb3915a",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Guillaume Deconinck <deconinck.guillaume@meetsmore.com>"
+    }
+  }
+}
