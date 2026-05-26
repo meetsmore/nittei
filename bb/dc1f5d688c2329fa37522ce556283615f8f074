@@ -1,0 +1,20 @@
+crates/api/src/status/mod.rs
+  h_f948a6a5342a21 64,66
+charts/nittei/values.yaml
+  h_f948a6a5342a21 93,101,108
+clients/javascript/lib/healthClient.ts
+  h_f948a6a5342a21 11,18
+clients/rust/src/status.rs
+  h_f948a6a5342a21 21,28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "bbdc1f5d688c2329fa37522ce556283615f8f074",
+  "prompts": {},
+  "humans": {
+    "h_f948a6a5342a21": {
+      "author": "Guillaume Deconinck <deconinck.guillaume@meetsmore.com>"
+    }
+  }
+}
