@@ -1,0 +1,14 @@
+clients/javascript/tests/health.spec.ts
+  h_f948a6a5342a21 4,7-13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "f528b66ee7c417ff661c03f4e7b633d21341d4b9",
+  "prompts": {},
+  "humans": {
+    "h_f948a6a5342a21": {
+      "author": "Guillaume Deconinck <deconinck.guillaume@meetsmore.com>"
+    }
+  }
+}
