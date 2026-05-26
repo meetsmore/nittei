@@ -6,27 +6,57 @@
       {
         "ordinal": 0,
         "name": "event_uid",
-        "type_info": "Uuid"
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "reminders",
+            "name": "event_uid"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "account_uid",
-        "type_info": "Uuid"
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "reminders",
+            "name": "account_uid"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "remind_at",
-        "type_info": "Timestamptz"
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "reminders",
+            "name": "remind_at"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "version",
-        "type_info": "Int8"
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "reminders",
+            "name": "version"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "identifier",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "reminders",
+            "name": "identifier"
+          }
+        }
       }
     ],
     "parameters": {
