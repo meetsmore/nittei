@@ -1,0 +1,53 @@
+clients/javascript/jest.config.js
+  s_f4faac9f039106::t_cbcc9c431c71ff 9,13-21,25-37
+clients/javascript/lib/index.ts
+  s_f4faac9f039106::t_a0cc182796d41e 1,5-6,35-54,66-85,89-94,105,110-111,117-123,128-133,143,149-150,156-164
+package.json
+  h_f948a6a5342a21 8
+clients/javascript/tests/error-handling.spec.ts
+  s_f4faac9f039106::t_d28648dfcdc7b6 345-346
+  s_f4faac9f039106::t_f1b2d536618385 31-38
+clients/javascript/lib/baseClient.ts
+  s_f4faac9f039106::t_50adb2bacc67c4 13-18,22-23,28-29
+  h_f948a6a5342a21 156-157,406,445
+  s_f4faac9f039106::t_6892472516053c 176-183,190-198
+  s_f4faac9f039106::t_54617a12ec34ee 1,146,164,208
+  s_f4faac9f039106::t_f0eb3156ba0ddb 418-420,422-426,444,451
+  s_0517b6bb1dd925::t_f8aad47c5ab2e9 292
+  s_f4faac9f039106::t_7ce83d2cc0ca1d 58-60,65-66,74-104,110,120-145,147-155,158-163,165-175,184-189,199-207,209-218,222-223,226,229,241-252,254-265,267,274-291,294-300,303-324,326-328,335,339,343,347,351,355,357,359-381,386,388,390,395-396,399-405,408-412,416,428,434-435,438-443,447-450
+clients/javascript/tsconfig.jest.json
+  s_f4faac9f039106::t_58fcc4ceab100f 1-4,7-8
+  s_f4faac9f039106::t_9888b8506519c9 5-6
+clients/javascript/package.json
+  s_f4faac9f039106::t_bffc587f48a2ba 45
+  s_f4faac9f039106::t_313efb40ee928e 44
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "838943e2a0166fd7af193b8bcc6c7bd27c1cd65e",
+  "prompts": {},
+  "humans": {
+    "h_f948a6a5342a21": {
+      "author": "Guillaume Deconinck <deconinck.guillaume@meetsmore.com>"
+    }
+  },
+  "sessions": {
+    "s_0517b6bb1dd925": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9a9b9d14-bcb3-4460-833f-23616db11575",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Guillaume Deconinck <deconinck.guillaume@meetsmore.com>"
+    },
+    "s_f4faac9f039106": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a6a39468-3415-426d-bd6a-eeb08fb3915a",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Guillaume Deconinck <deconinck.guillaume@meetsmore.com>"
+    }
+  }
+}
