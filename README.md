@@ -5,7 +5,7 @@
 
 ## Overview
 
-`Nittei` is a self-hosted calendar and scheduler server built upon [nittei](https://github.com/fmeringdal/nettu-scheduler).
+`Nittei` is a self-hosted calendar and scheduler server built upon [nettu-scheduler](https://github.com/fmeringdal/nettu-scheduler).
 
 It supports authentication through
 
