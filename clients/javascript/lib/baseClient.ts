@@ -414,11 +414,10 @@ export const createKyInstanceFrontend = (
 /**
  * Create a ky instance for the backend (Node.js).
  *
- * Uses `Undici`, bundled in NodeJS (fetch-like API)
- * It maintains persistent HTTP connections (keep-alive) and creates
- * a connection pool automatically. No explicit pool management is needed.
+ * Uses Node.js built-in fetch, which is backed by Undici internally.
+ * Connection reuse (keep-alive) is handled transparently by the Node.js HTTP layer.
  */
-export const createKyInstanceBackend = async (
+export const createKyInstanceBackend = (
   args: {
     baseUrl: string
     timeout: number
@@ -427,7 +426,7 @@ export const createKyInstanceBackend = async (
     hooks?: Hooks
   },
   credentials: ICredentials
-): Promise<KyInstance> => {
+): KyInstance => {
   const hooks = buildHooks({
     isReadOnly: args.isReadOnly,
     userHooks: args.hooks,

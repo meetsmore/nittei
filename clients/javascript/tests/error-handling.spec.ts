@@ -41,7 +41,7 @@ describe('Error Handling', () => {
 
   describe('BadRequestError (400)', () => {
     it('should throw BadRequestError with sanitized message for empty account code', async () => {
-      const unauthClient = await NitteiClient({})
+      const unauthClient = NitteiClient({})
 
       await expect(() =>
         unauthClient.account.create({
@@ -98,7 +98,7 @@ describe('Error Handling', () => {
 
   describe('UnauthorizedError (401/403)', () => {
     it('should throw UnauthorizedError for invalid account code', async () => {
-      const unauthClient = await NitteiClient({})
+      const unauthClient = NitteiClient({})
 
       await expect(() =>
         unauthClient.account.create({
@@ -120,7 +120,7 @@ describe('Error Handling', () => {
     })
 
     it('should throw UnauthorizedError when accessing protected resource without auth', async () => {
-      const unauthClient = await NitteiClient({})
+      const unauthClient = NitteiClient({})
 
       await expect(() => unauthClient.account.me()).rejects.toThrow(
         UnauthorizedError
@@ -141,7 +141,7 @@ describe('Error Handling', () => {
 
     it('should throw UnauthorizedError for expired or invalid JWT token', async () => {
       // Create a client with an invalid token
-      const invalidClient = await NitteiClient({
+      const invalidClient = NitteiClient({
         apiKey: 'invalid-api-key',
       })
 
@@ -325,7 +325,7 @@ describe('Error Handling', () => {
 
   describe('Error Message Sanitization', () => {
     it('should sanitize sensitive information in error messages', async () => {
-      const unauthClient = await NitteiClient({
+      const unauthClient = NitteiClient({
         timeout: 5,
       })
 

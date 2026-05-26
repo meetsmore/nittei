@@ -10,7 +10,7 @@ describe('Account API', () => {
   let client: INitteiClient
 
   it('should create account', async () => {
-    client = await NitteiClient({})
+    client = NitteiClient({})
     const accountRes = await client.account.create({
       code: CREATE_ACCOUNT_CODE,
     })
@@ -37,7 +37,7 @@ describe('Account API', () => {
     const accountRes = await client.account.create({
       code: CREATE_ACCOUNT_CODE,
     })
-    const accountClient = await NitteiClient({
+    const accountClient = NitteiClient({
       apiKey: accountRes.secretApiKey,
     })
     const res = await accountClient.account.me()

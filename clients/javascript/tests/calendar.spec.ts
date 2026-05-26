@@ -13,7 +13,7 @@ describe('Calendar API', () => {
   let adminClient: INitteiClient
 
   beforeAll(async () => {
-    unauthClient = await NitteiClient({})
+    unauthClient = NitteiClient({})
     const data = await setupUserClient()
     client = data.userClient
     userId = data.userId

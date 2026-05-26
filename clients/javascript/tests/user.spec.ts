@@ -20,7 +20,7 @@ describe('User API', () => {
     client = data.userClient
     accountClient = data.accountClient
     userId = data.userId
-    unauthClient = await NitteiClient({
+    unauthClient = NitteiClient({
       nitteiAccount: data.accountId,
     })
     const calendarRes = await client.calendar.create({ timezone: 'UTC' })

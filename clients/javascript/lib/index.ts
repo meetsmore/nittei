@@ -98,20 +98,17 @@ export const NitteiUserClient = (
 /**
  * Create a client for the Nittei API (admin/backend client).
  *
- * Async because it may initialise an undici connection pool when
- * `keepAlive.enabled` is true.
- *
  * @param config - configuration and credentials
  * @returns admin client
  */
-export const NitteiClient = async (
+export const NitteiClient = (
   config?: PartialCredentials & ClientConfig
-): Promise<INitteiClient> => {
+): INitteiClient => {
   const creds = createCreds(config)
 
   const finalConfig = { ...DEFAULT_CONFIG, ...config }
 
-  const httpClient = await createKyInstanceBackend(
+  const httpClient = createKyInstanceBackend(
     {
       baseUrl: finalConfig.baseUrl,
       timeout: finalConfig.timeout,

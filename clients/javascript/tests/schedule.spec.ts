@@ -13,7 +13,7 @@ describe('Schedule API', () => {
   let userId: string
 
   beforeAll(async () => {
-    unauthClient = await NitteiClient({})
+    unauthClient = NitteiClient({})
     const data = await setupUserClient()
     client = data.userClient
     userId = data.userId
