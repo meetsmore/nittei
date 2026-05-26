@@ -11,6 +11,11 @@ WORKDIR /app/nittei
 ARG TARGETARCH
 ENV BUILD_PROFILE=release-dd
 ENV RUSTFLAGS="-C force-frame-pointers=yes -C link-arg=-fuse-ld=mold"
+# cargo-sonic intentionally does not reuse payload RUSTFLAGS / CARGO_*_RUSTFLAGS
+# for its small generated loader build. Tell it to use mold for the loader too,
+# matching the payload link step. Frame pointers are not needed on the launcher
+# (ddprof profiles the payload process, not the loader).
+ENV CARGO_SONIC_LOADER_RUSTFLAGS="-C link-arg=-fuse-ld=mold"
 
 RUN apt update \
   && apt install -y --no-install-recommends curl openssl ca-certificates pkg-config build-essential libssl-dev mold \

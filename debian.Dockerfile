@@ -7,6 +7,10 @@ FROM rust:1.95.0-slim-trixie AS builder
 WORKDIR /app/nittei
 ARG TARGETARCH
 ENV BUILD_PROFILE=release
+# cargo-sonic intentionally does not reuse payload RUSTFLAGS / CARGO_*_RUSTFLAGS
+# for its small generated loader build. Tell it to use mold for the loader too,
+# matching the payload link step configured in .cargo/config.toml.
+ENV CARGO_SONIC_LOADER_RUSTFLAGS="-C link-arg=-fuse-ld=mold"
 
 RUN apt update \
   && apt install -y --no-install-recommends curl openssl ca-certificates pkg-config build-essential libssl-dev mold \
