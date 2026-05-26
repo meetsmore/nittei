@@ -1,0 +1,14 @@
+clients/javascript/tests/retry.spec.ts
+  h_f948a6a5342a21 84,86,89,91,101,107,109,126,143,170,189,213,247,271,289,307,313,358,361
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.1",
+  "base_commit_sha": "a7d3102c323b648a4808d0a4aa1a3e136f00a9b3",
+  "prompts": {},
+  "humans": {
+    "h_f948a6a5342a21": {
+      "author": "Guillaume Deconinck <deconinck.guillaume@meetsmore.com>"
+    }
+  }
+}
