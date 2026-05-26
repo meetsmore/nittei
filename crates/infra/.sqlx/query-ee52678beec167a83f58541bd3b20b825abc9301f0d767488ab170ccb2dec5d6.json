@@ -6,37 +6,79 @@
       {
         "ordinal": 0,
         "name": "calendar_uid",
-        "type_info": "Uuid"
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "calendars",
+            "name": "calendar_uid"
+          }
+        }
       },
       {
         "ordinal": 1,
         "name": "user_uid",
-        "type_info": "Uuid"
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "calendars",
+            "name": "user_uid"
+          }
+        }
       },
       {
         "ordinal": 2,
         "name": "settings",
-        "type_info": "Json"
+        "type_info": "Json",
+        "origin": {
+          "Table": {
+            "table": "calendars",
+            "name": "settings"
+          }
+        }
       },
       {
         "ordinal": 3,
         "name": "metadata",
-        "type_info": "Jsonb"
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "calendars",
+            "name": "metadata"
+          }
+        }
       },
       {
         "ordinal": 4,
         "name": "name",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "calendars",
+            "name": "name"
+          }
+        }
       },
       {
         "ordinal": 5,
         "name": "key",
-        "type_info": "Text"
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "calendars",
+            "name": "key"
+          }
+        }
       },
       {
         "ordinal": 6,
         "name": "account_uid",
-        "type_info": "Uuid"
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "calendars",
+            "name": "account_uid"
+          }
+        }
       }
     ],
     "parameters": {

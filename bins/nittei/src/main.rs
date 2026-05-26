@@ -17,17 +17,6 @@ fn main() {
     // Install the custom panic hook
     nittei::backtrace::install_custom_panic_hook();
 
-    // Initialize the subscriber for logging & tracing
-    let _ = init_subscriber().inspect_err(
-        // Allow eprintln! to be used here as logging/tracing has failed to initialize
-        #[allow(clippy::print_stderr)]
-        |e| {
-            eprintln!("[init_subscriber] Error: {e}");
-            // Exit the process with an error code
-            std::process::exit(1);
-        },
-    );
-
     let runtime_flavor = nittei_utils::config::APP_CONFIG
         .tokio_runtime_flavor
         .as_str();
@@ -78,6 +67,15 @@ fn main() {
 
 /// The main function that will be run by the tokio runtime
 async fn run() -> anyhow::Result<()> {
+    // Initialize the subscriber for logging & tracing
+    // Must be called inside the Tokio runtime: the batch exporter (rt-tokio) spawns
+    // a background task and requires an active runtime at initialization time.
+    init_subscriber().inspect_err(
+        // Allow eprintln! to be used here as logging/tracing has failed to initialize
+        #[allow(clippy::print_stderr)]
+        |e| eprintln!("[init_subscriber] Error: {e}"),
+    )?;
+
     print_runtime_info();
 
     let context = setup_context()
