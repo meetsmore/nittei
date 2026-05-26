@@ -5,7 +5,6 @@ import {
   createKyInstanceBackend,
   createKyInstanceFrontend,
   DEFAULT_CONFIG,
-  type KeepAliveConfig,
   type RetryConfig,
 } from './baseClient'
 import {
@@ -35,21 +34,7 @@ export interface INitteiUserClient {
   /**
    * The underlying ky HTTP client instance.
    *
-   * Use this to add custom hooks (the ky equivalent of Axios interceptors)
-   * after construction, or to make one-off requests outside the typed client:
-   *
-   * @example Read-only guard (typical usage in your SaaS admin site)
-   * ```ts
-   * // Preferred: pass isReadOnly in the config instead
-   * const client = NitteiUserClient({ isReadOnly: true })
-   *
-   * // Advanced: extend the ky instance with custom hooks
-   * const extended = client.httpClient.extend({
-   *   hooks: {
-   *     beforeRequest: [request => { console.log('→', request.url) }]
-   *   }
-   * })
-   * ```
+   * Use this to add custom hooks
    */
   readonly httpClient: KyInstance
 }
@@ -66,21 +51,7 @@ export interface INitteiClient {
   /**
    * The underlying ky HTTP client instance.
    *
-   * Use this to add custom hooks (the ky equivalent of Axios interceptors)
-   * after construction, or to make one-off requests outside the typed client:
-   *
-   * @example Read-only guard (typical usage in your SaaS admin site)
-   * ```ts
-   * // Preferred: pass isReadOnly in the config instead
-   * const client = await NitteiClient({ isReadOnly: true })
-   *
-   * // Advanced: extend the ky instance with custom hooks
-   * const extended = client.httpClient.extend({
-   *   hooks: {
-   *     beforeRequest: [request => { console.log('→', request.url) }]
-   *   }
-   * })
-   * ```
+   * Use this to add custom hooks
    */
   readonly httpClient: KyInstance
 }
@@ -143,7 +114,6 @@ export const NitteiClient = async (
   const httpClient = await createKyInstanceBackend(
     {
       baseUrl: finalConfig.baseUrl,
-      keepAlive: finalConfig.keepAlive,
       timeout: finalConfig.timeout,
       retry: finalConfig.retry,
       isReadOnly: finalConfig.isReadOnly,
@@ -166,7 +136,7 @@ export const NitteiClient = async (
 }
 
 // Client types
-export type { ClientConfig, KeepAliveConfig, RetryConfig }
+export type { ClientConfig, RetryConfig }
 
 // Enums
 export * from './gen_types'

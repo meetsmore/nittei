@@ -10,26 +10,10 @@ import {
 } from './helpers/errors'
 
 /**
- * Configuration for the keep alive feature.
- *
- * In Node.js 18+, the runtime's built-in fetch (backed by undici) already
- * maintains persistent HTTP connections automatically. This option serves as
- * an explicit opt-in signal; the `maxSockets` hint is forwarded to the runtime
- * where supported but is otherwise advisory.
+ * HTTP status codes that are eligible for retry.
+ * Only responses with these status codes will trigger ky's retry loop.
  */
-export type KeepAliveConfig = {
-  /**
-   * Whether to keep the connection alive (default: false).
-   * In Node.js 18+, connections are pooled by the runtime regardless.
-   */
-  enabled: boolean
-
-  /**
-   * Advisory maximum number of concurrent connections.
-   * Respected by environments that support explicit pool configuration.
-   */
-  maxSockets?: number
-}
+const RETRY_STATUS_CODES = [408, 413, 429, 500, 502, 503, 504]
 
 /**
  * Configuration for retry mechanism
@@ -43,6 +27,12 @@ export type RetryConfig = {
    * Maximum number of retry attempts (default: 3)
    */
   maxRetries?: number
+  /**
+   * Custom delay function between retry attempts (in milliseconds).
+   * Defaults to exponential backoff: 300ms, 600ms, 1200ms, …
+   * Pass `() => 0` in tests to skip delays entirely.
+   */
+  delay?: (attemptCount: number) => number
 }
 
 /**
@@ -53,13 +43,6 @@ export type ClientConfig = {
    * Base URL for the API
    */
   baseUrl?: string
-
-  /**
-   * Keep the connection alive (Node.js only).
-   * Uses undici connection pooling for persistent HTTP connections,
-   * reducing TCP handshake overhead on high-throughput backends.
-   */
-  keepAlive?: KeepAliveConfig
 
   /**
    * Timeout per request attempt in milliseconds (default: 1000).
@@ -109,9 +92,6 @@ export type ClientConfig = {
  */
 export const DEFAULT_CONFIG: Required<Omit<ClientConfig, 'hooks'>> = {
   baseUrl: `http://localhost:${process.env.NITTEI__HTTP_PORT ?? '5000'}/api/v1`,
-  keepAlive: {
-    enabled: false,
-  },
   timeout: 1000,
   retry: {
     enabled: true,
@@ -174,12 +154,10 @@ function buildHooks(args: { isReadOnly: boolean; userHooks?: Hooks }): Hooks {
   // POST endpoints (e.g. search), but we must stop ky from retrying
   // non-idempotent POSTs (e.g. create). The beforeRetry hook handles this.
   //
-  // NOTE: we do NOT use ky.stop here because it resolves the request with
-  // `undefined` (no response), which would bypass our handleResponse() error
-  // handling. Instead:
-  //  - For HTTP errors (5xx): return error.response so ky uses it as the
-  //    final response — handleResponse() will then throw the appropriate error.
-  //  - For network errors: rethrow so the catch block in callApi() handles it.
+  // Throwing `error` here propagates it out of ky's retry loop directly to
+  // callApi()'s catch block. At this point ky has already read the response
+  // body into `error.data`, so mapHttpError() can use that without re-reading
+  // the consumed stream.
   beforeRetryHooks.push(({ request, error }) => {
     if (request.method === 'POST') {
       const url = new URL(request.url)
@@ -187,14 +165,7 @@ function buildHooks(args: { isReadOnly: boolean; userHooks?: Hooks }): Hooks {
         url.pathname.includes(ep)
       )
       if (!isIdempotent) {
-        if (error instanceof HTTPError && error.response) {
-          // Return the original error response to stop retrying.
-          // With throwHttpErrors: false, ky returns this to callApi() which
-          // then passes it to handleResponse().
-          return error.response
-        }
-        // Network error (no response): propagate the error directly.
-        // callApi()'s catch block will wrap it into our standard error format.
+        // Stop retrying — propagate the original error (HTTP or network).
         throw error
       }
     }
@@ -264,7 +235,12 @@ export abstract class NitteiBaseClient {
           : {}),
       })
     } catch (error) {
-      // This catches network errors, timeouts, and read-only mode violations
+      if (error instanceof HTTPError) {
+        // HTTPError is thrown for retry-eligible status codes (5xx etc.) after
+        // all retries are exhausted. ky pre-reads the body into error.data.
+        return this.mapHttpError<T>(error)
+      }
+      // Network errors, timeouts, read-only mode violations, etc.
       const sanitizedErrorData = sanitizeErrorData(
         (error as Error)?.message ?? String(error)
       )
@@ -272,6 +248,25 @@ export abstract class NitteiBaseClient {
     }
 
     return this.handleResponse<T>(response)
+  }
+
+  /**
+   * Convert a ky HTTPError (thrown for retry-eligible status codes) into a
+   * typed error. ky has already read the response body into `error.data`
+   * before this is called, so the body stream is not re-read here.
+   */
+  private mapHttpError<T>(error: HTTPError): T {
+    const sanitizedErrorData = sanitizeErrorData(error.data)
+    const { status } = error.response
+
+    if (status >= 500) {
+      throw new Error(
+        `Internal server error, please try again later (${status}) (${sanitizedErrorData})`
+      )
+    }
+    throw new Error(
+      `Request failed with status code ${status} (${sanitizedErrorData})`
+    )
   }
 
   /**
@@ -365,20 +360,21 @@ function buildRetryOptions(retry: RetryConfig) {
   }
   return {
     limit: retry.maxRetries ?? 3,
-    // Include 'post' so that @IdempotentRequest endpoints can be retried.
-    // The beforeRetry hook filters out non-idempotent POSTs.
-    methods: [
-      'get',
-      'put',
-      'head',
-      'delete',
-      'options',
-      'trace',
-      'post',
-    ] as string[],
-    statusCodes: [408, 413, 429, 500, 502, 503, 504],
+    // Only retry methods that are safe to retry unconditionally.
+    // - GET/HEAD/OPTIONS/TRACE/DELETE: safe by HTTP spec (read-only or idempotent)
+    // - POST: included so @IdempotentRequest endpoints (e.g. /search) can retry;
+    //         the beforeRetry hook blocks non-idempotent POSTs (create, etc.)
+    // - PUT: excluded despite being HTTP-idempotent in theory. Three PUT endpoints
+    //   in this API are actually insert operations (add_account_integration,
+    //   add_sync_calendar, add_busy_calendar) with no ON CONFLICT guard, so
+    //   retrying them risks duplicate rows or duplicate-key DB errors.
+    // - PATCH: excluded — partial updates are not idempotent.
+    methods: ['get', 'head', 'options', 'trace', 'delete', 'post'] as string[],
+    statusCodes: RETRY_STATUS_CODES,
     // Cap exponential backoff at 30 s so retries don't stall for too long
     backoffLimit: 30_000,
+    // Allow callers (e.g. tests) to override the backoff delay
+    ...(retry.delay !== undefined ? { delay: retry.delay } : {}),
   }
 }
 
@@ -405,7 +401,10 @@ export const createKyInstanceFrontend = (
   return ky.create({
     prefix: normalizePrefixUrl(args.baseUrl),
     timeout: args.timeout,
-    throwHttpErrors: false,
+    // Only throw HTTPError for retry-eligible status codes so ky's retry loop
+    // can fire. Non-retry error responses (4xx, non-listed 5xx) are returned
+    // directly and handled by handleResponse().
+    throwHttpErrors: (status: number) => RETRY_STATUS_CODES.includes(status),
     headers: credentials.createAuthHeaders() as Record<string, string>,
     retry: buildRetryOptions(args.retry),
     hooks,
@@ -415,20 +414,13 @@ export const createKyInstanceFrontend = (
 /**
  * Create a ky instance for the backend (Node.js).
  *
- * In Node.js 18+, the global `fetch` is backed by the runtime's own bundled
- * undici, which already maintains persistent HTTP connections (keep-alive) and
+ * Uses `Undici`, bundled in NodeJS (fetch-like API)
+ * It maintains persistent HTTP connections (keep-alive) and creates
  * a connection pool automatically. No explicit pool management is needed.
- *
- * The `keepAlive` option is accepted for API compatibility and as an explicit
- * opt-in signal, but the underlying mechanism relies on the runtime's built-in
- * connection reuse rather than a separately managed undici Pool. This avoids
- * version-mismatch issues that arise when a user-installed undici package
- * differs from the version bundled in Node.js.
  */
 export const createKyInstanceBackend = async (
   args: {
     baseUrl: string
-    keepAlive: KeepAliveConfig
     timeout: number
     retry: RetryConfig
     isReadOnly: boolean
@@ -444,7 +436,10 @@ export const createKyInstanceBackend = async (
   return ky.create({
     prefix: normalizePrefixUrl(args.baseUrl),
     timeout: args.timeout,
-    throwHttpErrors: false,
+    // Only throw HTTPError for retry-eligible status codes so ky's retry loop
+    // can fire. Non-retry error responses (4xx, non-listed 5xx) are returned
+    // directly and handled by handleResponse().
+    throwHttpErrors: (status: number) => RETRY_STATUS_CODES.includes(status),
     headers: credentials.createAuthHeaders() as Record<string, string>,
     retry: buildRetryOptions(args.retry),
     hooks,
