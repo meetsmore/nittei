@@ -9,20 +9,17 @@ Nittei is a self-hosted calendar and scheduler server (Rust + Axum + PostgreSQL)
 ## Commands
 
 ```sh
-just setup          # Start local Postgres container + run migrations
-just dev            # Start dev server with auto-reload (watchexec)
-just test           # Run Rust tests (spins up ephemeral Postgres, then teardown)
-just test <name>    # Run a specific test by name
-just test-all       # Run Rust + JS tests
-just lint           # nightly fmt check + clippy
-just format         # Format Rust (nightly) and JS (biome) code
-just prepare_sqlx   # Regenerate SQLx offline query files (run after SQL changes)
-just generate-ts-types  # Generate TS types from Rust structs via ts-rs
-```
-
-For JS client tests (requires backend running via `just dev`):
-```sh
-cd clients/javascript && pnpm run test
+just setup                        # Start local Postgres container + run migrations
+just dev                          # Start dev server with auto-reload (watchexec)
+just test                         # Run Rust + JS tests (spins up ephemeral Postgres, then teardown)
+just test-backend                 # Run Rust tests only
+just test-backend <name>          # Run a specific Rust test by name
+just test-frontend                # Run JS tests only (spins up backend automatically)
+just test-frontend <file>         # Run a single JS test file
+just lint                         # nightly fmt check + clippy
+just format                       # Format Rust (nightly) and JS (biome) code
+just prepare_sqlx                 # Regenerate SQLx offline query files (run after SQL changes)
+just generate-ts-types            # Generate TS types from Rust structs via ts-rs
 ```
 
 Default local DB: `postgresql://postgres:postgres@localhost:45432/nittei`
