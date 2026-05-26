@@ -43,12 +43,10 @@ podAnnotations: {}
 
 deploymentLabels: {}
 
-podSecurityContext:
-  {}
+podSecurityContext: {}
   # fsGroup: 2000
 
-securityContext:
-  {}
+securityContext: {}
   # capabilities:
   #   drop:
   #   - ALL
@@ -65,12 +63,10 @@ service:
 ingress:
   enabled: false
   className: ""
-  annotations:
-    {}
+  annotations: {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
-  hosts:
-    []
+  hosts: []
     # - host: chart-example.local
     #   paths:
     #     - path: /
@@ -80,8 +76,7 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
-resources:
-  {}
+resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -93,16 +88,29 @@ resources:
   #   cpu: 100m
   #   memory: 128Mi
 
+startupProbe:
+  httpGet:
+    path: /api/v1/health/live
+    port: 5000
+  # Allow up to 60s for the app to start (failureThreshold * periodSeconds)
+  # periodSeconds is kept short so k8s detects a successful start with minimal delay
+  failureThreshold: 60
+  periodSeconds: 1
 livenessProbe:
   httpGet:
-    path: /api/v1/healthcheck
+    path: /api/v1/health/live
     port: 5000
-  initialDelaySeconds: 2
+  # initialDelaySeconds not needed — startupProbe guards the startup window
+  periodSeconds: 10
+  failureThreshold: 3
 readinessProbe:
   httpGet:
-    path: /api/v1/healthcheck
+    path: /api/v1/health/ready
     port: 5000
-  initialDelaySeconds: 2
+  # initialDelaySeconds not needed — startupProbe guards the startup window
+  # Faster than liveness: detect DB unavailability within ~15s (periodSeconds * failureThreshold)
+  periodSeconds: 5
+  failureThreshold: 3
 
 autoscaling:
   enabled: false
