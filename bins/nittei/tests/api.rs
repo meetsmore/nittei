@@ -27,9 +27,15 @@ use nittei_sdk::{
 };
 
 #[tokio::test]
-async fn test_status_ok() {
+async fn test_liveness_ok() {
     let (_, sdk, _) = spawn_app().await;
-    assert!(sdk.status.check_health().await.is_ok());
+    assert!(sdk.status.check_liveness().await.is_ok());
+}
+
+#[tokio::test]
+async fn test_readiness_ok() {
+    let (_, sdk, _) = spawn_app().await;
+    assert!(sdk.status.check_readiness().await.is_ok());
 }
 
 #[tokio::test]
