@@ -45,7 +45,9 @@ afterAll(() => {
 // ---------------------------------------------------------------------------
 
 /** Create a fresh NitteiClient pointing at the nock-intercepted base URL. */
-async function makeClient(overrides?: Partial<Parameters<typeof NitteiClient>[0]>) {
+async function makeClient(
+  overrides?: Partial<Parameters<typeof NitteiClient>[0]>
+) {
   return NitteiClient({ ...baseConfig, ...overrides })
 }
 
@@ -78,11 +80,15 @@ function interceptN(
 describe('GET requests', () => {
   it('retries on 5xx and succeeds when a later attempt returns 200', async () => {
     // First attempt → 503; second attempt (retry 1) → 200
-    nock(BASE_URL).get(`${API_PREFIX}/healthcheck`).reply(503, 'Service Unavailable')
-    nock(BASE_URL).get(`${API_PREFIX}/healthcheck`).reply(200)
+    nock(BASE_URL)
+      .get(`${API_PREFIX}/health/ready`)
+      .reply(503, 'Service Unavailable')
+    nock(BASE_URL).get(`${API_PREFIX}/health/ready`).reply(200)
 
-    const client = await makeClient({ retry: { enabled: true, maxRetries: 2, delay: () => 0 } })
-    await expect(client.health.checkStatus()).resolves.toBeUndefined()
+    const client = await makeClient({
+      retry: { enabled: true, maxRetries: 2, delay: () => 0 },
+    })
+    await expect(client.health.checkReadiness()).resolves.toBeUndefined()
 
     // Both interceptors must have been consumed
     expect(nock.isDone()).toBe(true)
@@ -92,13 +98,15 @@ describe('GET requests', () => {
     // maxRetries: 2 → 1 initial attempt + 2 retries = 3 total requests
     const { callCount } = interceptN(
       'get',
-      `${API_PREFIX}/healthcheck`,
+      `${API_PREFIX}/health/ready`,
       3,
       503
     )
 
-    const client = await makeClient({ retry: { enabled: true, maxRetries: 2, delay: () => 0 } })
-    await expect(client.health.checkStatus()).rejects.toThrow(
+    const client = await makeClient({
+      retry: { enabled: true, maxRetries: 2, delay: () => 0 },
+    })
+    await expect(client.health.checkReadiness()).rejects.toThrow(
       /internal server error/i
     )
     expect(callCount()).toBe(3)
@@ -112,17 +120,14 @@ describe('GET requests', () => {
 describe('Non-idempotent POST (e.g. account.create)', () => {
   it('does NOT retry on a 5xx response', async () => {
     // Allow up to 5 hits — if the client retries, callCount will exceed 1.
-    const { callCount } = interceptN(
-      'post',
-      `${API_PREFIX}/account`,
-      5,
-      500
-    )
+    const { callCount } = interceptN('post', `${API_PREFIX}/account`, 5, 500)
 
-    const client = await makeClient({ retry: { enabled: true, maxRetries: 3, delay: () => 0 } })
-    await expect(
-      client.account.create({ code: 'test' })
-    ).rejects.toThrow(/internal server error/i)
+    const client = await makeClient({
+      retry: { enabled: true, maxRetries: 3, delay: () => 0 },
+    })
+    await expect(client.account.create({ code: 'test' })).rejects.toThrow(
+      /internal server error/i
+    )
 
     // The beforeRetry hook must have blocked the retry loop.
     expect(callCount()).toBe(1)
@@ -131,15 +136,13 @@ describe('Non-idempotent POST (e.g. account.create)', () => {
   it('does NOT retry on a network error (ECONNRESET)', async () => {
     // Set up 4 interceptors (enough to cover 1 initial + 3 potential retries).
     for (let i = 0; i < 4; i++) {
-      nock(BASE_URL)
-        .post(`${API_PREFIX}/account`)
-        .replyWithError('ECONNRESET')
+      nock(BASE_URL).post(`${API_PREFIX}/account`).replyWithError('ECONNRESET')
     }
 
-    const client = await makeClient({ retry: { enabled: true, maxRetries: 3, delay: () => 0 } })
-    await expect(
-      client.account.create({ code: 'test' })
-    ).rejects.toThrow()
+    const client = await makeClient({
+      retry: { enabled: true, maxRetries: 3, delay: () => 0 },
+    })
+    await expect(client.account.create({ code: 'test' })).rejects.toThrow()
 
     // Only the first interceptor should have been consumed; 3 remain pending.
     expect(nock.pendingMocks().length).toBe(3)
@@ -163,7 +166,9 @@ describe('@IdempotentRequest POST (e.g. account.searchEventsInAccount)', () => {
       .post(`${API_PREFIX}/account/events/search`)
       .reply(200, { events: [] })
 
-    const client = await makeClient({ retry: { enabled: true, maxRetries: 2, delay: () => 0 } })
+    const client = await makeClient({
+      retry: { enabled: true, maxRetries: 2, delay: () => 0 },
+    })
     const result = await client.account.searchEventsInAccount(searchBody)
     expect(result.events).toEqual([])
 
@@ -180,7 +185,9 @@ describe('@IdempotentRequest POST (e.g. account.searchEventsInAccount)', () => {
       500
     )
 
-    const client = await makeClient({ retry: { enabled: true, maxRetries: 2, delay: () => 0 } })
+    const client = await makeClient({
+      retry: { enabled: true, maxRetries: 2, delay: () => 0 },
+    })
     await expect(
       client.account.searchEventsInAccount(searchBody)
     ).rejects.toThrow(/internal server error/i)
@@ -202,7 +209,9 @@ describe('PATCH (e.g. events.update)', () => {
       500
     )
 
-    const client = await makeClient({ retry: { enabled: true, maxRetries: 3, delay: () => 0 } })
+    const client = await makeClient({
+      retry: { enabled: true, maxRetries: 3, delay: () => 0 },
+    })
     await expect(
       client.events.update('00000000-0000-0000-0000-000000000000', {
         startTime: new Date(),
@@ -234,7 +243,9 @@ describe('PUT (e.g. account.setPublicSigningKey)', () => {
       500
     )
 
-    const client = await makeClient({ retry: { enabled: true, maxRetries: 3, delay: () => 0 } })
+    const client = await makeClient({
+      retry: { enabled: true, maxRetries: 3, delay: () => 0 },
+    })
     await expect(
       client.account.setPublicSigningKey('some-key')
     ).rejects.toThrow(/internal server error/i)
@@ -254,11 +265,11 @@ describe('DELETE (e.g. account.removeWebhook)', () => {
     nock(BASE_URL)
       .delete(`${API_PREFIX}/account/webhook`)
       .reply(500, { error: 'Internal Server Error' })
-    nock(BASE_URL)
-      .delete(`${API_PREFIX}/account/webhook`)
-      .reply(200, {})
+    nock(BASE_URL).delete(`${API_PREFIX}/account/webhook`).reply(200, {})
 
-    const client = await makeClient({ retry: { enabled: true, maxRetries: 2, delay: () => 0 } })
+    const client = await makeClient({
+      retry: { enabled: true, maxRetries: 2, delay: () => 0 },
+    })
     await expect(client.account.removeWebhook()).resolves.not.toThrow()
 
     // Both interceptors consumed → retried exactly once
@@ -274,10 +285,12 @@ describe('DELETE (e.g. account.removeWebhook)', () => {
       500
     )
 
-    const client = await makeClient({ retry: { enabled: true, maxRetries: 2, delay: () => 0 } })
-    await expect(
-      client.account.removeWebhook()
-    ).rejects.toThrow(/internal server error/i)
+    const client = await makeClient({
+      retry: { enabled: true, maxRetries: 2, delay: () => 0 },
+    })
+    await expect(client.account.removeWebhook()).rejects.toThrow(
+      /internal server error/i
+    )
     expect(callCount()).toBe(3)
   })
 })
@@ -291,13 +304,13 @@ describe('retry disabled (retry.enabled = false)', () => {
     // Allow up to 3 hits to detect any accidental retries.
     const { callCount } = interceptN(
       'get',
-      `${API_PREFIX}/healthcheck`,
+      `${API_PREFIX}/health/ready`,
       3,
       503
     )
 
     const client = await makeClient({ retry: { enabled: false } })
-    await expect(client.health.checkStatus()).rejects.toThrow(
+    await expect(client.health.checkReadiness()).rejects.toThrow(
       /internal server error/i
     )
     expect(callCount()).toBe(1)
@@ -311,9 +324,9 @@ describe('retry disabled (retry.enabled = false)', () => {
 describe('Read-only mode', () => {
   it('blocks POST requests', async () => {
     const client = await makeClient({ isReadOnly: true })
-    await expect(
-      client.account.create({ code: 'test' })
-    ).rejects.toThrow(/read-only mode/i)
+    await expect(client.account.create({ code: 'test' })).rejects.toThrow(
+      /read-only mode/i
+    )
   })
 
   it('blocks PUT requests', async () => {
@@ -336,16 +349,16 @@ describe('Read-only mode', () => {
 
   it('blocks DELETE requests', async () => {
     const client = await makeClient({ isReadOnly: true })
-    await expect(
-      client.account.removeWebhook()
-    ).rejects.toThrow(/read-only mode/i)
+    await expect(client.account.removeWebhook()).rejects.toThrow(
+      /read-only mode/i
+    )
   })
 
   it('allows GET requests', async () => {
-    nock(BASE_URL).get(`${API_PREFIX}/healthcheck`).reply(200)
+    nock(BASE_URL).get(`${API_PREFIX}/health/ready`).reply(200)
 
     const client = await makeClient({ isReadOnly: true })
-    await expect(client.health.checkStatus()).resolves.toBeUndefined()
+    await expect(client.health.checkReadiness()).resolves.toBeUndefined()
   })
 
   it('allows POST to endpoints ending with /search', async () => {
@@ -380,9 +393,9 @@ describe('Read-only mode', () => {
     try {
       // isReadOnly is false (default) but the env var should activate the guard
       const client = await makeClient({ isReadOnly: false })
-      await expect(
-        client.account.create({ code: 'test' })
-      ).rejects.toThrow(/read-only mode/i)
+      await expect(client.account.create({ code: 'test' })).rejects.toThrow(
+        /read-only mode/i
+      )
     } finally {
       delete process.env.CALENDAR_TEST_READONLY
     }
