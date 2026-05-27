@@ -11,10 +11,6 @@ import type { MultipleFreeBusyRequestBody } from './gen_types/MultipleFreeBusyRe
 import type { UpdateUserRequestBody } from './gen_types/UpdateUserRequestBody'
 import type { UserDTO } from './gen_types/UserDTO'
 import type { UserResponse } from './gen_types/UserResponse'
-import {
-  replaceEventStringsToDates,
-  replaceInstanceStringsToDates,
-} from './helpers/datesConverters'
 
 /**
  * Client for the user endpoints
@@ -100,7 +96,7 @@ export class NitteiUserClient extends NitteiBaseClient {
     userId: ID,
     req: GetEventsByCalendarsQueryParams
   ): Promise<GetEventsByCalendarsAPIResponse> {
-    const res = await this.get<GetEventsByCalendarsAPIResponse>(
+    return await this.get<GetEventsByCalendarsAPIResponse>(
       `/user/${userId}/events`,
       {
         calendarIds: req.calendarIds?.join(','),
@@ -108,15 +104,6 @@ export class NitteiUserClient extends NitteiBaseClient {
         endTime: req.endTime.toISOString(),
       }
     )
-
-    for (const event of res.events) {
-      replaceEventStringsToDates(event.event)
-      for (const instance of event.instances) {
-        replaceInstanceStringsToDates(instance)
-      }
-    }
-
-    return res
   }
 
   /**
@@ -129,7 +116,7 @@ export class NitteiUserClient extends NitteiBaseClient {
     userId: ID,
     req: GetUserFreeBusyQueryParams
   ): Promise<GetUserFreeBusyAPIResponse> {
-    const res = await this.get<GetUserFreeBusyAPIResponse>(
+    return await this.get<GetUserFreeBusyAPIResponse>(
       `/user/${userId}/freebusy`,
       {
         startTime: req.startTime.toISOString(),
@@ -137,12 +124,6 @@ export class NitteiUserClient extends NitteiBaseClient {
         calendarIds: req.calendarIds?.join(','),
       }
     )
-
-    for (const instance of res.busy) {
-      replaceInstanceStringsToDates(instance)
-    }
-
-    return res
   }
 
   /**
@@ -153,22 +134,11 @@ export class NitteiUserClient extends NitteiBaseClient {
   public async freebusyMultipleUsers(
     req: MultipleFreeBusyRequestBody
   ): Promise<MultipleFreeBusyAPIResponse> {
-    const res = await this.post<MultipleFreeBusyAPIResponse>('/user/freebusy', {
+    return await this.post<MultipleFreeBusyAPIResponse>('/user/freebusy', {
       userIds: req.userIds,
       startTime: req.startTime.toISOString(),
       endTime: req.endTime.toISOString(),
     })
-
-    return Object.keys(res).reduce((acc, key) => {
-      if (!res?.[key]) {
-        return acc
-      }
-      for (const instance of res[key]) {
-        replaceInstanceStringsToDates(instance)
-      }
-      acc[key] = res[key]
-      return acc
-    }, {} as MultipleFreeBusyAPIResponse)
   }
 
   /**

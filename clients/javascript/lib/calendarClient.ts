@@ -14,10 +14,6 @@ import type { OutlookCalendar } from './gen_types/OutlookCalendar'
 import type { OutlookCalendarAccessRole } from './gen_types/OutlookCalendarAccessRole'
 import type { RemoveSyncCalendarPathParams } from './gen_types/RemoveSyncCalendarPathParams'
 import type { RemoveSyncCalendarRequestBody } from './gen_types/RemoveSyncCalendarRequestBody'
-import {
-  replaceEventStringsToDates,
-  replaceInstanceStringsToDates,
-} from './helpers/datesConverters'
 
 /**
  * Request for updating a calendar
@@ -165,22 +161,13 @@ export class NitteiCalendarClient extends NitteiBaseClient {
     startTime: Date,
     endTime: Date
   ): Promise<GetCalendarEventsAPIResponse> {
-    const res = await this.get<GetCalendarEventsAPIResponse>(
+    return await this.get<GetCalendarEventsAPIResponse>(
       `/user/calendar/${calendarId}/events`,
       {
         startTime: startTime.toISOString(),
         endTime: endTime.toISOString(),
       }
     )
-
-    for (const event of res.events) {
-      replaceEventStringsToDates(event.event)
-      for (const instance of event.instances) {
-        replaceInstanceStringsToDates(instance)
-      }
-    }
-
-    return res
   }
 
   /**
@@ -304,21 +291,12 @@ export class NitteiCalendarUserClient extends NitteiBaseClient {
     calendarId: ID,
     timespan: Timespan
   ): Promise<GetCalendarEventsAPIResponse> {
-    const res = await this.get<GetCalendarEventsAPIResponse>(
+    return await this.get<GetCalendarEventsAPIResponse>(
       `/user/calendar/${calendarId}/events`,
       {
         startTime: timespan.startTime.toISOString(),
         endTime: timespan.endTime.toISOString(),
       }
     )
-
-    for (const event of res.events) {
-      replaceEventStringsToDates(event.event)
-      for (const instance of event.instances) {
-        replaceInstanceStringsToDates(instance)
-      }
-    }
-
-    return res
   }
 }
