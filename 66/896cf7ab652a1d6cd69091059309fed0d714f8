@@ -1,0 +1,29 @@
+clients/javascript/package.json
+  s_fc62baa4961d76::t_0bc1b0fc02c28c 43-45
+.github/workflows/js-client-test.yml
+  s_fc62baa4961d76::t_191ac853154925 21
+clients/javascript/tests/retry.spec.ts
+  s_fc62baa4961d76::t_90ee0638a88b73 24-25,27,31-35,87,96,98,115,130-133,157-159,174,196,221,223,245-246,261,276,278,292,299,306,316,325,334-336,344-349,351,358
+  s_fc62baa4961d76::t_5665bc6148899a 2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "66896cf7ab652a1d6cd69091059309fed0d714f8",
+  "prompts": {},
+  "humans": {
+    "h_f948a6a5342a21": {
+      "author": "Guillaume Deconinck <deconinck.guillaume@meetsmore.com>"
+    }
+  },
+  "sessions": {
+    "s_fc62baa4961d76": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a4b35900-6b20-49bc-8fb3-4cbf6aeda3eb",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Guillaume Deconinck <deconinck.guillaume@meetsmore.com>"
+    }
+  }
+}
