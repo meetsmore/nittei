@@ -28,12 +28,20 @@ describe('Error Handling', () => {
   })
 
   afterEach(() => {
+    // Abort pending (delayed) interceptors before cleaning up so their async
+    // timers don't fire after the test finishes and bleed into later suites.
+    nock.abortPendingRequests()
+    nock.cleanAll()
+  })
+
+  afterAll(() => {
+    nock.abortPendingRequests()
     nock.cleanAll()
   })
 
   describe('BadRequestError (400)', () => {
     it('should throw BadRequestError with sanitized message for empty account code', async () => {
-      const unauthClient = await NitteiClient({})
+      const unauthClient = NitteiClient({})
 
       await expect(() =>
         unauthClient.account.create({
@@ -90,7 +98,7 @@ describe('Error Handling', () => {
 
   describe('UnauthorizedError (401/403)', () => {
     it('should throw UnauthorizedError for invalid account code', async () => {
-      const unauthClient = await NitteiClient({})
+      const unauthClient = NitteiClient({})
 
       await expect(() =>
         unauthClient.account.create({
@@ -112,7 +120,7 @@ describe('Error Handling', () => {
     })
 
     it('should throw UnauthorizedError when accessing protected resource without auth', async () => {
-      const unauthClient = await NitteiClient({})
+      const unauthClient = NitteiClient({})
 
       await expect(() => unauthClient.account.me()).rejects.toThrow(
         UnauthorizedError
@@ -133,7 +141,7 @@ describe('Error Handling', () => {
 
     it('should throw UnauthorizedError for expired or invalid JWT token', async () => {
       // Create a client with an invalid token
-      const invalidClient = await NitteiClient({
+      const invalidClient = NitteiClient({
         apiKey: 'invalid-api-key',
       })
 
@@ -317,7 +325,7 @@ describe('Error Handling', () => {
 
   describe('Error Message Sanitization', () => {
     it('should sanitize sensitive information in error messages', async () => {
-      const unauthClient = await NitteiClient({
+      const unauthClient = NitteiClient({
         timeout: 5,
       })
 
@@ -334,7 +342,7 @@ describe('Error Handling', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(Error)
         if (error instanceof Error) {
-          expect(error.message).toContain('timeout')
+          expect(error.message).toMatch(/timeout|timed out/i)
           expect(error.message).not.toMatch(/Bearer\s+[A-Za-z0-9+/=._-]+/)
         }
       }

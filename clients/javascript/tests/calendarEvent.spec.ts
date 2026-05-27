@@ -21,7 +21,7 @@ describe('CalendarEvent API', () => {
   beforeAll(async () => {
     const data = await setupUserClient()
     client = data.userClient
-    unauthClient = await NitteiClient({
+    unauthClient = NitteiClient({
       nitteiAccount: data.accountId,
     })
     const calendarRes = await client.calendar.create({
