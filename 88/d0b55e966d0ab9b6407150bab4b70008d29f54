@@ -1,0 +1,28 @@
+clients/javascript/lib/index.ts
+  s_381f6c2bd3323e::t_9f30ac6406b5f2 107
+  s_381f6c2bd3323e::t_3ac63d3979ac5c 72
+  s_381f6c2bd3323e::t_ae2ad49dffee99 5
+clients/javascript/lib/baseClient.ts
+  s_381f6c2bd3323e::t_ff34f2c40c356c 394-399,403,405-408
+  s_381f6c2bd3323e::t_1f72e827bbce10 14-15,17
+  s_381f6c2bd3323e::t_34ccd0d8b2a7eb 410
+  s_381f6c2bd3323e::t_18ea70e462dd44 268-269,271
+  s_381f6c2bd3323e::t_42ff8bb78b7616 104-114
+  s_381f6c2bd3323e::t_be7c1c08726942 252
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.2",
+  "base_commit_sha": "88d0b55e966d0ab9b6407150bab4b70008d29f54",
+  "prompts": {},
+  "sessions": {
+    "s_381f6c2bd3323e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4c8a3622-edfe-4890-939a-8062eb6f9362",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Guillaume Deconinck <deconinck.guillaume@meetsmore.com>"
+    }
+  }
+}
