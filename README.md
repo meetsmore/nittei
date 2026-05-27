@@ -90,33 +90,26 @@ Please see below for links to more examples.
 
 ### Running the tests
 
-For running all the tests at once, you can run:
+All three commands below spin up an ephemeral PostgreSQL container automatically and clean up on exit.
 
-```sh
-just test-all
-```
-
-> This launches an ephemeral PostgreSQL container used by the tests. The script tries to remove the container at the end.
-
-For running only the tests for the server (Rust) and the Rust client SDK, you can simply run:
+**All tests (backend + frontend):**
 
 ```sh
 just test
 ```
 
-> This also launches an ephemeral PostgreSQL container.
-
-For running the tests for the JS client SDK, you first need to have the server running. As a reminder, this is the command:
+**Backend (Rust) tests only** — optionally filter by test name:
 
 ```sh
-just dev
+just test-backend
+just test-backend <test-name-filter>
 ```
 
-Once it's running, the tests can be run by doing the following:
+**Frontend (JS/TS) tests only** — the backend is started automatically; optionally run a single file:
 
 ```sh
-cd clients/javascript/
-pnpm run test
+just test-frontend
+just test-frontend <path/to/file.test.ts>
 ```
 
 ### OpenAPI UI
