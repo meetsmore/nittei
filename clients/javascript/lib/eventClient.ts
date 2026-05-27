@@ -15,10 +15,6 @@ import type { CreateEventRequestBody } from './gen_types/CreateEventRequestBody'
 import type { GetEventInstancesAPIResponse } from './gen_types/GetEventInstancesAPIResponse'
 import type { ID } from './gen_types/ID'
 import type { UpdateEventRequestBody } from './gen_types/UpdateEventRequestBody'
-import {
-  replaceEventStringsToDates,
-  replaceInstanceStringsToDates,
-} from './helpers/datesConverters'
 
 /**
  * Timespan for getting event instances
@@ -45,13 +41,10 @@ export class NitteiEventClient extends NitteiBaseClient {
     eventId: ID,
     data: UpdateEventRequestBody
   ): Promise<CalendarEventResponse> {
-    const res = await this.patch<CalendarEventResponse>(
+    return await this.patch<CalendarEventResponse>(
       `/user/events/${eventId}`,
       data
     )
-    replaceEventStringsToDates(res.event)
-
-    return res
   }
 
   /**
@@ -64,14 +57,10 @@ export class NitteiEventClient extends NitteiBaseClient {
     userId: ID,
     data: CreateEventRequestBody
   ): Promise<CalendarEventResponse> {
-    const res = await this.post<CalendarEventResponse>(
+    return await this.post<CalendarEventResponse>(
       `/user/${userId}/events`,
       data
     )
-
-    replaceEventStringsToDates(res.event)
-
-    return res
   }
 
   /**
@@ -85,16 +74,10 @@ export class NitteiEventClient extends NitteiBaseClient {
     userId: ID,
     data: CreateBatchEventsRequestBody
   ): Promise<CreateBatchEventsAPIResponse> {
-    const res = await this.post<CreateBatchEventsAPIResponse>(
+    return await this.post<CreateBatchEventsAPIResponse>(
       `/user/${userId}/events/batch`,
       data
     )
-
-    for (const event of res.events) {
-      replaceEventStringsToDates(event)
-    }
-
-    return res
   }
 
   /**
@@ -103,11 +86,7 @@ export class NitteiEventClient extends NitteiBaseClient {
    * @returns - the event
    */
   public async getById(eventId: ID): Promise<CalendarEventResponse> {
-    const res = await this.get<CalendarEventResponse>(`/user/events/${eventId}`)
-
-    replaceEventStringsToDates(res.event)
-
-    return res
+    return await this.get<CalendarEventResponse>(`/user/events/${eventId}`)
   }
 
   /**
@@ -120,15 +99,9 @@ export class NitteiEventClient extends NitteiBaseClient {
   public async getByExternalId(
     externalId: string
   ): Promise<GetEventsByExternalIdAPIResponse> {
-    const res = await this.get<GetEventsByExternalIdAPIResponse>(
+    return await this.get<GetEventsByExternalIdAPIResponse>(
       `/user/events/external_id/${externalId}`
     )
-
-    for (const event of res.events) {
-      replaceEventStringsToDates(event)
-    }
-
-    return res
   }
 
   /**
@@ -140,16 +113,7 @@ export class NitteiEventClient extends NitteiBaseClient {
   public async searchEvents(
     options: SearchEventsRequestBody
   ): Promise<SearchEventsAPIResponse> {
-    const res = await this.post<SearchEventsAPIResponse>(
-      EVENT_SEARCH_ENDPOINT,
-      options
-    )
-
-    for (const event of res.events) {
-      replaceEventStringsToDates(event)
-    }
-
-    return res
+    return await this.post<SearchEventsAPIResponse>(EVENT_SEARCH_ENDPOINT, options)
   }
 
   /**
@@ -162,19 +126,10 @@ export class NitteiEventClient extends NitteiBaseClient {
   public async getEventsOfUsersDuringTimespan(
     body: GetEventsForUsersInTimeSpanBody
   ): Promise<GetEventsForUsersInTimeSpanAPIResponse> {
-    const res = await this.post<GetEventsForUsersInTimeSpanAPIResponse>(
+    return await this.post<GetEventsForUsersInTimeSpanAPIResponse>(
       '/events/timespan',
       body
     )
-
-    for (const event of res.events) {
-      replaceEventStringsToDates(event.event)
-      for (const instance of event.instances) {
-        replaceInstanceStringsToDates(instance)
-      }
-    }
-
-    return res
   }
 
   public async findByMeta(
@@ -185,18 +140,12 @@ export class NitteiEventClient extends NitteiBaseClient {
     skip: number,
     limit: number
   ): Promise<{ events: CalendarEventDTO[] }> {
-    const res = await this.get<{ events: CalendarEventDTO[] }>('/events/meta', {
+    return await this.get<{ events: CalendarEventDTO[] }>('/events/meta', {
       skip,
       limit,
       key: meta.key,
       value: meta.value,
     })
-
-    for (const event of res.events) {
-      replaceEventStringsToDates(event)
-    }
-
-    return res
   }
 
   public async remove(eventId: ID) {
@@ -217,20 +166,13 @@ export class NitteiEventClient extends NitteiBaseClient {
     eventId: ID,
     timespan: Timespan
   ): Promise<GetEventInstancesAPIResponse> {
-    const res = await this.get<GetEventInstancesAPIResponse>(
+    return await this.get<GetEventInstancesAPIResponse>(
       `/user/events/${eventId}/instances`,
       {
         startTime: timespan.startTime.toISOString(),
         endTime: timespan.endTime.toISOString(),
       }
     )
-
-    replaceEventStringsToDates(res.event)
-    for (const instance of res.instances) {
-      replaceInstanceStringsToDates(instance)
-    }
-
-    return res
   }
 }
 
@@ -249,14 +191,7 @@ export class NitteiEventUserClient extends NitteiBaseClient {
     eventId: ID,
     data: UpdateEventRequestBody
   ): Promise<CalendarEventResponse> {
-    const res = await this.patch<CalendarEventResponse>(
-      `/events/${eventId}`,
-      data
-    )
-
-    replaceEventStringsToDates(res.event)
-
-    return res
+    return await this.patch<CalendarEventResponse>(`/events/${eventId}`, data)
   }
 
   /**
@@ -269,32 +204,17 @@ export class NitteiEventUserClient extends NitteiBaseClient {
     eventId: ID,
     data: UpdateEventRequestBody
   ): Promise<CalendarEventResponse> {
-    const res = await this.put<CalendarEventResponse>(
-      `/events_v2/${eventId}`,
-      data
-    )
-
-    replaceEventStringsToDates(res.event)
-
-    return res
+    return await this.put<CalendarEventResponse>(`/events_v2/${eventId}`, data)
   }
 
   public async create(
     data: CreateEventRequestBody
   ): Promise<CalendarEventResponse> {
-    const res = await this.post<CalendarEventResponse>('/events', data)
-
-    replaceEventStringsToDates(res.event)
-
-    return res
+    return await this.post<CalendarEventResponse>('/events', data)
   }
 
   public async findById(eventId: ID): Promise<CalendarEventResponse> {
-    const res = await this.get<CalendarEventResponse>(`/events/${eventId}`)
-
-    replaceEventStringsToDates(res.event)
-
-    return res
+    return await this.get<CalendarEventResponse>(`/events/${eventId}`)
   }
 
   public async remove(eventId: ID) {
@@ -305,19 +225,12 @@ export class NitteiEventUserClient extends NitteiBaseClient {
     eventId: ID,
     timespan: Timespan
   ): Promise<GetEventInstancesAPIResponse> {
-    const res = await this.get<GetEventInstancesAPIResponse>(
+    return await this.get<GetEventInstancesAPIResponse>(
       `/events/${eventId}/instances`,
       {
         startTime: timespan.startTime.toISOString(),
         endTime: timespan.endTime.toISOString(),
       }
     )
-
-    replaceEventStringsToDates(res.event)
-    for (const instance of res.instances) {
-      replaceInstanceStringsToDates(instance)
-    }
-
-    return res
   }
 }
