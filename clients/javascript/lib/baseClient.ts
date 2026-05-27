@@ -11,9 +11,10 @@ import {
 
 /**
  * HTTP status codes that are eligible for retry.
- * Only responses with these status codes will trigger ky's retry loop.
+ * Only responses with these status codes will trigger ky's retry loop,
+ * and ky will throw HTTPError for them.
  */
-const RETRY_STATUS_CODES = [408, 413, 429, 500, 502, 503, 504]
+const RETRY_STATUS_CODES = [408, 429, 500, 502, 503, 504]
 
 /**
  * Configuration for retry mechanism
@@ -100,7 +101,17 @@ export const DEFAULT_CONFIG: Required<Omit<ClientConfig, 'hooks'>> = {
   isReadOnly: false,
 }
 
-// Idempotent endpoints registered via @IdempotentRequest decorator
+// Idempotent endpoints registered via @IdempotentRequest decorator.
+//
+// This Set is intentionally module-level (not per-instance): registrations
+// happen at class-definition time (when TypeScript evaluates the decorator),
+// before any NitteiClient instance is created. All instances therefore share
+// the same static registry, which is the correct behaviour — the set of
+// idempotent endpoints is a property of the API contract, not of a particular
+// client configuration.
+//
+// Consequence: registrations accumulate for the lifetime of the process and
+// cannot be removed. Do not register endpoints conditionally at runtime.
 const idempotentEndpoints = new Set<string>()
 
 /**
@@ -238,7 +249,7 @@ export abstract class NitteiBaseClient {
       if (error instanceof HTTPError) {
         // HTTPError is thrown for retry-eligible status codes (5xx etc.) after
         // all retries are exhausted. ky pre-reads the body into error.data.
-        return this.mapHttpError<T>(error)
+        this.mapHttpError(error)
       }
       // Network errors, timeouts, read-only mode violations, etc.
       const sanitizedErrorData = sanitizeErrorData(
@@ -254,8 +265,10 @@ export abstract class NitteiBaseClient {
    * Convert a ky HTTPError (thrown for retry-eligible status codes) into a
    * typed error. ky has already read the response body into `error.data`
    * before this is called, so the body stream is not re-read here.
+   *
+   * Always throws — return type is `never`.
    */
-  private mapHttpError<T>(error: HTTPError): T {
+  private mapHttpError(error: HTTPError): never {
     const sanitizedErrorData = sanitizeErrorData(error.data)
     const { status } = error.response
 
@@ -378,21 +391,23 @@ function buildRetryOptions(retry: RetryConfig) {
   }
 }
 
+type KyInstanceArgs = {
+  baseUrl: string
+  timeout: number
+  retry: RetryConfig
+  isReadOnly: boolean
+  hooks?: Hooks
+}
+
 /**
- * Create a ky instance for the frontend (browser).
+ * Create a ky instance.
  *
- * Synchronous — browsers manage connections natively so no pooling is needed.
+ * Used by both the browser (frontend) and Node.js (backend) builds.
+ * In Node.js, ky uses the built-in `fetch` API which is backed by Undici
+ * internally — connection reuse (keep-alive) is handled transparently by
+ * the Node.js HTTP layer, so no extra configuration is needed here.
  */
-export const createKyInstanceFrontend = (
-  args: {
-    baseUrl: string
-    timeout: number
-    retry: RetryConfig
-    isReadOnly: boolean
-    hooks?: Hooks
-  },
-  credentials: ICredentials
-): KyInstance => {
+export function createKyInstance(args: KyInstanceArgs, credentials: ICredentials): KyInstance {
   const hooks = buildHooks({
     isReadOnly: args.isReadOnly,
     userHooks: args.hooks,
@@ -411,36 +426,3 @@ export const createKyInstanceFrontend = (
   })
 }
 
-/**
- * Create a ky instance for the backend (Node.js).
- *
- * Uses Node.js built-in fetch, which is backed by Undici internally.
- * Connection reuse (keep-alive) is handled transparently by the Node.js HTTP layer.
- */
-export const createKyInstanceBackend = (
-  args: {
-    baseUrl: string
-    timeout: number
-    retry: RetryConfig
-    isReadOnly: boolean
-    hooks?: Hooks
-  },
-  credentials: ICredentials
-): KyInstance => {
-  const hooks = buildHooks({
-    isReadOnly: args.isReadOnly,
-    userHooks: args.hooks,
-  })
-
-  return ky.create({
-    prefix: normalizePrefixUrl(args.baseUrl),
-    timeout: args.timeout,
-    // Only throw HTTPError for retry-eligible status codes so ky's retry loop
-    // can fire. Non-retry error responses (4xx, non-listed 5xx) are returned
-    // directly and handled by handleResponse().
-    throwHttpErrors: (status: number) => RETRY_STATUS_CODES.includes(status),
-    headers: credentials.createAuthHeaders() as Record<string, string>,
-    retry: buildRetryOptions(args.retry),
-    hooks,
-  })
-}

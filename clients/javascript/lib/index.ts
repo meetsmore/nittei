@@ -2,8 +2,7 @@ import type { KyInstance } from 'ky'
 import { NitteiAccountClient } from './accountClient'
 import {
   type ClientConfig,
-  createKyInstanceBackend,
-  createKyInstanceFrontend,
+  createKyInstance,
   DEFAULT_CONFIG,
   type RetryConfig,
 } from './baseClient'
@@ -59,9 +58,6 @@ export interface INitteiClient {
 /**
  * Create a client for the Nittei API (user/frontend client).
  *
- * This variant is synchronous and does not set up connection pooling,
- * making it suitable for browser usage.
- *
  * @param config - configuration and credentials
  * @returns user client
  */
@@ -73,7 +69,7 @@ export const NitteiUserClient = (
   const finalConfig = { ...DEFAULT_CONFIG, ...config }
 
   // User clients should not keep the connection alive (usually on the frontend)
-  const httpClient = createKyInstanceFrontend(
+  const httpClient = createKyInstance(
     {
       baseUrl: finalConfig.baseUrl,
       timeout: finalConfig.timeout,
@@ -108,7 +104,7 @@ export const NitteiClient = (
 
   const finalConfig = { ...DEFAULT_CONFIG, ...config }
 
-  const httpClient = createKyInstanceBackend(
+  const httpClient = createKyInstance(
     {
       baseUrl: finalConfig.baseUrl,
       timeout: finalConfig.timeout,
