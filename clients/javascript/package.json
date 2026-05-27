@@ -40,6 +40,9 @@
   "keywords": [],
   "author": "",
   "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "dayjs": "1.11.20",
     "ky": "2.0.2"
