@@ -37,21 +37,23 @@ prepare_sqlx:
 generate-ts-types:
 	bash ./scripts/generate_ts_types.sh
 
-# Run the tests on a temporary DB container
-test test_name="":
+# Run all tests (backend + frontend) on a temporary DB container
+test:
+	bash ./scripts/run_tests.sh
+
+# Run only the backend (Rust) tests on a temporary DB container.
+# Optionally filter by test name: just test-backend <name>
+test-backend test_name="":
 	bash ./scripts/run_tests_backend.sh {{test_name}}
 
-# Run only the JS tests - this assumes that the backend is running
-test-js:
-	cd clients/javascript && pnpm run test
+# Run only the frontend (JS) tests (spins up the backend automatically).
+# Optionally run a single file: just test-frontend <path/to/file.test.ts>
+test-frontend test_file="":
+	bash ./scripts/run_tests_frontend.sh {{test_file}}
 
 # Run the load tests on a temporary DB container
 loadtest:
 	INCLUDE_LOAD_TESTS=true bash ./scripts/run_tests_backend.sh loadtests
-
-# Run all tests (backend + frontend)
-test-all:
-	bash ./scripts/run_tests.sh
 
 # Lint
 lint: _setup_db
