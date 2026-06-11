@@ -57,7 +57,7 @@ chrono = "0.4.39"
 chrono-tz = "0.10.1"
 
 # Use the `jemallocator` crate to use jemalloc as the global allocator.
-tikv-jemallocator = "0.7"
+tikv-jemallocator = "0.6.1"
 
 
 ##################
