@@ -12,7 +12,9 @@ ENV MUSL_TARGET=aarch64-unknown-linux-musl
 
 FROM builder-${TARGETARCH} AS builder
 
-ARG RUST_VERSION=1.95.0
+ARG ARCH=x86_64
+ARG APP_NAME=nittei
+ARG RUST_VERSION=1.96.0
 ENV BUILD_PROFILE=release
 
 # Install and set the specific Rust version

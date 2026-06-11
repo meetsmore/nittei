@@ -1,14 +1,15 @@
 #! /bin/bash
 
-# Run the backend (Rust) tests only.
+# Run the frontend (JS/TS) tests only.
 # - Builds the app
 # - Launches a temporary PostgreSQL container
 # - Runs migrations
-# - Runs Rust tests
+# - Starts the backend server (required by the JS tests)
+# - Runs the JS tests
 # - Cleans up on exit
 #
-# Usage: ./run_tests_backend.sh [<test-name-filter>]
-#        DEBUG=1 ./run_tests_backend.sh   (verbose output)
+# Usage: ./run_tests_frontend.sh [<test-file>]
+#        DEBUG=1 ./run_tests_frontend.sh   (verbose backend output)
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/_lib.sh"
@@ -16,7 +17,8 @@ source "$SCRIPT_DIR/_lib.sh"
 trap cleanup EXIT SIGINT SIGTERM
 
 setup_infrastructure
-run_backend_tests "$@"
+start_backend_server
+run_frontend_tests "$@"
 RESULT=$?
 
 if [ $RESULT -ne 0 ]; then
