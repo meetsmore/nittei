@@ -17,9 +17,10 @@ pub use repos::{
     SearchEventsParams,
 };
 pub use services::*;
-use sqlx::postgres::PgPoolOptions;
 pub use system::ISys;
 use system::RealSys;
+
+use crate::repos::create_postgres_pool;
 
 /// The context for the application
 /// Contains the repositories, configuration, and system
@@ -61,10 +62,8 @@ pub async fn setup_context() -> anyhow::Result<NitteiContext> {
 /// This is not run by the application itself, but is provided as a utility
 /// Usage is in bins/nittei/src/bin/migrate.rs
 pub async fn run_migration() -> anyhow::Result<()> {
-    let pool = PgPoolOptions::new()
-        .max_connections(5)
-        .connect(nittei_utils::config::APP_CONFIG.pg.database_url.as_str())
-        .await?;
+    let pool =
+        create_postgres_pool(nittei_utils::config::APP_CONFIG.pg.database_url.as_str()).await?;
 
     sqlx::migrate!().run(&pool).await.map_err(|e| e.into())
 }

@@ -7,6 +7,8 @@ async fn main() -> anyhow::Result<()> {
     // Initialize the subscriber for logging & tracing
     init_subscriber()?;
 
+    tracing::info!("Running migrations");
+
     run_migration().await.inspect_err(|e| {
         tracing::error!(error = ?e, "Failed to run migrations");
     })?;

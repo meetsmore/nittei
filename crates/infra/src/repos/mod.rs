@@ -97,24 +97,29 @@ pub struct Repos {
     pub user_integrations: Arc<dyn IUserIntegrationRepo>,
 }
 
+pub async fn create_postgres_pool(connection_string: &str) -> anyhow::Result<Pool<Postgres>> {
+    let pool = PgPoolOptions::new()
+        .min_connections(nittei_utils::config::APP_CONFIG.pg.min_connections)
+        .max_connections(nittei_utils::config::APP_CONFIG.pg.max_connections)
+        .acquire_timeout(Duration::from_secs(3)) // Max time to wait for a connection
+        .connect(connection_string)
+        .await
+        .context(format!(
+            "Failed to connect to PG url '{}'",
+            remove_password_from_url(connection_string)?
+        ))?;
+
+    info!("[repos] Postgres connection created");
+
+    Ok(pool)
+}
+
 impl Repos {
     pub async fn create_postgres(connection_string: &str) -> anyhow::Result<Self> {
         // Register metrics
         register_metrics()?;
 
-        info!("[repos] Creating postgres connection");
-        let pool = PgPoolOptions::new()
-            .min_connections(nittei_utils::config::APP_CONFIG.pg.min_connections)
-            .max_connections(nittei_utils::config::APP_CONFIG.pg.max_connections)
-            .acquire_timeout(Duration::from_secs(3)) // Max time to wait for a connection
-            .connect(connection_string)
-            .await
-            .context(format!(
-                "Failed to connect to PG url '{}'",
-                remove_password_from_url(connection_string)?
-            ))?;
-
-        info!("[repos] Postgres connection created");
+        let pool = create_postgres_pool(connection_string).await?;
 
         // Create monitored pool
         let monitored_pool = MonitoredPgPool::new(pool.clone());
@@ -185,7 +190,7 @@ fn remove_password_from_url(connection_string: &str) -> anyhow::Result<String> {
         // If the connection string is not a valid URL, return the connection string as is
         Err(_) => return Ok(connection_string.to_string()),
     };
-    #[allow(clippy::unwrap_used)]
-    url.set_password(Some("*********")).unwrap();
+    // Ignore result as it's only best effort
+    let _ = url.set_password(Some("*********"));
     Ok(url.to_string())
 }
