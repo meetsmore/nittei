@@ -98,6 +98,8 @@ pub struct Repos {
 }
 
 pub async fn create_postgres_pool(connection_string: &str) -> anyhow::Result<Pool<Postgres>> {
+    info!("[repos] Creating postgres connection");
+
     let pool = PgPoolOptions::new()
         .min_connections(nittei_utils::config::APP_CONFIG.pg.min_connections)
         .max_connections(nittei_utils::config::APP_CONFIG.pg.max_connections)
