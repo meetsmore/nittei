@@ -51,15 +51,13 @@ opentelemetry-otlp = { version = "0.32.0", features = [
     "http-proto",
     "tls",
 ] }
-opentelemetry-datadog = { version = "0.20.0", features = [
-    "reqwest-client",
-] }
+opentelemetry-datadog = { version = "0.20.0", features = ["reqwest-client"] }
 
 chrono = "0.4.39"
 chrono-tz = "0.10.1"
 
 # Use the `jemallocator` crate to use jemalloc as the global allocator.
-tikv-jemallocator = "0.6"
+tikv-jemallocator = "0.6.1"
 
 
 ##################
