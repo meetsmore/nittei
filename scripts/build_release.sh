@@ -36,16 +36,18 @@ if [[ "$os" == "Linux" ]]; then
   # per-target-CPU payloads in an adjacent <bin>.bundle/ directory.
   # NOTE: --release and --profile are mutually exclusive in modern cargo, so
   # only --profile is passed (covers both `release` and `release-dd`).
-  cargo sonic \
-    --target-cpus="$target_cpus" \
-    --loader=bundle \
-    --parallelism="$parallelism" \
-    build \
-    --package nittei \
-    --bin nittei \
-    --bin nittei-migrate \
-    --locked \
-    --profile "$profile"
+  # cargo-sonic 0.2.0 only accepts a single --bin per invocation.
+  for bin in nittei nittei-migrate; do
+    cargo sonic \
+      --target-cpus="$target_cpus" \
+      --loader=bundle \
+      --parallelism="$parallelism" \
+      build \
+      --package nittei \
+      --bin "$bin" \
+      --locked \
+      --profile "$profile"
+  done
 
   # Final launchers live at exactly: target/sonic/<triple>/<profile>/<bin-name>
   # Bundle dirs live alongside them as: target/sonic/<triple>/<profile>/<bin-name>.bundle/
