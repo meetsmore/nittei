@@ -106,7 +106,7 @@ pub async fn create_postgres_pool(connection_string: &str) -> anyhow::Result<Poo
         .await
         .context(format!(
             "Failed to connect to PG url '{}'",
-            remove_password_from_url(connection_string)?
+            redact_password_from_url(connection_string)
         ))?;
 
     info!("[repos] Postgres connection created");
@@ -184,18 +184,13 @@ impl Repos {
     }
 }
 
-/// Remove the password from the connection string
-/// This is a best effort function, so if it fails, we return the connection string as is
-fn remove_password_from_url(connection_string: &str) -> anyhow::Result<String> {
-    let mut url = match url::Url::parse(connection_string) {
-        Ok(url) => url,
-        // If the connection string is not a valid URL, return the connection string as is
-        Err(_) => return Ok(connection_string.to_string()),
+/// Redact the password from the connection string
+fn redact_password_from_url(connection_string: &str) -> String {
+    let Ok(mut url) = url::Url::parse(connection_string) else {
+        return "<unparseable connection string>".to_string();
     };
-
-    // If we have a password, try to remove it
     if url.password().is_some() && url.set_password(Some("*********")).is_err() {
-        return Ok(connection_string.to_string());
+        return "<connection string with unredactable password>".to_string();
     }
-    Ok(url.to_string())
+    url.to_string()
 }
