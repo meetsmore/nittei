@@ -184,13 +184,18 @@ impl Repos {
     }
 }
 
+/// Remove the password from the connection string
+/// This is a best effort function, so if it fails, we return the connection string as is
 fn remove_password_from_url(connection_string: &str) -> anyhow::Result<String> {
     let mut url = match url::Url::parse(connection_string) {
         Ok(url) => url,
         // If the connection string is not a valid URL, return the connection string as is
         Err(_) => return Ok(connection_string.to_string()),
     };
-    // Ignore result as it's only best effort
-    let _ = url.set_password(Some("*********"));
+
+    // If we have a password, try to remove it
+    if url.password().is_some() && url.set_password(Some("*********")).is_err() {
+        return Ok(connection_string.to_string());
+    }
     Ok(url.to_string())
 }
