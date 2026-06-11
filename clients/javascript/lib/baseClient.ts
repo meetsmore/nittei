@@ -378,6 +378,12 @@ export const createAxiosInstanceBackend = async (
   const config: AxiosRequestConfig = {
     timeout: args.timeout,
     baseURL: args.baseUrl,
+    transitional: {
+      // Enable sending the zstd accept encoding header
+      // Axios handles checking if the client's environment supports it
+      // See https://github.com/axios/axios/pull/6792/changes
+      advertiseZstdAcceptEncoding: true,
+    },
     headers: credentials.createAuthHeaders(),
     validateStatus: () => true, // allow all status codes without throwing error
     paramsSerializer: params => {

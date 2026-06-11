@@ -42,10 +42,10 @@
   "license": "MIT",
   "dependencies": {
     "agentkeepalive": "4.6.0",
-    "axios": "1.15.0",
+    "axios": "1.17.0",
     "axios-retry": "4.5.0",
     "cacheable-lookup": "^6.1.0",
-    "dayjs": "1.11.20"
+    "dayjs": "1.11.21"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.4",
