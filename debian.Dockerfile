@@ -45,6 +45,6 @@ ENV RUST_BACKTRACE=${RUST_BACKTRACE}
 
 USER nonroot:nonroot
 
-COPY --from=builder --chown=nonroot:nonroot /out/ /
+COPY --from=builder --chown=nonroot:nonroot /tmp/nittei-build/ /
 
 CMD ["/nittei"]

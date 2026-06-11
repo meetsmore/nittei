@@ -60,7 +60,7 @@ ENV RUST_BACKTRACE=${RUST_BACKTRACE}
 
 USER nonroot:nonroot
 
-COPY --from=builder --chown=nonroot:nonroot /out/ /
+COPY --from=builder --chown=nonroot:nonroot /tmp/nittei-build/ /
 COPY --from=builder --chown=nonroot:nonroot /ddprof /ddprof
 
 CMD ["/ddprof", "--preset", "cpu_live_heap", "/nittei"]

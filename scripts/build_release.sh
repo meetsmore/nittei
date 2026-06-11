@@ -3,7 +3,7 @@ set -euo pipefail
 
 profile="${BUILD_PROFILE:-release}"
 target_dir="${CARGO_TARGET_DIR:-target}"
-out_dir="${OUT_DIR:-/out}"
+out_dir="${OUT_DIR:-/tmp/nittei-build}"
 os="$(uname -s)"
 parallelism="${CARGO_SONIC_PARALLELISM:-2}"
 
@@ -36,29 +36,35 @@ if [[ "$os" == "Linux" ]]; then
   # per-target-CPU payloads in an adjacent <bin>.bundle/ directory.
   # NOTE: --release and --profile are mutually exclusive in modern cargo, so
   # only --profile is passed (covers both `release` and `release-dd`).
-  # cargo-sonic 0.2.0 only accepts a single --bin per invocation.
-  for bin in nittei nittei-migrate; do
-    cargo sonic \
-      --target-cpus="$target_cpus" \
-      --loader=bundle \
-      --parallelism="$parallelism" \
-      build \
-      --package nittei \
-      --bin "$bin" \
-      --locked \
-      --profile "$profile"
-  done
+  # Only the server binary benefits from CPU dispatch; the migration binary is
+  # a one-shot tool and is built with plain cargo to avoid artifact collisions
+  # in the sonic output directory.
+  cargo sonic \
+    --target-cpus="$target_cpus" \
+    --loader=bundle \
+    --parallelism="$parallelism" \
+    build \
+    --package nittei \
+    --bin nittei \
+    --locked \
+    --profile "$profile"
+
+  cargo build \
+    --package nittei \
+    --bin nittei-migrate \
+    --locked \
+    --profile "$profile"
 
   # Final launchers live at exactly: target/sonic/<triple>/<profile>/<bin-name>
   # Bundle dirs live alongside them as: target/sonic/<triple>/<profile>/<bin-name>.bundle/
   # Pin mindepth/maxdepth to avoid picking up intermediate per-payload artifacts.
-  find "$target_dir/sonic" -mindepth 3 -maxdepth 3 -type f \( \
-    -name 'nittei' -o \
-    -name 'nittei-migrate' \
-  \) -exec cp {} "$out_dir/" \;
+  find "$target_dir/sonic" -mindepth 3 -maxdepth 3 -type f -name 'nittei' \
+    -exec cp {} "$out_dir/" \;
 
   find "$target_dir/sonic" -mindepth 3 -maxdepth 3 -type d -name '*.bundle' \
     -exec cp -a {} "$out_dir/" \;
+
+  cp "$target_dir/$profile/nittei-migrate" "$out_dir/nittei-migrate"
 else
   # cargo-sonic only supports Linux x86_64/aarch64 (memfd_create + execveat).
   # On other platforms (e.g. macOS for local dev), fall back to a plain build.
