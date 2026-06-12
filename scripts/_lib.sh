@@ -150,7 +150,7 @@ start_backend_server() {
 
   # Wait for the server to become healthy
   RETRIES=10
-  until curl -s "localhost:${BACKEND_PORT}/api/v1/healthcheck" >/dev/null 2>&1 || [ $((RETRIES--)) -eq 0 ]; do
+  until curl -s "localhost:${BACKEND_PORT}/api/v1/health/live" >/dev/null 2>&1 || [ $((RETRIES--)) -eq 0 ]; do
     sleep 1
   done
 }

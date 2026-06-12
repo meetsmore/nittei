@@ -115,7 +115,7 @@ jobs:
           RETRIES=20
           PORT=${NITTEI__HTTP_PORT}
           until [ "$IS_READY" = true ] || [ $((RETRIES--)) -eq 0 ]; do
-            if curl localhost:$PORT/api/v1/healthcheck >/dev/null 2>&1; then
+            if curl localhost:$PORT/api/v1/health/live >/dev/null 2>&1; then
               IS_READY=true
               break
             fi
