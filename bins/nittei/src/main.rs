@@ -14,8 +14,17 @@ static GLOBAL: Jemalloc = Jemalloc;
 /// Main wraps the `run` function with a tokio runtime (flavor can be decided via the `NITTEI__TOKIO_RUNTIME_FLAVOR` env var)
 /// See crates/utils/src/config.rs for more details
 fn main() {
+    // Allow eprintln! to be used here as logging/tracing has failed to initialize
+    #[allow(clippy::unwrap_used, clippy::print_stderr)]
+    init_subscriber()
+        .map_err(|e| eprintln!("[init_subscriber] Error: {e}"))
+        .unwrap();
+
     // Install the custom panic hook
     nittei::backtrace::install_custom_panic_hook();
+    // Initialize the subscriber for logging & tracing
+    // Must be called inside the Tokio runtime: the batch exporter (rt-tokio) spawns
+    // a background task and requires an active runtime at initialization time.
 
     let runtime_flavor = nittei_utils::config::APP_CONFIG
         .tokio_runtime_flavor
@@ -67,15 +76,6 @@ fn main() {
 
 /// The main function that will be run by the tokio runtime
 async fn run() -> anyhow::Result<()> {
-    // Initialize the subscriber for logging & tracing
-    // Must be called inside the Tokio runtime: the batch exporter (rt-tokio) spawns
-    // a background task and requires an active runtime at initialization time.
-    init_subscriber().inspect_err(
-        // Allow eprintln! to be used here as logging/tracing has failed to initialize
-        #[allow(clippy::print_stderr)]
-        |e| eprintln!("[init_subscriber] Error: {e}"),
-    )?;
-
     print_runtime_info();
 
     let context = setup_context()

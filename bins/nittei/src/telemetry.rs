@@ -1,6 +1,8 @@
+use std::time::Duration;
+
 use opentelemetry::{global, propagation::TextMapCompositePropagator, trace::TracerProvider};
 use opentelemetry_datadog::{ApiVersion, DatadogPipelineBuilder, DatadogPropagator};
-use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_otlp::{WithExportConfig, WithHttpConfig};
 use opentelemetry_sdk::{
     Resource,
     propagation::TraceContextPropagator,
@@ -131,6 +133,7 @@ fn get_tracer_datadog(
     service_version: String,
     service_env: String,
 ) -> anyhow::Result<SdkTracerProvider> {
+    let http_client = get_http_client()?;
     let mut config = trace::Config::default();
     config.sampler = Box::new(get_sampler());
     config.id_generator = Box::new(RandomIdGenerator::default());
@@ -142,6 +145,7 @@ fn get_tracer_datadog(
         .with_api_version(ApiVersion::Version05)
         .with_agent_endpoint(datadog_endpoint)
         .with_trace_config(config)
+        .with_http_client(http_client)
         .install_batch()
         .map_err(|e| e.into())
 }
@@ -154,8 +158,10 @@ fn get_tracer_otlp(
     service_version: String,
     service_env: String,
 ) -> anyhow::Result<SdkTracerProvider> {
+    let http_client = get_http_client()?;
     let otlp_exporter = opentelemetry_otlp::SpanExporter::builder()
         .with_http()
+        .with_http_client(http_client)
         .with_protocol(opentelemetry_otlp::Protocol::HttpBinary)
         .with_endpoint(otlp_endpoint)
         .build()?;
@@ -197,4 +203,16 @@ fn get_sampler() -> Sampler {
     // (1) parent => so if parent exists always sample
     // (2) if no parent, then the trace id ratio
     Sampler::ParentBased(Box::new(Sampler::TraceIdRatioBased(ratio_to_sample)))
+}
+
+/// Get the HTTP client to be used
+/// This is used to send traces to the tracing endpoint
+///
+/// The exporter runs on a different thread than the main thread, so we need to use a blocking client.
+fn get_http_client() -> anyhow::Result<reqwest::blocking::Client> {
+    reqwest::blocking::Client::builder()
+        .timeout(Duration::from_secs(10))
+        .connect_timeout(Duration::from_secs(5))
+        .build()
+        .map_err(|e| anyhow::anyhow!("Failed to create HTTP client for telemetry: {}", e))
 }

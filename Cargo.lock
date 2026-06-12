@@ -2007,6 +2007,7 @@ dependencies = [
  "opentelemetry-datadog",
  "opentelemetry-otlp",
  "opentelemetry_sdk",
+ "reqwest",
  "serde_json",
  "test-log",
  "tikv-jemallocator",
@@ -2267,7 +2268,6 @@ dependencies = [
  "opentelemetry-http",
  "opentelemetry-semantic-conventions",
  "opentelemetry_sdk",
- "reqwest",
  "rmp",
  "ryu",
  "thiserror 2.0.18",
@@ -2335,8 +2335,6 @@ dependencies = [
  "portable-atomic",
  "rand 0.9.4",
  "thiserror 2.0.18",
- "tokio",
- "tokio-stream",
 ]
 
 [[package]]
