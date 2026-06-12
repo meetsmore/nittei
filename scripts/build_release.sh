@@ -32,6 +32,8 @@ if [[ "$os" == "Linux" ]]; then
       ;;
   esac
 
+  echo "Building binaries"
+
   # cargo-sonic builds a CPU-dispatched fat binary: a small launcher plus
   # per-target-CPU payloads in an adjacent <bin>.bundle/ directory.
   # NOTE: --release and --profile are mutually exclusive in modern cargo, so
@@ -49,11 +51,19 @@ if [[ "$os" == "Linux" ]]; then
     --locked \
     --profile "$profile"
 
-  cargo build \
+  echo "Building nittei-migrate binary"
+
+  cargo sonic \
+    --target-cpus="$target_cpus" \
+    --loader=embedded \
+    --parallelism="$parallelism" \
+    build \
     --package nittei \
     --bin nittei-migrate \
     --locked \
     --profile "$profile"
+
+  echo "Copying binaries to $out_dir"
 
   # Final launchers live at exactly: target/sonic/<triple>/<profile>/<bin-name>
   # Bundle dirs live alongside them as: target/sonic/<triple>/<profile>/<bin-name>.bundle/
@@ -64,7 +74,9 @@ if [[ "$os" == "Linux" ]]; then
   find "$target_dir/sonic" -mindepth 3 -maxdepth 3 -type d -name '*.bundle' \
     -exec cp -a {} "$out_dir/" \;
 
-  cp "$target_dir/$profile/nittei-migrate" "$out_dir/nittei-migrate"
+  find "$target_dir/sonic" -mindepth 3 -maxdepth 3 -type f -name 'nittei-migrate' \
+    -exec cp {} "$out_dir/" \;
+
 else
   # cargo-sonic only supports Linux x86_64/aarch64 (memfd_create + execveat).
   # On other platforms (e.g. macOS for local dev), fall back to a plain build.
