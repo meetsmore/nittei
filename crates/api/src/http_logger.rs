@@ -12,8 +12,7 @@ use tower_http::trace::{MakeSpan, OnFailure, OnResponse};
 use tracing::{Span, field::Empty};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
-const PATHS_TO_EXCLUDE_FROM_LOGGING_AND_TRACING: [&str; 2] =
-    ["/api/v1/healthcheck", "/api/v1/metrics"];
+const PATHS_TO_EXCLUDE_FROM_LOGGING_AND_TRACING: [&str; 2] = ["/api/v1/health", "/api/v1/metrics"];
 
 /// Metadata for the request
 /// Used for logging and tracing
