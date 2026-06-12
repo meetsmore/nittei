@@ -44,6 +44,11 @@ jobs:
         with:
           toolchain: ${{ env.RUST_VERSION }}
 
+      - name: Install mold
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mold
+
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:

@@ -1,25 +1,32 @@
 # Usage:
-# docker buildx build -f debian.Dockerfile -t image:tag --build-arg='ARCH=x86_64' --platform linux/amd64 .
-# docker buildx build -f debian.Dockerfile -t image:tag --build-arg='ARCH=aarch64' --platform linux/arm64 .
+# docker buildx build -f debian.Dockerfile -t image:tag --platform linux/amd64 .
+# docker buildx build -f debian.Dockerfile -t image:tag --platform linux/arm64 .
 
 FROM rust:1.96.0-slim-trixie AS builder
 
 WORKDIR /app/nittei
+ARG TARGETARCH
+ENV BUILD_PROFILE=release
+# cargo-sonic intentionally does not reuse payload RUSTFLAGS / CARGO_*_RUSTFLAGS
+# for its small generated loader build. Tell it to use mold for the loader too,
+# matching the payload link step configured in .cargo/config.toml.
+ENV CARGO_SONIC_LOADER_RUSTFLAGS="-C link-arg=-fuse-ld=mold"
 
 RUN apt update \
-  && apt install -y --no-install-recommends curl openssl ca-certificates pkg-config build-essential libssl-dev \
+  && apt install -y --no-install-recommends curl openssl ca-certificates pkg-config build-essential libssl-dev mold \
   && apt clean \
   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-COPY ./Cargo.toml ./Cargo.lock .cargo ./
+RUN cargo install cargo-sonic --version 0.2.0 --locked
+
+COPY .cargo .cargo
+COPY ./Cargo.toml ./Cargo.lock ./
 COPY ./clients/rust ./clients/rust
 COPY ./crates ./crates
 COPY ./bins ./bins
+COPY ./scripts ./scripts
 
-RUN cargo build --locked --release && \
-  cp ./target/release/nittei /nittei && \
-  cargo build --locked --release --bin nittei-migrate && \
-  cp ./target/release/nittei-migrate /nittei-migrate
+RUN ./scripts/build_release.sh
 
 # Use the distroless base image for final image
 FROM gcr.io/distroless/cc-debian13
@@ -38,7 +45,6 @@ ENV RUST_BACKTRACE=${RUST_BACKTRACE}
 
 USER nonroot:nonroot
 
-COPY --from=builder --chown=nonroot:nonroot /nittei /nittei
-COPY --from=builder --chown=nonroot:nonroot /nittei-migrate /nittei-migrate
+COPY --from=builder --chown=nonroot:nonroot /tmp/nittei-build/ /
 
 CMD ["/nittei"]
