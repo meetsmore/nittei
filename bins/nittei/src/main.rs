@@ -22,9 +22,6 @@ fn main() {
 
     // Install the custom panic hook
     nittei::backtrace::install_custom_panic_hook();
-    // Initialize the subscriber for logging & tracing
-    // Must be called inside the Tokio runtime: the batch exporter (rt-tokio) spawns
-    // a background task and requires an active runtime at initialization time.
 
     let runtime_flavor = nittei_utils::config::APP_CONFIG
         .tokio_runtime_flavor
