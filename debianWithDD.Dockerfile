@@ -10,28 +10,24 @@ WORKDIR /app/nittei
 
 ARG TARGETARCH
 ENV BUILD_PROFILE=release-dd
+# RUSTFLAGS overrides .cargo/config.toml rustflags, so mold must be set explicitly here.
 ENV RUSTFLAGS="-C force-frame-pointers=yes -C link-arg=-fuse-ld=mold"
-# cargo-sonic intentionally does not reuse payload RUSTFLAGS / CARGO_*_RUSTFLAGS
-# for its small generated loader build. Tell it to use mold for the loader too,
-# matching the payload link step. Frame pointers are not needed on the launcher
-# (ddprof profiles the payload process, not the loader).
-ENV CARGO_SONIC_LOADER_RUSTFLAGS="-C link-arg=-fuse-ld=mold"
 
 RUN apt update \
   && apt install -y --no-install-recommends curl openssl ca-certificates pkg-config build-essential libssl-dev mold \
   && apt clean \
   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN cargo install cargo-sonic --version 0.2.0 --locked
-
 COPY .cargo .cargo
 COPY ./Cargo.toml ./Cargo.lock ./
 COPY ./clients/rust ./clients/rust
 COPY ./crates ./crates
 COPY ./bins ./bins
-COPY ./scripts ./scripts
 
-RUN ./scripts/build_release.sh
+RUN mkdir -p /tmp/nittei-build \
+  && cargo build --locked --profile ${BUILD_PROFILE} --bin nittei --bin nittei-migrate \
+  && cp ./target/${BUILD_PROFILE}/nittei /tmp/nittei-build/nittei \
+  && cp ./target/${BUILD_PROFILE}/nittei-migrate /tmp/nittei-build/nittei-migrate
 
 # Install ddprof
 RUN ARCH_IN_URL=$(case "${TARGETARCH:-$(uname -m)}" in \
