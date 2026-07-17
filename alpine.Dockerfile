@@ -14,7 +14,7 @@ FROM builder-${TARGETARCH} AS builder
 
 ARG ARCH=x86_64
 ARG APP_NAME=nittei
-ARG RUST_VERSION=1.96.0
+ARG RUST_VERSION=1.97.1
 ENV BUILD_PROFILE=release
 
 # Install and set the specific Rust version

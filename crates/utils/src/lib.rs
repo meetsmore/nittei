@@ -1,6 +1,6 @@
 extern crate rand;
 
-use rand::Rng;
+use rand::RngExt;
 
 pub mod backtrace;
 pub mod config;
