@@ -18,8 +18,8 @@ futures = "0.3"
 async-trait = "0.1"
 
 axum = { version = "0.8", features = ["macros"] }
-axum-valid = { version = "0.24", features = ["into_json"] }
-tower-http = { version = "0.6", features = [
+axum-valid = { version = "0.25", features = ["into_json"] }
+tower-http = { version = "0.7", features = [
   "cors",
   "compression-full",
   "decompression-full",
