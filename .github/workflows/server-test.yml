@@ -71,6 +71,10 @@ jobs:
           cargo install sqlx-cli --no-default-features --features postgres || true
           (cd crates/infra && sqlx migrate run)
 
+      - name: Check sqlx offline cache is up to date
+        run: |
+          cd crates/infra && cargo sqlx prepare --check
+
       - name: Formatting
         run: |
           cargo +nightly fmt --all -- --check
