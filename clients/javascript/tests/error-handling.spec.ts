@@ -322,7 +322,8 @@ describe('Error Handling', () => {
       })
 
       // Mock a timeout
-      nock('http://localhost:5000')
+      const port = process.env.NITTEI__HTTP_PORT ?? '5000'
+      nock(`http://localhost:${port}`)
         .post('/api/v1/account')
         .delay(100)
         .reply(200, {})
