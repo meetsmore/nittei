@@ -55,8 +55,7 @@ opentelemetry = "0.32.0"
 opentelemetry-http = "0.32.0"
 tracing-opentelemetry = "0.33.0"
 tracing = "0.1"
-tracing-futures = "0.2"
 prometheus = "0.14"
 
 [dev-dependencies]
-serial_test = "*"
+serial_test = { version = "4", features = ["file_locks"] }

@@ -1,0 +1,3 @@
+# Keep in sync with RUST_VERSION in the CI workflows and Dockerfiles
+[toolchain]
+channel = "1.97.1"

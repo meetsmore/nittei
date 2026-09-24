@@ -99,4 +99,9 @@ jobs:
 
       - name: Run server tests
         run: |
-          cargo test --workspace -- --skip export_bindings_
+          cargo nextest run --workspace --no-fail-fast --no-tests=warn -E 'not test(export_bindings_)'
+
+      # nextest doesn't run doctests
+      - name: Run doctests
+        run: |
+          cargo test --workspace --doc
