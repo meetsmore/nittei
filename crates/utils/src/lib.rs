@@ -1,6 +1,8 @@
 extern crate rand;
 
 use rand::RngExt;
+// Not used directly in this crate, but required for the `error_with_backtrace!` macro
+use tracing as _;
 
 pub mod backtrace;
 pub mod config;

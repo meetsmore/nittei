@@ -21,7 +21,7 @@ url = "2.3"
 uuid = { version = "1.1", features = ["serde", "v4"] }
 jsonwebtoken = { version = "10", features = ["rust_crypto"] }
 thiserror = "2.0"
-itertools = "0.14"
+itertools = "0.15"
 rand = "0.10"
 tracing = "0.1"
 ts-rs = { version = "12.0.1", features = [
@@ -29,5 +29,4 @@ ts-rs = { version = "12.0.1", features = [
   "chrono-impl",
   "serde-json-impl",
 ] }
-validator = { version = "0.20", features = ["derive"] }
 utoipa = { version = "5.3", features = ["uuid", "chrono"] }

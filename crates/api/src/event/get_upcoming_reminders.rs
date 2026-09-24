@@ -223,7 +223,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial_test::serial]
+    #[serial_test::file_serial(nittei_reminders)]
     async fn serial_get_upcoming_reminders() {
         let mut ctx = setup_context().await;
         ctx.sys = Arc::new(StaticTimeSys1 {});
@@ -305,7 +305,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial_test::serial]
+    #[serial_test::file_serial(nittei_reminders)]
     async fn serial_updating_event_also_updates_reminders() {
         let mut ctx = setup_context().await;
         ctx.sys = Arc::new(StaticTimeSys1 {});
@@ -376,7 +376,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial_test::serial]
+    #[serial_test::file_serial(nittei_reminders)]
     async fn serial_deleting_event_reminder_setting_also_deletes_reminders() {
         let mut ctx = setup_context().await;
         ctx.sys = Arc::new(StaticTimeSys1 {});
@@ -440,7 +440,7 @@ mod tests {
     }
 
     #[tokio::test]
-    #[serial_test::serial]
+    #[serial_test::file_serial(nittei_reminders)]
     async fn serial_deleting_event_also_deletes_reminders() {
         let mut ctx = setup_context().await;
         ctx.sys = Arc::new(StaticTimeSys1 {});

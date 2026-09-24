@@ -4,7 +4,7 @@ export RUST_BACKTRACE := "1"
 # Install minimal tools
 install_tools: 
 	cargo install sqlx-cli
-	cargo install cargo-pretty-test
+	cargo install --locked cargo-nextest
 	cargo install --locked watchexec-cli
 
 # Install all tools
