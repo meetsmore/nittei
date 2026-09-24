@@ -1,12 +1,12 @@
 use std::time::Duration;
 
-use opentelemetry::{global, propagation::TextMapCompositePropagator, trace::TracerProvider};
-use opentelemetry_datadog::{ApiVersion, DatadogPipelineBuilder, DatadogPropagator};
+use datadog_opentelemetry::configuration::Config as DatadogConfig;
+use opentelemetry::{global, trace::TracerProvider};
 use opentelemetry_otlp::{WithExportConfig, WithHttpConfig};
 use opentelemetry_sdk::{
     Resource,
     propagation::TraceContextPropagator,
-    trace::{self, RandomIdGenerator, Sampler, SdkTracerProvider},
+    trace::{Sampler, SdkTracerProvider},
 };
 use tracing::{Level, warn};
 use tracing_subscriber::{EnvFilter, Layer, Registry, filter, layer::SubscriberExt};
@@ -39,14 +39,6 @@ pub fn init_subscriber() -> anyhow::Result<()> {
         let service_name = &observability_config.service_name;
         let service_version = &observability_config.service_version;
         let service_env = &observability_config.service_env;
-
-        // Set the global propagator to trace context propagator
-        let composite = TextMapCompositePropagator::new(vec![
-            Box::new(TraceContextPropagator::new()),
-            Box::new(DatadogPropagator::new()),
-        ]);
-
-        global::set_text_map_propagator(composite);
 
         // Get the tracer - if no endpoint is provided, tracing will be disabled
         let tracer_provider = get_tracer_provider(
@@ -126,28 +118,28 @@ fn get_tracer_provider(
 }
 
 /// Get the tracer based on the tracing endpoint
-/// This is for the (unofficial) Datadog exporter
+/// This is for the official Datadog exporter (dd-trace-rs), which sends traces to the Datadog agent
+///
+/// This also installs globally the tracer provider and the text map propagator
+/// (Datadog + W3C TraceContext headers by default)
 fn get_tracer_datadog(
     datadog_endpoint: String,
     service_name: String,
     service_version: String,
     service_env: String,
 ) -> anyhow::Result<SdkTracerProvider> {
-    let http_client = get_http_client()?;
-    let mut config = trace::Config::default();
-    config.sampler = Box::new(get_sampler());
-    config.id_generator = Box::new(RandomIdGenerator::default());
+    let observability_config = &nittei_utils::config::APP_CONFIG.observability;
 
-    DatadogPipelineBuilder::default()
-        .with_service_name(service_name)
-        .with_version(service_version)
-        .with_env(service_env)
-        .with_api_version(ApiVersion::Version05)
-        .with_agent_endpoint(datadog_endpoint)
-        .with_trace_config(config)
-        .with_http_client(http_client)
-        .install_batch()
-        .map_err(|e| e.into())
+    let config = DatadogConfig::builder()
+        .set_service(service_name)
+        .set_version(service_version)
+        .set_env(service_env)
+        .set_trace_agent_url(datadog_endpoint)
+        .set_trace_sample_rate(observability_config.tracing_sample_rate)
+        .set_enabled(!observability_config.disable_tracing)
+        .build();
+
+    Ok(datadog_opentelemetry::tracing().with_config(config).init())
 }
 
 /// Get the tracer based on the OTLP endpoint
@@ -158,6 +150,9 @@ fn get_tracer_otlp(
     service_version: String,
     service_env: String,
 ) -> anyhow::Result<SdkTracerProvider> {
+    // Set the global propagator to trace context propagator
+    global::set_text_map_propagator(TraceContextPropagator::new());
+
     let http_client = get_http_client()?;
     let otlp_exporter = opentelemetry_otlp::SpanExporter::builder()
         .with_http()
