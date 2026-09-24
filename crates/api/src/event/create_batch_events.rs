@@ -269,7 +269,6 @@ impl PermissionBoundary for CreateBatchEventsUseCase {
 
 #[cfg(test)]
 mod test {
-    use chrono::prelude::*;
     use nittei_domain::{Account, Calendar, User};
     use nittei_infra::setup_context;
 
