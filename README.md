@@ -59,7 +59,7 @@ just install_tools
 This will compile and install
 
 - `sqlx-cli`: CLI used for applying the SQL migrations & for generating the offline files for [SQLx](https://github.com/launchbadge/sqlx/blob/main/sqlx-cli/README.md)
-- `cargo-pretty-test`: CLI for running the tests and print them in a prettier way compared to `cargo test`
+- `cargo-nextest`: faster test runner with clearer output than `cargo test`
 - `cargo-watch`: CLI for auto-reloading the backend when source files have changed
 
 ### Initial setup

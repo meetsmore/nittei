@@ -47,3 +47,6 @@ moka = { version = "0.12", features = ["future"] }
 
 prometheus = "0.14"
 lazy_static = "1.4"
+
+[dev-dependencies]
+serial_test = { version = "4", features = ["file_locks"] }

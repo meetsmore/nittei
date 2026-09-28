@@ -253,7 +253,6 @@ impl UseCase for GetEventsForUsersInTimeRangeUseCase {
 
 #[cfg(test)]
 mod test {
-    use chrono::prelude::*;
     use nittei_domain::{
         Account,
         Calendar,

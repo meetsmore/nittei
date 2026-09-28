@@ -119,11 +119,14 @@ run_backend_tests() {
   echo "########################"
   echo ""
 
+  local nextest_args=(--workspace --no-fail-fast --no-tests=warn -E 'not test(export_bindings_)')
   if [ -n "$DEBUG" ]; then
-    cargo test --workspace "$@" -- --nocapture --skip export_bindings_
-  else
-    cargo-pretty-test --workspace "$@" -- --skip export_bindings_
+    nextest_args+=(--no-capture)
   fi
+
+  # nextest doesn't run doctests, so run them separately
+  cargo nextest run "${nextest_args[@]}" "$@" &&
+    cargo test --workspace --doc "$@"
 }
 
 # ============================================================

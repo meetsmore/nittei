@@ -22,6 +22,7 @@ mod tests {
     use crate::setup_context;
 
     #[tokio::test]
+    #[serial_test::file_serial(nittei_reminders)]
     async fn crud() {
         let ctx = setup_context().await.unwrap();
         let account = Account::default();
